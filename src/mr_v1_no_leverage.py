@@ -1,15 +1,22 @@
 #!/usr/bin/env python
 """
-Intraday TWAP Mean Reversion — EUR/USD Minute Data
+Intraday TWAP Mean Reversion V1 — No Leverage, Symmetric TP/SL
 
-Robust backtesting pipeline:
-- TWAP anchor (no volume data available) with rolling z-score
-- Native vbt.generic.nb.rolling_zscore_1d_nb for signal computation
-- ADX regime filter to disable MR in trending markets
-- Volatility-targeted position sizing
-- Purged k-fold + walk-forward cross-validation
-- 20% hold-out set for final validation
-- Realistic transaction costs (1.5 pip slippage)
+Variation of the base OU mean-reversion strategy (ou_mean_reversion.py) that
+removes the two main sources of losses:
+
+1. **No vol-targeting leverage** — fixed leverage at 1.0 eliminates amplified
+   drawdowns from the vol-targeted sizing (up to 3x in the base strategy).
+2. **Symmetric TP = SL** — the base strategy uses an asymmetric TP (exit at
+   TWAP crossback) that cuts winners too early while letting losers run.
+   Here both stops use the same distance, so expected payoff per trade is
+   balanced.
+
+Everything else is preserved:
+- TWAP anchor with rolling z-score entry logic
+- ADX regime filter (disable MR in trending markets)
+- EOD forced exit
+- Purged walk-forward cross-validation on 80/20 hold-out split
 """
 
 import os
@@ -32,11 +39,9 @@ from utils import (
     apply_vbt_settings,
     compute_ann_factor,
     compute_daily_adx_broadcast_nb,
-    compute_daily_rolling_volatility_nb,
     compute_intraday_rolling_std_nb,
     compute_intraday_twap_nb,
     compute_intraday_zscore_nb,
-    compute_leverage_nb,
     compute_metric_nb,
     find_day_boundaries_nb,
     load_fx_data,
@@ -51,9 +56,6 @@ apply_vbt_settings()
 SLIPPAGE = 0.00015  # 1.5 pips — realistic for EUR/USD minute bars
 FIXED_FEES = 0.0  # No fixed commission for spot FX
 INIT_CASH = 1_000_000.0
-VOL_WINDOW = 20  # Days for rolling volatility
-SIGMA_TARGET = 0.01  # Daily vol target for position sizing
-MAX_LEVERAGE = 3.0  # Cap on vol-targeted leverage
 ADX_PERIOD = 14  # ADX lookback (daily-equivalent, applied to minute)
 ADX_THRESHOLD = 30.0  # ADX above this = trending, disable MR
 
@@ -64,7 +66,7 @@ ADX_THRESHOLD = 30.0  # ADX above this = trending, disable MR
 
 
 @njit(nogil=True)
-def compute_intraday_mr_indicators_nb(
+def compute_mr_v1_indicators_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
     low: np.ndarray,
@@ -74,11 +76,8 @@ def compute_intraday_mr_indicators_nb(
     band_width: float,
     adx_period: int,
     adx_threshold: float,
-    vol_window: int,
-    sigma_target: float,
-    max_leverage: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Compute TWAP, z-score, bands, ADX filter, and leverage."""
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Compute TWAP, z-score, bands, and ADX regime filter (no leverage)."""
     n = len(close)
 
     # TWAP per session
@@ -92,10 +91,10 @@ def compute_intraday_mr_indicators_nb(
         else:
             deviation[i] = close[i] - twap[i]
 
-    # Native rolling z-score (one-pass accumulator)
+    # Intraday rolling z-score (resets at day boundaries)
     zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
 
-    # Bands from rolling std
+    # Intraday rolling std for bands (resets at day boundaries)
     rolling_std = compute_intraday_rolling_std_nb(index_ns, deviation, lookback)
     upper_band = np.full(n, np.nan)
     lower_band = np.full(n, np.nan)
@@ -105,27 +104,23 @@ def compute_intraday_mr_indicators_nb(
             upper_band[i] = twap[i] + band_width * s
             lower_band[i] = twap[i] - band_width * s
 
-    # ADX regime filter (1 = MR allowed, 0 = trending)
+    # ADX regime filter on daily-resampled data (1 = MR allowed, 0 = trending)
     adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
     regime_ok = np.ones(n, dtype=np.float64)
     for i in range(n):
         if not np.isnan(adx[i]) and adx[i] > adx_threshold:
             regime_ok[i] = 0.0
 
-    # Volatility-targeted leverage
-    rolling_vol = compute_daily_rolling_volatility_nb(index_ns, close, vol_window)
-    leverage = compute_leverage_nb(rolling_vol, sigma_target, max_leverage)
-
-    return twap, zscore, upper_band, lower_band, regime_ok, leverage
+    return twap, zscore, upper_band, lower_band, regime_ok
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 3. SIGNAL FUNCTION
+# 2. SIGNAL FUNCTION
 # ═══════════════════════════════════════════════════════════════════════
 
 
 @njit(nogil=True)
-def intraday_mr_signal_nb(
+def mr_v1_signal_nb(
     c,
     close_arr: np.ndarray,
     upper_arr: np.ndarray,
@@ -137,6 +132,8 @@ def intraday_mr_signal_nb(
     eod_minute_arr: np.ndarray,
     eval_freq_arr: np.ndarray,
 ):
+    """Signal function for MR V1: entry on band breach, exit on TWAP
+    crossback OR symmetric SL/TP (handled by portfolio engine), EOD forced exit."""
     ts_ns = index_ns_arr[c.i]
     cur_hour = vbt.dt_nb.hour_nb(ts_ns)
     cur_minute = vbt.dt_nb.minute_nb(ts_ns)
@@ -174,14 +171,17 @@ def intraday_mr_signal_nb(
     if not in_long and not in_short:
         if regime < 0.5:
             return False, False, False, False
+        # Entry: price crosses outside bands
         if px < lb:
-            return True, False, False, False
+            return True, False, False, False  # Long entry (mean reversion)
         elif px > ub:
-            return False, False, True, False
+            return False, False, True, False  # Short entry (mean reversion)
     elif in_long:
+        # Exit long on TWAP crossback (SL/TP handled by portfolio engine)
         if px >= tw:
             return False, True, False, False
     elif in_short:
+        # Exit short on TWAP crossback (SL/TP handled by portfolio engine)
         if px <= tw:
             return False, False, False, True
 
@@ -189,11 +189,11 @@ def intraday_mr_signal_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 4. STANDARD BACKTEST
+# 4. BACKTEST
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def run_standard_backtest(
+def run_backtest(
     raw: pd.DataFrame,
     index_ns: np.ndarray,
     ann_factor: float,
@@ -205,22 +205,17 @@ def run_standard_backtest(
     sl_stop: float = 0.005,
     adx_period: int = ADX_PERIOD,
     adx_threshold: float = ADX_THRESHOLD,
-    vol_window: int = VOL_WINDOW,
-    sigma_target: float = SIGMA_TARGET,
-    max_leverage: float = MAX_LEVERAGE,
 ):
-    IMR = vbt.IF(
-        class_name="IntradayMR",
-        short_name="imr",
+    """Run a single backtest with fixed leverage=1.0, SL catastrophe only."""
+    MR_V1 = vbt.IF(
+        class_name="MR_V1",
+        short_name="mr_v1",
         input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
         param_names=[
             "lookback",
             "band_width",
             "adx_period",
             "adx_threshold",
-            "vol_window",
-            "sigma_target",
-            "max_leverage",
         ],
         output_names=[
             "twap",
@@ -228,21 +223,17 @@ def run_standard_backtest(
             "upper_band",
             "lower_band",
             "regime_ok",
-            "leverage",
         ],
     ).with_apply_func(
-        compute_intraday_mr_indicators_nb,
+        compute_mr_v1_indicators_nb,
         takes_1d=True,
         lookback=lookback,
         band_width=band_width,
         adx_period=adx_period,
         adx_threshold=adx_threshold,
-        vol_window=vol_window,
-        sigma_target=sigma_target,
-        max_leverage=max_leverage,
     )
 
-    imr = IMR.run(
+    mr = MR_V1.run(
         index_ns=index_ns,
         high_minute=raw["high"],
         low_minute=raw["low"],
@@ -252,9 +243,6 @@ def run_standard_backtest(
         band_width=band_width,
         adx_period=adx_period,
         adx_threshold=adx_threshold,
-        vol_window=vol_window,
-        sigma_target=sigma_target,
-        max_leverage=max_leverage,
         jitted_loop=True,
         jitted_warmup=True,
         execute_kwargs={"engine": "threadpool", "n_chunks": "auto"},
@@ -267,7 +255,7 @@ def run_standard_backtest(
         low=raw["low"],
         jitted={"parallel": True},
         chunked="threadpool",
-        signal_func_nb=intraday_mr_signal_nb,
+        signal_func_nb=mr_v1_signal_nb,
         signal_args=(
             vbt.Rep("close_arr"),
             vbt.Rep("upper_arr"),
@@ -281,16 +269,16 @@ def run_standard_backtest(
         ),
         broadcast_named_args={
             "close_arr": raw["close"],
-            "upper_arr": imr.upper_band.values,
-            "lower_arr": imr.lower_band.values,
-            "twap_arr": imr.twap.values,
-            "regime_ok_arr": imr.regime_ok.values,
+            "upper_arr": mr.upper_band.values,
+            "lower_arr": mr.lower_band.values,
+            "twap_arr": mr.twap.values,
+            "regime_ok_arr": mr.regime_ok.values,
             "index_arr": index_ns,
             "eod_hour": eod_hour,
             "eod_minute": eod_minute,
             "eval_freq": eval_freq,
         },
-        leverage=imr.leverage.values,
+        leverage=1.0,
         slippage=SLIPPAGE,
         fixed_fees=FIXED_FEES,
         sl_stop=sl_stop,
@@ -298,105 +286,11 @@ def run_standard_backtest(
         freq="1min",
     )
 
-    return pf, imr
+    return pf, mr
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 5. FULL NUMBA PIPELINE (for parameter sweeps)
-# ═══════════════════════════════════════════════════════════════════════
-
-
-@vbt.parameterized(
-    execute_kwargs={
-        "chunk_len": "auto",
-        "engine": "threadpool",
-        "warmup": True,
-    },
-    merge_func="concat",
-)
-@njit(nogil=True)
-def pipeline_nb(
-    high_arr,
-    low_arr,
-    close_arr,
-    open_arr,
-    idx_ns,
-    lookback,
-    band_width,
-    eod_hour,
-    eod_minute,
-    eval_freq,
-    adx_period: int = ADX_PERIOD,
-    adx_threshold: float = ADX_THRESHOLD,
-    vol_window: int = VOL_WINDOW,
-    sigma_target: float = SIGMA_TARGET,
-    max_leverage: float = MAX_LEVERAGE,
-    init_cash: float = INIT_CASH,
-    fixed_fees: float = FIXED_FEES,
-    ann_factor: float = 299_124.0,
-    metric_type: int = SHARPE_RATIO,
-):
-    target_shape = close_arr.shape
-
-    twap, zscore, upper, lower, regime_ok, leverage = compute_intraday_mr_indicators_nb(
-        idx_ns,
-        high_arr[:, 0],
-        low_arr[:, 0],
-        close_arr[:, 0],
-        open_arr[:, 0],
-        lookback,
-        band_width,
-        adx_period,
-        adx_threshold,
-        vol_window,
-        sigma_target,
-        max_leverage,
-    )
-
-    eod_hour_a = np.full(target_shape, eod_hour, dtype=np.int32)
-    eod_minute_a = np.full(target_shape, eod_minute, dtype=np.int32)
-    eval_freq_a = np.full(target_shape, eval_freq, dtype=np.int32)
-    group_lens = np.full(close_arr.shape[1], 1)
-    leverage_arr = leverage.reshape(-1, 1)
-    fixed_fees_arr = np.full((1, 1), fixed_fees)
-    fees_arr = np.full((1, 1), 0.0)
-
-    sim_out = vbt.pf_nb.from_signal_func_nb(
-        target_shape=target_shape,
-        group_lens=group_lens,
-        init_cash=init_cash,
-        cash_sharing=False,
-        open=open_arr,
-        high=high_arr,
-        low=low_arr,
-        close=close_arr,
-        signal_func_nb=intraday_mr_signal_nb,
-        signal_args=(
-            close_arr,
-            upper.reshape(-1, 1),
-            lower.reshape(-1, 1),
-            twap.reshape(-1, 1),
-            regime_ok.reshape(-1, 1),
-            idx_ns,
-            eod_hour_a,
-            eod_minute_a,
-            eval_freq_a,
-        ),
-        fees=fees_arr,
-        fixed_fees=fixed_fees_arr,
-        leverage=leverage_arr,
-        post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(
-            target_shape, group_lens, cash_sharing=False
-        ),
-    )
-
-    returns = sim_out.in_outputs.returns
-    return compute_metric_nb(returns, metric_type, ann_factor)
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# 6. CV PIPELINES
+# 5. CV PIPELINE
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -417,23 +311,17 @@ def _build_cv_runner(splitter):
         eval_freq=5,
         adx_period=ADX_PERIOD,
         adx_threshold=ADX_THRESHOLD,
-        vol_window=VOL_WINDOW,
-        sigma_target=SIGMA_TARGET,
-        max_leverage=MAX_LEVERAGE,
         metric="sharpe_ratio",
     ):
-        IMR = vbt.IF(
-            class_name="IntradayMR",
-            short_name="imr",
+        MR_V1 = vbt.IF(
+            class_name="MR_V1",
+            short_name="mr_v1",
             input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
             param_names=[
                 "lookback",
                 "band_width",
                 "adx_period",
                 "adx_threshold",
-                "vol_window",
-                "sigma_target",
-                "max_leverage",
             ],
             output_names=[
                 "twap",
@@ -441,18 +329,14 @@ def _build_cv_runner(splitter):
                 "upper_band",
                 "lower_band",
                 "regime_ok",
-                "leverage",
             ],
         ).with_apply_func(
-            compute_intraday_mr_indicators_nb,
+            compute_mr_v1_indicators_nb,
             takes_1d=True,
             lookback=lookback,
             band_width=band_width,
             adx_period=adx_period,
             adx_threshold=adx_threshold,
-            vol_window=vol_window,
-            sigma_target=sigma_target,
-            max_leverage=max_leverage,
         )
 
         close_s = (
@@ -462,7 +346,7 @@ def _build_cv_runner(splitter):
         low_s = pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
         open_s = pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
 
-        imr = IMR.run(
+        mr = MR_V1.run(
             index_ns=idx_ns,
             high_minute=high_s,
             low_minute=low_s,
@@ -472,9 +356,6 @@ def _build_cv_runner(splitter):
             band_width=band_width,
             adx_period=adx_period,
             adx_threshold=adx_threshold,
-            vol_window=vol_window,
-            sigma_target=sigma_target,
-            max_leverage=max_leverage,
         )
 
         pf = vbt.Portfolio.from_signals(
@@ -484,7 +365,7 @@ def _build_cv_runner(splitter):
             low=low_s,
             jitted={"parallel": True},
             chunked="threadpool",
-            signal_func_nb=intraday_mr_signal_nb,
+            signal_func_nb=mr_v1_signal_nb,
             signal_args=(
                 vbt.Rep("close_arr"),
                 vbt.Rep("upper_arr"),
@@ -498,16 +379,16 @@ def _build_cv_runner(splitter):
             ),
             broadcast_named_args={
                 "close_arr": close_s,
-                "upper_arr": imr.upper_band.values,
-                "lower_arr": imr.lower_band.values,
-                "twap_arr": imr.twap.values,
-                "regime_ok_arr": imr.regime_ok.values,
+                "upper_arr": mr.upper_band.values,
+                "lower_arr": mr.lower_band.values,
+                "twap_arr": mr.twap.values,
+                "regime_ok_arr": mr.regime_ok.values,
                 "index_arr": idx_ns,
                 "eod_hour": eod_hour,
                 "eod_minute": eod_minute,
                 "eval_freq": eval_freq,
             },
-            leverage=imr.leverage.values,
+            leverage=1.0,
             slippage=SLIPPAGE,
             fixed_fees=FIXED_FEES,
             sl_stop=sl_stop,
@@ -526,7 +407,7 @@ def _build_cv_runner(splitter):
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 7. PLOTTING
+# 6. PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -573,11 +454,11 @@ def plot_monthly_heatmap(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 8. MAIN
+# 7. MAIN
 # ═══════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    results_dir = "results/intraday_mr"
+    results_dir = "results/mr_v1"
     os.makedirs(results_dir, exist_ok=True)
 
     # ── Load data (VBT Pro native) ───────────────────────────────
@@ -601,39 +482,9 @@ if __name__ == "__main__":
         f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} -> {raw_test.index[-1]})"
     )
 
-    # ── Standard backtest on FULL data ─────────────────────────────
-    print("\nRunning standard backtest (full data, default params)...")
-    pf, imr = run_standard_backtest(
-        raw,
-        index_ns,
-        ann_factor,
-        lookback=60,
-        band_width=2.0,
-        sl_stop=0.005,
-        eval_freq=5,
-    )
-
+    # ── Walk-forward CV on train set ──────────────────────────────
     print("\n" + "=" * 60)
-    print("INTRADAY TWAP MEAN REVERSION — STANDARD (realistic costs)")
-    print("=" * 60)
-    print(pf.stats().to_string())
-    print("=" * 60)
-
-    # ── Plots (standard) ──────────────────────────────────────────
-    fig_pf = pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
-    fig_pf.update_layout(
-        title="Intraday MR — Portfolio Overview (realistic)", height=900
-    )
-    fig_pf.write_html(f"{results_dir}/portfolio_overview.html")
-
-    fig_monthly = plot_monthly_heatmap(pf, "Intraday MR — Monthly Returns (%)")
-    fig_monthly.write_html(f"{results_dir}/monthly_returns.html")
-
-    print(f"\nPlots saved to {results_dir}/")
-
-    # ── Cross-validation: Purged K-Fold (on train set) ─────────────
-    print("\n" + "=" * 60)
-    print("CV 1: Purged K-Fold (Lopez de Prado)")
+    print("WALK-FORWARD CV (MR V1: no leverage, symmetric TP=SL)")
     print("=" * 60)
 
     high_arr_train = vbt.to_2d_array(raw_train["high"])
@@ -641,57 +492,7 @@ if __name__ == "__main__":
     close_arr_train = vbt.to_2d_array(raw_train["close"])
     open_arr_train = vbt.to_2d_array(raw_train["open"])
 
-    splitter_kfold = vbt.Splitter.from_purged_kfold(
-        raw_train.index,
-        n_folds=10,
-        n_test_folds=2,
-        purge_td="1 hour",
-        embargo_td="30 min",
-    )
-
-    cv_kfold = _build_cv_runner(splitter_kfold)
-
-    param_grid = {
-        "lookback": vbt.Param([20, 30, 60, 120, 240]),
-        "band_width": vbt.Param([1.5, 2.0, 2.5, 3.0, 3.5]),
-        "sl_stop": vbt.Param([0.002, 0.003, 0.005]),
-    }
-
-    n_combos = 5 * 5 * 3
-    n_splits = len(splitter_kfold.splits)
-    print(f"  Splitter: {n_splits} splits")
-    total = n_combos * n_splits
-    print(f"  Grid: {n_combos} combos x {n_splits} splits = {total} backtests")
-
-    grid_perf_kfold, best_perf_kfold = cv_kfold(
-        high_arr=high_arr_train,
-        low_arr=low_arr_train,
-        close_arr=close_arr_train,
-        open_arr=open_arr_train,
-        idx_ns=index_ns_train,
-        **param_grid,
-        eod_hour=21,
-        eod_minute=0,
-        eval_freq=5,
-        metric="sharpe_ratio",
-        _return_grid="all",
-        _index=raw_train.index,
-    )
-
-    fig_cv_kfold = grid_perf_kfold.vbt.heatmap(
-        x_level="lookback",
-        y_level="band_width",
-        slider_level="split",
-    )
-    fig_cv_kfold.write_html(f"{results_dir}/cv_kfold_heatmap.html")
-    print("  CV k-fold heatmap saved.")
-
-    # ── Cross-validation: Walk-Forward (on train set) ──────────────
-    print("\n" + "=" * 60)
-    print("CV 2: Purged Walk-Forward")
-    print("=" * 60)
-
-    splitter_wf = vbt.Splitter.from_purged_walkforward(
+    splitter = vbt.Splitter.from_purged_walkforward(
         raw_train.index,
         n_folds=10,
         n_test_folds=1,
@@ -699,13 +500,21 @@ if __name__ == "__main__":
         purge_td="1 hour",
     )
 
-    cv_wf = _build_cv_runner(splitter_wf)
-    n_splits_wf = len(splitter_wf.splits)
-    print(f"  Splitter: {n_splits_wf} splits (walk-forward)")
-    total_wf = n_combos * n_splits_wf
-    print(f"  Grid: {n_combos} combos x {n_splits_wf} splits = {total_wf} backtests")
+    cv_runner = _build_cv_runner(splitter)
 
-    grid_perf_wf, best_perf_wf = cv_wf(
+    param_grid = {
+        "lookback": vbt.Param([20, 40, 60, 120, 240]),
+        "band_width": vbt.Param([1.5, 2.0, 2.5, 3.0]),
+        "sl_stop": vbt.Param([0.001, 0.002, 0.003, 0.005]),
+    }
+
+    n_combos = 5 * 4 * 4
+    n_splits = len(splitter.splits)
+    print(f"  Splitter: {n_splits} splits (walk-forward)")
+    total = n_combos * n_splits
+    print(f"  Grid: {n_combos} combos x {n_splits} splits = {total} backtests")
+
+    grid_perf, best_perf = cv_runner(
         high_arr=high_arr_train,
         low_arr=low_arr_train,
         close_arr=close_arr_train,
@@ -720,42 +529,30 @@ if __name__ == "__main__":
         _index=raw_train.index,
     )
 
-    fig_cv_wf = grid_perf_wf.vbt.heatmap(
+    # ── Save CV heatmaps ──────────────────────────────────────────
+    fig_cv = grid_perf.vbt.heatmap(
         x_level="lookback",
         y_level="band_width",
         slider_level="split",
     )
-    fig_cv_wf.write_html(f"{results_dir}/cv_walkforward_heatmap.html")
+    fig_cv.write_html(f"{results_dir}/cv_walkforward_heatmap.html")
     print("  CV walk-forward heatmap saved.")
 
-    # ── Best params consensus ──────────────────────────────────────
+    # ── Best params selection ─────────────────────────────────────
     print("\n" + "=" * 60)
     print("PARAMETER SELECTION")
     print("=" * 60)
 
-    best_idx_kfold = (
-        best_perf_kfold.idxmax()
-        if isinstance(best_perf_kfold.index, pd.MultiIndex)
+    best_idx = (
+        best_perf.idxmax()
+        if isinstance(best_perf.index, pd.MultiIndex)
         else None
     )
-    best_idx_wf = (
-        best_perf_wf.idxmax() if isinstance(best_perf_wf.index, pd.MultiIndex) else None
-    )
+    print(f"  Walk-Forward best: {best_idx} (Sharpe: {best_perf.max():.4f})")
 
-    print(f"  K-Fold best: {best_idx_kfold} (Sharpe: {best_perf_kfold.max():.4f})")
-    print(f"  Walk-Forward best: {best_idx_wf} (Sharpe: {best_perf_wf.max():.4f})")
-
-    # Use walk-forward params as primary (more conservative / realistic)
-    if best_idx_wf is not None:
-        level_names = best_perf_wf.index.names
-        best_row = best_perf_wf[best_perf_wf == best_perf_wf.max()]
-        opt_params = {}
-        for name in ["lookback", "band_width", "sl_stop"]:
-            if name in level_names:
-                opt_params[name] = best_row.index.get_level_values(name)[0]
-    elif best_idx_kfold is not None:
-        level_names = best_perf_kfold.index.names
-        best_row = best_perf_kfold[best_perf_kfold == best_perf_kfold.max()]
+    if best_idx is not None:
+        level_names = best_perf.index.names
+        best_row = best_perf[best_perf == best_perf.max()]
         opt_params = {}
         for name in ["lookback", "band_width", "sl_stop"]:
             if name in level_names:
@@ -763,77 +560,107 @@ if __name__ == "__main__":
     else:
         opt_params = {"lookback": 60, "band_width": 2.0, "sl_stop": 0.003}
 
+    opt_sl = float(opt_params.get("sl_stop", 0.003))
     print(f"  Selected params: {opt_params}")
+    print(f"  TP = SL = {opt_sl}")
 
-    # ── Re-run optimized on train set ──────────────────────────────
+    # ── Re-run optimized on train set ─────────────────────────────
     print("\nRe-running optimized on TRAIN set...")
-    pf_opt_train, _ = run_standard_backtest(
+    pf_opt_train, _ = run_backtest(
         raw_train,
         index_ns_train,
         ann_factor,
         lookback=int(opt_params.get("lookback", 60)),
         band_width=float(opt_params.get("band_width", 2.0)),
-        sl_stop=float(opt_params.get("sl_stop", 0.005)),
+        sl_stop=opt_sl,
+        tp_stop=opt_sl,  # symmetric
         eval_freq=5,
     )
 
     print("\n" + "=" * 60)
-    print("OPTIMIZED — TRAIN SET")
+    print("OPTIMIZED — TRAIN SET (MR V1)")
     print("=" * 60)
     print(pf_opt_train.stats().to_string())
 
-    # ── Hold-out test: final validation ────────────────────────────
+    # ── Hold-out test: final validation ───────────────────────────
     print("\n" + "=" * 60)
     print("HOLD-OUT TEST (20% unseen data)")
     print("=" * 60)
 
-    pf_holdout, _ = run_standard_backtest(
+    pf_holdout, _ = run_backtest(
         raw_test,
         index_ns_test,
         ann_factor,
         lookback=int(opt_params.get("lookback", 60)),
         band_width=float(opt_params.get("band_width", 2.0)),
-        sl_stop=float(opt_params.get("sl_stop", 0.005)),
+        sl_stop=opt_sl,
+        tp_stop=opt_sl,  # symmetric
         eval_freq=5,
     )
 
     print(pf_holdout.stats().to_string())
     print("=" * 60)
 
+    # ── Stats comparison ──────────────────────────────────────────
     comparison = pd.DataFrame(
         {
-            "Standard (full)": pf.stats(),
             "Optimized (train)": pf_opt_train.stats(),
             "Hold-out (test)": pf_holdout.stats(),
         }
     )
     print("\n" + "=" * 60)
-    print("COMPARISON: Standard vs Optimized vs Hold-Out")
+    print("COMPARISON: Optimized vs Hold-Out")
     print("=" * 60)
     print(comparison.to_string())
     print("=" * 60)
 
-    # ── Save hold-out plots ────────────────────────────────────────
-    fig_holdout = pf_holdout.plot(
-        subplots=["cumulative_returns", "drawdowns", "underwater"]
-    )
-    fig_holdout.update_layout(title="Intraday MR — Hold-Out Test", height=900)
-    fig_holdout.write_html(f"{results_dir}/portfolio_holdout.html")
-
-    fig_monthly_holdout = plot_monthly_heatmap(
-        pf_holdout, "Intraday MR — Hold-Out Monthly Returns (%)"
-    )
-    fig_monthly_holdout.write_html(f"{results_dir}/monthly_returns_holdout.html")
-
+    # ── Save plots ────────────────────────────────────────────────
     fig_opt = pf_opt_train.plot(
         subplots=["cumulative_returns", "drawdowns", "underwater"]
     )
-    fig_opt.update_layout(title="Intraday MR — Optimized (Train)", height=900)
+    fig_opt.update_layout(
+        title="MR V1 (no leverage, sym TP=SL) — Optimized (Train)", height=900
+    )
     fig_opt.write_html(f"{results_dir}/portfolio_optimized.html")
 
     fig_monthly_opt = plot_monthly_heatmap(
-        pf_opt_train, "Intraday MR — Optimized Monthly Returns (%)"
+        pf_opt_train, "MR V1 — Optimized Monthly Returns (%)"
     )
     fig_monthly_opt.write_html(f"{results_dir}/monthly_returns_optimized.html")
 
+    fig_holdout = pf_holdout.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater"]
+    )
+    fig_holdout.update_layout(
+        title="MR V1 (no leverage, sym TP=SL) — Hold-Out Test", height=900
+    )
+    fig_holdout.write_html(f"{results_dir}/portfolio_holdout.html")
+
+    fig_monthly_holdout = plot_monthly_heatmap(
+        pf_holdout, "MR V1 — Hold-Out Monthly Returns (%)"
+    )
+    fig_monthly_holdout.write_html(f"{results_dir}/monthly_returns_holdout.html")
+
+    # ── Save summary ──────────────────────────────────────────────
+    summary_path = f"{results_dir}/summary.txt"
+    with open(summary_path, "w") as f:
+        f.write("MR V1 — No Leverage, Symmetric TP=SL\n")
+        f.write("=" * 60 + "\n\n")
+        f.write("BEST PARAMETERS (walk-forward CV)\n")
+        f.write("-" * 40 + "\n")
+        for k, v in opt_params.items():
+            f.write(f"  {k}: {v}\n")
+        f.write(f"  tp_stop: {opt_sl} (= sl_stop, symmetric)\n")
+        f.write(f"  leverage: 1.0 (fixed, no vol-targeting)\n\n")
+        f.write("TRAIN SET STATS\n")
+        f.write("-" * 40 + "\n")
+        f.write(pf_opt_train.stats().to_string() + "\n\n")
+        f.write("HOLD-OUT SET STATS\n")
+        f.write("-" * 40 + "\n")
+        f.write(pf_holdout.stats().to_string() + "\n\n")
+        f.write("COMPARISON\n")
+        f.write("-" * 40 + "\n")
+        f.write(comparison.to_string() + "\n")
+
     print(f"\nAll results saved to {results_dir}/")
+    print(f"Summary written to {summary_path}")

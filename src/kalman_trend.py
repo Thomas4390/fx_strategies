@@ -17,54 +17,18 @@ import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
 
+from utils import apply_vbt_settings, find_day_boundaries_nb, load_fx_data
+
 # ═══════════════════════════════════════════════════════════════════════
 # 0. SETTINGS
 # ═══════════════════════════════════════════════════════════════════════
 
-
-def configure_figure_for_fullscreen(fig):
-    fig.update_layout(
-        width=None,
-        height=None,
-        autosize=True,
-        margin={"l": 30, "r": 30, "t": 60, "b": 30},
-        title={"font": {"size": 20}, "x": 0.5, "xanchor": "center"},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5},
-    )
-    return fig
-
-
-vbt.settings.set("plotting.pre_show_func", configure_figure_for_fullscreen)
-vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
+apply_vbt_settings()
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # 1. NUMBA KERNELS
 # ═══════════════════════════════════════════════════════════════════════
-
-
-@njit
-def find_day_boundaries_nb(index_ns: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:
-    n = len(index_ns)
-    start_idx = np.empty(n, dtype=np.int64)
-    end_idx = np.empty(n, dtype=np.int64)
-    if n == 0:
-        return start_idx, end_idx, 0
-    day_number = vbt.dt_nb.days_nb(ts=index_ns)
-    current_day = day_number[0]
-    day_counter = 0
-    current_start = 0
-    for i in range(1, n):
-        if day_number[i] != current_day:
-            start_idx[day_counter] = current_start
-            end_idx[day_counter] = i
-            day_counter += 1
-            current_day = day_number[i]
-            current_start = i
-    start_idx[day_counter] = current_start
-    end_idx[day_counter] = n
-    day_counter += 1
-    return start_idx, end_idx, day_counter
 
 
 @njit
@@ -314,7 +278,8 @@ def run_standard_backtest(
             "eod_hour": eod_hour,
             "eod_minute": eod_minute,
         },
-        fixed_fees=0.0035,
+        slippage=0.00015,
+        fixed_fees=0.0,
         init_cash=1_000_000,
         freq="1T",
     )
@@ -418,7 +383,8 @@ def create_cv_pipeline(splitter):
                 "eod_hour": eod_hour,
                 "eod_minute": eod_minute,
             },
-            fixed_fees=0.0035,
+            slippage=0.00015,
+            fixed_fees=0.0,
             init_cash=1_000_000,
             freq="1T",
         )
@@ -493,10 +459,8 @@ if __name__ == "__main__":
     results_dir = "results/intraday_kalman"
     os.makedirs(results_dir, exist_ok=True)
 
-    print("Loading EUR-USD minute data...")
-    raw = pd.read_parquet("data/EUR-USD.parquet")
-    raw["date"] = pd.to_datetime(raw["date"])
-    raw = raw.set_index("date").sort_index()
+    print("Loading EUR-USD minute data via vbt.Data...")
+    raw, data = load_fx_data()
     raw["volume"] = 1.0
     index_ns = vbt.dt.to_ns(raw.index)
     print(f"  {len(raw)} bars: {raw.index[0]} → {raw.index[-1]}")

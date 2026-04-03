@@ -282,7 +282,7 @@ CompositeAlpha = vbt.IF(
     vol_long=252,
     ewma_span=30,
     target_vol=0.10,
-    leverage_cap=5.0,
+    leverage_cap=3.0,
     vr_low=0.8,
     vr_high=1.2,
     mom_w_low=0.20,
@@ -474,7 +474,7 @@ def optimized_pipeline(
     metric: str = "sharpe_ratio",
     fees: float = 0.00035,
     init_cash: float = 1_000_000,
-    leverage: float = 5.0,
+    leverage: float = 2.0,
     **kwargs,
 ):
     """Run the full strategy pipeline and return a single performance metric.
@@ -541,7 +541,7 @@ def run_cross_validation(
     cv_split_kwargs: dict | None = None,
     fees: float = 0.00035,
     init_cash: float = 1_000_000,
-    leverage: float = 5.0,
+    leverage: float = 2.0,
 ) -> Any:
     """Run cross-validation over a parameter grid using vbt.cv_split.
 
@@ -806,19 +806,14 @@ def save_backtest_results_to_excel(
 
 
 if __name__ == "__main__":
-    # ── Load & resample ────────────────────────────────────────────
-    print("Loading EUR-USD minute data...")
-    raw = pd.read_parquet("data/EUR-USD.parquet")
-    raw["date"] = pd.to_datetime(raw["date"])
-    raw = raw.set_index("date").sort_index()
+    from utils import load_fx_data
 
-    # FX 5pm ET convention: shift +7h then resample daily
-    raw.index = raw.index + pd.Timedelta(hours=7)
-    daily = raw.resample("D").agg(
-        {"open": "first", "high": "max", "low": "min", "close": "last"}
-    )
-    daily = daily.dropna(subset=["close"])
-    close = daily["close"]
+    # ── Load & resample (VBT Pro native) ──────────────────────────
+    print("Loading EUR-USD minute data via vbt.Data...")
+    _, data = load_fx_data(shift_hours=7)
+    data_daily = data.resample("1d")
+    daily = data_daily.get()
+    close = data_daily.close
     log_returns = np.log(close / close.shift(1))
     print(
         f"  {len(daily)} trading days: {daily.index[0].date()} → {daily.index[-1].date()}"
@@ -877,7 +872,7 @@ if __name__ == "__main__":
         upon_opposite_entry="Reverse",
         fees=0.00035,
         init_cash=1_000_000,
-        leverage=5.0,
+        leverage=2.0,
         leverage_mode="lazy",
         freq="1D",
     )
@@ -946,7 +941,7 @@ if __name__ == "__main__":
         upon_opposite_entry="Reverse",
         fees=0.00035,
         init_cash=1_000_000,
-        leverage=5.0,
+        leverage=2.0,
         leverage_mode="lazy",
         freq="1D",
     )
