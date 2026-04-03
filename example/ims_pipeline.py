@@ -6,7 +6,6 @@ from typing import Tuple
 import plotly.graph_objects as go
 
 
-
 def configure_figure_for_fullscreen(fig):
     """Configure automatiquement chaque figure pour s'adapter à la taille du browser"""
     fig.update_layout(
@@ -14,33 +13,22 @@ def configure_figure_for_fullscreen(fig):
         width=None,
         height=None,
         autosize=True,
-
         # Marges en pourcentage de la taille de l'écran
         margin=dict(l=30, r=30, t=60, b=30),
-
-        title=dict(
-            font=dict(size=20),
-            x=0.5,
-            xanchor='center'
-        ),
+        title=dict(font=dict(size=20), x=0.5, xanchor="center"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="center",
             x=0.5,
-            font=dict(size=12)
+            font=dict(size=12),
         ),
-        xaxis=dict(
-            title_font=dict(size=14),
-            tickfont=dict(size=12)
-        ),
-        yaxis=dict(
-            title_font=dict(size=14),
-            tickfont=dict(size=12)
-        )
+        xaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
+        yaxis=dict(title_font=dict(size=14), tickfont=dict(size=12)),
     )
     return fig
+
 
 vbt.settings.set("plotting.pre_show_func", configure_figure_for_fullscreen)
 vbt.settings.returns.year_freq = pd.Timedelta(hours=6.5) * 252
@@ -78,9 +66,9 @@ def find_day_boundaries_nb(index_ns: np.ndarray) -> Tuple[np.ndarray, np.ndarray
 
 @njit
 def compute_abs_move_from_open_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
 ) -> np.ndarray:
     """Compute |Close / FirstOpen − 1| for every intraday bar."""
     n = len(index_ns)
@@ -112,10 +100,10 @@ def compute_abs_move_from_open_nb(
 
 @njit
 def compute_sigma_open_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        window_size: int,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    window_size: int,
 ) -> np.ndarray:
     """Return *sigma_open*: mean(|Close − Open|) by minute‑of‑day lagged 1 bar."""
     move_open = compute_abs_move_from_open_nb(index_ns, close_minute, open_minute)
@@ -145,9 +133,9 @@ def compute_sigma_open_nb(
 
 @njit
 def compute_daily_rolling_volatility_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        window_size: int,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    window_size: int,
 ) -> np.ndarray:
     """Compute close‑to‑close rolling volatility and broadcast to minutes."""
     n = len(close_minute)
@@ -184,17 +172,17 @@ def compute_daily_rolling_volatility_nb(
         if d - 1 < rolling_std.size:
             std_val = rolling_std[d - 1]
             if start_arr[d] < end_arr[d]:
-                vol_per_minute[start_arr[d]: end_arr[d]] = std_val
+                vol_per_minute[start_arr[d] : end_arr[d]] = std_val
 
     return vol_per_minute
 
 
 @njit
 def compute_leverage_nb(
-        rolling_vol_per_minute: np.ndarray,
-        sigma_target: float,
-        max_leverage: float,
-        use_leverage: bool,
+    rolling_vol_per_minute: np.ndarray,
+    sigma_target: float,
+    max_leverage: float,
+    use_leverage: bool,
 ) -> np.ndarray:
     """Compute volatility‑targeted leverage capped at ``max_leverage``."""
     n = len(rolling_vol_per_minute)
@@ -214,13 +202,13 @@ def compute_leverage_nb(
 
 @njit
 def compute_intraday_bands_nb(
-        start_arr: np.ndarray,
-        end_arr: np.ndarray,
-        n_days: int,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        sigma_open: np.ndarray,
-        band_mult: float,
+    start_arr: np.ndarray,
+    end_arr: np.ndarray,
+    n_days: int,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    sigma_open: np.ndarray,
+    band_mult: float,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Return (upper_band, lower_band) arrays for every intraday bar."""
     n = len(close_minute)
@@ -228,7 +216,7 @@ def compute_intraday_bands_nb(
     lower_band = np.full(n, np.nan)
 
     for d in range(1, n_days):
-        if d-1 >= 0 and end_arr[d-1] > 0:
+        if d - 1 >= 0 and end_arr[d - 1] > 0:
             start = start_arr[d]
             end = end_arr[d]
 
@@ -252,18 +240,20 @@ def compute_intraday_bands_nb(
 
 @njit
 def compute_bands_nb(
-        index_ns: np.ndarray,
-        high_minute: np.ndarray,
-        low_minute: np.ndarray,
-        volume_minute: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        window_size: int,
-        band_mult: float,
-        max_leverage: float,
-        sigma_target: float,
-        use_leverage: bool,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    index_ns: np.ndarray,
+    high_minute: np.ndarray,
+    low_minute: np.ndarray,
+    volume_minute: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    window_size: int,
+    band_mult: float,
+    max_leverage: float,
+    sigma_target: float,
+    use_leverage: bool,
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]:
     """Compute all intraday indicators required by the strategy."""
     n = len(close_minute)
     if n == 0:
@@ -272,8 +262,12 @@ def compute_bands_nb(
 
     abs_move_open = compute_abs_move_from_open_nb(index_ns, close_minute, open_minute)
     sigma_open = compute_sigma_open_nb(index_ns, close_minute, open_minute, window_size)
-    rolling_vol = compute_daily_rolling_volatility_nb(index_ns, close_minute, window_size)
-    leverage = compute_leverage_nb(rolling_vol, sigma_target, max_leverage, use_leverage)
+    rolling_vol = compute_daily_rolling_volatility_nb(
+        index_ns, close_minute, window_size
+    )
+    leverage = compute_leverage_nb(
+        rolling_vol, sigma_target, max_leverage, use_leverage
+    )
 
     start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
     upper_band, lower_band = compute_intraday_bands_nb(
@@ -309,14 +303,14 @@ def compute_bands_nb(
 
 @njit
 def intraday_signal_nb(
-        c,
-        close_price_arr: np.ndarray,
-        upper_band_arr: np.ndarray,
-        lower_band_arr: np.ndarray,
-        vwap_arr: np.ndarray,
-        index_ns_arr: np.ndarray,
-        eod_exit_trigger_hour_param: np.ndarray,
-        eod_exit_trigger_minute_param: np.ndarray,
+    c,
+    close_price_arr: np.ndarray,
+    upper_band_arr: np.ndarray,
+    lower_band_arr: np.ndarray,
+    vwap_arr: np.ndarray,
+    index_ns_arr: np.ndarray,
+    eod_exit_trigger_hour_param: np.ndarray,
+    eod_exit_trigger_minute_param: np.ndarray,
 ):
     """Return a 4‑tuple (entry_long, exit_long, entry_short, exit_short)."""
     ts_ns = index_ns_arr[c.i]
@@ -331,9 +325,8 @@ def intraday_signal_nb(
     entry_short = False
     exit_short = False
 
-    is_eod_period = (
-            (cur_hour > selected_eod_hour) or
-            (cur_hour == selected_eod_hour and cur_minute >= selected_eod_minute)
+    is_eod_period = (cur_hour > selected_eod_hour) or (
+        cur_hour == selected_eod_hour and cur_minute >= selected_eod_minute
     )
 
     if is_eod_period:
@@ -350,10 +343,10 @@ def intraday_signal_nb(
         vwap_val = vbt.pf_nb.select_nb(c, vwap_arr)
 
         if (
-                np.isnan(close_px) or
-                np.isnan(up_band) or
-                np.isnan(low_band) or
-                np.isnan(vwap_val)
+            np.isnan(close_px)
+            or np.isnan(up_band)
+            or np.isnan(low_band)
+            or np.isnan(vwap_val)
         ):
             return False, False, False, False
 
@@ -382,7 +375,11 @@ def intraday_signal_nb(
 
     return False, False, False, False
 
-@vbt.parameterized(execute_kwargs=dict(chunk_len="auto", engine="threadpool"), merge_func='column_stack')
+
+@vbt.parameterized(
+    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    merge_func="column_stack",
+)
 def pipeline(
     high,
     low,
@@ -402,44 +399,41 @@ def pipeline(
     # ------------------------------------------------------------------
     # 1. Build custom indicator class (vectorbt interface factory)
     # ------------------------------------------------------------------
-    IMIBase = (
-        vbt.IF(
-            class_name="IntradayMomentumIndicator",
-            short_name="imi",
-            input_names=[
-                "index_ns",
-                "high_minute",
-                "low_minute",
-                "volume_minute",
-                "close_minute",
-                "open_minute",
-            ],
-            param_names=[
-                "window_size",
-                "band_mult",
-                "max_leverage",
-                "sigma_target",
-                "use_leverage",
-            ],
-            output_names=[
-                "upper_band",
-                "lower_band",
-                "sigma_open",
-                "abs_move_open",
-                "rolling_vol",
-                "leverage",
-                "vwap",
-            ],
-        )
-        .with_apply_func(
-            compute_bands_nb,
-            takes_1d=True,
-            window_size=window_size,
-            band_mult=band_mult,
-            max_leverage=max_leverage,
-            sigma_target=sigma_target,
-            use_leverage=use_leverage,
-        )
+    IMIBase = vbt.IF(
+        class_name="IntradayMomentumIndicator",
+        short_name="imi",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "volume_minute",
+            "close_minute",
+            "open_minute",
+        ],
+        param_names=[
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+        ],
+        output_names=[
+            "upper_band",
+            "lower_band",
+            "sigma_open",
+            "abs_move_open",
+            "rolling_vol",
+            "leverage",
+            "vwap",
+        ],
+    ).with_apply_func(
+        compute_bands_nb,
+        takes_1d=True,
+        window_size=window_size,
+        band_mult=band_mult,
+        max_leverage=max_leverage,
+        sigma_target=sigma_target,
+        use_leverage=use_leverage,
     )
 
     class IntradayMomentumIndicator(IMIBase):
@@ -451,14 +445,12 @@ def pipeline(
             fig: go.Figure | None = None,
             **layout_kwargs,
         ) -> go.Figure:
-            close = (
-                self.select_col_from_obj(self.close_minute, column).rename("Close")
+            close = self.select_col_from_obj(self.close_minute, column).rename("Close")
+            upper = self.select_col_from_obj(self.upper_band, column).rename(
+                "Upper Band"
             )
-            upper = (
-                self.select_col_from_obj(self.upper_band, column).rename("Upper Band")
-            )
-            lower = (
-                self.select_col_from_obj(self.lower_band, column).rename("Lower Band")
+            lower = self.select_col_from_obj(self.lower_band, column).rename(
+                "Lower Band"
             )
             vwap_line = self.select_col_from_obj(self.vwap, column).rename("VWAP")
 
@@ -469,7 +461,7 @@ def pipeline(
                 trace_kwargs=dict(
                     name="Close",
                     line=dict(width=2, color="blue"),
-                )
+                ),
             )
 
             # Étape 1: Tracer la bande inférieure
@@ -495,13 +487,8 @@ def pipeline(
             vwap_line.vbt.plot(
                 fig=fig,
                 trace_kwargs=dict(
-                    name="VWAP",
-                    line=dict(
-                        color="red",
-                        width=1,
-                        dash="dot"
-                    )
-                )
+                    name="VWAP", line=dict(color="red", width=1, dash="dot")
+                ),
             )
 
             fig.update_layout(**layout_kwargs)
@@ -521,7 +508,7 @@ def pipeline(
         use_leverage=use_leverage,
         jitted_loop=True,
         jitted_warmup=True,
-        execute_kwargs=dict(engine='threadpool', n_chunks='auto'),
+        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
     )
 
     pf = vbt.Portfolio.from_signals(
@@ -552,8 +539,10 @@ def pipeline(
     return pf, imi
 
 
-
-@vbt.parameterized(execute_kwargs=dict(chunk_len="auto", engine="threadpool"), merge_func='column_stack')
+@vbt.parameterized(
+    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    merge_func="column_stack",
+)
 def pipeline_parameterized(
     high,
     low,
@@ -573,44 +562,41 @@ def pipeline_parameterized(
     # ------------------------------------------------------------------
     # 1. Build custom indicator class (vectorbt interface factory)
     # ------------------------------------------------------------------
-    IMIBase = (
-        vbt.IF(
-            class_name="IntradayMomentumIndicator",
-            short_name="imi",
-            input_names=[
-                "index_ns",
-                "high_minute",
-                "low_minute",
-                "volume_minute",
-                "close_minute",
-                "open_minute",
-            ],
-            param_names=[
-                "window_size",
-                "band_mult",
-                "max_leverage",
-                "sigma_target",
-                "use_leverage",
-            ],
-            output_names=[
-                "upper_band",
-                "lower_band",
-                "sigma_open",
-                "abs_move_open",
-                "rolling_vol",
-                "leverage",
-                "vwap",
-            ],
-        )
-        .with_apply_func(
-            compute_bands_nb,
-            takes_1d=True,
-            window_size=window_size,
-            band_mult=band_mult,
-            max_leverage=max_leverage,
-            sigma_target=sigma_target,
-            use_leverage=use_leverage,
-        )
+    IMIBase = vbt.IF(
+        class_name="IntradayMomentumIndicator",
+        short_name="imi",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "volume_minute",
+            "close_minute",
+            "open_minute",
+        ],
+        param_names=[
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+        ],
+        output_names=[
+            "upper_band",
+            "lower_band",
+            "sigma_open",
+            "abs_move_open",
+            "rolling_vol",
+            "leverage",
+            "vwap",
+        ],
+    ).with_apply_func(
+        compute_bands_nb,
+        takes_1d=True,
+        window_size=window_size,
+        band_mult=band_mult,
+        max_leverage=max_leverage,
+        sigma_target=sigma_target,
+        use_leverage=use_leverage,
     )
 
     class IntradayMomentumIndicator(IMIBase):
@@ -622,14 +608,12 @@ def pipeline_parameterized(
             fig: go.Figure | None = None,
             **layout_kwargs,
         ) -> go.Figure:
-            close = (
-                self.select_col_from_obj(self.close_minute, column).rename("Close")
+            close = self.select_col_from_obj(self.close_minute, column).rename("Close")
+            upper = self.select_col_from_obj(self.upper_band, column).rename(
+                "Upper Band"
             )
-            upper = (
-                self.select_col_from_obj(self.upper_band, column).rename("Upper Band")
-            )
-            lower = (
-                self.select_col_from_obj(self.lower_band, column).rename("Lower Band")
+            lower = self.select_col_from_obj(self.lower_band, column).rename(
+                "Lower Band"
             )
             vwap_line = self.select_col_from_obj(self.vwap, column).rename("VWAP")
 
@@ -640,7 +624,7 @@ def pipeline_parameterized(
                 trace_kwargs=dict(
                     name="Close",
                     line=dict(width=2, color="blue"),
-                )
+                ),
             )
 
             # Étape 1: Tracer la bande inférieure
@@ -666,13 +650,8 @@ def pipeline_parameterized(
             vwap_line.vbt.plot(
                 fig=fig,
                 trace_kwargs=dict(
-                    name="VWAP",
-                    line=dict(
-                        color="red",
-                        width=1,
-                        dash="dot"
-                    )
-                )
+                    name="VWAP", line=dict(color="red", width=1, dash="dot")
+                ),
             )
 
             fig.update_layout(**layout_kwargs)
@@ -692,7 +671,7 @@ def pipeline_parameterized(
         use_leverage=use_leverage,
         jitted_loop=True,
         jitted_warmup=True,
-        execute_kwargs=dict(engine='threadpool', n_chunks='auto'),
+        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
     )
 
     pf = vbt.Portfolio.from_signals(
@@ -748,12 +727,13 @@ COND_VALUE_AT_RISK = 13
 # 2. FONCTION DE DISPATCH POUR LES MÉTRIQUES (NUMBA COMPATIBLE)
 # =============================================================================
 
+
 @njit(nogil=True)
 def compute_metric_nb(
-        returns,
-        metric_type,
-        ann_factor=252.0 * 390.0,
-        cutoff=0.05,
+    returns,
+    metric_type,
+    ann_factor=252.0 * 390.0,
+    cutoff=0.05,
 ):
     """
     Fonction de dispatch pour calculer différentes métriques de performance.
@@ -792,49 +772,59 @@ def compute_metric_nb(
         return vbt.ret_nb.profit_factor_nb(returns=returns)
 
     elif metric_type == VALUE_AT_RISK:
-        return -vbt.ret_nb.value_at_risk_nb(returns=returns, cutoff=cutoff)  # Négatif pour minimiser risque
+        return -vbt.ret_nb.value_at_risk_nb(
+            returns=returns, cutoff=cutoff
+        )  # Négatif pour minimiser risque
 
     elif metric_type == TAIL_RATIO:
         return vbt.ret_nb.tail_ratio_nb(returns=returns)
 
     elif metric_type == ANNUALIZED_VOLATILITY:
-        return -vbt.ret_nb.annualized_volatility_nb(returns=returns, ann_factor=ann_factor)  # Négatif pour minimiser
+        return -vbt.ret_nb.annualized_volatility_nb(
+            returns=returns, ann_factor=ann_factor
+        )  # Négatif pour minimiser
 
     elif metric_type == INFORMATION_RATIO:
         return vbt.ret_nb.information_ratio_nb(returns=returns)  # Pas d'ann_factor
 
     elif metric_type == DOWNSIDE_RISK:
-        return -vbt.ret_nb.downside_risk_nb(returns=returns, ann_factor=ann_factor)  # Négatif pour minimiser
+        return -vbt.ret_nb.downside_risk_nb(
+            returns=returns, ann_factor=ann_factor
+        )  # Négatif pour minimiser
 
     elif metric_type == COND_VALUE_AT_RISK:
-        return -vbt.ret_nb.cond_value_at_risk_nb(returns=returns, cutoff=cutoff)  # Négatif pour minimiser
+        return -vbt.ret_nb.cond_value_at_risk_nb(
+            returns=returns, cutoff=cutoff
+        )  # Négatif pour minimiser
 
     else:
         # Fallback vers total return
         return vbt.ret_nb.total_return_nb(returns=returns)
 
 
-@vbt.parameterized(execute_kwargs=dict(chunk_len="auto", engine="threadpool"), merge_func='concat')
+@vbt.parameterized(
+    execute_kwargs=dict(chunk_len="auto", engine="threadpool"), merge_func="concat"
+)
 @njit(nogil=True)
 def pipeline_nb(
-        high_arr,
-        low_arr,
-        close_arr,
-        open_arr,
-        volume_arr,
-        idx_ns,
-        window_size,
-        band_mult,
-        max_leverage,
-        sigma_target,
-        use_leverage,
-        eod_exit_trigger_hour,
-        eod_exit_trigger_minute,
-        init_cash: float = 1_000_000,
-        fixed_fees: float = 0.0035,
-        ann_factor: float = 252. * 390.,
-        cutoff: float = 0.05,
-        metric_type: int = 0
+    high_arr,
+    low_arr,
+    close_arr,
+    open_arr,
+    volume_arr,
+    idx_ns,
+    window_size,
+    band_mult,
+    max_leverage,
+    sigma_target,
+    use_leverage,
+    eod_exit_trigger_hour,
+    eod_exit_trigger_minute,
+    init_cash: float = 1_000_000,
+    fixed_fees: float = 0.0035,
+    ann_factor: float = 252.0 * 390.0,
+    cutoff: float = 0.05,
+    metric_type: int = 0,
 ):
     """
     Pipeline de cross-validation avec splitter dynamique.
@@ -842,18 +832,20 @@ def pipeline_nb(
     target_shape = close_arr.shape
 
     # Calcul des indicateurs techniques
-    upper_band, lower_band, sigma_open, abs_move_open, rolling_vol, leverage, vwap = compute_bands_nb(
-        index_ns=idx_ns,
-        close_minute=close_arr[:, 0],
-        high_minute=high_arr[:, 0],
-        low_minute=low_arr[:, 0],
-        open_minute=open_arr[:, 0],
-        volume_minute=volume_arr[:, 0],
-        window_size=window_size,
-        band_mult=band_mult,
-        max_leverage=max_leverage,
-        sigma_target=sigma_target,
-        use_leverage=use_leverage,
+    upper_band, lower_band, sigma_open, abs_move_open, rolling_vol, leverage, vwap = (
+        compute_bands_nb(
+            index_ns=idx_ns,
+            close_minute=close_arr[:, 0],
+            high_minute=high_arr[:, 0],
+            low_minute=low_arr[:, 0],
+            open_minute=open_arr[:, 0],
+            volume_minute=volume_arr[:, 0],
+            window_size=window_size,
+            band_mult=band_mult,
+            max_leverage=max_leverage,
+            sigma_target=sigma_target,
+            use_leverage=use_leverage,
+        )
     )
 
     # Configuration des arrays de sortie
@@ -884,7 +876,9 @@ def pipeline_nb(
         fixed_fees=fixed_fees,
         leverage=leverage,
         post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(target_shape, group_lens, cash_sharing=False),
+        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(
+            target_shape, group_lens, cash_sharing=False
+        ),
     )
 
     # Extraction des rendements
@@ -892,10 +886,7 @@ def pipeline_nb(
 
     # Calcul de la métrique sélectionnée
     metric_value = compute_metric_nb(
-        returns=returns,
-        metric_type=metric_type,
-        ann_factor=ann_factor,
-        cutoff=cutoff
+        returns=returns, metric_type=metric_type, ann_factor=ann_factor, cutoff=cutoff
     )
 
     return metric_value
@@ -904,6 +895,7 @@ def pipeline_nb(
 # =============================================================================
 # 3. PIPELINE GÉNÉRIQUE AVEC SÉLECTION DE MÉTRIQUE
 # =============================================================================
+
 
 def create_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **pipeline_defaults):
     """
@@ -920,46 +912,53 @@ def create_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **pipeline_defaults):
 
     # Paramètres par défaut pour la pipeline
     default_params = {
-        'init_cash': 1_000_000.,
-        'fixed_fees': 0.0035,
-        'ann_factor': 252.0 * 390.0,  # Votre valeur
-        'cutoff': 0.05,
-        'metric_type': metric_type
+        "init_cash": 1_000_000.0,
+        "fixed_fees": 0.0035,
+        "ann_factor": 252.0 * 390.0,  # Votre valeur
+        "cutoff": 0.05,
+        "metric_type": metric_type,
     }
     default_params.update(pipeline_defaults)
 
     # Créer la fonction décorée dynamiquement
     @vbt.cv_split(
         splitter=splitter,
-        takeable_args=["high_arr", "low_arr", "close_arr", "open_arr", "volume_arr", "idx_ns"],
+        takeable_args=[
+            "high_arr",
+            "low_arr",
+            "close_arr",
+            "open_arr",
+            "volume_arr",
+            "idx_ns",
+        ],
         parameterized_kwargs=dict(
             execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
-            merge_func="concat"
+            merge_func="concat",
         ),
-        return_grid='all',
+        return_grid="all",
         merge_func="concat",
         attach_bounds="index",
     )
     @njit(nogil=True)
     def cv_pipeline(
-            high_arr,
-            low_arr,
-            close_arr,
-            open_arr,
-            volume_arr,
-            idx_ns,
-            window_size,
-            band_mult,
-            max_leverage,
-            sigma_target,
-            use_leverage,
-            eod_exit_trigger_hour,
-            eod_exit_trigger_minute,
-            init_cash: float = default_params['init_cash'],
-            fixed_fees: float = default_params['fixed_fees'],
-            ann_factor: float = default_params['ann_factor'],
-            cutoff: float = default_params['cutoff'],
-            metric_type: int = default_params['metric_type']
+        high_arr,
+        low_arr,
+        close_arr,
+        open_arr,
+        volume_arr,
+        idx_ns,
+        window_size,
+        band_mult,
+        max_leverage,
+        sigma_target,
+        use_leverage,
+        eod_exit_trigger_hour,
+        eod_exit_trigger_minute,
+        init_cash: float = default_params["init_cash"],
+        fixed_fees: float = default_params["fixed_fees"],
+        ann_factor: float = default_params["ann_factor"],
+        cutoff: float = default_params["cutoff"],
+        metric_type: int = default_params["metric_type"],
     ):
         """
         Pipeline de cross-validation avec splitter dynamique.
@@ -967,7 +966,15 @@ def create_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **pipeline_defaults):
         target_shape = close_arr.shape
 
         # Calcul des indicateurs techniques
-        upper_band, lower_band, sigma_open, abs_move_open, rolling_vol, leverage, vwap = compute_bands_nb(
+        (
+            upper_band,
+            lower_band,
+            sigma_open,
+            abs_move_open,
+            rolling_vol,
+            leverage,
+            vwap,
+        ) = compute_bands_nb(
             index_ns=idx_ns,
             close_minute=close_arr[:, 0],
             high_minute=high_arr[:, 0],
@@ -1009,7 +1016,9 @@ def create_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **pipeline_defaults):
             fixed_fees=fixed_fees,
             leverage=leverage,
             post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-            in_outputs=vbt.pf_nb.init_FSInOutputs_nb(target_shape, group_lens, cash_sharing=False),
+            in_outputs=vbt.pf_nb.init_FSInOutputs_nb(
+                target_shape, group_lens, cash_sharing=False
+            ),
         )
 
         # Extraction des rendements
@@ -1020,7 +1029,7 @@ def create_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **pipeline_defaults):
             returns=returns,
             metric_type=metric_type,
             ann_factor=ann_factor,
-            cutoff=cutoff
+            cutoff=cutoff,
         )
 
         return metric_value
@@ -1045,7 +1054,7 @@ def run_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **kwargs):
     execution_params = {}
 
     # Paramètres de pipeline par défaut
-    pipeline_param_names = {'init_cash', 'fixed_fees', 'ann_factor', 'cutoff'}
+    pipeline_param_names = {"init_cash", "fixed_fees", "ann_factor", "cutoff"}
 
     for key, value in kwargs.items():
         if key in pipeline_param_names:
@@ -1055,9 +1064,7 @@ def run_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **kwargs):
 
     # Créer la pipeline
     pipeline = create_cv_pipeline(
-        splitter=splitter,
-        metric_type=metric_type,
-        **pipeline_params
+        splitter=splitter, metric_type=metric_type, **pipeline_params
     )
 
     # Exécuter la pipeline
@@ -1072,10 +1079,9 @@ def run_cv_pipeline(splitter, metric_type=TOTAL_RETURN, **kwargs):
         return results
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     data = vbt.HDFData.pull("../data/cleaned/us_tickers_verified_cleaned.h5")
-    data = data.xloc['2017-01-01':]
+    data = data.xloc["2017-01-01":]
     index_ns = vbt.dt.to_ns(data.index)
 
     print(data.data)
@@ -1089,7 +1095,7 @@ if __name__ == '__main__':
     eod_exit_trigger_hour = 15
     eod_exit_trigger_minute = 55
 
-    ticker = 'NFLX'
+    ticker = "NFLX"
 
     high = data.data[ticker].High
     low = data.data[ticker].Low
@@ -1155,7 +1161,7 @@ if __name__ == '__main__':
         ticker=ticker,
         output_dir="../reports",
         show_charts=True,
-        save_excel=True
+        save_excel=True,
     )
 
     # index_for_splitter_daily = data.resample('D').index
@@ -1232,7 +1238,3 @@ if __name__ == '__main__':
     # )
     #
     # print(f"Résultats sauvegardés dans: {excel_path}")
-
-
-
-

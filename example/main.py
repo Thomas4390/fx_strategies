@@ -2,7 +2,7 @@
 """
 Trading Strategy Cross-Validation Script
 
-This script implements an intraday momentum strategy with flexible 
+This script implements an intraday momentum strategy with flexible
 cross-validation functionality using vectorbtpro.
 """
 
@@ -14,12 +14,13 @@ from numba import njit
 import plotly.graph_objects as go
 
 # Configure pandas display options
-pd.set_option('display.max_columns', None)
+pd.set_option("display.max_columns", None)
 
 
 # ---------------------------------------------------------------------------
 # Helper functions from paste.txt (all Numba-optimized functions)
 # ---------------------------------------------------------------------------
+
 
 @njit
 def find_day_boundaries_nb(index_ns: np.ndarray) -> Tuple[np.ndarray, np.ndarray, int]:
@@ -56,9 +57,9 @@ def find_day_boundaries_nb(index_ns: np.ndarray) -> Tuple[np.ndarray, np.ndarray
 
 @njit
 def compute_abs_move_from_open_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
 ) -> np.ndarray:
     """Compute |Close / FirstOpen − 1| for every intraday bar."""
     n = len(index_ns)
@@ -91,10 +92,10 @@ def compute_abs_move_from_open_nb(
 
 @njit
 def compute_sigma_open_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        window_size: int,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    window_size: int,
 ) -> np.ndarray:
     """Return *sigma_open*: mean(|Close − Open|) by minute‑of‑day lagged 1 bar."""
     move_open = compute_abs_move_from_open_nb(index_ns, close_minute, open_minute)
@@ -123,9 +124,9 @@ def compute_sigma_open_nb(
 
 @njit
 def compute_daily_rolling_volatility_nb(
-        index_ns: np.ndarray,
-        close_minute: np.ndarray,
-        window_size: int,
+    index_ns: np.ndarray,
+    close_minute: np.ndarray,
+    window_size: int,
 ) -> np.ndarray:
     """Compute close‑to‑close rolling volatility and broadcast to minutes."""
     n = len(close_minute)
@@ -158,17 +159,17 @@ def compute_daily_rolling_volatility_nb(
     vol_per_minute = np.full(n, np.nan)
     for d in range(1, n_days):
         std_val = rolling_std[d - 1] if d - 1 < rolling_std.size else np.nan
-        vol_per_minute[start_arr[d]: end_arr[d]] = std_val
+        vol_per_minute[start_arr[d] : end_arr[d]] = std_val
 
     return vol_per_minute
 
 
 @njit
 def compute_leverage_nb(
-        rolling_vol_per_minute: np.ndarray,
-        sigma_target: float,
-        max_leverage: float,
-        use_leverage: bool,
+    rolling_vol_per_minute: np.ndarray,
+    sigma_target: float,
+    max_leverage: float,
+    use_leverage: bool,
 ) -> np.ndarray:
     """Compute volatility‑targeted leverage capped at ``max_leverage``."""
     n = len(rolling_vol_per_minute)
@@ -188,13 +189,13 @@ def compute_leverage_nb(
 
 @njit
 def compute_intraday_bands_nb(
-        start_arr: np.ndarray,
-        end_arr: np.ndarray,
-        n_days: int,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        sigma_open: np.ndarray,
-        band_mult: float,
+    start_arr: np.ndarray,
+    end_arr: np.ndarray,
+    n_days: int,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    sigma_open: np.ndarray,
+    band_mult: float,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Return (upper_band, lower_band) arrays for every intraday bar."""
     n = len(close_minute)
@@ -221,18 +222,20 @@ def compute_intraday_bands_nb(
 
 @njit
 def compute_bands_nb(
-        index_ns: np.ndarray,
-        high_minute: np.ndarray,
-        low_minute: np.ndarray,
-        volume_minute: np.ndarray,
-        close_minute: np.ndarray,
-        open_minute: np.ndarray,
-        window_size: int,
-        band_mult: float,
-        max_leverage: float,
-        sigma_target: float,
-        use_leverage: bool,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    index_ns: np.ndarray,
+    high_minute: np.ndarray,
+    low_minute: np.ndarray,
+    volume_minute: np.ndarray,
+    close_minute: np.ndarray,
+    open_minute: np.ndarray,
+    window_size: int,
+    band_mult: float,
+    max_leverage: float,
+    sigma_target: float,
+    use_leverage: bool,
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]:
     """Compute all intraday indicators required by the strategy."""
     n = len(close_minute)
     if n == 0:
@@ -241,8 +244,12 @@ def compute_bands_nb(
 
     abs_move_open = compute_abs_move_from_open_nb(index_ns, close_minute, open_minute)
     sigma_open = compute_sigma_open_nb(index_ns, close_minute, open_minute, window_size)
-    rolling_vol = compute_daily_rolling_volatility_nb(index_ns, close_minute, window_size)
-    leverage = compute_leverage_nb(rolling_vol, sigma_target, max_leverage, use_leverage)
+    rolling_vol = compute_daily_rolling_volatility_nb(
+        index_ns, close_minute, window_size
+    )
+    leverage = compute_leverage_nb(
+        rolling_vol, sigma_target, max_leverage, use_leverage
+    )
 
     start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
     upper_band, lower_band = compute_intraday_bands_nb(
@@ -278,14 +285,14 @@ def compute_bands_nb(
 
 @njit
 def intraday_signal_nb(
-        c,
-        close_price_arr: np.ndarray,
-        upper_band_arr: np.ndarray,
-        lower_band_arr: np.ndarray,
-        vwap_arr: np.ndarray,
-        index_ns_arr: np.ndarray,
-        eod_exit_trigger_hour_param: np.ndarray,
-        eod_exit_trigger_minute_param: np.ndarray,
+    c,
+    close_price_arr: np.ndarray,
+    upper_band_arr: np.ndarray,
+    lower_band_arr: np.ndarray,
+    vwap_arr: np.ndarray,
+    index_ns_arr: np.ndarray,
+    eod_exit_trigger_hour_param: np.ndarray,
+    eod_exit_trigger_minute_param: np.ndarray,
 ):
     """Return a 4‑tuple (entry_long, exit_long, entry_short, exit_short)."""
     # Extract current intraday time components
@@ -304,9 +311,8 @@ def intraday_signal_nb(
     exit_short = False
 
     # 1. EOD forced exit logic
-    is_eod_period = (
-            (cur_hour > selected_eod_hour) or
-            (cur_hour == selected_eod_hour and cur_minute >= selected_eod_minute)
+    is_eod_period = (cur_hour > selected_eod_hour) or (
+        cur_hour == selected_eod_hour and cur_minute >= selected_eod_minute
     )
 
     if is_eod_period:
@@ -327,10 +333,10 @@ def intraday_signal_nb(
 
         # Skip if any NaNs are present (data gap)
         if (
-                np.isnan(close_px) or
-                np.isnan(up_band) or
-                np.isnan(low_band) or
-                np.isnan(vwap_val)
+            np.isnan(close_px)
+            or np.isnan(up_band)
+            or np.isnan(low_band)
+            or np.isnan(vwap_val)
         ):
             return False, False, False, False
 
@@ -366,21 +372,21 @@ def intraday_signal_nb(
 
 
 def optimized_pipeline(
-        index_ns: np.ndarray,
-        high: pd.Series,
-        low: pd.Series,
-        close: pd.Series,
-        open: pd.Series,
-        volume: pd.Series,
-        window_size: int = 10,
-        band_mult: float = 1.0,
-        max_leverage: float = 4.0,
-        sigma_target: float = 0.02,
-        use_leverage: bool = False,
-        eod_exit_trigger_hour: int = 15,
-        eod_exit_trigger_minute: int = 45,
-        metric: str = 'sharpe_ratio',
-        **kwargs,  # For portfolio parameters like fixed_fees
+    index_ns: np.ndarray,
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    open: pd.Series,
+    volume: pd.Series,
+    window_size: int = 10,
+    band_mult: float = 1.0,
+    max_leverage: float = 4.0,
+    sigma_target: float = 0.02,
+    use_leverage: bool = False,
+    eod_exit_trigger_hour: int = 15,
+    eod_exit_trigger_minute: int = 45,
+    metric: str = "sharpe_ratio",
+    **kwargs,  # For portfolio parameters like fixed_fees
 ):
     """Run an optimized trading pipeline with intraday momentum strategy.
 
@@ -422,44 +428,41 @@ def optimized_pipeline(
     float or pd.Series
         The selected performance metric
     """
-    IMI = (
-        vbt.IF(
-            class_name="IntradayMomentumIndicator",
-            short_name="imi",
-            input_names=[
-                "index_ns",
-                "high_minute",
-                "low_minute",
-                "volume_minute",
-                "close_minute",
-                "open_minute",
-            ],
-            param_names=[
-                "window_size",
-                "band_mult",
-                "max_leverage",
-                "sigma_target",
-                "use_leverage",
-            ],
-            output_names=[
-                "upper_band",
-                "lower_band",
-                "sigma_open",
-                "abs_move_open",
-                "rolling_vol",
-                "leverage",
-                "vwap",
-            ],
-        )
-        .with_apply_func(
-            compute_bands_nb,
-            takes_1d=True,
-            window_size=window_size,
-            band_mult=band_mult,
-            max_leverage=max_leverage,
-            sigma_target=sigma_target,
-            use_leverage=use_leverage,
-        )
+    IMI = vbt.IF(
+        class_name="IntradayMomentumIndicator",
+        short_name="imi",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "volume_minute",
+            "close_minute",
+            "open_minute",
+        ],
+        param_names=[
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+        ],
+        output_names=[
+            "upper_band",
+            "lower_band",
+            "sigma_open",
+            "abs_move_open",
+            "rolling_vol",
+            "leverage",
+            "vwap",
+        ],
+    ).with_apply_func(
+        compute_bands_nb,
+        takes_1d=True,
+        window_size=window_size,
+        band_mult=band_mult,
+        max_leverage=max_leverage,
+        sigma_target=sigma_target,
+        use_leverage=use_leverage,
     )
 
     # Instantiate the indicator
@@ -500,86 +503,81 @@ def optimized_pipeline(
             eod_exit_trigger_minute=eod_exit_trigger_minute,
         ),
         leverage=imi.leverage.values,
-        **kwargs  # Pass kwargs (e.g., fixed_fees) to the portfolio
+        **kwargs,  # Pass kwargs (e.g., fixed_fees) to the portfolio
     )
 
     return pf.deep_getattr(metric)
 
 
 def run_pipeline(
-        minute_data: vbt.HDFData,
-        index_ns: np.ndarray,
-        window_size: int = 10,
-        band_mult: float = 1.0,
-        max_leverage: float = 4.0,
-        sigma_target: float = 0.02,
-        use_leverage: bool = False,
-        eod_exit_trigger_hour: int = 15,
-        eod_exit_trigger_minute: int = 45,
-        fixed_fees: float = 0.0035,
+    minute_data: vbt.HDFData,
+    index_ns: np.ndarray,
+    window_size: int = 10,
+    band_mult: float = 1.0,
+    max_leverage: float = 4.0,
+    sigma_target: float = 0.02,
+    use_leverage: bool = False,
+    eod_exit_trigger_hour: int = 15,
+    eod_exit_trigger_minute: int = 45,
+    fixed_fees: float = 0.0035,
 ):
     """Return (*portfolio*, *indicator*) built from intraday momentum logic."""
 
     # ------------------------------------------------------------------
     # 1. Build custom indicator class (vectorbt interface factory)
     # ------------------------------------------------------------------
-    IMIBase = (
-        vbt.IF(
-            class_name="IntradayMomentumIndicator",
-            short_name="imi",
-            input_names=[
-                "index_ns",
-                "high_minute",
-                "low_minute",
-                "volume_minute",
-                "close_minute",
-                "open_minute",
-            ],
-            param_names=[
-                "window_size",
-                "band_mult",
-                "max_leverage",
-                "sigma_target",
-                "use_leverage",
-            ],
-            output_names=[
-                "upper_band",
-                "lower_band",
-                "sigma_open",
-                "abs_move_open",
-                "rolling_vol",
-                "leverage",
-                "vwap",
-            ],
-        )
-        .with_apply_func(
-            compute_bands_nb,
-            takes_1d=True,
-            window_size=window_size,
-            band_mult=band_mult,
-            max_leverage=max_leverage,
-            sigma_target=sigma_target,
-            use_leverage=use_leverage,
-        )
+    IMIBase = vbt.IF(
+        class_name="IntradayMomentumIndicator",
+        short_name="imi",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "volume_minute",
+            "close_minute",
+            "open_minute",
+        ],
+        param_names=[
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+        ],
+        output_names=[
+            "upper_band",
+            "lower_band",
+            "sigma_open",
+            "abs_move_open",
+            "rolling_vol",
+            "leverage",
+            "vwap",
+        ],
+    ).with_apply_func(
+        compute_bands_nb,
+        takes_1d=True,
+        window_size=window_size,
+        band_mult=band_mult,
+        max_leverage=max_leverage,
+        sigma_target=sigma_target,
+        use_leverage=use_leverage,
     )
 
     class IntradayMomentumIndicator(IMIBase):  # type: ignore[misc]
         """Indicator subclass adding a convenience Plotly chart."""
 
         def plot(
-                self,
-                column: tuple | str | int | None = None,
-                fig: go.Figure | None = None,
-                **layout_kwargs,
+            self,
+            column: tuple | str | int | None = None,
+            fig: go.Figure | None = None,
+            **layout_kwargs,
         ) -> go.Figure:
-            close = (
-                self.select_col_from_obj(self.close_minute, column).rename("Close")
+            close = self.select_col_from_obj(self.close_minute, column).rename("Close")
+            upper = self.select_col_from_obj(self.upper_band, column).rename(
+                "Upper Band"
             )
-            upper = (
-                self.select_col_from_obj(self.upper_band, column).rename("Upper Band")
-            )
-            lower = (
-                self.select_col_from_obj(self.lower_band, column).rename("Lower Band")
+            lower = self.select_col_from_obj(self.lower_band, column).rename(
+                "Lower Band"
             )
             vwap_line = self.select_col_from_obj(self.vwap, column).rename("VWAP")
 
@@ -590,7 +588,7 @@ def run_pipeline(
                 trace_kwargs=dict(
                     name="Close",
                     line=dict(width=2, color="blue"),
-                )
+                ),
             )
 
             # Étape 1: Tracer la bande inférieure (ligne grise, sans remplissage "tonexty" ici)
@@ -619,13 +617,8 @@ def run_pipeline(
             vwap_line.vbt.plot(
                 fig=fig,
                 trace_kwargs=dict(
-                    name="VWAP",
-                    line=dict(
-                        color="red",
-                        width=1,
-                        dash="dot"
-                    )
-                )
+                    name="VWAP", line=dict(color="red", width=1, dash="dot")
+                ),
             )
 
             fig.update_layout(**layout_kwargs)
@@ -646,7 +639,7 @@ def run_pipeline(
         use_leverage=use_leverage,
         jitted_loop=True,
         jitted_warmup=True,
-        execute_kwargs=dict(engine='threadpool', n_chunks='auto'),
+        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
     )
 
     # ------------------------------------------------------------------
@@ -681,20 +674,20 @@ def run_pipeline(
 
 
 def run_pipeline_single(
-        index_ns: np.ndarray,
-        high: pd.Series,
-        low: pd.Series,
-        close: pd.Series,
-        open: pd.Series,
-        volume: pd.Series,
-        window_size: int = 10,
-        band_mult: float = 1.0,
-        max_leverage: float = 4.0,
-        sigma_target: float = 0.02,
-        use_leverage: bool = False,
-        eod_exit_trigger_hour: int = 15,
-        eod_exit_trigger_minute: int = 45,
-        fixed_fees: float = 0.0035,
+    index_ns: np.ndarray,
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    open: pd.Series,
+    volume: pd.Series,
+    window_size: int = 10,
+    band_mult: float = 1.0,
+    max_leverage: float = 4.0,
+    sigma_target: float = 0.02,
+    use_leverage: bool = False,
+    eod_exit_trigger_hour: int = 15,
+    eod_exit_trigger_minute: int = 45,
+    fixed_fees: float = 0.0035,
 ):
     """Run pipeline for a single asset using individual Series.
 
@@ -737,63 +730,58 @@ def run_pipeline_single(
     # ------------------------------------------------------------------
     # 1. Build custom indicator class (vectorbt interface factory)
     # ------------------------------------------------------------------
-    IMIBase = (
-        vbt.IF(
-            class_name="IntradayMomentumIndicator",
-            short_name="imi",
-            input_names=[
-                "index_ns",
-                "high_minute",
-                "low_minute",
-                "volume_minute",
-                "close_minute",
-                "open_minute",
-            ],
-            param_names=[
-                "window_size",
-                "band_mult",
-                "max_leverage",
-                "sigma_target",
-                "use_leverage",
-            ],
-            output_names=[
-                "upper_band",
-                "lower_band",
-                "sigma_open",
-                "abs_move_open",
-                "rolling_vol",
-                "leverage",
-                "vwap",
-            ],
-        )
-        .with_apply_func(
-            compute_bands_nb,
-            takes_1d=True,
-            window_size=window_size,
-            band_mult=band_mult,
-            max_leverage=max_leverage,
-            sigma_target=sigma_target,
-            use_leverage=use_leverage,
-        )
+    IMIBase = vbt.IF(
+        class_name="IntradayMomentumIndicator",
+        short_name="imi",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "volume_minute",
+            "close_minute",
+            "open_minute",
+        ],
+        param_names=[
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+        ],
+        output_names=[
+            "upper_band",
+            "lower_band",
+            "sigma_open",
+            "abs_move_open",
+            "rolling_vol",
+            "leverage",
+            "vwap",
+        ],
+    ).with_apply_func(
+        compute_bands_nb,
+        takes_1d=True,
+        window_size=window_size,
+        band_mult=band_mult,
+        max_leverage=max_leverage,
+        sigma_target=sigma_target,
+        use_leverage=use_leverage,
     )
 
     class IntradayMomentumIndicator(IMIBase):  # type: ignore[misc]
         """Indicator subclass adding a convenience Plotly chart."""
 
         def plot(
-                self,
-                column: tuple | str | int | None = None,
-                fig: go.Figure | None = None,
-                **layout_kwargs,
+            self,
+            column: tuple | str | int | None = None,
+            fig: go.Figure | None = None,
+            **layout_kwargs,
         ) -> go.Figure:
-            close = (
-                self.select_col_from_obj(self.close_minute, column).rename("Close")
+            close = self.select_col_from_obj(self.close_minute, column).rename("Close")
+            upper = self.select_col_from_obj(self.upper_band, column).rename(
+                "Upper Band"
             )
-            upper = (
-                self.select_col_from_obj(self.upper_band, column).rename("Upper Band")
-            )
-            lower = (
-                self.select_col_from_obj(self.lower_band, column).rename("Lower Band")
+            lower = self.select_col_from_obj(self.lower_band, column).rename(
+                "Lower Band"
             )
             vwap_line = self.select_col_from_obj(self.vwap, column).rename("VWAP")
 
@@ -804,7 +792,7 @@ def run_pipeline_single(
                 trace_kwargs=dict(
                     name="Close",
                     line=dict(width=2, color="blue"),
-                )
+                ),
             )
 
             # Étape 1: Tracer la bande inférieure (ligne grise, sans remplissage "tonexty" ici)
@@ -833,13 +821,8 @@ def run_pipeline_single(
             vwap_line.vbt.plot(
                 fig=fig,
                 trace_kwargs=dict(
-                    name="VWAP",
-                    line=dict(
-                        color="red",
-                        width=1,
-                        dash="dot"
-                    )
-                )
+                    name="VWAP", line=dict(color="red", width=1, dash="dot")
+                ),
             )
 
             fig.update_layout(**layout_kwargs)
@@ -860,7 +843,7 @@ def run_pipeline_single(
         use_leverage=use_leverage,
         jitted_loop=True,
         jitted_warmup=True,
-        execute_kwargs=dict(engine='threadpool', n_chunks='auto'),
+        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
     )
 
     # ------------------------------------------------------------------
@@ -895,16 +878,16 @@ def run_pipeline_single(
 
 
 def run_backtest(
-        minute_df: vbt.HDFData,
-        ticker: str,
-        window_size: int = 10,
-        band_mult: float = 1.0,
-        max_leverage: float = 4.0,
-        sigma_target: float = 0.02,
-        use_leverage: bool = False,
-        eod_exit_trigger_hour: int = 15,
-        eod_exit_trigger_minute: int = 45,
-        fixed_fees: float = 0.0035,
+    minute_df: vbt.HDFData,
+    ticker: str,
+    window_size: int = 10,
+    band_mult: float = 1.0,
+    max_leverage: float = 4.0,
+    sigma_target: float = 0.02,
+    use_leverage: bool = False,
+    eod_exit_trigger_hour: int = 15,
+    eod_exit_trigger_minute: int = 45,
+    fixed_fees: float = 0.0035,
 ) -> Tuple[vbt.Portfolio, Any]:
     """Run a backtest for a single set of parameters.
 
@@ -942,11 +925,11 @@ def run_backtest(
     idx_ns = vbt.dt.to_ns(minute_df.index)
 
     # Extract data series for the ticker
-    high = minute_df.data[ticker]['High']
-    low = minute_df.data[ticker]['Low']
-    close = minute_df.data[ticker]['Close']
-    open_price = minute_df.data[ticker]['Open']
-    volume = minute_df.data[ticker]['Volume']
+    high = minute_df.data[ticker]["High"]
+    low = minute_df.data[ticker]["Low"]
+    close = minute_df.data[ticker]["Close"]
+    open_price = minute_df.data[ticker]["Open"]
+    volume = minute_df.data[ticker]["Volume"]
 
     # Run the pipeline for a single asset
     pf, imi = run_pipeline_single(
@@ -970,14 +953,14 @@ def run_backtest(
 
 
 def run_cross_validation(
-        minute_df: vbt.HDFData,
-        ticker: str,
-        param_grid: Dict[str, Union[List, vbt.Param]],
-        metric: str = 'total_return',
-        cv_split_kwargs: Optional[Dict] = None,
-        fixed_fees: float = 0.0035,
-        attach_bounds: str = 'index',
-        **additional_kwargs
+    minute_df: vbt.HDFData,
+    ticker: str,
+    param_grid: Dict[str, Union[List, vbt.Param]],
+    metric: str = "total_return",
+    cv_split_kwargs: Optional[Dict] = None,
+    fixed_fees: float = 0.0035,
+    attach_bounds: str = "index",
+    **additional_kwargs,
 ) -> Union[Any, Tuple[Any, Any]]:
     """Run cross-validation for the trading strategy with flexible parameters.
 
@@ -1024,10 +1007,10 @@ def run_cross_validation(
     default_cv_kwargs = {
         "splitter": "from_ranges",
         "splitter_kwargs": dict(
-            every='M',  # Monthly split
+            every="M",  # Monthly split
             split=0.5,  # 50% train, 50% test
-            set_labels=['train', 'test'],
-        )
+            set_labels=["train", "test"],
+        ),
     }
 
     # Update with user-provided kwargs if any
@@ -1038,20 +1021,20 @@ def run_cross_validation(
     cv_pipeline = vbt.cv_split(
         optimized_pipeline,
         **default_cv_kwargs,
-        takeable_args=['index_ns', 'high', 'low', 'close', 'open', 'volume'],
+        takeable_args=["index_ns", "high", "low", "close", "open", "volume"],
         parameterized_kwargs=dict(
-            engine='threadpool',
-            chunk_len='auto',
+            engine="threadpool",
+            chunk_len="auto",
         ),
-        merge_func='concat',
+        merge_func="concat",
     )
 
     # Extract data for the specified ticker from the HDF container
-    high = minute_df.data[ticker]['High']
-    low = minute_df.data[ticker]['Low']
-    close = minute_df.data[ticker]['Close']
-    open_price = minute_df.data[ticker]['Open']
-    volume = minute_df.data[ticker]['Volume']
+    high = minute_df.data[ticker]["High"]
+    low = minute_df.data[ticker]["Low"]
+    close = minute_df.data[ticker]["Close"]
+    open_price = minute_df.data[ticker]["Open"]
+    volume = minute_df.data[ticker]["Volume"]
 
     # Create a wrapper for proper data structure
     wrapper = minute_df.symbol_wrapper
@@ -1073,18 +1056,18 @@ def run_cross_validation(
         fixed_fees=fixed_fees,
         attach_bounds=attach_bounds,
         _merge_kwargs=dict(wrapper=wrapper),
-        _return_grid='all',  # Pass the return_grid parameter directly
+        _return_grid="all",  # Pass the return_grid parameter directly
         _index=minute_df.index,
         **param_grid,
-        **additional_kwargs
+        **additional_kwargs,
     )
 
     return result
 
 
 def extract_best_parameters(
-        cv_result: Union[pd.Series, Tuple[pd.Series, pd.Series]],
-        param_names: List[str] = None
+    cv_result: Union[pd.Series, Tuple[pd.Series, pd.Series]],
+    param_names: List[str] = None,
 ) -> Dict[str, Any]:
     """Extract best parameters from cross-validation results.
 
@@ -1104,8 +1087,15 @@ def extract_best_parameters(
     """
     # Default parameter names to look for if not specified
     if param_names is None:
-        param_names = ['window_size', 'band_mult', 'max_leverage', 'sigma_target',
-                       'use_leverage', 'eod_exit_trigger_hour', 'eod_exit_trigger_minute']
+        param_names = [
+            "window_size",
+            "band_mult",
+            "max_leverage",
+            "sigma_target",
+            "use_leverage",
+            "eod_exit_trigger_hour",
+            "eod_exit_trigger_minute",
+        ]
 
     # If input is a tuple, extract the best_perf component
     if isinstance(cv_result, tuple) and len(cv_result) >= 2:
@@ -1114,8 +1104,10 @@ def extract_best_parameters(
         best_perf = cv_result
 
     # Make sure we're working with a Series that has a MultiIndex
-    if not isinstance(best_perf, pd.Series) or not hasattr(best_perf, 'index'):
-        raise ValueError("Input must be a pandas Series with an index containing parameter values")
+    if not isinstance(best_perf, pd.Series) or not hasattr(best_perf, "index"):
+        raise ValueError(
+            "Input must be a pandas Series with an index containing parameter values"
+        )
 
     # Extract parameters from the MultiIndex
     best_params = {}
@@ -1150,13 +1142,13 @@ def extract_best_parameters(
     # If no parameters were found, provide defaults
     if not best_params:
         defaults = {
-            'window_size': 10,
-            'band_mult': 1.0,
-            'max_leverage': 4.0,
-            'sigma_target': 0.02,
-            'use_leverage': False,
-            'eod_exit_trigger_hour': 15,
-            'eod_exit_trigger_minute': 45
+            "window_size": 10,
+            "band_mult": 1.0,
+            "max_leverage": 4.0,
+            "sigma_target": 0.02,
+            "use_leverage": False,
+            "eod_exit_trigger_hour": 15,
+            "eod_exit_trigger_minute": 45,
         }
 
         for param in param_names:
@@ -1166,14 +1158,14 @@ def extract_best_parameters(
 
 
 def save_backtest_results_to_excel(
-        ticker: str,
-        pf: vbt.Portfolio,
-        pf_opt: vbt.Portfolio,
-        best_perf: pd.Series,
-        standard_params: Dict[str, Any],
-        optimal_params: Dict[str, Any],
-        metric: str = 'total_return',
-        file_path: str = None
+    ticker: str,
+    pf: vbt.Portfolio,
+    pf_opt: vbt.Portfolio,
+    best_perf: pd.Series,
+    standard_params: Dict[str, Any],
+    optimal_params: Dict[str, Any],
+    metric: str = "total_return",
+    file_path: str = None,
 ):
     """
     Save backtest results to a nicely formatted Excel file.
@@ -1206,7 +1198,7 @@ def save_backtest_results_to_excel(
 
     # Set default file path if not provided
     if file_path is None:
-        file_path = f'../data/results/{ticker}_backtest_results.xlsx'
+        file_path = f"../data/results/{ticker}_backtest_results.xlsx"
 
     # Create output directory if it doesn't exist
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -1228,38 +1220,44 @@ def save_backtest_results_to_excel(
     normal_font = Font(size=10)
 
     thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
     )
 
-    header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
-    param_fill = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
+    )
+    param_fill = PatternFill(
+        start_color="E2EFDA", end_color="E2EFDA", fill_type="solid"
+    )
 
     # ---- Standard Backtest Section ----
     # Add section header
     row = 4
     ws1.cell(row, 1, "Standard Backtest").font = header_font
-    ws1.cell(row, 1).alignment = Alignment(horizontal='left')
+    ws1.cell(row, 1).alignment = Alignment(horizontal="left")
     ws1.cell(row, 1).fill = header_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     # Add parameters
     row += 1
     ws1.cell(row, 1, "Parameters:").font = subheader_font
     ws1.cell(row, 1).fill = param_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     row += 1
-    params_df = pd.DataFrame({
-        'Parameter': list(standard_params.keys()),
-        'Value': list(standard_params.values())
-    })
+    params_df = pd.DataFrame(
+        {
+            "Parameter": list(standard_params.keys()),
+            "Value": list(standard_params.values()),
+        }
+    )
 
     for r_idx, (_, r) in enumerate(params_df.iterrows(), row):
-        ws1.cell(r_idx, 1, r['Parameter']).font = normal_font
-        ws1.cell(r_idx, 2, str(r['Value'])).font = normal_font
+        ws1.cell(r_idx, 1, r["Parameter"]).font = normal_font
+        ws1.cell(r_idx, 2, str(r["Value"])).font = normal_font
         ws1.cell(r_idx, 1).border = thin_border
         ws1.cell(r_idx, 2).border = thin_border
 
@@ -1268,11 +1266,11 @@ def save_backtest_results_to_excel(
     # Add stats
     ws1.cell(row, 1, "Performance Metrics:").font = subheader_font
     ws1.cell(row, 1).fill = header_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     row += 1
     stats_df = pf.stats().reset_index()
-    stats_df.columns = ['Metric', 'Value']
+    stats_df.columns = ["Metric", "Value"]
 
     # Highlight the optimized metric in the stats
     for r_idx, (_, r) in enumerate(stats_df.iterrows(), row):
@@ -1280,12 +1278,14 @@ def save_backtest_results_to_excel(
         cell_fill = None
 
         # If this is the metric that was optimized, highlight it
-        if metric.lower() in r['Metric'].lower():
+        if metric.lower() in r["Metric"].lower():
             cell_font = Font(size=10, bold=True)
-            cell_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+            cell_fill = PatternFill(
+                start_color="FFEB9C", end_color="FFEB9C", fill_type="solid"
+            )
 
-        ws1.cell(r_idx, 1, r['Metric']).font = cell_font
-        ws1.cell(r_idx, 2, str(r['Value'])).font = cell_font
+        ws1.cell(r_idx, 1, r["Metric"]).font = cell_font
+        ws1.cell(r_idx, 2, str(r["Value"])).font = cell_font
 
         if cell_fill:
             ws1.cell(r_idx, 1).fill = cell_fill
@@ -1299,25 +1299,27 @@ def save_backtest_results_to_excel(
     # ---- Optimized Backtest Section ----
     # Add section header
     ws1.cell(row, 1, f"Optimized Backtest (for {metric})").font = header_font
-    ws1.cell(row, 1).alignment = Alignment(horizontal='left')
+    ws1.cell(row, 1).alignment = Alignment(horizontal="left")
     ws1.cell(row, 1).fill = header_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     # Add parameters
     row += 1
     ws1.cell(row, 1, "Optimal Parameters:").font = subheader_font
     ws1.cell(row, 1).fill = param_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     row += 1
-    opt_params_df = pd.DataFrame({
-        'Parameter': list(optimal_params.keys()),
-        'Value': list(optimal_params.values())
-    })
+    opt_params_df = pd.DataFrame(
+        {
+            "Parameter": list(optimal_params.keys()),
+            "Value": list(optimal_params.values()),
+        }
+    )
 
     for r_idx, (_, r) in enumerate(opt_params_df.iterrows(), row):
-        ws1.cell(r_idx, 1, r['Parameter']).font = normal_font
-        ws1.cell(r_idx, 2, str(r['Value'])).font = normal_font
+        ws1.cell(r_idx, 1, r["Parameter"]).font = normal_font
+        ws1.cell(r_idx, 2, str(r["Value"])).font = normal_font
         ws1.cell(r_idx, 1).border = thin_border
         ws1.cell(r_idx, 2).border = thin_border
 
@@ -1326,11 +1328,11 @@ def save_backtest_results_to_excel(
     # Add stats
     ws1.cell(row, 1, "Performance Metrics:").font = subheader_font
     ws1.cell(row, 1).fill = header_fill
-    ws1.merge_cells(f'A{row}:D{row}')
+    ws1.merge_cells(f"A{row}:D{row}")
 
     row += 1
     opt_stats_df = pf_opt.stats().reset_index()
-    opt_stats_df.columns = ['Metric', 'Value']
+    opt_stats_df.columns = ["Metric", "Value"]
 
     # Highlight the optimized metric in the stats
     for r_idx, (_, r) in enumerate(opt_stats_df.iterrows(), row):
@@ -1338,12 +1340,14 @@ def save_backtest_results_to_excel(
         cell_fill = None
 
         # If this is the metric that was optimized, highlight it
-        if metric.lower() in r['Metric'].lower():
+        if metric.lower() in r["Metric"].lower():
             cell_font = Font(size=10, bold=True)
-            cell_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+            cell_fill = PatternFill(
+                start_color="FFEB9C", end_color="FFEB9C", fill_type="solid"
+            )
 
-        ws1.cell(r_idx, 1, r['Metric']).font = cell_font
-        ws1.cell(r_idx, 2, str(r['Value'])).font = cell_font
+        ws1.cell(r_idx, 1, r["Metric"]).font = cell_font
+        ws1.cell(r_idx, 2, str(r["Value"])).font = cell_font
 
         if cell_fill:
             ws1.cell(r_idx, 1).fill = cell_fill
@@ -1360,7 +1364,9 @@ def save_backtest_results_to_excel(
     ws2 = wb.create_sheet(title="Cross-Validation Results")
 
     # Add title
-    ws2.cell(1, 1, f"Cross-Validation Results for {ticker}").font = Font(size=16, bold=True)
+    ws2.cell(1, 1, f"Cross-Validation Results for {ticker}").font = Font(
+        size=16, bold=True
+    )
     ws2.cell(2, 1, f"Optimized for: {metric}").font = Font(size=12, italic=True)
 
     # Prepare the data - convert best_perf to DataFrame for easier handling
@@ -1369,10 +1375,10 @@ def save_backtest_results_to_excel(
         cv_results_df = best_perf.reset_index()
     else:
         # If it's not a MultiIndex, just convert to DataFrame
-        cv_results_df = best_perf.to_frame(name='Performance').reset_index()
+        cv_results_df = best_perf.to_frame(name="Performance").reset_index()
 
     # Rename the last column to the metric name
-    if cv_results_df.columns[-1] == 0 or cv_results_df.columns[-1] == 'Performance':
+    if cv_results_df.columns[-1] == 0 or cv_results_df.columns[-1] == "Performance":
         cv_results_df.rename(columns={cv_results_df.columns[-1]: metric}, inplace=True)
 
     # Add data
@@ -1403,7 +1409,7 @@ if __name__ == "__main__":
     idx_ns = vbt.dt.to_ns(minute_df.index)
 
     # Set the optimization metric
-    optimization_metric = 'sharpe_ratio'
+    optimization_metric = "sharpe_ratio"
 
     # Example 1: Run a simple backtest
 
@@ -1413,37 +1419,37 @@ if __name__ == "__main__":
 
     # Define standard parameters
     standard_params = {
-        'window_size': 14,
-        'band_mult': 1.0,
-        'max_leverage': 1.0,
-        'sigma_target': 0.02,
-        'use_leverage': True,
-        'eod_exit_trigger_hour': 15,
-        'eod_exit_trigger_minute': 59,
-        'fixed_fees': 0.0035
+        "window_size": 14,
+        "band_mult": 1.0,
+        "max_leverage": 1.0,
+        "sigma_target": 0.02,
+        "use_leverage": True,
+        "eod_exit_trigger_hour": 15,
+        "eod_exit_trigger_minute": 59,
+        "fixed_fees": 0.0035,
     }
 
-    pf, imi = run_backtest(
-        minute_df=minute_df,
-        ticker=ticker,
-        **standard_params
-    )
+    pf, imi = run_backtest(minute_df=minute_df, ticker=ticker, **standard_params)
 
     print(pf.stats())
     print(imi.wrapper.columns)
-    date_slice = slice('2024-04-01', '2024-04-30')
+    date_slice = slice("2024-04-01", "2024-04-30")
     fig = imi.xloc[date_slice].plot()
     pf.xloc[date_slice].plot_trade_signals(fig=fig).show()
 
     # Example 2: Run cross-validation to find optimal parameters
     print("\nRunning cross-validation to find optimal parameters...")
     param_grid = {
-        'window_size': vbt.Param(list(range(5, 30, 1))),  # Test window sizes from 10 to 45
-        'band_mult': vbt.Param(np.linspace(start=0.5, stop=2, num=10)),  # Test different band multipliers
-        'max_leverage': 4.0,
-        'use_leverage': False,
-        'eod_exit_trigger_hour': 15,
-        'eod_exit_trigger_minute': 45
+        "window_size": vbt.Param(
+            list(range(5, 30, 1))
+        ),  # Test window sizes from 10 to 45
+        "band_mult": vbt.Param(
+            np.linspace(start=0.5, stop=2, num=10)
+        ),  # Test different band multipliers
+        "max_leverage": 4.0,
+        "use_leverage": False,
+        "eod_exit_trigger_hour": 15,
+        "eod_exit_trigger_minute": 45,
     }
 
     # Run cross-validation
@@ -1452,7 +1458,7 @@ if __name__ == "__main__":
         ticker=ticker,
         param_grid=param_grid,
         metric=optimization_metric,
-        fixed_fees=0.0035
+        fixed_fees=0.0035,
     )
 
     print(f"Grid Perf is: {grid_perf}")
@@ -1467,29 +1473,23 @@ if __name__ == "__main__":
 
     # Create optimal parameters dictionary
     optimal_params = {
-        'window_size': best_params.get('window_size', 10),
-        'band_mult': best_params.get('band_mult', 1.0),
-        'max_leverage': 4.0,
-        'sigma_target': 0.02,
-        'use_leverage': False,
-        'eod_exit_trigger_hour': 15,
-        'eod_exit_trigger_minute': 45,
-        'fixed_fees': 0.0035
+        "window_size": best_params.get("window_size", 10),
+        "band_mult": best_params.get("band_mult", 1.0),
+        "max_leverage": 4.0,
+        "sigma_target": 0.02,
+        "use_leverage": False,
+        "eod_exit_trigger_hour": 15,
+        "eod_exit_trigger_minute": 45,
+        "fixed_fees": 0.0035,
     }
 
     # Run the optimized backtest
-    pf_opt, imi_opt = run_backtest(
-        minute_df=minute_df,
-        ticker=ticker,
-        **optimal_params
-    )
+    pf_opt, imi_opt = run_backtest(minute_df=minute_df, ticker=ticker, **optimal_params)
 
     print(pf_opt.stats())
 
     fig_heatmap = grid_perf.vbt.heatmap(
-        x_level='window_size',
-        y_level='band_mult',
-        slider_level='split'
+        x_level="window_size", y_level="band_mult", slider_level="split"
     )
 
     fig_heatmap.show()
@@ -1503,5 +1503,5 @@ if __name__ == "__main__":
         standard_params=standard_params,
         optimal_params=optimal_params,
         metric=optimization_metric,
-        file_path=f'../data/results/{ticker}_backtest_results.xlsx'
+        file_path=f"../data/results/{ticker}_backtest_results.xlsx",
     )

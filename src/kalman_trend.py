@@ -10,7 +10,6 @@ Full-Numba kernels + VBT PRO pipeline:
 """
 
 import os
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,19 +17,22 @@ import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
 
-
 # ═══════════════════════════════════════════════════════════════════════
 # 0. SETTINGS
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def configure_figure_for_fullscreen(fig):
     fig.update_layout(
-        width=None, height=None, autosize=True,
-        margin=dict(l=30, r=30, t=60, b=30),
-        title=dict(font=dict(size=20), x=0.5, xanchor="center"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        width=None,
+        height=None,
+        autosize=True,
+        margin={"l": 30, "r": 30, "t": 60, "b": 30},
+        title={"font": {"size": 20}, "x": 0.5, "xanchor": "center"},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5},
     )
     return fig
+
 
 vbt.settings.set("plotting.pre_show_func", configure_figure_for_fullscreen)
 vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
@@ -40,8 +42,9 @@ vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
 # 1. NUMBA KERNELS
 # ═══════════════════════════════════════════════════════════════════════
 
+
 @njit
-def find_day_boundaries_nb(index_ns: np.ndarray) -> Tuple[np.ndarray, np.ndarray, int]:
+def find_day_boundaries_nb(index_ns: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:
     n = len(index_ns)
     start_idx = np.empty(n, dtype=np.int64)
     end_idx = np.empty(n, dtype=np.int64)
@@ -69,7 +72,7 @@ def kalman_filter_1d_nb(
     close: np.ndarray,
     process_var: float,
     measurement_var: float,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Scalar 2-state Kalman filter: [price, velocity]."""
     n = len(close)
     kf_price = np.full(n, np.nan)
@@ -140,13 +143,17 @@ def compute_intraday_kalman_indicators_nb(
     measurement_var: float,
     ema_fast: int,
     ema_slow: int,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # Kalman filter
     kf_price, kf_velocity = kalman_filter_1d_nb(close, process_var, measurement_var)
 
     # EMA fast/slow on Kalman price
-    ema_fast_line = vbt.generic.nb.ewm_mean_1d_nb(kf_price, ema_fast, minp=1, adjust=True)
-    ema_slow_line = vbt.generic.nb.ewm_mean_1d_nb(kf_price, ema_slow, minp=1, adjust=True)
+    ema_fast_line = vbt.generic.nb.ewm_mean_1d_nb(
+        kf_price, ema_fast, minp=1, adjust=True
+    )
+    ema_slow_line = vbt.generic.nb.ewm_mean_1d_nb(
+        kf_price, ema_slow, minp=1, adjust=True
+    )
 
     # VWAP
     start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
@@ -159,6 +166,7 @@ def compute_intraday_kalman_indicators_nb(
 # ═══════════════════════════════════════════════════════════════════════
 # 2. SIGNAL FUNCTION
 # ═══════════════════════════════════════════════════════════════════════
+
 
 @njit
 def intraday_kalman_signal_nb(
@@ -180,7 +188,9 @@ def intraday_kalman_signal_nb(
     eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
 
     # EOD forced exit
-    is_eod = (cur_hour > eod_hour) or (cur_hour == eod_hour and cur_minute >= eod_minute)
+    is_eod = (cur_hour > eod_hour) or (
+        cur_hour == eod_hour and cur_minute >= eod_minute
+    )
     if is_eod:
         el = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
         es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
@@ -196,7 +206,13 @@ def intraday_kalman_signal_nb(
     vel = vbt.pf_nb.select_nb(c, velocity_arr)
     vw = vbt.pf_nb.select_nb(c, vwap_arr)
 
-    if np.isnan(px) or np.isnan(ef) or np.isnan(es_val) or np.isnan(vel) or np.isnan(vw):
+    if (
+        np.isnan(px)
+        or np.isnan(ef)
+        or np.isnan(es_val)
+        or np.isnan(vel)
+        or np.isnan(vw)
+    ):
         return False, False, False, False
 
     in_long = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
@@ -210,9 +226,8 @@ def intraday_kalman_signal_nb(
     elif in_long:
         if ef < es_val or vel < 0.0:
             return False, True, False, False
-    elif in_short:
-        if ef > es_val or vel > 0.0:
-            return False, False, False, True
+    elif in_short and (ef > es_val or vel > 0.0):
+        return False, False, False, True
 
     return False, False, False, False
 
@@ -221,47 +236,87 @@ def intraday_kalman_signal_nb(
 # 3. STANDARD BACKTEST
 # ═══════════════════════════════════════════════════════════════════════
 
-def run_standard_backtest(raw, index_ns, process_var=0.001, measurement_var=1.0,
-                          ema_fast=100, ema_slow=500, eod_hour=21, eod_minute=0):
+
+def run_standard_backtest(
+    raw,
+    index_ns,
+    process_var=0.001,
+    measurement_var=1.0,
+    ema_fast=100,
+    ema_slow=500,
+    eod_hour=21,
+    eod_minute=0,
+):
     IKT = vbt.IF(
-        class_name="IntradayKalman", short_name="ikt",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute", "volume_minute"],
+        class_name="IntradayKalman",
+        short_name="ikt",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+            "volume_minute",
+        ],
         param_names=["process_var", "measurement_var", "ema_fast", "ema_slow"],
-        output_names=["kalman_price", "kalman_velocity", "ema_fast_line", "ema_slow_line", "vwap"],
+        output_names=[
+            "kalman_price",
+            "kalman_velocity",
+            "ema_fast_line",
+            "ema_slow_line",
+            "vwap",
+        ],
     ).with_apply_func(
-        compute_intraday_kalman_indicators_nb, takes_1d=True,
-        process_var=process_var, measurement_var=measurement_var,
-        ema_fast=ema_fast, ema_slow=ema_slow,
+        compute_intraday_kalman_indicators_nb,
+        takes_1d=True,
+        process_var=process_var,
+        measurement_var=measurement_var,
+        ema_fast=ema_fast,
+        ema_slow=ema_slow,
     )
 
     ikt = IKT.run(
         index_ns=index_ns,
-        high_minute=raw["high"], low_minute=raw["low"],
-        close_minute=raw["close"], open_minute=raw["open"], volume_minute=raw["volume"],
-        process_var=process_var, measurement_var=measurement_var,
-        ema_fast=ema_fast, ema_slow=ema_slow,
-        jitted_loop=True, jitted_warmup=True,
-        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
+        high_minute=raw["high"],
+        low_minute=raw["low"],
+        close_minute=raw["close"],
+        open_minute=raw["open"],
+        volume_minute=raw["volume"],
+        process_var=process_var,
+        measurement_var=measurement_var,
+        ema_fast=ema_fast,
+        ema_slow=ema_slow,
+        jitted_loop=True,
+        jitted_warmup=True,
+        execute_kwargs={"engine": "threadpool", "n_chunks": "auto"},
     )
 
     pf = vbt.Portfolio.from_signals(
         raw["close"],
         signal_func_nb=intraday_kalman_signal_nb,
         signal_args=(
-            vbt.Rep("close_arr"), vbt.Rep("ema_fast_arr"), vbt.Rep("ema_slow_arr"),
-            vbt.Rep("velocity_arr"), vbt.Rep("vwap_arr"),
-            vbt.Rep("index_arr"), vbt.Rep("eod_hour"), vbt.Rep("eod_minute"),
+            vbt.Rep("close_arr"),
+            vbt.Rep("ema_fast_arr"),
+            vbt.Rep("ema_slow_arr"),
+            vbt.Rep("velocity_arr"),
+            vbt.Rep("vwap_arr"),
+            vbt.Rep("index_arr"),
+            vbt.Rep("eod_hour"),
+            vbt.Rep("eod_minute"),
         ),
-        broadcast_named_args=dict(
-            close_arr=raw["close"],
-            ema_fast_arr=ikt.ema_fast_line.values,
-            ema_slow_arr=ikt.ema_slow_line.values,
-            velocity_arr=ikt.kalman_velocity.values,
-            vwap_arr=ikt.vwap.values,
-            index_arr=index_ns,
-            eod_hour=eod_hour, eod_minute=eod_minute,
-        ),
-        fixed_fees=0.0035, init_cash=1_000_000, freq="1T",
+        broadcast_named_args={
+            "close_arr": raw["close"],
+            "ema_fast_arr": ikt.ema_fast_line.values,
+            "ema_slow_arr": ikt.ema_slow_line.values,
+            "velocity_arr": ikt.kalman_velocity.values,
+            "vwap_arr": ikt.vwap.values,
+            "index_arr": index_ns,
+            "eod_hour": eod_hour,
+            "eod_minute": eod_minute,
+        },
+        fixed_fees=0.0035,
+        init_cash=1_000_000,
+        freq="1T",
     )
     return pf, ikt
 
@@ -270,56 +325,117 @@ def run_standard_backtest(raw, index_ns, process_var=0.001, measurement_var=1.0,
 # 4. CV PIPELINE
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def create_cv_pipeline(splitter):
-    def _run(high_arr, low_arr, close_arr, open_arr, volume_arr, idx_ns,
-             process_var, measurement_var, ema_fast, ema_slow,
-             eod_hour=21, eod_minute=0, metric="sharpe_ratio"):
-        close_s = pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+    def _run(
+        high_arr,
+        low_arr,
+        close_arr,
+        open_arr,
+        volume_arr,
+        idx_ns,
+        process_var,
+        measurement_var,
+        ema_fast,
+        ema_slow,
+        eod_hour=21,
+        eod_minute=0,
+        metric="sharpe_ratio",
+    ):
+        close_s = (
+            pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+        )
         high_s = pd.Series(high_arr[:, 0]) if high_arr.ndim > 1 else pd.Series(high_arr)
         low_s = pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
         open_s = pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
-        vol_s = pd.Series(volume_arr[:, 0]) if volume_arr.ndim > 1 else pd.Series(volume_arr)
+        vol_s = (
+            pd.Series(volume_arr[:, 0])
+            if volume_arr.ndim > 1
+            else pd.Series(volume_arr)
+        )
 
         IKT = vbt.IF(
-            class_name="IntradayKalman", short_name="ikt",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute", "volume_minute"],
+            class_name="IntradayKalman",
+            short_name="ikt",
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+                "volume_minute",
+            ],
             param_names=["process_var", "measurement_var", "ema_fast", "ema_slow"],
-            output_names=["kalman_price", "kalman_velocity", "ema_fast_line", "ema_slow_line", "vwap"],
+            output_names=[
+                "kalman_price",
+                "kalman_velocity",
+                "ema_fast_line",
+                "ema_slow_line",
+                "vwap",
+            ],
         ).with_apply_func(
-            compute_intraday_kalman_indicators_nb, takes_1d=True,
-            process_var=process_var, measurement_var=measurement_var,
-            ema_fast=ema_fast, ema_slow=ema_slow,
+            compute_intraday_kalman_indicators_nb,
+            takes_1d=True,
+            process_var=process_var,
+            measurement_var=measurement_var,
+            ema_fast=ema_fast,
+            ema_slow=ema_slow,
         )
 
         ikt = IKT.run(
-            index_ns=idx_ns, high_minute=high_s, low_minute=low_s,
-            close_minute=close_s, open_minute=open_s, volume_minute=vol_s,
-            process_var=process_var, measurement_var=measurement_var,
-            ema_fast=ema_fast, ema_slow=ema_slow,
+            index_ns=idx_ns,
+            high_minute=high_s,
+            low_minute=low_s,
+            close_minute=close_s,
+            open_minute=open_s,
+            volume_minute=vol_s,
+            process_var=process_var,
+            measurement_var=measurement_var,
+            ema_fast=ema_fast,
+            ema_slow=ema_slow,
         )
 
         pf = vbt.Portfolio.from_signals(
             close_s,
             signal_func_nb=intraday_kalman_signal_nb,
             signal_args=(
-                vbt.Rep("close_arr"), vbt.Rep("ema_fast_arr"), vbt.Rep("ema_slow_arr"),
-                vbt.Rep("velocity_arr"), vbt.Rep("vwap_arr"),
-                vbt.Rep("index_arr"), vbt.Rep("eod_hour"), vbt.Rep("eod_minute"),
+                vbt.Rep("close_arr"),
+                vbt.Rep("ema_fast_arr"),
+                vbt.Rep("ema_slow_arr"),
+                vbt.Rep("velocity_arr"),
+                vbt.Rep("vwap_arr"),
+                vbt.Rep("index_arr"),
+                vbt.Rep("eod_hour"),
+                vbt.Rep("eod_minute"),
             ),
-            broadcast_named_args=dict(
-                close_arr=close_s, ema_fast_arr=ikt.ema_fast_line.values,
-                ema_slow_arr=ikt.ema_slow_line.values, velocity_arr=ikt.kalman_velocity.values,
-                vwap_arr=ikt.vwap.values, index_arr=idx_ns,
-                eod_hour=eod_hour, eod_minute=eod_minute,
-            ),
-            fixed_fees=0.0035, init_cash=1_000_000, freq="1T",
+            broadcast_named_args={
+                "close_arr": close_s,
+                "ema_fast_arr": ikt.ema_fast_line.values,
+                "ema_slow_arr": ikt.ema_slow_line.values,
+                "velocity_arr": ikt.kalman_velocity.values,
+                "vwap_arr": ikt.vwap.values,
+                "index_arr": idx_ns,
+                "eod_hour": eod_hour,
+                "eod_minute": eod_minute,
+            },
+            fixed_fees=0.0035,
+            init_cash=1_000_000,
+            freq="1T",
         )
         return pf.deep_getattr(metric)
 
     return vbt.cv_split(
-        _run, splitter=splitter,
-        takeable_args=["high_arr", "low_arr", "close_arr", "open_arr", "volume_arr", "idx_ns"],
-        parameterized_kwargs=dict(engine="threadpool", chunk_len="auto"),
+        _run,
+        splitter=splitter,
+        takeable_args=[
+            "high_arr",
+            "low_arr",
+            "close_arr",
+            "open_arr",
+            "volume_arr",
+            "idx_ns",
+        ],
+        parameterized_kwargs={"engine": "threadpool", "chunk_len": "auto"},
         merge_func="concat",
     )
 
@@ -328,18 +444,43 @@ def create_cv_pipeline(splitter):
 # 5. PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def plot_monthly_heatmap(pf: vbt.Portfolio) -> go.Figure:
     rets = pf.returns
     monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    df = pd.DataFrame({"year": monthly.index.year, "month": monthly.index.month, "ret": monthly.values})
+    df = pd.DataFrame(
+        {
+            "year": monthly.index.year,
+            "month": monthly.index.month,
+            "ret": monthly.values,
+        }
+    )
     pivot = df.pivot(index="year", columns="month", values="ret")
-    pivot.columns = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot.values, x=pivot.columns, y=pivot.index.astype(str),
-        colorscale="RdYlGn", zmid=0,
-        text=np.round(pivot.values * 100, 1), texttemplate="%{text}%",
-    ))
+    pivot.columns = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index.astype(str),
+            colorscale="RdYlGn",
+            zmid=0,
+            text=np.round(pivot.values * 100, 1),
+            texttemplate="%{text}%",
+        )
+    )
     fig.update_layout(title="Kalman Trend — Monthly Returns (%)", height=400)
     return fig
 
@@ -361,7 +502,9 @@ if __name__ == "__main__":
     print(f"  {len(raw)} bars: {raw.index[0]} → {raw.index[-1]}")
 
     # ── Standard backtest ──────────────────────────────────────────
-    print("\nRunning standard backtest (process_var=0.001, measurement_var=1.0, ema=100/500)...")
+    print(
+        "\nRunning standard backtest (process_var=0.001, measurement_var=1.0, ema=100/500)..."
+    )
     pf, ikt = run_standard_backtest(raw, index_ns)
 
     print("\n" + "=" * 60)
@@ -387,7 +530,11 @@ if __name__ == "__main__":
     volume_arr = vbt.to_2d_array(raw["volume"])
 
     splitter = vbt.Splitter.from_n_rolling(
-        raw.index, n=5, length=1_500_000, split=0.5, set_labels=["train", "test"],
+        raw.index,
+        n=5,
+        length=1_500_000,
+        split=0.5,
+        set_labels=["train", "test"],
     )
     cv = create_cv_pipeline(splitter)
 
@@ -395,21 +542,30 @@ if __name__ == "__main__":
     print(f"Running CV: {n_combos} combos x 5 splits = {n_combos * 5} backtests...")
 
     grid_perf, best_perf = cv(
-        high_arr=high_arr, low_arr=low_arr, close_arr=close_arr,
-        open_arr=open_arr, volume_arr=volume_arr, idx_ns=index_ns,
+        high_arr=high_arr,
+        low_arr=low_arr,
+        close_arr=close_arr,
+        open_arr=open_arr,
+        volume_arr=volume_arr,
+        idx_ns=index_ns,
         process_var=vbt.Param([0.0001, 0.001, 0.01]),
         measurement_var=vbt.Param([0.5, 1.0, 5.0]),
         ema_fast=vbt.Param([50, 100, 200]),
         ema_slow=vbt.Param([200, 500, 1000]),
-        eod_hour=21, eod_minute=0, metric="sharpe_ratio",
-        _return_grid="all", _index=raw.index,
+        eod_hour=21,
+        eod_minute=0,
+        metric="sharpe_ratio",
+        _return_grid="all",
+        _index=raw.index,
     )
 
     print(f"  Grid shape: {grid_perf.shape}")
     print(f"  Best perf shape: {best_perf.shape}")
 
     fig_cv = grid_perf.vbt.heatmap(
-        x_level="process_var", y_level="measurement_var", slider_level="split",
+        x_level="process_var",
+        y_level="measurement_var",
+        slider_level="split",
     )
     fig_cv.write_html(f"{results_dir}/cv_heatmap.html")
 

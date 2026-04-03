@@ -10,7 +10,7 @@ Single-script implementation following vectorbtpro conventions:
 """
 
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -98,9 +98,8 @@ def drawdown_control_nb(
                 state = 2
             elif d < recovery:
                 state = 0
-        elif state == 2:
-            if d < recovery:
-                state = 0
+        elif state == 2 and d < recovery:
+            state = 0
         if state == 1:
             mult[i] = 0.5
         elif state == 2:
@@ -173,18 +172,30 @@ def compute_composite_nb(
     direction = np.full(n, 0.0)
     for i in range(n):
         if not np.isnan(momentum[i]):
-            direction[i] = 1.0 if momentum[i] > 0 else (-1.0 if momentum[i] < 0 else 0.0)
+            direction[i] = (
+                1.0 if momentum[i] > 0 else (-1.0 if momentum[i] < 0 else 0.0)
+            )
 
     # 2. Rolling realized vol (short + long windows) → regime ratio
-    sigma_short = vbt.generic.nb.rolling_std_1d_nb(returns, vol_short, minp=vol_short, ddof=1)
-    sigma_long = vbt.generic.nb.rolling_std_1d_nb(returns, vol_long, minp=vol_long, ddof=1)
+    sigma_short = vbt.generic.nb.rolling_std_1d_nb(
+        returns, vol_short, minp=vol_short, ddof=1
+    )
+    sigma_long = vbt.generic.nb.rolling_std_1d_nb(
+        returns, vol_long, minp=vol_long, ddof=1
+    )
     vr = np.full(n, np.nan)
     for i in range(n):
-        if not np.isnan(sigma_short[i]) and not np.isnan(sigma_long[i]) and sigma_long[i] > 0:
+        if (
+            not np.isnan(sigma_short[i])
+            and not np.isnan(sigma_long[i])
+            and sigma_long[i] > 0
+        ):
             vr[i] = sigma_short[i] / sigma_long[i]
 
     # 3. Regime weight
-    regime_wt = regime_weight_nb(vr, vr_low, vr_high, mom_w_low, mom_w_normal, mom_w_high)
+    regime_wt = regime_weight_nb(
+        vr, vr_low, vr_high, mom_w_low, mom_w_normal, mom_w_high
+    )
 
     # 4. EWMA vol + scaling factor
     sq_returns = np.empty(n)
@@ -218,7 +229,9 @@ def compute_composite_nb(
     dd_mult = drawdown_control_nb(dd, dd_soft, dd_hard, dd_recovery)
 
     # 6. K overlapping sub-portfolio weights
-    weights = sub_portfolio_weights_nb(direction, regime_wt, vol_scale, dd_mult, n, n_sub)
+    weights = sub_portfolio_weights_nb(
+        direction, regime_wt, vol_scale, dd_mult, n, n_sub
+    )
 
     return momentum, direction, vr, regime_wt, ewma_vol, vol_scale, dd, dd_mult, weights
 
@@ -232,25 +245,52 @@ CompositeAlpha = vbt.IF(
     short_name="ca",
     input_names=["close", "returns"],
     param_names=[
-        "w_short", "w_long", "vol_short", "vol_long", "ewma_span",
-        "target_vol", "leverage_cap", "vr_low", "vr_high",
-        "mom_w_low", "mom_w_normal", "mom_w_high",
-        "dd_soft", "dd_hard", "dd_recovery", "n_sub",
+        "w_short",
+        "w_long",
+        "vol_short",
+        "vol_long",
+        "ewma_span",
+        "target_vol",
+        "leverage_cap",
+        "vr_low",
+        "vr_high",
+        "mom_w_low",
+        "mom_w_normal",
+        "mom_w_high",
+        "dd_soft",
+        "dd_hard",
+        "dd_recovery",
+        "n_sub",
     ],
     output_names=[
-        "momentum", "direction", "vol_regime", "regime_weight",
-        "ewma_vol", "vol_scale", "drawdown", "dd_multiplier", "target_weight",
+        "momentum",
+        "direction",
+        "vol_regime",
+        "regime_weight",
+        "ewma_vol",
+        "vol_scale",
+        "drawdown",
+        "dd_multiplier",
+        "target_weight",
     ],
 ).with_apply_func(
     compute_composite_nb,
     takes_1d=True,
-    w_short=21, w_long=63,
-    vol_short=21, vol_long=252,
+    w_short=21,
+    w_long=63,
+    vol_short=21,
+    vol_long=252,
     ewma_span=30,
-    target_vol=0.10, leverage_cap=5.0,
-    vr_low=0.8, vr_high=1.2,
-    mom_w_low=0.20, mom_w_normal=0.30, mom_w_high=0.50,
-    dd_soft=0.12, dd_hard=0.20, dd_recovery=0.10,
+    target_vol=0.10,
+    leverage_cap=5.0,
+    vr_low=0.8,
+    vr_high=1.2,
+    mom_w_low=0.20,
+    mom_w_normal=0.30,
+    mom_w_high=0.50,
+    dd_soft=0.12,
+    dd_hard=0.20,
+    dd_recovery=0.10,
     n_sub=5,
 )
 
@@ -290,17 +330,17 @@ def composite_signal_nb(c, target_weights, size_arr):
     size_arr[c.i, c.col] = abs(delta)
 
     if pos >= 0 and delta > 0:
-        return True, False, False, False      # add to long
+        return True, False, False, False  # add to long
     elif pos > 0 and delta < 0 and target_pos >= 0:
-        return False, True, False, False       # trim long
+        return False, True, False, False  # trim long
     elif pos >= 0 and target_pos < 0:
-        return False, False, True, False       # flip to short (Reverse)
+        return False, False, True, False  # flip to short (Reverse)
     elif pos <= 0 and delta < 0:
-        return False, False, True, False       # add to short
+        return False, False, True, False  # add to short
     elif pos < 0 and delta > 0 and target_pos <= 0:
-        return False, False, False, True       # trim short
+        return False, False, False, True  # trim short
     elif pos <= 0 and target_pos > 0:
-        return True, False, False, False       # flip to long (Reverse)
+        return True, False, False, False  # flip to long (Reverse)
 
     return False, False, False, False
 
@@ -314,30 +354,56 @@ def plot_signal_dashboard(daily: pd.DataFrame, ca) -> go.Figure:
     """5-panel signal analysis dashboard."""
     idx = daily.index
     fig = make_subplots(
-        rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.04,
+        rows=5,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.04,
         subplot_titles=[
-            "EUR-USD Close", "Momentum Signal", "Vol Regime (VR_t)",
-            "Vol Scaling (λ_t)", "Target Weight (K=5 avg)",
+            "EUR-USD Close",
+            "Momentum Signal",
+            "Vol Regime (VR_t)",
+            "Vol Scaling (λ_t)",
+            "Target Weight (K=5 avg)",
         ],
     )
-    fig.add_trace(go.Scatter(x=idx, y=daily["close"], name="Close", line=dict(width=1)), row=1, col=1)
+    fig.add_trace(
+        go.Scatter(x=idx, y=daily["close"], name="Close", line={"width": 1}),
+        row=1,
+        col=1,
+    )
 
     mom = ca.momentum.values.flatten()
-    fig.add_trace(go.Scatter(x=idx, y=mom, name="Momentum", line=dict(width=1)), row=2, col=1)
+    fig.add_trace(
+        go.Scatter(x=idx, y=mom, name="Momentum", line={"width": 1}), row=2, col=1
+    )
     fig.add_hline(y=0, line_dash="dash", line_color="gray", row=2, col=1)
 
     vr = ca.vol_regime.values.flatten()
-    fig.add_trace(go.Scatter(x=idx, y=vr, name="VR_t", line=dict(width=1, color="#636EFA")), row=3, col=1)
+    fig.add_trace(
+        go.Scatter(x=idx, y=vr, name="VR_t", line={"width": 1, "color": "#636EFA"}),
+        row=3,
+        col=1,
+    )
     fig.add_hline(y=0.8, line_dash="dot", line_color="green", row=3, col=1)
     fig.add_hline(y=1.2, line_dash="dot", line_color="red", row=3, col=1)
 
     vs = ca.vol_scale.values.flatten()
-    fig.add_trace(go.Scatter(x=idx, y=vs, name="λ_t", line=dict(width=1, color="#00CC96")), row=4, col=1)
+    fig.add_trace(
+        go.Scatter(x=idx, y=vs, name="λ_t", line={"width": 1, "color": "#00CC96"}),
+        row=4,
+        col=1,
+    )
 
     tw = ca.target_weight.values.flatten()
-    fig.add_trace(go.Scatter(x=idx, y=tw, name="Weight", line=dict(width=1), fill="tozeroy"), row=5, col=1)
+    fig.add_trace(
+        go.Scatter(x=idx, y=tw, name="Weight", line={"width": 1}, fill="tozeroy"),
+        row=5,
+        col=1,
+    )
 
-    fig.update_layout(title="Composite FX Alpha — Signal Dashboard", height=1200, showlegend=False)
+    fig.update_layout(
+        title="Composite FX Alpha — Signal Dashboard", height=1200, showlegend=False
+    )
     return fig
 
 
@@ -345,15 +411,39 @@ def plot_monthly_heatmap(pf: vbt.Portfolio) -> go.Figure:
     """Monthly returns heatmap."""
     rets = pf.returns
     monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    df = pd.DataFrame({"year": monthly.index.year, "month": monthly.index.month, "ret": monthly.values})
+    df = pd.DataFrame(
+        {
+            "year": monthly.index.year,
+            "month": monthly.index.month,
+            "ret": monthly.values,
+        }
+    )
     pivot = df.pivot(index="year", columns="month", values="ret")
-    pivot.columns = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot.values, x=pivot.columns, y=pivot.index.astype(str),
-        colorscale="RdYlGn", zmid=0,
-        text=np.round(pivot.values * 100, 1), texttemplate="%{text}%",
-    ))
+    pivot.columns = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index.astype(str),
+            colorscale="RdYlGn",
+            zmid=0,
+            text=np.round(pivot.values * 100, 1),
+            texttemplate="%{text}%",
+        )
+    )
     fig.update_layout(title="Monthly Returns Heatmap (%)", height=400)
     return fig
 
@@ -427,9 +517,9 @@ def optimized_pipeline(
             vbt.Rep("target_weights"),
             vbt.Rep("size"),
         ),
-        broadcast_named_args=dict(
-            target_weights=ca.target_weight.values,
-        ),
+        broadcast_named_args={
+            "target_weights": ca.target_weight.values,
+        },
         size=vbt.RepEval("np.full(wrapper.shape_2d, np.nan)"),
         size_type="amount",
         accumulate=True,
@@ -446,9 +536,9 @@ def optimized_pipeline(
 
 def run_cross_validation(
     close: pd.Series,
-    param_grid: Dict[str, Any],
+    param_grid: dict[str, Any],
     metric: str = "sharpe_ratio",
-    cv_split_kwargs: Optional[Dict] = None,
+    cv_split_kwargs: dict | None = None,
     fees: float = 0.00035,
     init_cash: float = 1_000_000,
     leverage: float = 5.0,
@@ -472,12 +562,12 @@ def run_cross_validation(
     # usable signal days per train fold.
     default_cv_kwargs = {
         "splitter": "from_n_rolling",
-        "splitter_kwargs": dict(
-            n=5,
-            length=1200,
-            split=0.5,
-            set_labels=["train", "test"],
-        ),
+        "splitter_kwargs": {
+            "n": 5,
+            "length": 1200,
+            "split": 0.5,
+            "set_labels": ["train", "test"],
+        },
     }
 
     if cv_split_kwargs:
@@ -487,10 +577,10 @@ def run_cross_validation(
         optimized_pipeline,
         **default_cv_kwargs,
         takeable_args=["close"],
-        parameterized_kwargs=dict(
-            engine="threadpool",
-            chunk_len="auto",
-        ),
+        parameterized_kwargs={
+            "engine": "threadpool",
+            "chunk_len": "auto",
+        },
         merge_func="concat",
     )
 
@@ -514,8 +604,8 @@ def run_cross_validation(
 
 def extract_best_parameters(
     cv_result: Any,
-    param_names: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    param_names: list[str] | None = None,
+) -> dict[str, Any]:
     """Extract best parameters from cross-validation results.
 
     Parameters
@@ -528,10 +618,22 @@ def extract_best_parameters(
     """
     if param_names is None:
         param_names = [
-            "w_short", "w_long", "vol_short", "vol_long", "ewma_span",
-            "target_vol", "leverage_cap", "vr_low", "vr_high",
-            "mom_w_low", "mom_w_normal", "mom_w_high",
-            "dd_soft", "dd_hard", "dd_recovery", "n_sub",
+            "w_short",
+            "w_long",
+            "vol_short",
+            "vol_long",
+            "ewma_span",
+            "target_vol",
+            "leverage_cap",
+            "vr_low",
+            "vr_high",
+            "mom_w_low",
+            "mom_w_normal",
+            "mom_w_high",
+            "dd_soft",
+            "dd_hard",
+            "dd_recovery",
+            "n_sub",
         ]
 
     if isinstance(cv_result, tuple) and len(cv_result) >= 2:
@@ -542,7 +644,7 @@ def extract_best_parameters(
     if not isinstance(best_perf, pd.Series) or not hasattr(best_perf, "index"):
         raise ValueError("Input must be a pandas Series with parameter index")
 
-    best_params: Dict[str, Any] = {}
+    best_params: dict[str, Any] = {}
 
     if isinstance(best_perf.index, pd.MultiIndex):
         level_names = best_perf.index.names
@@ -559,12 +661,24 @@ def extract_best_parameters(
                     best_params[param] = pd.Series(best_values).mode()[0]
 
     if not best_params:
-        defaults = dict(
-            w_short=21, w_long=63, vol_short=21, vol_long=252, ewma_span=30,
-            target_vol=0.10, leverage_cap=5.0, vr_low=0.8, vr_high=1.2,
-            mom_w_low=0.20, mom_w_normal=0.30, mom_w_high=0.50,
-            dd_soft=0.12, dd_hard=0.20, dd_recovery=0.10, n_sub=5,
-        )
+        defaults = {
+            "w_short": 21,
+            "w_long": 63,
+            "vol_short": 21,
+            "vol_long": 252,
+            "ewma_span": 30,
+            "target_vol": 0.10,
+            "leverage_cap": 5.0,
+            "vr_low": 0.8,
+            "vr_high": 1.2,
+            "mom_w_low": 0.20,
+            "mom_w_normal": 0.30,
+            "mom_w_high": 0.50,
+            "dd_soft": 0.12,
+            "dd_hard": 0.20,
+            "dd_recovery": 0.10,
+            "n_sub": 5,
+        }
         for param in param_names:
             best_params[param] = defaults.get(param)
 
@@ -576,14 +690,14 @@ def save_backtest_results_to_excel(
     pf: vbt.Portfolio,
     pf_opt: vbt.Portfolio,
     best_perf: pd.Series,
-    standard_params: Dict[str, Any],
-    optimal_params: Dict[str, Any],
+    standard_params: dict[str, Any],
+    optimal_params: dict[str, Any],
     metric: str = "sharpe_ratio",
-    file_path: Optional[str] = None,
+    file_path: str | None = None,
 ) -> None:
     """Save standard vs optimized backtest results to a formatted Excel file."""
     from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.styles import Border, Font, PatternFill, Side
     from openpyxl.utils.dataframe import dataframe_to_rows
 
     if file_path is None:
@@ -595,12 +709,20 @@ def save_backtest_results_to_excel(
     subheader_font = Font(bold=True, size=11)
     normal_font = Font(size=10)
     thin_border = Border(
-        left=Side(style="thin"), right=Side(style="thin"),
-        top=Side(style="thin"), bottom=Side(style="thin"),
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
     )
-    header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
-    param_fill = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
-    highlight_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
+    )
+    param_fill = PatternFill(
+        start_color="E2EFDA", end_color="E2EFDA", fill_type="solid"
+    )
+    highlight_fill = PatternFill(
+        start_color="FFEB9C", end_color="FFEB9C", fill_type="solid"
+    )
 
     # ── Sheet 1: Backtest Results ──
     ws1 = wb.active
@@ -648,11 +770,15 @@ def save_backtest_results_to_excel(
 
     row = 4
     row = _write_section(ws1, row, "Standard Backtest", standard_params, pf)
-    _write_section(ws1, row, f"Optimized Backtest (for {metric})", optimal_params, pf_opt)
+    _write_section(
+        ws1, row, f"Optimized Backtest (for {metric})", optimal_params, pf_opt
+    )
 
     # ── Sheet 2: Cross-Validation Results ──
     ws2 = wb.create_sheet(title="Cross-Validation Results")
-    ws2.cell(1, 1, f"Cross-Validation Results for {ticker}").font = Font(size=16, bold=True)
+    ws2.cell(1, 1, f"Cross-Validation Results for {ticker}").font = Font(
+        size=16, bold=True
+    )
 
     cv_df = best_perf.reset_index() if isinstance(best_perf, pd.Series) else best_perf
     if cv_df.columns[-1] == 0 or cv_df.columns[-1] == "Performance":
@@ -688,27 +814,51 @@ if __name__ == "__main__":
 
     # FX 5pm ET convention: shift +7h then resample daily
     raw.index = raw.index + pd.Timedelta(hours=7)
-    daily = raw.resample("D").agg({"open": "first", "high": "max", "low": "min", "close": "last"})
+    daily = raw.resample("D").agg(
+        {"open": "first", "high": "max", "low": "min", "close": "last"}
+    )
     daily = daily.dropna(subset=["close"])
     close = daily["close"]
     log_returns = np.log(close / close.shift(1))
-    print(f"  {len(daily)} trading days: {daily.index[0].date()} → {daily.index[-1].date()}")
-
-    # ── A. Standard backtest ──────────────────────────────────────
-    standard_params = dict(
-        w_short=21, w_long=63, vol_short=21, vol_long=252, ewma_span=30,
-        target_vol=0.10, leverage_cap=5.0, vr_low=0.8, vr_high=1.2,
-        mom_w_low=0.20, mom_w_normal=0.30, mom_w_high=0.50,
-        dd_soft=0.12, dd_hard=0.20, dd_recovery=0.10, n_sub=5,
+    print(
+        f"  {len(daily)} trading days: {daily.index[0].date()} → {daily.index[-1].date()}"
     )
 
-    print("Computing Composite Alpha signals...")
-    ca = CompositeAlpha.run(close=close, returns=log_returns, jitted_loop=True, jitted_warmup=True)
+    # ── A. Standard backtest ──────────────────────────────────────
+    standard_params = {
+        "w_short": 21,
+        "w_long": 63,
+        "vol_short": 21,
+        "vol_long": 252,
+        "ewma_span": 30,
+        "target_vol": 0.10,
+        "leverage_cap": 5.0,
+        "vr_low": 0.8,
+        "vr_high": 1.2,
+        "mom_w_low": 0.20,
+        "mom_w_normal": 0.30,
+        "mom_w_high": 0.50,
+        "dd_soft": 0.12,
+        "dd_hard": 0.20,
+        "dd_recovery": 0.10,
+        "n_sub": 5,
+    }
 
-    print(f"  Long: {int((ca.direction == 1).sum())} days, Short: {int((ca.direction == -1).sum())} days")
-    print(f"  Vol scale: [{ca.vol_scale.min():.2f}, {ca.vol_scale.max():.2f}], mean={ca.vol_scale.mean():.2f}")
+    print("Computing Composite Alpha signals...")
+    ca = CompositeAlpha.run(
+        close=close, returns=log_returns, jitted_loop=True, jitted_warmup=True
+    )
+
+    print(
+        f"  Long: {int((ca.direction == 1).sum())} days, Short: {int((ca.direction == -1).sum())} days"
+    )
+    print(
+        f"  Vol scale: [{ca.vol_scale.min():.2f}, {ca.vol_scale.max():.2f}], mean={ca.vol_scale.mean():.2f}"
+    )
     print(f"  Max proxy DD: {ca.drawdown.max():.2%}")
-    print(f"  Weight range: [{ca.target_weight.min():.3f}, {ca.target_weight.max():.3f}]")
+    print(
+        f"  Weight range: [{ca.target_weight.min():.3f}, {ca.target_weight.max():.3f}]"
+    )
 
     print("Running standard backtest...")
     pf = vbt.Portfolio.from_signals(
@@ -718,9 +868,9 @@ if __name__ == "__main__":
             vbt.Rep("target_weights"),
             vbt.Rep("size"),
         ),
-        broadcast_named_args=dict(
-            target_weights=ca.target_weight.values,
-        ),
+        broadcast_named_args={
+            "target_weights": ca.target_weight.values,
+        },
         size=vbt.RepEval("np.full(wrapper.shape_2d, np.nan)"),
         size_type="amount",
         accumulate=True,
@@ -749,7 +899,9 @@ if __name__ == "__main__":
     }
 
     print(f"\nRunning cross-validation ({optimization_metric})...")
-    print(f"  Grid: {4*4*4*5} combinations x 5 splits = {4*4*4*5*5} backtests")
+    print(
+        f"  Grid: {4 * 4 * 4 * 5} combinations x 5 splits = {4 * 4 * 4 * 5 * 5} backtests"
+    )
 
     grid_perf, best_perf = run_cross_validation(
         close=close,
@@ -785,9 +937,9 @@ if __name__ == "__main__":
             vbt.Rep("target_weights"),
             vbt.Rep("size"),
         ),
-        broadcast_named_args=dict(
-            target_weights=ca_opt.target_weight.values,
-        ),
+        broadcast_named_args={
+            "target_weights": ca_opt.target_weight.values,
+        },
         size=vbt.RepEval("np.full(wrapper.shape_2d, np.nan)"),
         size_type="amount",
         accumulate=True,
@@ -803,10 +955,12 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("STANDARD vs OPTIMIZED")
     print("=" * 60)
-    comparison = pd.DataFrame({
-        "Standard": pf.stats(),
-        "Optimized": pf_opt.stats(),
-    })
+    comparison = pd.DataFrame(
+        {
+            "Standard": pf.stats(),
+            "Optimized": pf_opt.stats(),
+        }
+    )
     print(comparison.to_string())
     print("=" * 60)
 
@@ -814,14 +968,20 @@ if __name__ == "__main__":
     os.makedirs(results_dir, exist_ok=True)
 
     # Portfolio overview (standard)
-    fig_pf = pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"])
+    fig_pf = pf.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"]
+    )
     fig_pf.update_layout(title="Composite FX Alpha — Standard Portfolio", height=1000)
     fig_pf.write_html(f"{results_dir}/portfolio_overview.html")
     fig_pf.show()
 
     # Portfolio overview (optimized)
-    fig_pf_opt = pf_opt.plot(subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"])
-    fig_pf_opt.update_layout(title="Composite FX Alpha — Optimized Portfolio", height=1000)
+    fig_pf_opt = pf_opt.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"]
+    )
+    fig_pf_opt.update_layout(
+        title="Composite FX Alpha — Optimized Portfolio", height=1000
+    )
     fig_pf_opt.write_html(f"{results_dir}/portfolio_overview_optimized.html")
     fig_pf_opt.show()
 
@@ -831,7 +991,9 @@ if __name__ == "__main__":
     fig_signals.show()
 
     fig_signals_opt = plot_signal_dashboard(daily, ca_opt)
-    fig_signals_opt.update_layout(title="Composite FX Alpha — Optimized Signal Dashboard")
+    fig_signals_opt.update_layout(
+        title="Composite FX Alpha — Optimized Signal Dashboard"
+    )
     fig_signals_opt.write_html(f"{results_dir}/signal_dashboard_optimized.html")
     fig_signals_opt.show()
 

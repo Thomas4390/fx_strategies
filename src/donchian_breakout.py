@@ -10,7 +10,6 @@ Full-Numba kernels + VBT PRO pipeline:
 """
 
 import os
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,19 +17,22 @@ import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
 
-
 # ═══════════════════════════════════════════════════════════════════════
 # 0. SETTINGS
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def configure_figure_for_fullscreen(fig):
     fig.update_layout(
-        width=None, height=None, autosize=True,
-        margin=dict(l=30, r=30, t=60, b=30),
-        title=dict(font=dict(size=20), x=0.5, xanchor="center"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        width=None,
+        height=None,
+        autosize=True,
+        margin={"l": 30, "r": 30, "t": 60, "b": 30},
+        title={"font": {"size": 20}, "x": 0.5, "xanchor": "center"},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5},
     )
     return fig
+
 
 vbt.settings.set("plotting.pre_show_func", configure_figure_for_fullscreen)
 vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
@@ -40,8 +42,9 @@ vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
 # 1. NUMBA KERNELS
 # ═══════════════════════════════════════════════════════════════════════
 
+
 @njit
-def find_day_boundaries_nb(index_ns: np.ndarray) -> Tuple[np.ndarray, np.ndarray, int]:
+def find_day_boundaries_nb(index_ns: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:
     n = len(index_ns)
     start_idx = np.empty(n, dtype=np.int64)
     end_idx = np.empty(n, dtype=np.int64)
@@ -102,7 +105,7 @@ def compute_intraday_donchian_nb(
     volume: np.ndarray,
     entry_period: int,
     exit_period: int,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # Entry channels
     upper = rolling_max_nb(high, entry_period)
     lower = rolling_min_nb(low, entry_period)
@@ -122,6 +125,7 @@ def compute_intraday_donchian_nb(
 # ═══════════════════════════════════════════════════════════════════════
 # 2. SIGNAL FUNCTION
 # ═══════════════════════════════════════════════════════════════════════
+
 
 @njit
 def intraday_donchian_signal_nb(
@@ -144,7 +148,9 @@ def intraday_donchian_signal_nb(
     eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
 
     # EOD forced exit
-    is_eod = (cur_hour > eod_hour) or (cur_hour == eod_hour and cur_minute >= eod_minute)
+    is_eod = (cur_hour > eod_hour) or (
+        cur_hour == eod_hour and cur_minute >= eod_minute
+    )
     if is_eod:
         el = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
         es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
@@ -177,9 +183,8 @@ def intraday_donchian_signal_nb(
         # Exit on shorter channel break
         if not np.isnan(exl) and px < exl:
             return False, True, False, False
-    elif in_short:
-        if not np.isnan(exu) and px > exu:
-            return False, False, False, True
+    elif in_short and not np.isnan(exu) and px > exu:
+        return False, False, False, True
 
     return False, False, False, False
 
@@ -188,46 +193,78 @@ def intraday_donchian_signal_nb(
 # 3. STANDARD BACKTEST
 # ═══════════════════════════════════════════════════════════════════════
 
-def run_standard_backtest(raw, index_ns, entry_period=240, exit_period=60,
-                          eod_hour=21, eod_minute=0):
+
+def run_standard_backtest(
+    raw, index_ns, entry_period=240, exit_period=60, eod_hour=21, eod_minute=0
+):
     IDB = vbt.IF(
-        class_name="IntradayDonchian", short_name="idb",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute", "volume_minute"],
+        class_name="IntradayDonchian",
+        short_name="idb",
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+            "volume_minute",
+        ],
         param_names=["entry_period", "exit_period"],
-        output_names=["upper_channel", "lower_channel", "exit_upper", "exit_lower", "vwap"],
+        output_names=[
+            "upper_channel",
+            "lower_channel",
+            "exit_upper",
+            "exit_lower",
+            "vwap",
+        ],
     ).with_apply_func(
-        compute_intraday_donchian_nb, takes_1d=True,
-        entry_period=entry_period, exit_period=exit_period,
+        compute_intraday_donchian_nb,
+        takes_1d=True,
+        entry_period=entry_period,
+        exit_period=exit_period,
     )
 
     idb = IDB.run(
         index_ns=index_ns,
-        high_minute=raw["high"], low_minute=raw["low"],
-        close_minute=raw["close"], open_minute=raw["open"], volume_minute=raw["volume"],
-        entry_period=entry_period, exit_period=exit_period,
-        jitted_loop=True, jitted_warmup=True,
-        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
+        high_minute=raw["high"],
+        low_minute=raw["low"],
+        close_minute=raw["close"],
+        open_minute=raw["open"],
+        volume_minute=raw["volume"],
+        entry_period=entry_period,
+        exit_period=exit_period,
+        jitted_loop=True,
+        jitted_warmup=True,
+        execute_kwargs={"engine": "threadpool", "n_chunks": "auto"},
     )
 
     pf = vbt.Portfolio.from_signals(
         raw["close"],
         signal_func_nb=intraday_donchian_signal_nb,
         signal_args=(
-            vbt.Rep("close_arr"), vbt.Rep("upper_arr"), vbt.Rep("lower_arr"),
-            vbt.Rep("exit_upper_arr"), vbt.Rep("exit_lower_arr"), vbt.Rep("vwap_arr"),
-            vbt.Rep("index_arr"), vbt.Rep("eod_hour"), vbt.Rep("eod_minute"),
+            vbt.Rep("close_arr"),
+            vbt.Rep("upper_arr"),
+            vbt.Rep("lower_arr"),
+            vbt.Rep("exit_upper_arr"),
+            vbt.Rep("exit_lower_arr"),
+            vbt.Rep("vwap_arr"),
+            vbt.Rep("index_arr"),
+            vbt.Rep("eod_hour"),
+            vbt.Rep("eod_minute"),
         ),
-        broadcast_named_args=dict(
-            close_arr=raw["close"],
-            upper_arr=idb.upper_channel.values,
-            lower_arr=idb.lower_channel.values,
-            exit_upper_arr=idb.exit_upper.values,
-            exit_lower_arr=idb.exit_lower.values,
-            vwap_arr=idb.vwap.values,
-            index_arr=index_ns,
-            eod_hour=eod_hour, eod_minute=eod_minute,
-        ),
-        fixed_fees=0.0035, init_cash=1_000_000, freq="1T",
+        broadcast_named_args={
+            "close_arr": raw["close"],
+            "upper_arr": idb.upper_channel.values,
+            "lower_arr": idb.lower_channel.values,
+            "exit_upper_arr": idb.exit_upper.values,
+            "exit_lower_arr": idb.exit_lower.values,
+            "vwap_arr": idb.vwap.values,
+            "index_arr": index_ns,
+            "eod_hour": eod_hour,
+            "eod_minute": eod_minute,
+        },
+        fixed_fees=0.0035,
+        init_cash=1_000_000,
+        freq="1T",
     )
     return pf, idb
 
@@ -236,54 +273,113 @@ def run_standard_backtest(raw, index_ns, entry_period=240, exit_period=60,
 # 4. CV PIPELINE
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def create_cv_pipeline(splitter):
-    def _run(high_arr, low_arr, close_arr, open_arr, volume_arr, idx_ns,
-             entry_period, exit_period, eod_hour=21, eod_minute=0,
-             metric="sharpe_ratio"):
-        close_s = pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+    def _run(
+        high_arr,
+        low_arr,
+        close_arr,
+        open_arr,
+        volume_arr,
+        idx_ns,
+        entry_period,
+        exit_period,
+        eod_hour=21,
+        eod_minute=0,
+        metric="sharpe_ratio",
+    ):
+        close_s = (
+            pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+        )
         high_s = pd.Series(high_arr[:, 0]) if high_arr.ndim > 1 else pd.Series(high_arr)
         low_s = pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
         open_s = pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
-        vol_s = pd.Series(volume_arr[:, 0]) if volume_arr.ndim > 1 else pd.Series(volume_arr)
+        vol_s = (
+            pd.Series(volume_arr[:, 0])
+            if volume_arr.ndim > 1
+            else pd.Series(volume_arr)
+        )
 
         IDB = vbt.IF(
-            class_name="IntradayDonchian", short_name="idb",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute", "volume_minute"],
+            class_name="IntradayDonchian",
+            short_name="idb",
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+                "volume_minute",
+            ],
             param_names=["entry_period", "exit_period"],
-            output_names=["upper_channel", "lower_channel", "exit_upper", "exit_lower", "vwap"],
+            output_names=[
+                "upper_channel",
+                "lower_channel",
+                "exit_upper",
+                "exit_lower",
+                "vwap",
+            ],
         ).with_apply_func(
-            compute_intraday_donchian_nb, takes_1d=True,
-            entry_period=entry_period, exit_period=exit_period,
+            compute_intraday_donchian_nb,
+            takes_1d=True,
+            entry_period=entry_period,
+            exit_period=exit_period,
         )
 
         idb = IDB.run(
-            index_ns=idx_ns, high_minute=high_s, low_minute=low_s,
-            close_minute=close_s, open_minute=open_s, volume_minute=vol_s,
-            entry_period=entry_period, exit_period=exit_period,
+            index_ns=idx_ns,
+            high_minute=high_s,
+            low_minute=low_s,
+            close_minute=close_s,
+            open_minute=open_s,
+            volume_minute=vol_s,
+            entry_period=entry_period,
+            exit_period=exit_period,
         )
 
         pf = vbt.Portfolio.from_signals(
             close_s,
             signal_func_nb=intraday_donchian_signal_nb,
             signal_args=(
-                vbt.Rep("close_arr"), vbt.Rep("upper_arr"), vbt.Rep("lower_arr"),
-                vbt.Rep("exit_upper_arr"), vbt.Rep("exit_lower_arr"), vbt.Rep("vwap_arr"),
-                vbt.Rep("index_arr"), vbt.Rep("eod_hour"), vbt.Rep("eod_minute"),
+                vbt.Rep("close_arr"),
+                vbt.Rep("upper_arr"),
+                vbt.Rep("lower_arr"),
+                vbt.Rep("exit_upper_arr"),
+                vbt.Rep("exit_lower_arr"),
+                vbt.Rep("vwap_arr"),
+                vbt.Rep("index_arr"),
+                vbt.Rep("eod_hour"),
+                vbt.Rep("eod_minute"),
             ),
-            broadcast_named_args=dict(
-                close_arr=close_s, upper_arr=idb.upper_channel.values,
-                lower_arr=idb.lower_channel.values, exit_upper_arr=idb.exit_upper.values,
-                exit_lower_arr=idb.exit_lower.values, vwap_arr=idb.vwap.values,
-                index_arr=idx_ns, eod_hour=eod_hour, eod_minute=eod_minute,
-            ),
-            fixed_fees=0.0035, init_cash=1_000_000, freq="1T",
+            broadcast_named_args={
+                "close_arr": close_s,
+                "upper_arr": idb.upper_channel.values,
+                "lower_arr": idb.lower_channel.values,
+                "exit_upper_arr": idb.exit_upper.values,
+                "exit_lower_arr": idb.exit_lower.values,
+                "vwap_arr": idb.vwap.values,
+                "index_arr": idx_ns,
+                "eod_hour": eod_hour,
+                "eod_minute": eod_minute,
+            },
+            fixed_fees=0.0035,
+            init_cash=1_000_000,
+            freq="1T",
         )
         return pf.deep_getattr(metric)
 
     return vbt.cv_split(
-        _run, splitter=splitter,
-        takeable_args=["high_arr", "low_arr", "close_arr", "open_arr", "volume_arr", "idx_ns"],
-        parameterized_kwargs=dict(engine="threadpool", chunk_len="auto"),
+        _run,
+        splitter=splitter,
+        takeable_args=[
+            "high_arr",
+            "low_arr",
+            "close_arr",
+            "open_arr",
+            "volume_arr",
+            "idx_ns",
+        ],
+        parameterized_kwargs={"engine": "threadpool", "chunk_len": "auto"},
         merge_func="concat",
     )
 
@@ -292,18 +388,43 @@ def create_cv_pipeline(splitter):
 # 5. PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def plot_monthly_heatmap(pf: vbt.Portfolio) -> go.Figure:
     rets = pf.returns
     monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    df = pd.DataFrame({"year": monthly.index.year, "month": monthly.index.month, "ret": monthly.values})
+    df = pd.DataFrame(
+        {
+            "year": monthly.index.year,
+            "month": monthly.index.month,
+            "ret": monthly.values,
+        }
+    )
     pivot = df.pivot(index="year", columns="month", values="ret")
-    pivot.columns = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot.values, x=pivot.columns, y=pivot.index.astype(str),
-        colorscale="RdYlGn", zmid=0,
-        text=np.round(pivot.values * 100, 1), texttemplate="%{text}%",
-    ))
+    pivot.columns = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index.astype(str),
+            colorscale="RdYlGn",
+            zmid=0,
+            text=np.round(pivot.values * 100, 1),
+            texttemplate="%{text}%",
+        )
+    )
     fig.update_layout(title="Donchian Breakout — Monthly Returns (%)", height=400)
     return fig
 
@@ -351,7 +472,11 @@ if __name__ == "__main__":
     volume_arr = vbt.to_2d_array(raw["volume"])
 
     splitter = vbt.Splitter.from_n_rolling(
-        raw.index, n=5, length=1_500_000, split=0.5, set_labels=["train", "test"],
+        raw.index,
+        n=5,
+        length=1_500_000,
+        split=0.5,
+        set_labels=["train", "test"],
     )
     cv = create_cv_pipeline(splitter)
 
@@ -359,19 +484,28 @@ if __name__ == "__main__":
     print(f"Running CV: {n_combos} combos x 5 splits = {n_combos * 5} backtests...")
 
     grid_perf, best_perf = cv(
-        high_arr=high_arr, low_arr=low_arr, close_arr=close_arr,
-        open_arr=open_arr, volume_arr=volume_arr, idx_ns=index_ns,
+        high_arr=high_arr,
+        low_arr=low_arr,
+        close_arr=close_arr,
+        open_arr=open_arr,
+        volume_arr=volume_arr,
+        idx_ns=index_ns,
         entry_period=vbt.Param([120, 240, 480, 720]),
         exit_period=vbt.Param([30, 60, 120]),
-        eod_hour=21, eod_minute=0, metric="sharpe_ratio",
-        _return_grid="all", _index=raw.index,
+        eod_hour=21,
+        eod_minute=0,
+        metric="sharpe_ratio",
+        _return_grid="all",
+        _index=raw.index,
     )
 
     print(f"  Grid shape: {grid_perf.shape}")
     print(f"  Best perf shape: {best_perf.shape}")
 
     fig_cv = grid_perf.vbt.heatmap(
-        x_level="entry_period", y_level="exit_period", slider_level="split",
+        x_level="entry_period",
+        y_level="exit_period",
+        slider_level="split",
     )
     fig_cv.write_html(f"{results_dir}/cv_heatmap.html")
 

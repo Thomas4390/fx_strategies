@@ -4,33 +4,32 @@ Shared utilities for FX intraday strategies.
 Numba-compiled kernels and common settings reused across all strategy modules.
 """
 
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
-from numba import njit
-
+from numba import njit, prange
 
 # ═══════════════════════════════════════════════════════════════════════
 # PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def configure_figure_for_fullscreen(fig):
     fig.update_layout(
         width=None,
         height=None,
         autosize=True,
-        margin=dict(l=30, r=30, t=60, b=30),
-        title=dict(font=dict(size=20), x=0.5, xanchor="center"),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=12),
-        ),
+        margin={"l": 30, "r": 30, "t": 60, "b": 30},
+        title={"font": {"size": 20}, "x": 0.5, "xanchor": "center"},
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "center",
+            "x": 0.5,
+            "font": {"size": 12},
+        },
     )
     return fig
 
@@ -44,10 +43,11 @@ def apply_vbt_settings() -> None:
 # TIME UTILITIES
 # ═══════════════════════════════════════════════════════════════════════
 
-@njit
+
+@njit(nogil=True)
 def find_day_boundaries_nb(
     index_ns: np.ndarray,
-) -> Tuple[np.ndarray, np.ndarray, int]:
+) -> tuple[np.ndarray, np.ndarray, int]:
     """Return (start_idx, end_idx, n_days) for each trading day."""
     n = len(index_ns)
     start_idx = np.empty(n, dtype=np.int64)
@@ -86,7 +86,8 @@ def compute_ann_factor(index: pd.DatetimeIndex) -> float:
 # VOLATILITY & LEVERAGE
 # ═══════════════════════════════════════════════════════════════════════
 
-@njit
+
+@njit(nogil=True)
 def compute_daily_rolling_volatility_nb(
     index_ns: np.ndarray,
     close_minute: np.ndarray,
@@ -116,7 +117,10 @@ def compute_daily_rolling_volatility_nb(
         return np.full(n, np.nan)
 
     rolling_std = vbt.generic.nb.rolling_std_1d_nb(
-        returns, window=window_size, minp=window_size, ddof=1,
+        returns,
+        window=window_size,
+        minp=window_size,
+        ddof=1,
     )
 
     vol_per_minute = np.full(n, np.nan)
@@ -129,7 +133,7 @@ def compute_daily_rolling_volatility_nb(
     return vol_per_minute
 
 
-@njit
+@njit(nogil=True)
 def compute_leverage_nb(
     rolling_vol_per_minute: np.ndarray,
     sigma_target: float,
@@ -152,7 +156,8 @@ def compute_leverage_nb(
 # ADX REGIME FILTER
 # ═══════════════════════════════════════════════════════════════════════
 
-@njit
+
+@njit(nogil=True)
 def compute_adx_nb(
     high: np.ndarray,
     low: np.ndarray,
@@ -185,9 +190,15 @@ def compute_adx_nb(
         lc = abs(low[i] - close[i - 1])
         tr[i] = max(hl, max(hc, lc))
 
-    smoothed_plus_dm = vbt.generic.nb.ewm_mean_1d_nb(plus_dm, span=period, minp=period, adjust=False)
-    smoothed_minus_dm = vbt.generic.nb.ewm_mean_1d_nb(minus_dm, span=period, minp=period, adjust=False)
-    smoothed_tr = vbt.generic.nb.ewm_mean_1d_nb(tr, span=period, minp=period, adjust=False)
+    smoothed_plus_dm = vbt.generic.nb.ewm_mean_1d_nb(
+        plus_dm, span=period, minp=period, adjust=False
+    )
+    smoothed_minus_dm = vbt.generic.nb.ewm_mean_1d_nb(
+        minus_dm, span=period, minp=period, adjust=False
+    )
+    smoothed_tr = vbt.generic.nb.ewm_mean_1d_nb(
+        tr, span=period, minp=period, adjust=False
+    )
 
     dx = np.full(n, np.nan)
     for i in range(n):

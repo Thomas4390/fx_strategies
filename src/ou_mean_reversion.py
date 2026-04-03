@@ -13,14 +13,12 @@ Robust backtesting pipeline:
 """
 
 import os
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
-from plotly.subplots import make_subplots
 
 from utils import (
     apply_vbt_settings,
@@ -31,28 +29,28 @@ from utils import (
     find_day_boundaries_nb,
 )
 
-
 # ═══════════════════════════════════════════════════════════════════════
 # 0. SETTINGS
 # ═══════════════════════════════════════════════════════════════════════
 
 apply_vbt_settings()
 
-SLIPPAGE = 0.00015       # 1.5 pips — realistic for EUR/USD minute bars
-FIXED_FEES = 0.0         # No fixed commission for spot FX
+SLIPPAGE = 0.00015  # 1.5 pips — realistic for EUR/USD minute bars
+FIXED_FEES = 0.0  # No fixed commission for spot FX
 INIT_CASH = 1_000_000.0
-VOL_WINDOW = 20          # Days for rolling volatility
-SIGMA_TARGET = 0.01      # Daily vol target for position sizing
-MAX_LEVERAGE = 3.0       # Cap on vol-targeted leverage
-ADX_PERIOD = 14          # ADX lookback (daily-equivalent, applied to minute)
-ADX_THRESHOLD = 30.0     # ADX above this = trending, disable MR
+VOL_WINDOW = 20  # Days for rolling volatility
+SIGMA_TARGET = 0.01  # Daily vol target for position sizing
+MAX_LEVERAGE = 3.0  # Cap on vol-targeted leverage
+ADX_PERIOD = 14  # ADX lookback (daily-equivalent, applied to minute)
+ADX_THRESHOLD = 30.0  # ADX above this = trending, disable MR
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # 1. NUMBA KERNELS
 # ═══════════════════════════════════════════════════════════════════════
 
-@njit
+
+@njit(nogil=True)
 def compute_intraday_twap_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
@@ -82,7 +80,7 @@ def compute_intraday_twap_nb(
     return twap
 
 
-@njit
+@njit(nogil=True)
 def compute_intraday_mr_indicators_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
@@ -95,7 +93,7 @@ def compute_intraday_mr_indicators_nb(
     vol_window: int,
     sigma_target: float,
     max_leverage: float,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute TWAP, z-score, bands, ADX filter, and leverage."""
     n = len(close)
 
@@ -111,10 +109,14 @@ def compute_intraday_mr_indicators_nb(
             deviation[i] = close[i] - twap[i]
 
     # Native rolling z-score (one-pass accumulator)
-    zscore = vbt.generic.nb.rolling_zscore_1d_nb(deviation, lookback, minp=lookback, ddof=1)
+    zscore = vbt.generic.nb.rolling_zscore_1d_nb(
+        deviation, lookback, minp=lookback, ddof=1
+    )
 
     # Bands from rolling std
-    rolling_std = vbt.generic.nb.rolling_std_1d_nb(deviation, lookback, minp=lookback, ddof=1)
+    rolling_std = vbt.generic.nb.rolling_std_1d_nb(
+        deviation, lookback, minp=lookback, ddof=1
+    )
     upper_band = np.full(n, np.nan)
     lower_band = np.full(n, np.nan)
     for i in range(n):
@@ -177,7 +179,8 @@ def compute_metric_nb(returns, metric_type, ann_factor, cutoff=0.05):
 # 3. SIGNAL FUNCTION
 # ═══════════════════════════════════════════════════════════════════════
 
-@njit
+
+@njit(nogil=True)
 def intraday_mr_signal_nb(
     c,
     close_arr: np.ndarray,
@@ -198,7 +201,9 @@ def intraday_mr_signal_nb(
     eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
 
     # EOD forced exit
-    is_eod = (cur_hour > eod_hour) or (cur_hour == eod_hour and cur_minute >= eod_minute)
+    is_eod = (cur_hour > eod_hour) or (
+        cur_hour == eod_hour and cur_minute >= eod_minute
+    )
     if is_eod:
         el = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
         es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
@@ -243,6 +248,7 @@ def intraday_mr_signal_nb(
 # 4. STANDARD BACKTEST
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def run_standard_backtest(
     raw: pd.DataFrame,
     index_ns: np.ndarray,
@@ -264,9 +270,23 @@ def run_standard_backtest(
         class_name="IntradayMR",
         short_name="imr",
         input_names=["index_ns", "high_minute", "low_minute", "close_minute"],
-        param_names=["lookback", "band_width", "adx_period", "adx_threshold",
-                      "vol_window", "sigma_target", "max_leverage"],
-        output_names=["twap", "zscore", "upper_band", "lower_band", "regime_ok", "leverage"],
+        param_names=[
+            "lookback",
+            "band_width",
+            "adx_period",
+            "adx_threshold",
+            "vol_window",
+            "sigma_target",
+            "max_leverage",
+        ],
+        output_names=[
+            "twap",
+            "zscore",
+            "upper_band",
+            "lower_band",
+            "regime_ok",
+            "leverage",
+        ],
     ).with_apply_func(
         compute_intraday_mr_indicators_nb,
         takes_1d=True,
@@ -293,7 +313,7 @@ def run_standard_backtest(
         max_leverage=max_leverage,
         jitted_loop=True,
         jitted_warmup=True,
-        execute_kwargs=dict(engine="threadpool", n_chunks="auto"),
+        execute_kwargs={"engine": "threadpool", "n_chunks": "auto"},
     )
 
     pf = vbt.Portfolio.from_signals(
@@ -301,6 +321,8 @@ def run_standard_backtest(
         open=raw["open"],
         high=raw["high"],
         low=raw["low"],
+        jitted={"parallel": True},
+        chunked="threadpool",
         signal_func_nb=intraday_mr_signal_nb,
         signal_args=(
             vbt.Rep("close_arr"),
@@ -313,17 +335,17 @@ def run_standard_backtest(
             vbt.Rep("eod_minute"),
             vbt.Rep("eval_freq"),
         ),
-        broadcast_named_args=dict(
-            close_arr=raw["close"],
-            upper_arr=imr.upper_band.values,
-            lower_arr=imr.lower_band.values,
-            twap_arr=imr.twap.values,
-            regime_ok_arr=imr.regime_ok.values,
-            index_arr=index_ns,
-            eod_hour=eod_hour,
-            eod_minute=eod_minute,
-            eval_freq=eval_freq,
-        ),
+        broadcast_named_args={
+            "close_arr": raw["close"],
+            "upper_arr": imr.upper_band.values,
+            "lower_arr": imr.lower_band.values,
+            "twap_arr": imr.twap.values,
+            "regime_ok_arr": imr.regime_ok.values,
+            "index_arr": index_ns,
+            "eod_hour": eod_hour,
+            "eod_minute": eod_minute,
+            "eval_freq": eval_freq,
+        },
         leverage=imr.leverage.values,
         slippage=SLIPPAGE,
         fixed_fees=FIXED_FEES,
@@ -340,8 +362,13 @@ def run_standard_backtest(
 # 5. FULL NUMBA PIPELINE (for parameter sweeps)
 # ═══════════════════════════════════════════════════════════════════════
 
+
 @vbt.parameterized(
-    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    execute_kwargs={
+        "chunk_len": "auto",
+        "engine": "threadpool",
+        "warmup": True,
+    },
     merge_func="concat",
 )
 @njit(nogil=True)
@@ -363,7 +390,6 @@ def pipeline_nb(
     max_leverage: float = MAX_LEVERAGE,
     init_cash: float = INIT_CASH,
     fixed_fees: float = FIXED_FEES,
-    sl_stop: float = 0.003,
     ann_factor: float = 299_124.0,
     metric_type: int = SHARPE_RATIO,
 ):
@@ -388,8 +414,8 @@ def pipeline_nb(
     eval_freq_a = np.full(target_shape, eval_freq, dtype=np.int32)
     group_lens = np.full(close_arr.shape[1], 1)
     leverage_arr = leverage.reshape(-1, 1)
-    fixed_fees_arr = np.full(1, fixed_fees)
-    fees_arr = np.full(1, 0.0)
+    fixed_fees_arr = np.full((1, 1), fixed_fees)
+    fees_arr = np.full((1, 1), 0.0)
 
     sim_out = vbt.pf_nb.from_signal_func_nb(
         target_shape=target_shape,
@@ -415,9 +441,10 @@ def pipeline_nb(
         fees=fees_arr,
         fixed_fees=fixed_fees_arr,
         leverage=leverage_arr,
-        sl_stop=sl_stop,
         post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(target_shape, group_lens, cash_sharing=False),
+        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(
+            target_shape, group_lens, cash_sharing=False
+        ),
     )
 
     returns = sim_out.in_outputs.returns
@@ -428,15 +455,27 @@ def pipeline_nb(
 # 6. CV PIPELINES
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def _build_cv_runner(splitter):
     """Build a CV-wrapped backtest function for a given splitter."""
 
     def _run_pipeline(
-        high_arr, low_arr, close_arr, open_arr, idx_ns,
-        lookback, band_width, sl_stop=0.003, tp_stop=0.0045,
-        eod_hour=21, eod_minute=0, eval_freq=5,
-        adx_period=ADX_PERIOD, adx_threshold=ADX_THRESHOLD,
-        vol_window=VOL_WINDOW, sigma_target=SIGMA_TARGET,
+        high_arr,
+        low_arr,
+        close_arr,
+        open_arr,
+        idx_ns,
+        lookback,
+        band_width,
+        sl_stop=0.003,
+        tp_stop=0.0045,
+        eod_hour=21,
+        eod_minute=0,
+        eval_freq=5,
+        adx_period=ADX_PERIOD,
+        adx_threshold=ADX_THRESHOLD,
+        vol_window=VOL_WINDOW,
+        sigma_target=SIGMA_TARGET,
         max_leverage=MAX_LEVERAGE,
         metric="sharpe_ratio",
     ):
@@ -444,9 +483,23 @@ def _build_cv_runner(splitter):
             class_name="IntradayMR",
             short_name="imr",
             input_names=["index_ns", "high_minute", "low_minute", "close_minute"],
-            param_names=["lookback", "band_width", "adx_period", "adx_threshold",
-                          "vol_window", "sigma_target", "max_leverage"],
-            output_names=["twap", "zscore", "upper_band", "lower_band", "regime_ok", "leverage"],
+            param_names=[
+                "lookback",
+                "band_width",
+                "adx_period",
+                "adx_threshold",
+                "vol_window",
+                "sigma_target",
+                "max_leverage",
+            ],
+            output_names=[
+                "twap",
+                "zscore",
+                "upper_band",
+                "lower_band",
+                "regime_ok",
+                "leverage",
+            ],
         ).with_apply_func(
             compute_intraday_mr_indicators_nb,
             takes_1d=True,
@@ -459,7 +512,9 @@ def _build_cv_runner(splitter):
             max_leverage=max_leverage,
         )
 
-        close_s = pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+        close_s = (
+            pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
+        )
         high_s = pd.Series(high_arr[:, 0]) if high_arr.ndim > 1 else pd.Series(high_arr)
         low_s = pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
         open_s = pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
@@ -483,23 +538,31 @@ def _build_cv_runner(splitter):
             open=open_s,
             high=high_s,
             low=low_s,
+            jitted={"parallel": True},
+            chunked="threadpool",
             signal_func_nb=intraday_mr_signal_nb,
             signal_args=(
-                vbt.Rep("close_arr"), vbt.Rep("upper_arr"), vbt.Rep("lower_arr"),
-                vbt.Rep("twap_arr"), vbt.Rep("regime_ok_arr"), vbt.Rep("index_arr"),
-                vbt.Rep("eod_hour"), vbt.Rep("eod_minute"), vbt.Rep("eval_freq"),
+                vbt.Rep("close_arr"),
+                vbt.Rep("upper_arr"),
+                vbt.Rep("lower_arr"),
+                vbt.Rep("twap_arr"),
+                vbt.Rep("regime_ok_arr"),
+                vbt.Rep("index_arr"),
+                vbt.Rep("eod_hour"),
+                vbt.Rep("eod_minute"),
+                vbt.Rep("eval_freq"),
             ),
-            broadcast_named_args=dict(
-                close_arr=close_s,
-                upper_arr=imr.upper_band.values,
-                lower_arr=imr.lower_band.values,
-                twap_arr=imr.twap.values,
-                regime_ok_arr=imr.regime_ok.values,
-                index_arr=idx_ns,
-                eod_hour=eod_hour,
-                eod_minute=eod_minute,
-                eval_freq=eval_freq,
-            ),
+            broadcast_named_args={
+                "close_arr": close_s,
+                "upper_arr": imr.upper_band.values,
+                "lower_arr": imr.lower_band.values,
+                "twap_arr": imr.twap.values,
+                "regime_ok_arr": imr.regime_ok.values,
+                "index_arr": idx_ns,
+                "eod_hour": eod_hour,
+                "eod_minute": eod_minute,
+                "eval_freq": eval_freq,
+            },
             leverage=imr.leverage.values,
             slippage=SLIPPAGE,
             fixed_fees=FIXED_FEES,
@@ -514,7 +577,7 @@ def _build_cv_runner(splitter):
         _run_pipeline,
         splitter=splitter,
         takeable_args=["high_arr", "low_arr", "close_arr", "open_arr", "idx_ns"],
-        parameterized_kwargs=dict(engine="threadpool", chunk_len="auto"),
+        parameterized_kwargs={"engine": "threadpool", "chunk_len": "auto"},
         merge_func="concat",
     )
 
@@ -523,28 +586,45 @@ def _build_cv_runner(splitter):
 # 7. PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
 
-def plot_monthly_heatmap(pf: vbt.Portfolio, title: str = "Monthly Returns (%)") -> go.Figure:
+
+def plot_monthly_heatmap(
+    pf: vbt.Portfolio, title: str = "Monthly Returns (%)"
+) -> go.Figure:
     rets = pf.returns
     monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    df = pd.DataFrame({
-        "year": monthly.index.year,
-        "month": monthly.index.month,
-        "ret": monthly.values,
-    })
+    df = pd.DataFrame(
+        {
+            "year": monthly.index.year,
+            "month": monthly.index.month,
+            "ret": monthly.values,
+        }
+    )
     pivot = df.pivot(index="year", columns="month", values="ret")
     pivot.columns = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
     ]
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot.values,
-        x=pivot.columns,
-        y=pivot.index.astype(str),
-        colorscale="RdYlGn",
-        zmid=0,
-        text=np.round(pivot.values * 100, 1),
-        texttemplate="%{text}%",
-    ))
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index.astype(str),
+            colorscale="RdYlGn",
+            zmid=0,
+            text=np.round(pivot.values * 100, 1),
+            texttemplate="%{text}%",
+        )
+    )
     fig.update_layout(title=title, height=400)
     return fig
 
@@ -574,14 +654,22 @@ if __name__ == "__main__":
     raw_test = raw.loc[holdout_date:]
     index_ns_train = vbt.dt.to_ns(raw_train.index)
     index_ns_test = vbt.dt.to_ns(raw_test.index)
-    print(f"  Train: {len(raw_train)} bars ({raw_train.index[0]} -> {raw_train.index[-1]})")
-    print(f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} -> {raw_test.index[-1]})")
+    train_start, train_end = raw_train.index[0], raw_train.index[-1]
+    print(f"  Train: {len(raw_train)} bars ({train_start} -> {train_end})")
+    print(
+        f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} -> {raw_test.index[-1]})"
+    )
 
     # ── Standard backtest on FULL data ─────────────────────────────
     print("\nRunning standard backtest (full data, default params)...")
     pf, imr = run_standard_backtest(
-        raw, index_ns, ann_factor,
-        lookback=60, band_width=2.0, sl_stop=0.003, tp_stop=0.0045,
+        raw,
+        index_ns,
+        ann_factor,
+        lookback=60,
+        band_width=2.0,
+        sl_stop=0.003,
+        tp_stop=0.0045,
         eval_freq=5,
     )
 
@@ -593,7 +681,9 @@ if __name__ == "__main__":
 
     # ── Plots (standard) ──────────────────────────────────────────
     fig_pf = pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
-    fig_pf.update_layout(title="Intraday MR — Portfolio Overview (realistic)", height=900)
+    fig_pf.update_layout(
+        title="Intraday MR — Portfolio Overview (realistic)", height=900
+    )
     fig_pf.write_html(f"{results_dir}/portfolio_overview.html")
 
     fig_monthly = plot_monthly_heatmap(pf, "Intraday MR — Monthly Returns (%)")
@@ -621,16 +711,17 @@ if __name__ == "__main__":
 
     cv_kfold = _build_cv_runner(splitter_kfold)
 
-    param_grid = dict(
-        lookback=vbt.Param([20, 30, 60, 120, 240]),
-        band_width=vbt.Param([1.5, 2.0, 2.5, 3.0, 3.5]),
-        sl_stop=vbt.Param([0.002, 0.003, 0.005]),
-    )
+    param_grid = {
+        "lookback": vbt.Param([20, 30, 60, 120, 240]),
+        "band_width": vbt.Param([1.5, 2.0, 2.5, 3.0, 3.5]),
+        "sl_stop": vbt.Param([0.002, 0.003, 0.005]),
+    }
 
     n_combos = 5 * 5 * 3
     n_splits = len(splitter_kfold.splits)
     print(f"  Splitter: {n_splits} splits")
-    print(f"  Grid: {n_combos} combos x {n_splits} splits = {n_combos * n_splits} backtests")
+    total = n_combos * n_splits
+    print(f"  Grid: {n_combos} combos x {n_splits} splits = {total} backtests")
 
     grid_perf_kfold, best_perf_kfold = cv_kfold(
         high_arr=high_arr_train,
@@ -654,7 +745,7 @@ if __name__ == "__main__":
         slider_level="split",
     )
     fig_cv_kfold.write_html(f"{results_dir}/cv_kfold_heatmap.html")
-    print(f"  CV k-fold heatmap saved.")
+    print("  CV k-fold heatmap saved.")
 
     # ── Cross-validation: Walk-Forward (on train set) ──────────────
     print("\n" + "=" * 60)
@@ -672,7 +763,8 @@ if __name__ == "__main__":
     cv_wf = _build_cv_runner(splitter_wf)
     n_splits_wf = len(splitter_wf.splits)
     print(f"  Splitter: {n_splits_wf} splits (walk-forward)")
-    print(f"  Grid: {n_combos} combos x {n_splits_wf} splits = {n_combos * n_splits_wf} backtests")
+    total_wf = n_combos * n_splits_wf
+    print(f"  Grid: {n_combos} combos x {n_splits_wf} splits = {total_wf} backtests")
 
     grid_perf_wf, best_perf_wf = cv_wf(
         high_arr=high_arr_train,
@@ -696,15 +788,21 @@ if __name__ == "__main__":
         slider_level="split",
     )
     fig_cv_wf.write_html(f"{results_dir}/cv_walkforward_heatmap.html")
-    print(f"  CV walk-forward heatmap saved.")
+    print("  CV walk-forward heatmap saved.")
 
     # ── Best params consensus ──────────────────────────────────────
     print("\n" + "=" * 60)
     print("PARAMETER SELECTION")
     print("=" * 60)
 
-    best_idx_kfold = best_perf_kfold.idxmax() if isinstance(best_perf_kfold.index, pd.MultiIndex) else None
-    best_idx_wf = best_perf_wf.idxmax() if isinstance(best_perf_wf.index, pd.MultiIndex) else None
+    best_idx_kfold = (
+        best_perf_kfold.idxmax()
+        if isinstance(best_perf_kfold.index, pd.MultiIndex)
+        else None
+    )
+    best_idx_wf = (
+        best_perf_wf.idxmax() if isinstance(best_perf_wf.index, pd.MultiIndex) else None
+    )
 
     print(f"  K-Fold best: {best_idx_kfold} (Sharpe: {best_perf_kfold.max():.4f})")
     print(f"  Walk-Forward best: {best_idx_wf} (Sharpe: {best_perf_wf.max():.4f})")
@@ -732,7 +830,9 @@ if __name__ == "__main__":
     # ── Re-run optimized on train set ──────────────────────────────
     print("\nRe-running optimized on TRAIN set...")
     pf_opt_train, _ = run_standard_backtest(
-        raw_train, index_ns_train, ann_factor,
+        raw_train,
+        index_ns_train,
+        ann_factor,
         lookback=int(opt_params.get("lookback", 60)),
         band_width=float(opt_params.get("band_width", 2.0)),
         sl_stop=float(opt_params.get("sl_stop", 0.003)),
@@ -751,7 +851,9 @@ if __name__ == "__main__":
     print("=" * 60)
 
     pf_holdout, _ = run_standard_backtest(
-        raw_test, index_ns_test, ann_factor,
+        raw_test,
+        index_ns_test,
+        ann_factor,
         lookback=int(opt_params.get("lookback", 60)),
         band_width=float(opt_params.get("band_width", 2.0)),
         sl_stop=float(opt_params.get("sl_stop", 0.003)),
@@ -762,11 +864,13 @@ if __name__ == "__main__":
     print(pf_holdout.stats().to_string())
     print("=" * 60)
 
-    comparison = pd.DataFrame({
-        "Standard (full)": pf.stats(),
-        "Optimized (train)": pf_opt_train.stats(),
-        "Hold-out (test)": pf_holdout.stats(),
-    })
+    comparison = pd.DataFrame(
+        {
+            "Standard (full)": pf.stats(),
+            "Optimized (train)": pf_opt_train.stats(),
+            "Hold-out (test)": pf_holdout.stats(),
+        }
+    )
     print("\n" + "=" * 60)
     print("COMPARISON: Standard vs Optimized vs Hold-Out")
     print("=" * 60)
@@ -774,18 +878,26 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # ── Save hold-out plots ────────────────────────────────────────
-    fig_holdout = pf_holdout.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
+    fig_holdout = pf_holdout.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater"]
+    )
     fig_holdout.update_layout(title="Intraday MR — Hold-Out Test", height=900)
     fig_holdout.write_html(f"{results_dir}/portfolio_holdout.html")
 
-    fig_monthly_holdout = plot_monthly_heatmap(pf_holdout, "Intraday MR — Hold-Out Monthly Returns (%)")
+    fig_monthly_holdout = plot_monthly_heatmap(
+        pf_holdout, "Intraday MR — Hold-Out Monthly Returns (%)"
+    )
     fig_monthly_holdout.write_html(f"{results_dir}/monthly_returns_holdout.html")
 
-    fig_opt = pf_opt_train.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
+    fig_opt = pf_opt_train.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater"]
+    )
     fig_opt.update_layout(title="Intraday MR — Optimized (Train)", height=900)
     fig_opt.write_html(f"{results_dir}/portfolio_optimized.html")
 
-    fig_monthly_opt = plot_monthly_heatmap(pf_opt_train, "Intraday MR — Optimized Monthly Returns (%)")
+    fig_monthly_opt = plot_monthly_heatmap(
+        pf_opt_train, "Intraday MR — Optimized Monthly Returns (%)"
+    )
     fig_monthly_opt.write_html(f"{results_dir}/monthly_returns_optimized.html")
 
     print(f"\nAll results saved to {results_dir}/")
