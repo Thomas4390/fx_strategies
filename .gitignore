@@ -1,0 +1,21 @@
+# Data files
+data/
+*.parquet
+*.ods
+
+# Results (generated)
+results/
+
+# Documentation (binary)
+docs/*.pdf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,15 @@
+[project]
+name = "fx-strategies"
+version = "0.1.0"
+description = "Composite FX Alpha: Multi-Signal Currency Strategy"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.0",
+    "pyarrow",
+    "numpy",
+    "numba",
+    "plotly",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ipython"]
