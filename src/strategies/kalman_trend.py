@@ -226,3 +226,9 @@ spec = StrategySpec(
         "idx_ns",
     ),
 )
+
+
+if __name__ == "__main__":
+    from framework.runner import run_strategy
+
+    run_strategy(spec, mode="full")

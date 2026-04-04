@@ -335,3 +335,9 @@ spec = StrategySpec(
     ),
     takeable_args=("close_arr",),
 )
+
+
+if __name__ == "__main__":
+    from framework.runner import run_strategy
+
+    run_strategy(spec, mode="full")

@@ -201,3 +201,9 @@ spec = StrategySpec(
     },
     portfolio_config=PortfolioConfig(leverage="ind.leverage", sl_stop=0.005),
 )
+
+
+if __name__ == "__main__":
+    from framework.runner import run_strategy
+
+    run_strategy(spec, mode="full")
