@@ -13,3 +13,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "ipython"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
