@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 """
-Multi-Strategy Walk-Forward CV — True Multicore via Numba prange
+Multi-Strategy Walk-Forward CV — VBT Pro Native Pipeline
 
-- prange parallel loops for real 32-core utilization
-- @vbt.cv_split with attach_bounds="index" for date-labeled splits
-- slider_level="start" for temporal heatmap navigation
+Architecture:
+- splitter.apply() + @vbt.parameterized for idiomatic VBT CV
+- Multi-metric returns (Sharpe, Sortino, Calmar, PF, max DD, return, trades)
+- prange batch for ultra-fast full-sample sweeps
+- slider_labels with dates on all heatmaps
 - Fullscreen browser plots
 """
 
 import os
 import sys
+import time
 import warnings
 
 import numba
@@ -41,8 +44,27 @@ def fullscreen(fig, title="", height=900):
     return fig
 
 
+def show_save(fig, name, title, h=800):
+    fig = fullscreen(fig, title, h)
+    fig.write_html(f"{RESULTS_DIR}/{name}.html")
+    fig.show(renderer="browser")
+    print(f"  {name} → browser")
+
+
+def split_date_labels(splitter, set_label="train"):
+    """Build date range labels for each split."""
+    bounds = splitter.get_bounds(index_bounds=True)
+    labels = []
+    for i in range(len(splitter.splits)):
+        row = bounds.loc[(i, set_label)]
+        s = str(pd.Timestamp(row["start"]).date())
+        e = str(pd.Timestamp(row["end"]).date())
+        labels.append(f"{s} → {e}")
+    return labels
+
+
 # ═══════════════════════════════════════════════════════════════════════
-# NUMBA KERNELS
+# 1. NUMBA PRANGE KERNELS (fast full-sample sweeps)
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -63,97 +85,15 @@ def rsi_signal_nb(c, rsi_arr, entry_th_arr, exit_th_arr):
 
 
 @njit(nogil=True)
-def bbands_signal_nb(c, close_arr, upper_arr, middle_arr, lower_arr):
-    px = vbt.pf_nb.select_nb(c, close_arr)
-    up = vbt.pf_nb.select_nb(c, upper_arr)
-    mid = vbt.pf_nb.select_nb(c, middle_arr)
-    lo = vbt.pf_nb.select_nb(c, lower_arr)
-    if np.isnan(px) or np.isnan(up) or c.i == 0:
-        return False, False, False, False
-    pp = close_arr[c.i-1, c.col] if close_arr.ndim > 1 else close_arr[c.i-1]
-    plo = lower_arr[c.i-1, c.col] if lower_arr.ndim > 1 else lower_arr[c.i-1]
-    pup = upper_arr[c.i-1, c.col] if upper_arr.ndim > 1 else upper_arr[c.i-1]
-    pmid = middle_arr[c.i-1, c.col] if middle_arr.ndim > 1 else middle_arr[c.i-1]
-    return (pp >= plo and px < lo, pp <= pmid and px > mid,
-            pp <= pup and px > up, pp >= pmid and px < mid)
-
-
-@njit(nogil=True)
 def _run_rsi_sim(close_arr, rsi_window, entry_th, fees, slippage):
-    """Single RSI backtest, returns Sharpe scalar."""
     ts = close_arr.shape
     rsi = vbt.indicators.nb.rsi_1d_nb(close_arr[:, 0], window=rsi_window)
-    eth_arr = np.full(ts, entry_th)
-    exth_arr = np.full(ts, 100.0 - entry_th)
     gl = np.full(ts[1], 1)
     so = vbt.pf_nb.from_signal_func_nb(
         target_shape=ts, group_lens=gl, init_cash=1000000.0,
         cash_sharing=False, close=close_arr,
         signal_func_nb=rsi_signal_nb,
-        signal_args=(rsi.reshape(-1, 1), eth_arr, exth_arr),
-        slippage=np.full(ts, slippage), fees=np.full(ts, fees),
-        post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(ts, gl, cash_sharing=False),
-    )
-    return vbt.ret_nb.sharpe_ratio_nb(returns=so.in_outputs.returns, ann_factor=252.0)[0]
-
-
-@njit(nogil=True)
-def _run_bb_sim(close_arr, bb_window, bb_alpha, fees, slippage):
-    """Single BBands backtest, returns Sharpe scalar."""
-    ts = close_arr.shape
-    upper, middle, lower = vbt.indicators.nb.bbands_1d_nb(close_arr[:, 0], window=bb_window, alpha=bb_alpha)
-    gl = np.full(ts[1], 1)
-    so = vbt.pf_nb.from_signal_func_nb(
-        target_shape=ts, group_lens=gl, init_cash=1000000.0,
-        cash_sharing=False, close=close_arr,
-        signal_func_nb=bbands_signal_nb,
-        signal_args=(close_arr, upper.reshape(-1,1), middle.reshape(-1,1), lower.reshape(-1,1)),
-        slippage=np.full(ts, slippage), fees=np.full(ts, fees),
-        post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
-        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(ts, gl, cash_sharing=False),
-    )
-    return vbt.ret_nb.sharpe_ratio_nb(returns=so.in_outputs.returns, ann_factor=252.0)[0]
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# PRANGE BATCH SWEEPS (true multicore)
-# ═══════════════════════════════════════════════════════════════════════
-
-
-@njit(nogil=True)
-def rsi_exit_signal_nb(c, rsi_arr, entry_th_arr, exit_th_arr, exit_l_arr, exit_s_arr):
-    """RSI signal with variable exit level."""
-    rv = vbt.pf_nb.select_nb(c, rsi_arr)
-    et = vbt.pf_nb.select_nb(c, entry_th_arr)
-    ext = vbt.pf_nb.select_nb(c, exit_th_arr)
-    xl = vbt.pf_nb.select_nb(c, exit_l_arr)
-    xs = vbt.pf_nb.select_nb(c, exit_s_arr)
-    if np.isnan(rv) or c.i == 0:
-        return False, False, False, False
-    p = rsi_arr[c.i - 1, c.col] if rsi_arr.ndim > 1 else rsi_arr[c.i - 1]
-    if np.isnan(p):
-        return False, False, False, False
-    return (p >= et and rv < et, p <= xl and rv > xl,
-            p <= ext and rv > ext, p >= xs and rv < xs)
-
-
-@njit(nogil=True)
-def _run_rsi_sim_exit(close_arr, rsi_window, entry_th, exit_level, fees, slippage):
-    """RSI backtest with variable exit level (not fixed at 50)."""
-    ts = close_arr.shape
-    rsi = vbt.indicators.nb.rsi_1d_nb(close_arr[:, 0], window=rsi_window)
-    rsi_2d = rsi.reshape(-1, 1)
-    eth_arr = np.full(ts, entry_th)
-    exth_arr = np.full(ts, 100.0 - entry_th)
-    exit_l_arr = np.full(ts, exit_level)
-    exit_s_arr = np.full(ts, 100.0 - exit_level)
-    gl = np.full(ts[1], 1)
-    so = vbt.pf_nb.from_signal_func_nb(
-        target_shape=ts, group_lens=gl, init_cash=1000000.0,
-        cash_sharing=False, close=close_arr,
-        signal_func_nb=rsi_exit_signal_nb,
-        signal_args=(rsi_2d, eth_arr, exth_arr, exit_l_arr, exit_s_arr),
+        signal_args=(rsi.reshape(-1, 1), np.full(ts, entry_th), np.full(ts, 100.0 - entry_th)),
         slippage=np.full(ts, slippage), fees=np.full(ts, fees),
         post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
         in_outputs=vbt.pf_nb.init_FSInOutputs_nb(ts, gl, cash_sharing=False),
@@ -163,146 +103,141 @@ def _run_rsi_sim_exit(close_arr, rsi_window, entry_th, exit_level, fees, slippag
 
 @njit(parallel=True, nogil=True)
 def rsi_batch(close_arr, rsi_windows, entry_ths, fees, slippage):
-    """Parallel RSI sweep using all CPU cores via prange."""
     n_rw, n_eth = len(rsi_windows), len(entry_ths)
     results = np.empty(n_rw * n_eth)
     for idx in prange(n_rw * n_eth):
         results[idx] = _run_rsi_sim(
-            close_arr, rsi_windows[idx // n_eth], entry_ths[idx % n_eth], fees, slippage,
-        )
-    return results
-
-
-@njit(parallel=True, nogil=True)
-def rsi_batch_3d(close_arr, rsi_windows, entry_ths, exit_levels, fees, slippage):
-    """3-param RSI sweep (window × entry × exit_level) via prange."""
-    n_rw = len(rsi_windows)
-    n_eth = len(entry_ths)
-    n_ex = len(exit_levels)
-    total = n_rw * n_eth * n_ex
-    results = np.empty(total)
-    for idx in prange(total):
-        rw_i = idx // (n_eth * n_ex)
-        eth_i = (idx // n_ex) % n_eth
-        ex_i = idx % n_ex
-        results[idx] = _run_rsi_sim_exit(
-            close_arr, rsi_windows[rw_i], entry_ths[eth_i], exit_levels[ex_i], fees, slippage,
-        )
-    return results
-
-
-@njit(parallel=True, nogil=True)
-def bbands_batch(close_arr, bb_windows, bb_alphas, fees, slippage):
-    """Parallel BBands sweep using all CPU cores via prange."""
-    n_w, n_a = len(bb_windows), len(bb_alphas)
-    results = np.empty(n_w * n_a)
-    for idx in prange(n_w * n_a):
-        results[idx] = _run_bb_sim(
-            close_arr, bb_windows[idx // n_a], bb_alphas[idx % n_a], fees, slippage,
-        )
+            close_arr, rsi_windows[idx // n_eth], entry_ths[idx % n_eth], fees, slippage)
     return results
 
 
 def batch_to_series(results, names_vals):
-    """Convert flat batch results to MultiIndex Series for VBT heatmaps.
-
-    names_vals: list of (name, values) tuples.
-    """
     names = [nv[0] for nv in names_vals]
     vals = [nv[1] for nv in names_vals]
-    idx = pd.MultiIndex.from_product(vals, names=names)
-    return pd.Series(results, index=idx)
+    return pd.Series(results, index=pd.MultiIndex.from_product(vals, names=names))
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# CV VIA MANUAL SPLITTER + PRANGE (true multicore on every split)
+# 2. VBT NATIVE CV PIPELINE (multi-metric, splitter.apply)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def _run_cv_prange(close_series, batch_fn, param_arrays, param_names, n_splits=8, window_length=500):
-    """Generic walk-forward CV using vbt.Splitter + prange batch function.
+def rsi_multi_metrics(close, rsi_window, entry_th):
+    """Single backtest returning multiple metrics as a Series."""
+    exit_th = 100 - entry_th
+    rsi = vbt.RSI.run(close, window=rsi_window)
+    el = rsi.rsi_crossed_below(entry_th)
+    xl = rsi.rsi_crossed_above(50)
+    es = rsi.rsi_crossed_above(exit_th)
+    xs = rsi.rsi_crossed_below(50)
+    pf = vbt.PF.from_signals(
+        close, long_entries=el, long_exits=xl,
+        short_entries=es, short_exits=xs,
+        slippage=SLIPPAGE, fees=FEES, init_cash=INIT_CASH, freq="1d",
+    )
+    stats = pf.stats()
+    return pd.Series({
+        "sharpe": pf.sharpe_ratio,
+        "sortino": pf.sortino_ratio,
+        "calmar": pf.calmar_ratio,
+        "total_return": pf.total_return,
+        "max_dd": pf.max_drawdown,
+        "profit_factor": stats.get("Profit Factor", np.nan),
+        "win_rate": stats.get("Win Rate [%]", np.nan),
+        "trades": stats.get("Total Trades", 0),
+    })
 
-    batch_fn: a prange-parallel function like rsi_batch(close_arr, *param_arrays, fees, slippage)
-    param_arrays: list of numpy arrays for each parameter dimension
-    param_names: list of str names for each parameter
+
+# Create parameterized wrapper (once)
+param_rsi_multi = vbt.parameterized(rsi_multi_metrics, merge_func="concat")
+param_rsi_sharpe = vbt.parameterized(
+    lambda close, rsi_window, entry_th: rsi_multi_metrics(close, rsi_window, entry_th)["sharpe"],
+    merge_func="concat",
+)
+
+
+def run_native_cv(close, rsi_windows, entry_ths, n_splits=6, window_length=600):
+    """VBT native walk-forward CV with multi-metric output.
+
+    Returns:
+        splitter: vbt.Splitter instance
+        train_metrics: multi-metric Series (split × params × metric)
+        test_metrics: multi-metric Series
+        train_sharpe: sharpe-only Series (for heatmaps)
+        test_sharpe: sharpe-only Series
     """
     splitter = vbt.Splitter.from_n_rolling(
-        close_series.index, n=n_splits, length=window_length,
+        close.index, n=n_splits, length=window_length,
         split=0.5, set_labels=["train", "test"],
     )
-    taken = splitter.take(close_series)
 
-    all_rows = []
+    print(f"  Splitter: {n_splits} splits × {window_length} bars")
+
+    # Multi-metric CV via splitter.apply
+    t0 = time.time()
+    train_metrics = splitter.apply(
+        param_rsi_multi,
+        vbt.Takeable(close),
+        vbt.Param(rsi_windows),
+        vbt.Param(entry_ths),
+        set_="train",
+        merge_func="concat",
+        execute_kwargs={"show_progress": True},
+    )
+    t1 = time.time()
+    print(f"  Train: {t1-t0:.3f}s, {train_metrics.shape[0]} results")
+
+    t0 = time.time()
+    test_metrics = splitter.apply(
+        param_rsi_multi,
+        vbt.Takeable(close),
+        vbt.Param(rsi_windows),
+        vbt.Param(entry_ths),
+        set_="test",
+        merge_func="concat",
+        execute_kwargs={"show_progress": True},
+    )
+    t1 = time.time()
+    print(f"  Test:  {t1-t0:.3f}s")
+
+    # Extract Sharpe for heatmaps
+    metric_level = train_metrics.index.names.index(None) if None in train_metrics.index.names else -1
+    train_sharpe = train_metrics.xs("sharpe", level=metric_level)
+    test_sharpe = test_metrics.xs("sharpe", level=metric_level)
+
+    return splitter, train_metrics, test_metrics, train_sharpe, test_sharpe
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 3. BEST PARAM SELECTION + OOS VALIDATION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def select_best_and_validate(splitter, train_sharpe, test_sharpe, train_metrics, test_metrics):
+    """Select best params per split on train, validate on test."""
+    n_splits = len(splitter.splits)
+    metric_level = train_metrics.index.names.index(None) if None in train_metrics.index.names else -1
+
+    rows = []
     for split_i in range(n_splits):
-        for set_label in ["train", "test"]:
-            subset = taken[(split_i, set_label)]
-            arr = vbt.to_2d_array(subset)
+        tr = train_sharpe.xs(split_i, level="split")
+        best_idx = tr.idxmax()
+        rw, eth = best_idx
 
-            results = batch_fn(arr, *param_arrays, FEES, SLIPPAGE)
+        te = test_sharpe.xs(split_i, level="split")
+        test_val = te.loc[best_idx] if best_idx in te.index else np.nan
 
-            start_str = str(subset.index[0].date())
-            end_str = str(subset.index[-1].date())
+        # Get all metrics for best params
+        tr_all = train_metrics.xs(split_i, level="split").xs(rw, level="rsi_window").xs(eth, level="entry_th")
+        te_all = test_metrics.xs(split_i, level="split").xs(rw, level="rsi_window").xs(eth, level="entry_th")
 
-            # Decode flat index back to param indices
-            sizes = [len(p) for p in param_arrays]
-            for flat_idx in range(len(results)):
-                param_vals = []
-                remainder = flat_idx
-                for dim in range(len(sizes) - 1, -1, -1):
-                    param_vals.insert(0, param_arrays[dim][remainder % sizes[dim]])
-                    remainder //= sizes[dim]
+        row = {"split": split_i, "rsi_window": rw, "entry_th": eth}
+        for metric in ["sharpe", "sortino", "calmar", "total_return", "max_dd", "profit_factor", "win_rate", "trades"]:
+            row[f"train_{metric}"] = tr_all.get(metric, np.nan) if metric in tr_all.index else np.nan
+            row[f"test_{metric}"] = te_all.get(metric, np.nan) if metric in te_all.index else np.nan
+        rows.append(row)
 
-                row = [split_i, set_label, start_str, end_str] + [_convert(v) for v in param_vals]
-                all_rows.append((*row, results[flat_idx]))
-
-    level_names = ["split", "set", "start", "end"] + param_names
-    idx = pd.MultiIndex.from_tuples(
-        [r[:-1] for r in all_rows], names=level_names,
-    )
-    grid = pd.Series([r[-1] for r in all_rows], index=idx)
-
-    # Best per split: find best train params, report test
-    best_rows = []
-    for split_i in range(n_splits):
-        train = grid.xs((split_i, "train"), level=("split", "set"))
-        best_idx = train.idxmax()
-        train_sharpe = train.loc[best_idx]
-        test = grid.xs((split_i, "test"), level=("split", "set"))
-        # Extract param values from best_idx (skip start/end)
-        param_vals = best_idx[2:]  # after start, end
-        test_match = test.xs(param_vals, level=param_names)
-        test_sharpe = test_match.iloc[0] if len(test_match) > 0 else np.nan
-        row = {"split": split_i, "train_sharpe": train_sharpe, "test_sharpe": test_sharpe}
-        for pn, pv in zip(param_names, param_vals):
-            row[pn] = pv
-        best_rows.append(row)
-
-    return grid, pd.DataFrame(best_rows)
-
-
-def _convert(v):
-    """Convert numpy scalar to Python native for MultiIndex."""
-    if isinstance(v, (np.integer,)):
-        return int(v)
-    if isinstance(v, (np.floating,)):
-        return float(v)
-    return v
-
-
-def run_rsi_cv(close_series, rsi_windows, entry_ths, n_splits=8, window_length=500):
-    return _run_cv_prange(
-        close_series, rsi_batch,
-        [rsi_windows, entry_ths], ["rsi_window", "entry_th"],
-        n_splits, window_length,
-    )
-
-
-def run_bb_cv(close_series, bb_windows, bb_alphas, n_splits=8, window_length=500):
-    return _run_cv_prange(
-        close_series, bbands_batch,
-        [bb_windows, bb_alphas], ["bb_window", "bb_alpha"],
-        n_splits, window_length,
-    )
+    return pd.DataFrame(rows)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -311,187 +246,123 @@ def run_bb_cv(close_series, bb_windows, bb_alphas, n_splits=8, window_length=500
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("MULTI-STRATEGY CV — True Multicore (prange)")
+    print("MULTI-STRATEGY CV — VBT Pro Native + prange")
     print(f"Numba threads: {numba.config.NUMBA_NUM_THREADS}")
     print("=" * 60)
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     _, data = load_fx_data()
     close_d = data.resample("1d").close.dropna()
-    close_4h = data.resample("4h").close.dropna()
     arr_d = vbt.to_2d_array(close_d)
-    arr_4h = vbt.to_2d_array(close_4h)
-    print(f"Daily: {len(close_d)} | 4H: {len(close_4h)}")
+    print(f"Daily: {len(close_d)} bars ({close_d.index[0].date()} → {close_d.index[-1].date()})")
 
-    import time
+    rsi_ws = list(range(3, 35, 2))
+    entry_ts = [float(x) for x in range(15, 46, 2)]
 
-    rsi_ws = np.array(list(range(3, 35, 2)), dtype=np.int64)
-    entry_ts = np.array([float(x) for x in range(15, 46, 2)])
-    exit_lvls = np.array([40.0, 45.0, 50.0, 55.0, 60.0])
-    bb_ws = np.array(list(range(5, 45, 3)), dtype=np.int64)
-    bb_as = np.array([x / 10.0 for x in range(10, 35, 2)])
-
-    # ── A. RSI FULL SWEEP (prange multicore) ─────────────────────
+    # ── A. PRANGE FULL-SAMPLE SWEEP ──────────────────────────────
     print("\n" + "=" * 60)
-    print("A. RSI DAILY — prange sweep")
+    print("A. FULL-SAMPLE SWEEP (prange multicore)")
     print("=" * 60)
-    _run_rsi_sim(arr_d, 14, 30.0, FEES, SLIPPAGE)
-    rsi_batch(arr_d, rsi_ws[:1], entry_ts[:1], FEES, SLIPPAGE)
+    rsi_ws_np = np.array(rsi_ws, dtype=np.int64)
+    entry_ts_np = np.array(entry_ts)
+    _run_rsi_sim(arr_d, 14, 30.0, FEES, SLIPPAGE)  # warmup
+    rsi_batch(arr_d, rsi_ws_np[:1], entry_ts_np[:1], FEES, SLIPPAGE)
 
     t0 = time.time()
-    rsi_res = rsi_batch(arr_d, rsi_ws, entry_ts, FEES, SLIPPAGE)
-    t_rsi = time.time() - t0
-    rsi_sr = batch_to_series(rsi_res, [("rsi_window", rsi_ws.tolist()), ("entry_th", entry_ts.tolist())])
-    best = rsi_sr.idxmax()
-    print(f"  {len(rsi_res)} combos in {t_rsi:.3f}s → Best RSI({best[0]}) {best[1]}/{100-best[1]} Sharpe={rsi_sr.max():.4f}")
+    full_res = rsi_batch(arr_d, rsi_ws_np, entry_ts_np, FEES, SLIPPAGE)
+    print(f"  {len(full_res)} combos in {time.time()-t0:.3f}s (prange)")
+    full_sr = batch_to_series(full_res, [("rsi_window", rsi_ws), ("entry_th", entry_ts)])
+    best = full_sr.idxmax()
+    print(f"  Best: RSI({best[0]}) {best[1]}/{100-best[1]} → Sharpe {full_sr.max():.4f}")
 
-    # ── B. RSI 3D SWEEP (window × entry × exit_level) ────────────
+    # ── B. NATIVE CV (multi-metric) ──────────────────────────────
     print("\n" + "=" * 60)
-    print("B. RSI 3D — prange sweep (window × entry × exit_level)")
+    print("B. VBT NATIVE CV (multi-metric, splitter.apply)")
     print("=" * 60)
-    rsi_ws_3d = np.array([5, 7, 10, 14, 21, 28], dtype=np.int64)
-    entry_ts_3d = np.array([15.0, 20.0, 25.0, 30.0, 35.0, 40.0])
-    _run_rsi_sim_exit(arr_d, 14, 30.0, 50.0, FEES, SLIPPAGE)
-    rsi_batch_3d(arr_d, rsi_ws_3d[:1], entry_ts_3d[:1], exit_lvls[:1], FEES, SLIPPAGE)
+    splitter, train_m, test_m, train_sh, test_sh = run_native_cv(
+        close_d, rsi_ws, entry_ts, n_splits=6, window_length=600,
+    )
 
-    t0 = time.time()
-    rsi_3d_res = rsi_batch_3d(arr_d, rsi_ws_3d, entry_ts_3d, exit_lvls, FEES, SLIPPAGE)
-    t_3d = time.time() - t0
-    rsi_3d_sr = batch_to_series(rsi_3d_res, [
-        ("rsi_window", rsi_ws_3d.tolist()),
-        ("entry_th", entry_ts_3d.tolist()),
-        ("exit_level", exit_lvls.tolist()),
-    ])
-    print(f"  {len(rsi_3d_res)} combos in {t_3d:.3f}s")
-
-    # ── C. BBANDS FULL SWEEP ─────────────────────────────────────
+    # ── C. BEST PARAMS + OOS VALIDATION ──────────────────────────
     print("\n" + "=" * 60)
-    print("C. BBANDS DAILY — prange sweep")
+    print("C. BEST PARAMS + OOS VALIDATION")
     print("=" * 60)
-    _run_bb_sim(arr_d, 20, 2.0, FEES, SLIPPAGE)
-    bbands_batch(arr_d, bb_ws[:1], bb_as[:1], FEES, SLIPPAGE)
+    best_df = select_best_and_validate(splitter, train_sh, test_sh, train_m, test_m)
 
-    t0 = time.time()
-    bb_res = bbands_batch(arr_d, bb_ws, bb_as, FEES, SLIPPAGE)
-    t_bb = time.time() - t0
-    bb_sr = batch_to_series(bb_res, [("bb_window", bb_ws.tolist()), ("bb_alpha", bb_as.tolist())])
-    best_bb = bb_sr.idxmax()
-    print(f"  {len(bb_res)} combos in {t_bb:.3f}s → Best BB({best_bb[0]}, {best_bb[1]}) Sharpe={bb_sr.max():.4f}")
+    print(best_df[[
+        "split", "rsi_window", "entry_th",
+        "train_sharpe", "test_sharpe",
+        "train_sortino", "test_sortino",
+        "train_total_return", "test_total_return",
+        "train_max_dd", "test_max_dd",
+        "train_profit_factor", "test_profit_factor",
+        "train_trades", "test_trades",
+    ]].round(4).to_string(index=False))
 
-    # ── D. RSI 4H SWEEP ──────────────────────────────────────────
+    print(f"\n  Train Sharpe: mean={best_df['train_sharpe'].mean():.4f} min={best_df['train_sharpe'].min():.4f}")
+    print(f"  Test Sharpe:  mean={best_df['test_sharpe'].mean():.4f} min={best_df['test_sharpe'].min():.4f}")
+    print(f"  Test Sortino: mean={best_df['test_sortino'].mean():.4f}")
+    print(f"  Test PF:      mean={best_df['test_profit_factor'].mean():.4f}")
+
+    # ── D. HEATMAPS ──────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print("D. RSI 4H — prange sweep")
-    print("=" * 60)
-    rsi_batch(arr_4h, rsi_ws[:1], entry_ts[:1], FEES, SLIPPAGE)
-    t0 = time.time()
-    rsi_4h_res = rsi_batch(arr_4h, rsi_ws, entry_ts, FEES, SLIPPAGE)
-    t_4h = time.time() - t0
-    rsi_4h_sr = batch_to_series(rsi_4h_res, [("rsi_window", rsi_ws.tolist()), ("entry_th", entry_ts.tolist())])
-    best_4h = rsi_4h_sr.idxmax()
-    print(f"  {len(rsi_4h_res)} combos in {t_4h:.3f}s → Best RSI({best_4h[0]}) {best_4h[1]} Sharpe={rsi_4h_sr.max():.4f}")
-
-    # ── E. CV WALK-FORWARD (8 splits, prange multicore per split) ─
-    print("\n" + "=" * 60)
-    print("E. RSI CV (8 splits, prange per split)")
-    print("=" * 60)
-    t0 = time.time()
-    grid_rsi, best_rsi_cv = run_rsi_cv(close_d, rsi_ws, entry_ts, n_splits=8, window_length=500)
-    print(f"  {len(grid_rsi)} results in {time.time()-t0:.3f}s")
-    print(f"  Train Sharpe: mean={best_rsi_cv['train_sharpe'].mean():.4f} min={best_rsi_cv['train_sharpe'].min():.4f}")
-    print(f"  Test Sharpe:  mean={best_rsi_cv['test_sharpe'].mean():.4f} min={best_rsi_cv['test_sharpe'].min():.4f}")
-    print(best_rsi_cv.to_string(index=False))
-
-    # ── F. BBANDS CV ──────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("F. BBANDS CV (8 splits, prange per split)")
-    print("=" * 60)
-    t0 = time.time()
-    grid_bb, best_bb_cv = run_bb_cv(close_d, bb_ws, bb_as, n_splits=8, window_length=500)
-    print(f"  {len(grid_bb)} results in {time.time()-t0:.3f}s")
-    print(f"  Train Sharpe: mean={best_bb_cv['train_sharpe'].mean():.4f} min={best_bb_cv['train_sharpe'].min():.4f}")
-    print(f"  Test Sharpe:  mean={best_bb_cv['test_sharpe'].mean():.4f} min={best_bb_cv['test_sharpe'].min():.4f}")
-    print(best_bb_cv.to_string(index=False))
-
-    # ── G. HEATMAPS → BROWSER ────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("G. HEATMAPS → browser")
+    print("D. HEATMAPS → browser")
     print("=" * 60)
 
-    def show_save(fig, name, title, h=800):
-        fig = fullscreen(fig, title, h)
-        fig.write_html(f"{RESULTS_DIR}/{name}.html")
-        fig.show(renderer="browser")
-        print(f"  {name} → browser")
+    train_labels = split_date_labels(splitter, "train")
+    test_labels = split_date_labels(splitter, "test")
 
-    # 1. RSI 2D full sample
-    show_save(rsi_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+    # 1. Full-sample 2D Sharpe
+    show_save(full_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "rsi_heatmap_2d", "RSI Daily — Sharpe (32-core prange)")
+        "full_sample_sharpe", "RSI Full Sample — Sharpe (prange 32-core)")
 
-    # 2. RSI 3D volume: window × entry_th × exit_level
-    show_save(rsi_3d_sr.vbt.volume(
-        x_level="rsi_window", y_level="entry_th", z_level="exit_level",
-        trace_kwargs={"colorscale": "RdYlGn"}),
-        "rsi_3d_volume", "RSI 3D — Sharpe: window × entry × exit_level")
+    # 2. Splitter visualization
+    fig_split = splitter.plots()
+    show_save(fig_split, "splitter_plot", "Walk-Forward Splits", h=400)
 
-    # 3. RSI 3D as heatmap with exit_level slider
-    show_save(rsi_3d_sr.vbt.heatmap(
-        x_level="rsi_window", y_level="entry_th", slider_level="exit_level",
+    # 3. Train Sharpe — slider by split (dates)
+    show_save(train_sh.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        slider_level="split", slider_labels=train_labels,
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "rsi_3d_slider", "RSI Sharpe — Slider by exit_level")
+        "cv_train_sharpe", "CV Train Sharpe — per split (dates)")
 
-    # 4. BBands 2D
-    show_save(bb_sr.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
+    # 4. Test Sharpe — slider by split (dates)
+    show_save(test_sh.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        slider_level="split", slider_labels=test_labels,
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "bb_heatmap_2d", "BBands Daily — Sharpe")
+        "cv_test_sharpe", "CV Test Sharpe — per split (dates)")
 
-    # 5. RSI 4H 2D
-    show_save(rsi_4h_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+    # 5. Multi-metric train — slider by metric
+    # Rename the unnamed metric level, then aggregate across splits
+    train_m_named = train_m.copy()
+    train_m_named.index = train_m_named.index.set_names("metric", level=-1)
+    train_mean = train_m_named.groupby(level=["rsi_window", "entry_th", "metric"]).mean()
+    show_save(train_mean.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        slider_level="metric",
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "rsi_4h_heatmap_2d", "RSI 4H — Sharpe")
+        "cv_train_multi_metric", "CV Train Mean — slider by metric")
 
-    # 6. RSI CV train with date slider
-    try:
-        train_grid = grid_rsi.xs("train", level="set")
-        show_save(train_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
-            slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "rsi_cv_train", "RSI CV Train — date slider")
-    except Exception as e:
-        print(f"  RSI CV train error: {e}")
+    # 6. Test multi-metric — slider by metric
+    test_m_named = test_m.copy()
+    test_m_named.index = test_m_named.index.set_names("metric", level=-1)
+    test_mean = test_m_named.groupby(level=["rsi_window", "entry_th", "metric"]).mean()
+    show_save(test_mean.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        slider_level="metric",
+        trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
+        "cv_test_multi_metric", "CV Test Mean — slider by metric")
 
-    # 7. RSI CV test with date slider
-    try:
-        test_grid = grid_rsi.xs("test", level="set")
-        show_save(test_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
-            slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "rsi_cv_test", "RSI CV Test — date slider")
-    except Exception as e:
-        print(f"  RSI CV test error: {e}")
+    # 7. Combined train vs test Sharpe — slider by set
+    combined = pd.concat([train_sh, test_sh], keys=["train", "test"], names=["set"])
+    show_save(combined.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        slider_level="set",
+        trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
+        "cv_combined_sharpe", "CV Sharpe — slider train vs test")
 
-    # 8. BBands CV train with date slider
-    try:
-        train_bb = grid_bb.xs("train", level="set")
-        show_save(train_bb.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
-            slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "bb_cv_train", "BBands CV Train — date slider")
-    except Exception as e:
-        print(f"  BBands CV train error: {e}")
-
-    # 9. RSI CV 3D volume: window × entry × split_start (temporal z-axis)
-    #    with set (train/test) as slider
-    try:
-        show_save(grid_rsi.vbt.volume(
-            x_level="rsi_window", y_level="entry_th", z_level="split",
-            slider_level="set",
-            trace_kwargs={"colorscale": "RdYlGn"}),
-            "rsi_cv_3d", "RSI CV 3D — window × entry × split (train/test slider)")
-    except Exception as e:
-        print(f"  RSI CV 3D error: {e}")
-
-    # ── G. INSPECT BEST ───────────────────────────────────────────
+    # ── E. INSPECT BEST ──────────────────────────────────────────
     print("\n" + "=" * 60)
     rw, eth = int(best[0]), int(best[1])
-    print(f"G. INSPECT BEST: RSI({rw}) {eth}/{100-eth} Daily")
+    print(f"E. INSPECT BEST: RSI({rw}) {eth}/{100-eth}")
     print("=" * 60)
 
     rsi_ind = vbt.RSI.run(close_d, window=rw)
@@ -510,13 +381,14 @@ if __name__ == "__main__":
         print(f"  Avg win: {ret[w].mean():.4%}, Avg loss: {ret[~w].mean():.4%}")
         t = trades.copy()
         t["year"] = pd.to_datetime(t["Entry Index"]).dt.year
-        print(t.groupby("year").agg(n=("PnL","count"), pnl=("PnL","sum"),
-            wr=("PnL", lambda x: (x>0).mean())).round(4).to_string())
+        print(t.groupby("year").agg(n=("PnL", "count"), pnl=("PnL", "sum"),
+            wr=("PnL", lambda x: (x > 0).mean())).round(4).to_string())
 
-    fig = fullscreen(pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"]),
-        f"RSI({rw}) {eth}/{100-eth} — Best Portfolio", height=1000)
-    fig.write_html(f"{RESULTS_DIR}/best_portfolio.html")
-    fig.show(renderer="browser")
+    show_save(pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"]),
+        "best_portfolio", f"RSI({rw}) {eth}/{100-eth} — Best Portfolio", h=1000)
+
+    # Save best_df
+    best_df.to_csv(f"{RESULTS_DIR}/cv_best_params.csv", index=False)
 
     print(f"\n{'='*60}")
     print(f"DONE — {RESULTS_DIR}/")
