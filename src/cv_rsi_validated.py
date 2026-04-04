@@ -121,6 +121,46 @@ def _run_bb_sim(close_arr, bb_window, bb_alpha, fees, slippage):
 # ═══════════════════════════════════════════════════════════════════════
 
 
+@njit(nogil=True)
+def rsi_exit_signal_nb(c, rsi_arr, entry_th_arr, exit_th_arr, exit_l_arr, exit_s_arr):
+    """RSI signal with variable exit level."""
+    rv = vbt.pf_nb.select_nb(c, rsi_arr)
+    et = vbt.pf_nb.select_nb(c, entry_th_arr)
+    ext = vbt.pf_nb.select_nb(c, exit_th_arr)
+    xl = vbt.pf_nb.select_nb(c, exit_l_arr)
+    xs = vbt.pf_nb.select_nb(c, exit_s_arr)
+    if np.isnan(rv) or c.i == 0:
+        return False, False, False, False
+    p = rsi_arr[c.i - 1, c.col] if rsi_arr.ndim > 1 else rsi_arr[c.i - 1]
+    if np.isnan(p):
+        return False, False, False, False
+    return (p >= et and rv < et, p <= xl and rv > xl,
+            p <= ext and rv > ext, p >= xs and rv < xs)
+
+
+@njit(nogil=True)
+def _run_rsi_sim_exit(close_arr, rsi_window, entry_th, exit_level, fees, slippage):
+    """RSI backtest with variable exit level (not fixed at 50)."""
+    ts = close_arr.shape
+    rsi = vbt.indicators.nb.rsi_1d_nb(close_arr[:, 0], window=rsi_window)
+    rsi_2d = rsi.reshape(-1, 1)
+    eth_arr = np.full(ts, entry_th)
+    exth_arr = np.full(ts, 100.0 - entry_th)
+    exit_l_arr = np.full(ts, exit_level)
+    exit_s_arr = np.full(ts, 100.0 - exit_level)
+    gl = np.full(ts[1], 1)
+    so = vbt.pf_nb.from_signal_func_nb(
+        target_shape=ts, group_lens=gl, init_cash=1000000.0,
+        cash_sharing=False, close=close_arr,
+        signal_func_nb=rsi_exit_signal_nb,
+        signal_args=(rsi_2d, eth_arr, exth_arr, exit_l_arr, exit_s_arr),
+        slippage=np.full(ts, slippage), fees=np.full(ts, fees),
+        post_segment_func_nb=vbt.pf_nb.save_post_segment_func_nb,
+        in_outputs=vbt.pf_nb.init_FSInOutputs_nb(ts, gl, cash_sharing=False),
+    )
+    return vbt.ret_nb.sharpe_ratio_nb(returns=so.in_outputs.returns, ann_factor=252.0)[0]
+
+
 @njit(parallel=True, nogil=True)
 def rsi_batch(close_arr, rsi_windows, entry_ths, fees, slippage):
     """Parallel RSI sweep using all CPU cores via prange."""
@@ -129,6 +169,24 @@ def rsi_batch(close_arr, rsi_windows, entry_ths, fees, slippage):
     for idx in prange(n_rw * n_eth):
         results[idx] = _run_rsi_sim(
             close_arr, rsi_windows[idx // n_eth], entry_ths[idx % n_eth], fees, slippage,
+        )
+    return results
+
+
+@njit(parallel=True, nogil=True)
+def rsi_batch_3d(close_arr, rsi_windows, entry_ths, exit_levels, fees, slippage):
+    """3-param RSI sweep (window × entry × exit_level) via prange."""
+    n_rw = len(rsi_windows)
+    n_eth = len(entry_ths)
+    n_ex = len(exit_levels)
+    total = n_rw * n_eth * n_ex
+    results = np.empty(total)
+    for idx in prange(total):
+        rw_i = idx // (n_eth * n_ex)
+        eth_i = (idx // n_ex) % n_eth
+        ex_i = idx % n_ex
+        results[idx] = _run_rsi_sim_exit(
+            close_arr, rsi_windows[rw_i], entry_ths[eth_i], exit_levels[ex_i], fees, slippage,
         )
     return results
 
@@ -145,11 +203,14 @@ def bbands_batch(close_arr, bb_windows, bb_alphas, fees, slippage):
     return results
 
 
-def batch_to_series(results, param1_name, param1_vals, param2_name, param2_vals):
-    """Convert flat batch results to MultiIndex Series for VBT heatmaps."""
-    idx = pd.MultiIndex.from_product(
-        [param1_vals, param2_vals], names=[param1_name, param2_name]
-    )
+def batch_to_series(results, names_vals):
+    """Convert flat batch results to MultiIndex Series for VBT heatmaps.
+
+    names_vals: list of (name, values) tuples.
+    """
+    names = [nv[0] for nv in names_vals]
+    vals = [nv[1] for nv in names_vals]
+    idx = pd.MultiIndex.from_product(vals, names=names)
     return pd.Series(results, index=idx)
 
 
@@ -206,8 +267,11 @@ if __name__ == "__main__":
     arr_4h = vbt.to_2d_array(close_4h)
     print(f"Daily: {len(close_d)} | 4H: {len(close_4h)}")
 
+    import time
+
     rsi_ws = np.array(list(range(3, 35, 2)), dtype=np.int64)
     entry_ts = np.array([float(x) for x in range(15, 46, 2)])
+    exit_lvls = np.array([40.0, 45.0, 50.0, 55.0, 60.0])
     bb_ws = np.array(list(range(5, 45, 3)), dtype=np.int64)
     bb_as = np.array([x / 10.0 for x in range(10, 35, 2)])
 
@@ -215,22 +279,38 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("A. RSI DAILY — prange sweep")
     print("=" * 60)
-    import time
-
-    # Warmup
     _run_rsi_sim(arr_d, 14, 30.0, FEES, SLIPPAGE)
     rsi_batch(arr_d, rsi_ws[:1], entry_ts[:1], FEES, SLIPPAGE)
 
     t0 = time.time()
     rsi_res = rsi_batch(arr_d, rsi_ws, entry_ts, FEES, SLIPPAGE)
     t_rsi = time.time() - t0
-    rsi_sr = batch_to_series(rsi_res, "rsi_window", rsi_ws.tolist(), "entry_th", entry_ts.tolist())
+    rsi_sr = batch_to_series(rsi_res, [("rsi_window", rsi_ws.tolist()), ("entry_th", entry_ts.tolist())])
     best = rsi_sr.idxmax()
     print(f"  {len(rsi_res)} combos in {t_rsi:.3f}s → Best RSI({best[0]}) {best[1]}/{100-best[1]} Sharpe={rsi_sr.max():.4f}")
 
-    # ── B. BBANDS FULL SWEEP ─────────────────────────────────────
+    # ── B. RSI 3D SWEEP (window × entry × exit_level) ────────────
     print("\n" + "=" * 60)
-    print("B. BBANDS DAILY — prange sweep")
+    print("B. RSI 3D — prange sweep (window × entry × exit_level)")
+    print("=" * 60)
+    rsi_ws_3d = np.array([5, 7, 10, 14, 21, 28], dtype=np.int64)
+    entry_ts_3d = np.array([15.0, 20.0, 25.0, 30.0, 35.0, 40.0])
+    _run_rsi_sim_exit(arr_d, 14, 30.0, 50.0, FEES, SLIPPAGE)
+    rsi_batch_3d(arr_d, rsi_ws_3d[:1], entry_ts_3d[:1], exit_lvls[:1], FEES, SLIPPAGE)
+
+    t0 = time.time()
+    rsi_3d_res = rsi_batch_3d(arr_d, rsi_ws_3d, entry_ts_3d, exit_lvls, FEES, SLIPPAGE)
+    t_3d = time.time() - t0
+    rsi_3d_sr = batch_to_series(rsi_3d_res, [
+        ("rsi_window", rsi_ws_3d.tolist()),
+        ("entry_th", entry_ts_3d.tolist()),
+        ("exit_level", exit_lvls.tolist()),
+    ])
+    print(f"  {len(rsi_3d_res)} combos in {t_3d:.3f}s")
+
+    # ── C. BBANDS FULL SWEEP ─────────────────────────────────────
+    print("\n" + "=" * 60)
+    print("C. BBANDS DAILY — prange sweep")
     print("=" * 60)
     _run_bb_sim(arr_d, 20, 2.0, FEES, SLIPPAGE)
     bbands_batch(arr_d, bb_ws[:1], bb_as[:1], FEES, SLIPPAGE)
@@ -238,19 +318,19 @@ if __name__ == "__main__":
     t0 = time.time()
     bb_res = bbands_batch(arr_d, bb_ws, bb_as, FEES, SLIPPAGE)
     t_bb = time.time() - t0
-    bb_sr = batch_to_series(bb_res, "bb_window", bb_ws.tolist(), "bb_alpha", bb_as.tolist())
+    bb_sr = batch_to_series(bb_res, [("bb_window", bb_ws.tolist()), ("bb_alpha", bb_as.tolist())])
     best_bb = bb_sr.idxmax()
     print(f"  {len(bb_res)} combos in {t_bb:.3f}s → Best BB({best_bb[0]}, {best_bb[1]}) Sharpe={bb_sr.max():.4f}")
 
-    # ── C. RSI 4H SWEEP ──────────────────────────────────────────
+    # ── D. RSI 4H SWEEP ──────────────────────────────────────────
     print("\n" + "=" * 60)
-    print("C. RSI 4H — prange sweep")
+    print("D. RSI 4H — prange sweep")
     print("=" * 60)
     rsi_batch(arr_4h, rsi_ws[:1], entry_ts[:1], FEES, SLIPPAGE)
     t0 = time.time()
     rsi_4h_res = rsi_batch(arr_4h, rsi_ws, entry_ts, FEES, SLIPPAGE)
     t_4h = time.time() - t0
-    rsi_4h_sr = batch_to_series(rsi_4h_res, "rsi_window", rsi_ws.tolist(), "entry_th", entry_ts.tolist())
+    rsi_4h_sr = batch_to_series(rsi_4h_res, [("rsi_window", rsi_ws.tolist()), ("entry_th", entry_ts.tolist())])
     best_4h = rsi_4h_sr.idxmax()
     print(f"  {len(rsi_4h_res)} combos in {t_4h:.3f}s → Best RSI({best_4h[0]}) {best_4h[1]} Sharpe={rsi_4h_sr.max():.4f}")
 
@@ -286,75 +366,81 @@ if __name__ == "__main__":
             v = best_bb_cv.xs(s, level="set")
             print(f"  {s}: mean={v.mean():.4f} min={v.min():.4f} max={v.max():.4f}")
 
-    # ── F. HEATMAPS → BROWSER ────────────────────────────────────
+    # ── G. HEATMAPS → BROWSER ────────────────────────────────────
     print("\n" + "=" * 60)
-    print("F. HEATMAPS → browser")
+    print("G. HEATMAPS → browser")
     print("=" * 60)
 
+    def show_save(fig, name, title, h=800):
+        fig = fullscreen(fig, title, h)
+        fig.write_html(f"{RESULTS_DIR}/{name}.html")
+        fig.show(renderer="browser")
+        print(f"  {name} → browser")
+
     # 1. RSI 2D full sample
-    fig = fullscreen(rsi_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+    show_save(rsi_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "RSI Daily — Sharpe (prange multicore)", height=800)
-    fig.write_html(f"{RESULTS_DIR}/rsi_heatmap_2d.html")
-    fig.show(renderer="browser")
+        "rsi_heatmap_2d", "RSI Daily — Sharpe (32-core prange)")
 
-    # 2. BBands 2D full sample
-    fig = fullscreen(bb_sr.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
+    # 2. RSI 3D volume: window × entry_th × exit_level
+    show_save(rsi_3d_sr.vbt.volume(
+        x_level="rsi_window", y_level="entry_th", z_level="exit_level",
+        trace_kwargs={"colorscale": "RdYlGn"}),
+        "rsi_3d_volume", "RSI 3D — Sharpe: window × entry × exit_level")
+
+    # 3. RSI 3D as heatmap with exit_level slider
+    show_save(rsi_3d_sr.vbt.heatmap(
+        x_level="rsi_window", y_level="entry_th", slider_level="exit_level",
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "BBands Daily — Sharpe (prange multicore)", height=800)
-    fig.write_html(f"{RESULTS_DIR}/bb_heatmap_2d.html")
-    fig.show(renderer="browser")
+        "rsi_3d_slider", "RSI Sharpe — Slider by exit_level")
 
-    # 3. RSI 4H 2D
-    fig = fullscreen(rsi_4h_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+    # 4. BBands 2D
+    show_save(bb_sr.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
         trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-        "RSI 4H — Sharpe (prange multicore)", height=800)
-    fig.write_html(f"{RESULTS_DIR}/rsi_4h_heatmap_2d.html")
-    fig.show(renderer="browser")
+        "bb_heatmap_2d", "BBands Daily — Sharpe")
 
-    # 4. RSI CV with date slider (train only)
+    # 5. RSI 4H 2D
+    show_save(rsi_4h_sr.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
+        "rsi_4h_heatmap_2d", "RSI 4H — Sharpe")
+
+    # 6. RSI CV train with date slider
     try:
         train_grid = grid_rsi.xs("train", level="set")
-        fig = fullscreen(train_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        show_save(train_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
             slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "RSI CV Train — Sharpe per split (date slider)", height=800)
-        fig.write_html(f"{RESULTS_DIR}/rsi_cv_train_dates.html")
-        fig.show(renderer="browser")
+            "rsi_cv_train", "RSI CV Train — date slider")
     except Exception as e:
-        print(f"  RSI CV train heatmap error: {e}")
+        print(f"  RSI CV train error: {e}")
 
-    # 5. RSI CV test with date slider
+    # 7. RSI CV test with date slider
     try:
         test_grid = grid_rsi.xs("test", level="set")
-        fig = fullscreen(test_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
+        show_save(test_grid.vbt.heatmap(x_level="rsi_window", y_level="entry_th",
             slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "RSI CV Test — Sharpe per split (date slider)", height=800)
-        fig.write_html(f"{RESULTS_DIR}/rsi_cv_test_dates.html")
-        fig.show(renderer="browser")
+            "rsi_cv_test", "RSI CV Test — date slider")
     except Exception as e:
-        print(f"  RSI CV test heatmap error: {e}")
+        print(f"  RSI CV test error: {e}")
 
-    # 6. BBands CV with date slider
+    # 8. BBands CV train with date slider
     try:
         train_bb = grid_bb.xs("train", level="set")
-        fig = fullscreen(train_bb.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
+        show_save(train_bb.vbt.heatmap(x_level="bb_window", y_level="bb_alpha",
             slider_level="start", trace_kwargs={"colorscale": "RdYlGn", "zmid": 0}),
-            "BBands CV Train — Sharpe per split (date slider)", height=800)
-        fig.write_html(f"{RESULTS_DIR}/bb_cv_train_dates.html")
-        fig.show(renderer="browser")
+            "bb_cv_train", "BBands CV Train — date slider")
     except Exception as e:
-        print(f"  BBands CV heatmap error: {e}")
+        print(f"  BBands CV train error: {e}")
 
-    # 7. 3D: RSI window × entry_th with temporal split slider
+    # 9. RSI CV 3D volume: window × entry × split_start (temporal z-axis)
+    #    with set (train/test) as slider
     try:
-        fig = fullscreen(grid_rsi.vbt.volume(
-            x_level="rsi_window", y_level="entry_th", z_level="start",
+        show_save(grid_rsi.vbt.volume(
+            x_level="rsi_window", y_level="entry_th", z_level="split",
+            slider_level="set",
             trace_kwargs={"colorscale": "RdYlGn"}),
-            "RSI 3D — Sharpe: window × entry × split_date", height=800)
-        fig.write_html(f"{RESULTS_DIR}/rsi_3d_temporal.html")
-        fig.show(renderer="browser")
+            "rsi_cv_3d", "RSI CV 3D — window × entry × split (train/test slider)")
     except Exception as e:
-        print(f"  RSI 3D temporal error: {e}")
+        print(f"  RSI CV 3D error: {e}")
 
     # ── G. INSPECT BEST ───────────────────────────────────────────
     print("\n" + "=" * 60)

@@ -1,53 +1,63 @@
 #!/usr/bin/env python
-"""Deep BBands sweep on 1D and 4H with train/test + alignment robustness."""
-import os, sys, warnings
-import numpy as np, pandas as pd, vectorbtpro as vbt
-warnings.filterwarnings("ignore"); os.environ["NUMBA_DISABLE_PERFORMANCE_WARNINGS"]="1"
+"""Deep BBands sweep with Numba prange multicore + train/test + alignment."""
+import os
+import sys
+import warnings
+
+import numpy as np
+import pandas as pd
+import vectorbtpro as vbt
+from numba import njit, prange
+
+warnings.filterwarnings("ignore")
+os.environ["NUMBA_DISABLE_PERFORMANCE_WARNINGS"] = "1"
 sys.path.insert(0, os.path.dirname(__file__))
 from utils import load_fx_data
+from cv_rsi_validated import _run_bb_sim, bbands_batch, batch_to_series
 
-COSTS = {"slippage": 0.00008, "fees": 0.0001}
-INIT_CASH = 1_000_000
-
-def run_bb(close, window, mult, tf):
-    bb = vbt.BBANDS.run(close, window=window, alpha=mult)
-    el = close.vbt.crossed_below(bb.lower); xl = close.vbt.crossed_above(bb.middle)
-    es = close.vbt.crossed_above(bb.upper); xs = close.vbt.crossed_below(bb.middle)
-    return vbt.PF.from_signals(close=close, long_entries=el, long_exits=xl,
-        short_entries=es, short_exits=xs, slippage=COSTS["slippage"],
-        fees=COSTS["fees"], init_cash=INIT_CASH, freq=tf)
+RESULTS_DIR = "results/exploration/parallel"
+FEES = 0.0001
+SLIPPAGE = 0.00008
 
 if __name__ == "__main__":
-    print("=== BBands Deep Sweep ===")
+    print("=== BBands Deep Sweep (prange multicore) ===")
+    os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    results = []
-
-    # Part 1: Standard sweep on clean data (no shift)
     _, data = load_fx_data()
+    results_all = []
+
+    # Part 1: Standard sweep on clean data
     for tf in ["4h", "1d"]:
-        close_full = data.resample(tf).close.dropna()
-        split = int(len(close_full) * 0.7)
-        train, test = close_full.iloc[:split], close_full.iloc[split:]
-        print(f"\n{tf}: train={len(train)} test={len(test)}")
+        close = data.resample(tf).close.dropna()
+        close_arr = vbt.to_2d_array(close)
+        split = int(len(close) * 0.7)
+        train_arr = vbt.to_2d_array(close.iloc[:split])
+        test_arr = vbt.to_2d_array(close.iloc[split:])
+        print(f"\n{tf}: train={train_arr.shape[0]} test={test_arr.shape[0]}")
 
-        for w in [5, 10, 15, 20, 30, 40]:
-            for mult in [1.0, 1.5, 2.0, 2.5, 3.0]:
-                for subset_name, subset in [("train", train), ("test", test)]:
-                    if w >= len(subset) // 2:
-                        continue
-                    pf = run_bb(subset, w, mult, tf)
-                    stats = pf.stats()
-                    results.append({
-                        "tf": tf, "window": w, "mult": mult, "shift": 0,
-                        "subset": subset_name,
-                        "sharpe": pf.sharpe_ratio,
-                        "return": pf.total_return,
-                        "pf": stats.get("Profit Factor", np.nan),
-                        "trades": stats.get("Total Trades", 0),
-                    })
+        bb_ws = np.array([5, 10, 15, 20, 30, 40], dtype=np.int64)
+        bb_as = np.array([1.0, 1.5, 2.0, 2.5, 3.0])
 
-    # Part 2: 4H alignment robustness for top BBands configs
+        _run_bb_sim(train_arr, 20, 2.0, FEES, SLIPPAGE)
+        bbands_batch(train_arr, bb_ws[:1], bb_as[:1], FEES, SLIPPAGE)
+
+        train_res = bbands_batch(train_arr, bb_ws, bb_as, FEES, SLIPPAGE)
+        test_res = bbands_batch(test_arr, bb_ws, bb_as, FEES, SLIPPAGE)
+
+        for idx in range(len(train_res)):
+            w_i = idx // len(bb_as)
+            a_i = idx % len(bb_as)
+            results_all.append({
+                "tf": tf, "window": int(bb_ws[w_i]), "alpha": bb_as[a_i],
+                "shift": 0, "subset": "standard",
+                "sharpe_train": train_res[idx], "sharpe_test": test_res[idx],
+            })
+
+    # Part 2: 4H alignment robustness
     print("\n=== 4H Alignment Robustness ===")
+    bb_ws_align = np.array([10, 20, 30], dtype=np.int64)
+    bb_as_align = np.array([2.0, 2.5, 3.0])
+
     for shift_h in range(4):
         raw = pd.read_parquet("data/EUR-USD.parquet")
         raw = raw.set_index("date").sort_index()
@@ -56,49 +66,35 @@ if __name__ == "__main__":
         d = vbt.Data.from_data({"EUR-USD": raw}, tz_localize=False, tz_convert=False)
         close = d.resample("4h").close.dropna()
         split = int(len(close) * 0.7)
-        test = close.iloc[split:]
+        test_arr = vbt.to_2d_array(close.iloc[split:])
 
-        for w in [10, 20, 30]:
-            for mult in [2.0, 2.5, 3.0]:
-                pf = run_bb(test, w, mult, "4h")
-                stats = pf.stats()
-                results.append({
-                    "tf": "4h", "window": w, "mult": mult, "shift": shift_h,
-                    "subset": f"test_shift{shift_h}",
-                    "sharpe": pf.sharpe_ratio,
-                    "return": pf.total_return,
-                    "pf": stats.get("Profit Factor", np.nan),
-                    "trades": stats.get("Total Trades", 0),
-                })
-                print(f"  shift={shift_h} BB({w},{mult}): Sharpe={pf.sharpe_ratio:.4f}")
+        test_res = bbands_batch(test_arr, bb_ws_align, bb_as_align, FEES, SLIPPAGE)
+        for idx in range(len(test_res)):
+            w_i = idx // len(bb_as_align)
+            a_i = idx % len(bb_as_align)
+            results_all.append({
+                "tf": "4h", "window": int(bb_ws_align[w_i]), "alpha": bb_as_align[a_i],
+                "shift": shift_h, "subset": f"test_shift{shift_h}",
+                "sharpe_train": np.nan, "sharpe_test": test_res[idx],
+            })
+            print(f"  shift={shift_h} BB({bb_ws_align[w_i]},{bb_as_align[a_i]}): Sharpe={test_res[idx]:.4f}")
 
-    df = pd.DataFrame(results)
-
-    # Find configs robust across alignments
-    train_df = df[df["subset"]=="train"].set_index(["tf","window","mult"])
-    test_df = df[df["subset"]=="test"].set_index(["tf","window","mult"])
-
-    merged = train_df[["sharpe","return","pf","trades"]].join(
-        test_df[["sharpe","return","pf","trades"]], lsuffix="_train", rsuffix="_test"
-    )
-    merged = merged[(merged["sharpe_train"]>0) & (merged["sharpe_test"]>0) & (merged["trades_train"]>=15)]
-    merged = merged.sort_values("sharpe_test", ascending=False)
+    df = pd.DataFrame(results_all)
+    standard = df[df["subset"] == "standard"]
+    valid = standard[(standard["sharpe_train"] > 0) & (standard["sharpe_test"] > 0)]
+    valid = valid.sort_values("sharpe_test", ascending=False)
 
     print("\n=== BBANDS PROFITABLE IN BOTH TRAIN AND TEST ===")
-    print(merged.head(20).to_string())
+    print(valid.head(15).to_string(index=False))
 
     # Alignment robustness
-    align_df = df[df["subset"].str.startswith("test_shift")]
-    if len(align_df) > 0:
-        align_pivot = align_df.pivot_table(
-            index=["tf","window","mult"], columns="subset", values="sharpe"
-        )
-        align_pivot["worst"] = align_pivot.min(axis=1)
-        align_pivot["best"] = align_pivot.max(axis=1)
-        align_pivot["range"] = align_pivot["best"] - align_pivot["worst"]
-        print("\n=== 4H ALIGNMENT ROBUSTNESS (test set) ===")
-        print(align_pivot.sort_values("worst", ascending=False).head(15).to_string())
+    align = df[df["subset"].str.startswith("test_shift")]
+    if len(align) > 0:
+        pivot = align.pivot_table(index=["tf", "window", "alpha"], columns="subset", values="sharpe_test")
+        pivot["worst"] = pivot.min(axis=1)
+        pivot["best"] = pivot.max(axis=1)
+        print("\n=== 4H ALIGNMENT ROBUSTNESS ===")
+        print(pivot.sort_values("worst", ascending=False).head(10).to_string())
 
-    out = "results/exploration/parallel/bbands_deep.csv"
-    df.to_csv(out, index=False)
-    print(f"\nSaved to {out}")
+    df.to_csv(f"{RESULTS_DIR}/bbands_deep.csv", index=False)
+    print(f"\nSaved to {RESULTS_DIR}/")
