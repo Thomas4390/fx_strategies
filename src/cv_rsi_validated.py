@@ -215,38 +215,94 @@ def batch_to_series(results, names_vals):
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# CV PIPELINE (with date-labeled splits)
+# CV VIA MANUAL SPLITTER + PRANGE (true multicore on every split)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def build_rsi_cv(n_splits, window_length):
-    @vbt.cv_split(
-        splitter="from_n_rolling",
-        splitter_kwargs={"n": n_splits, "length": window_length, "split": 0.5, "set_labels": ["train", "test"]},
-        takeable_args=["close_arr"],
-        parameterized_kwargs={"execute_kwargs": {"chunk_len": "auto", "engine": "threadpool"}, "merge_func": "concat"},
-        merge_func="concat",
-        attach_bounds="index",
+def _run_cv_prange(close_series, batch_fn, param_arrays, param_names, n_splits=8, window_length=500):
+    """Generic walk-forward CV using vbt.Splitter + prange batch function.
+
+    batch_fn: a prange-parallel function like rsi_batch(close_arr, *param_arrays, fees, slippage)
+    param_arrays: list of numpy arrays for each parameter dimension
+    param_names: list of str names for each parameter
+    """
+    splitter = vbt.Splitter.from_n_rolling(
+        close_series.index, n=n_splits, length=window_length,
+        split=0.5, set_labels=["train", "test"],
     )
-    @njit(nogil=True)
-    def cv_fn(close_arr, rsi_window, entry_th, ann_factor: float = 252.0):
-        return _run_rsi_sim(close_arr, rsi_window, entry_th, FEES, SLIPPAGE)
-    return cv_fn
+    taken = splitter.take(close_series)
+
+    all_rows = []
+    for split_i in range(n_splits):
+        for set_label in ["train", "test"]:
+            subset = taken[(split_i, set_label)]
+            arr = vbt.to_2d_array(subset)
+
+            results = batch_fn(arr, *param_arrays, FEES, SLIPPAGE)
+
+            start_str = str(subset.index[0].date())
+            end_str = str(subset.index[-1].date())
+
+            # Decode flat index back to param indices
+            sizes = [len(p) for p in param_arrays]
+            for flat_idx in range(len(results)):
+                param_vals = []
+                remainder = flat_idx
+                for dim in range(len(sizes) - 1, -1, -1):
+                    param_vals.insert(0, param_arrays[dim][remainder % sizes[dim]])
+                    remainder //= sizes[dim]
+
+                row = [split_i, set_label, start_str, end_str] + [_convert(v) for v in param_vals]
+                all_rows.append((*row, results[flat_idx]))
+
+    level_names = ["split", "set", "start", "end"] + param_names
+    idx = pd.MultiIndex.from_tuples(
+        [r[:-1] for r in all_rows], names=level_names,
+    )
+    grid = pd.Series([r[-1] for r in all_rows], index=idx)
+
+    # Best per split: find best train params, report test
+    best_rows = []
+    for split_i in range(n_splits):
+        train = grid.xs((split_i, "train"), level=("split", "set"))
+        best_idx = train.idxmax()
+        train_sharpe = train.loc[best_idx]
+        test = grid.xs((split_i, "test"), level=("split", "set"))
+        # Extract param values from best_idx (skip start/end)
+        param_vals = best_idx[2:]  # after start, end
+        test_match = test.xs(param_vals, level=param_names)
+        test_sharpe = test_match.iloc[0] if len(test_match) > 0 else np.nan
+        row = {"split": split_i, "train_sharpe": train_sharpe, "test_sharpe": test_sharpe}
+        for pn, pv in zip(param_names, param_vals):
+            row[pn] = pv
+        best_rows.append(row)
+
+    return grid, pd.DataFrame(best_rows)
 
 
-def build_bb_cv(n_splits, window_length):
-    @vbt.cv_split(
-        splitter="from_n_rolling",
-        splitter_kwargs={"n": n_splits, "length": window_length, "split": 0.5, "set_labels": ["train", "test"]},
-        takeable_args=["close_arr"],
-        parameterized_kwargs={"execute_kwargs": {"chunk_len": "auto", "engine": "threadpool"}, "merge_func": "concat"},
-        merge_func="concat",
-        attach_bounds="index",
+def _convert(v):
+    """Convert numpy scalar to Python native for MultiIndex."""
+    if isinstance(v, (np.integer,)):
+        return int(v)
+    if isinstance(v, (np.floating,)):
+        return float(v)
+    return v
+
+
+def run_rsi_cv(close_series, rsi_windows, entry_ths, n_splits=8, window_length=500):
+    return _run_cv_prange(
+        close_series, rsi_batch,
+        [rsi_windows, entry_ths], ["rsi_window", "entry_th"],
+        n_splits, window_length,
     )
-    @njit(nogil=True)
-    def cv_fn(close_arr, bb_window, bb_alpha, ann_factor: float = 252.0):
-        return _run_bb_sim(close_arr, bb_window, bb_alpha, FEES, SLIPPAGE)
-    return cv_fn
+
+
+def run_bb_cv(close_series, bb_windows, bb_alphas, n_splits=8, window_length=500):
+    return _run_cv_prange(
+        close_series, bbands_batch,
+        [bb_windows, bb_alphas], ["bb_window", "bb_alpha"],
+        n_splits, window_length,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -334,37 +390,27 @@ if __name__ == "__main__":
     best_4h = rsi_4h_sr.idxmax()
     print(f"  {len(rsi_4h_res)} combos in {t_4h:.3f}s → Best RSI({best_4h[0]}) {best_4h[1]} Sharpe={rsi_4h_sr.max():.4f}")
 
-    # ── D. CV WALK-FORWARD (8 splits, date labels) ───────────────
+    # ── E. CV WALK-FORWARD (8 splits, prange multicore per split) ─
     print("\n" + "=" * 60)
-    print("D. RSI CV (8 splits, dates)")
+    print("E. RSI CV (8 splits, prange per split)")
     print("=" * 60)
-    cv_rsi = build_rsi_cv(n_splits=8, window_length=500)
-    grid_rsi, best_rsi_cv = cv_rsi(
-        close_arr=arr_d,
-        rsi_window=vbt.Param(rsi_ws.tolist()),
-        entry_th=vbt.Param(entry_ts.tolist()),
-        _return_grid="all", _index=close_d.index,
-    )
-    for s in ["train", "test"]:
-        if "set" in best_rsi_cv.index.names:
-            v = best_rsi_cv.xs(s, level="set")
-            print(f"  {s}: mean={v.mean():.4f} min={v.min():.4f} max={v.max():.4f}")
+    t0 = time.time()
+    grid_rsi, best_rsi_cv = run_rsi_cv(close_d, rsi_ws, entry_ts, n_splits=8, window_length=500)
+    print(f"  {len(grid_rsi)} results in {time.time()-t0:.3f}s")
+    print(f"  Train Sharpe: mean={best_rsi_cv['train_sharpe'].mean():.4f} min={best_rsi_cv['train_sharpe'].min():.4f}")
+    print(f"  Test Sharpe:  mean={best_rsi_cv['test_sharpe'].mean():.4f} min={best_rsi_cv['test_sharpe'].min():.4f}")
+    print(best_rsi_cv.to_string(index=False))
 
-    # ── E. BBANDS CV ──────────────────────────────────────────────
+    # ── F. BBANDS CV ──────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print("E. BBANDS CV (8 splits, dates)")
+    print("F. BBANDS CV (8 splits, prange per split)")
     print("=" * 60)
-    cv_bb = build_bb_cv(n_splits=8, window_length=500)
-    grid_bb, best_bb_cv = cv_bb(
-        close_arr=arr_d,
-        bb_window=vbt.Param(bb_ws.tolist()),
-        bb_alpha=vbt.Param(bb_as.tolist()),
-        _return_grid="all", _index=close_d.index,
-    )
-    for s in ["train", "test"]:
-        if "set" in best_bb_cv.index.names:
-            v = best_bb_cv.xs(s, level="set")
-            print(f"  {s}: mean={v.mean():.4f} min={v.min():.4f} max={v.max():.4f}")
+    t0 = time.time()
+    grid_bb, best_bb_cv = run_bb_cv(close_d, bb_ws, bb_as, n_splits=8, window_length=500)
+    print(f"  {len(grid_bb)} results in {time.time()-t0:.3f}s")
+    print(f"  Train Sharpe: mean={best_bb_cv['train_sharpe'].mean():.4f} min={best_bb_cv['train_sharpe'].min():.4f}")
+    print(f"  Test Sharpe:  mean={best_bb_cv['test_sharpe'].mean():.4f} min={best_bb_cv['test_sharpe'].min():.4f}")
+    print(best_bb_cv.to_string(index=False))
 
     # ── G. HEATMAPS → BROWSER ────────────────────────────────────
     print("\n" + "=" * 60)
