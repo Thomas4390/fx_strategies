@@ -1,0 +1,129 @@
+"""Strategy specification dataclasses.
+
+A strategy is pure data: kernel function, signal function, parameter config,
+and the mapping that connects them. The StrategyRunner consumes these specs
+to execute backtests, parameter sweeps, and cross-validation pipelines.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Callable
+
+
+@dataclass(frozen=True)
+class ParamDef:
+    """A parameter with its default value and optional sweep range.
+
+    Parameters with ``sweep=None`` are fixed during grid search / CV.
+    Parameters with a sweep list become ``vbt.Param([...])`` in sweep/CV mode.
+    """
+
+    default: Any
+    sweep: list[Any] | None = None
+
+
+@dataclass(frozen=True)
+class IndicatorSpec:
+    """Declares the ``vbt.IF`` setup for an indicator kernel.
+
+    Attributes:
+        class_name: VBT indicator class name (e.g. ``"MR_V1"``).
+        short_name: Short name used in VBT internals (e.g. ``"mr_v1"``).
+        input_names: Ordered input names matching the kernel's first positional args
+            (e.g. ``("index_ns", "high_minute", "low_minute", "close_minute", "open_minute")``).
+        param_names: Parameter names that the kernel accepts after the inputs.
+        output_names: Names of the arrays returned by the kernel (in order).
+        kernel_func: The ``@njit`` function that computes indicators.
+    """
+
+    class_name: str
+    short_name: str
+    input_names: tuple[str, ...]
+    param_names: tuple[str, ...]
+    output_names: tuple[str, ...]
+    kernel_func: Callable
+
+
+# Default mapping from IndicatorSpec.input_names to raw DataFrame columns.
+# The runner uses this to auto-wire inputs unless overridden.
+DEFAULT_INPUT_MAP: dict[str, str] = {
+    "index_ns": "__index_ns__",  # special: resolved from vbt.dt.to_ns(raw.index)
+    "high_minute": "high",
+    "low_minute": "low",
+    "close_minute": "close",
+    "open_minute": "open",
+    "volume_minute": "volume",
+    # Daily strategies
+    "close": "close",
+    "returns": "__returns__",  # special: computed from close
+}
+
+
+@dataclass(frozen=True)
+class PortfolioConfig:
+    """Strategy-specific portfolio settings beyond global defaults.
+
+    Attributes:
+        leverage: Fixed float or ``"ind.<output_name>"`` for indicator-derived leverage.
+        sl_stop: Fixed float, ``"param.<name>"`` reference, or ``None``.
+        tp_stop: Fixed float, ``"param.<name>"`` reference, or ``None``.
+        extra_kwargs: Additional kwargs passed directly to ``Portfolio.from_signals``.
+            Use for strategy-specific settings like ``leverage_mode``, ``fees``, etc.
+    """
+
+    slippage: float = 0.00015
+    fixed_fees: float = 0.0
+    init_cash: float = 1_000_000.0
+    freq: str = "1min"
+    leverage: float | str = 1.0
+    sl_stop: float | str | None = None
+    tp_stop: float | str | None = None
+    size_type: str | None = None
+    accumulate: bool = False
+    upon_opposite_entry: str | None = None
+    extra_kwargs: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class StrategySpec:
+    """Complete, self-contained strategy specification.
+
+    Attributes:
+        name: Human-readable strategy name.
+        indicator: Indicator factory specification.
+        signal_func: The ``@njit`` signal callback for ``Portfolio.from_signals``.
+        signal_args_map: Ordered sequence of ``(rep_name, source)`` tuples.
+            The order MUST match the positional args of ``signal_func`` after ``c``.
+            Source conventions:
+            - ``"data.<col>"`` → ``raw[col]``
+            - ``"ind.<output>"`` → ``indicator_result.<output>.values``
+            - ``"extra.index_ns"`` → the ``index_ns`` array
+            - ``"param.<name>"`` → concrete parameter value (scalar or array)
+        params: All parameters (indicator + signal + portfolio) with defaults and
+            optional sweep ranges.
+        portfolio_config: Portfolio simulation settings.
+        takeable_args: Argument names that ``vbt.cv_split`` should slice across folds.
+    """
+
+    name: str
+    indicator: IndicatorSpec
+    signal_func: Callable
+    signal_args_map: tuple[tuple[str, str], ...]
+    params: dict[str, ParamDef]
+    portfolio_config: PortfolioConfig = field(default_factory=PortfolioConfig)
+    takeable_args: tuple[str, ...] = (
+        "high_arr",
+        "low_arr",
+        "close_arr",
+        "open_arr",
+        "idx_ns",
+    )
+
+    def default_params(self) -> dict[str, Any]:
+        """Return a dict of parameter_name → default_value."""
+        return {k: v.default for k, v in self.params.items()}
+
+    def sweep_grid(self) -> dict[str, list[Any]]:
+        """Return only the parameters that have a sweep range defined."""
+        return {k: v.sweep for k, v in self.params.items() if v.sweep is not None}
