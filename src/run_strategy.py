@@ -74,7 +74,6 @@ def main() -> None:
         if args.mode == "full":
             kwargs["metric"] = args.metric
             kwargs["holdout_ratio"] = args.holdout
-            kwargs["results_dir"] = f"results/{spec.indicator.short_name}"
 
         run_strategy(spec, data_path=args.data, mode=args.mode, **kwargs)
 

@@ -6,11 +6,16 @@ Numba-compiled kernels and common settings reused across all strategy modules.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
+
+# Project root: two levels up from this file (src/utils.py -> project/)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # ═══════════════════════════════════════════════════════════════════════
 # PLOTTING
@@ -69,8 +74,13 @@ def load_fx_data(
     data : vbt.Data
         VBT Data wrapper with capitalized columns (for native VBT functions).
     """
+    # Resolve relative paths against project root
+    resolved = Path(path)
+    if not resolved.is_absolute():
+        resolved = _PROJECT_ROOT / resolved
+
     # Load via VBT Pro native parquet reader
-    data_raw = vbt.Data.from_parquet(path)
+    data_raw = vbt.Data.from_parquet(str(resolved))
     symbol = data_raw.symbols[0]
     df = data_raw.data[symbol]
     df = df.set_index("date").sort_index()

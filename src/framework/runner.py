@@ -9,6 +9,7 @@ Consumes a ``StrategySpec`` and data, providing three execution modes:
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -16,6 +17,9 @@ import pandas as pd
 import vectorbtpro as vbt
 
 from framework.spec import DEFAULT_INPUT_MAP, StrategySpec
+
+# Project root: three levels up from this file (src/framework/runner.py -> project/)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -102,7 +106,9 @@ class StrategyRunner:
         if param_grid is None:
             param_grid = self.spec.sweep_grid()
         if results_dir is None:
-            results_dir = f"results/{self.spec.indicator.short_name}"
+            results_dir = str(
+                _PROJECT_ROOT / "results" / self.spec.indicator.short_name
+            )
         os.makedirs(results_dir, exist_ok=True)
 
         # -- Holdout split --------------------------------------------------
@@ -667,7 +673,7 @@ def run_strategy(
 
     if mode == "backtest":
         pf, ind = runner.backtest(**kwargs)
-        results_dir = f"results/{spec.indicator.short_name}"
+        results_dir = str(_PROJECT_ROOT / "results" / spec.indicator.short_name)
         runner.save_backtest_plots(pf, ind, results_dir)
         return pf, ind
     if mode == "full":
