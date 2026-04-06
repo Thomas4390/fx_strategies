@@ -23,22 +23,12 @@ import vectorbtpro as vbt
 from numba import njit
 
 from utils import (
-    ANNUALIZED_RETURN,
-    CALMAR_RATIO,
-    MAX_DRAWDOWN,
-    OMEGA_RATIO,
-    PROFIT_FACTOR,
-    SHARPE_RATIO,
-    SORTINO_RATIO,
-    TOTAL_RETURN,
     apply_vbt_settings,
     compute_ann_factor,
     compute_daily_adx_broadcast_nb,
     compute_intraday_rolling_std_nb,
     compute_intraday_twap_nb,
     compute_intraday_zscore_nb,
-    compute_metric_nb,
-    find_day_boundaries_nb,
     load_fx_data,
 )
 
@@ -270,7 +260,13 @@ def run_backtest(
     MR_V3 = vbt.IF(
         class_name="IntradayMR_V3",
         short_name="mr_v3",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+        ],
         param_names=[
             "lookback",
             "band_width",
@@ -382,7 +378,13 @@ def _build_cv_runner(splitter):
         MR_V3 = vbt.IF(
             class_name="IntradayMR_V3",
             short_name="mr_v3",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+            ],
             param_names=[
                 "lookback",
                 "band_width",
@@ -579,9 +581,7 @@ if __name__ == "__main__":
     )
     fig_pf.write_html(f"{results_dir}/portfolio_overview.html")
 
-    fig_monthly = plot_monthly_heatmap(
-        pf, "MR V3 Session Filter — Monthly Returns (%)"
-    )
+    fig_monthly = plot_monthly_heatmap(pf, "MR V3 Session Filter — Monthly Returns (%)")
     fig_monthly.write_html(f"{results_dir}/monthly_returns.html")
 
     print(f"\nPlots saved to {results_dir}/")
@@ -649,9 +649,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     best_idx = (
-        best_perf.idxmax()
-        if isinstance(best_perf.index, pd.MultiIndex)
-        else None
+        best_perf.idxmax() if isinstance(best_perf.index, pd.MultiIndex) else None
     )
 
     print(f"  Walk-Forward best: {best_idx} (Sharpe: {best_perf.max():.4f})")
@@ -738,9 +736,7 @@ if __name__ == "__main__":
     fig_holdout = pf_holdout.plot(
         subplots=["cumulative_returns", "drawdowns", "underwater"]
     )
-    fig_holdout.update_layout(
-        title="MR V3 Session Filter — Hold-Out Test", height=900
-    )
+    fig_holdout.update_layout(title="MR V3 Session Filter — Hold-Out Test", height=900)
     fig_holdout.write_html(f"{results_dir}/portfolio_holdout.html")
 
     fig_monthly_holdout = plot_monthly_heatmap(
@@ -751,9 +747,7 @@ if __name__ == "__main__":
     fig_opt = pf_opt_train.plot(
         subplots=["cumulative_returns", "drawdowns", "underwater"]
     )
-    fig_opt.update_layout(
-        title="MR V3 Session Filter — Optimized (Train)", height=900
-    )
+    fig_opt.update_layout(title="MR V3 Session Filter — Optimized (Train)", height=900)
     fig_opt.write_html(f"{results_dir}/portfolio_optimized.html")
 
     fig_monthly_opt = plot_monthly_heatmap(

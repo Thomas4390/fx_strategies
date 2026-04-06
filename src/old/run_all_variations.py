@@ -49,9 +49,9 @@ def run_variation(name, run_fn, raw, index_ns, ann_factor, params):
     ns_train = vbt.dt.to_ns(raw_train.index)
     ns_test = vbt.dt.to_ns(raw_test.index)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {name}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Train
     t0 = time.perf_counter()
@@ -64,14 +64,18 @@ def run_variation(name, run_fn, raw, index_ns, ann_factor, params):
     train_stats = pf_train.stats()
     test_stats = pf_test.stats()
 
-    print(f"  Train: Sharpe={train_stats.get('Sharpe Ratio', 'N/A'):.4f}, "
-          f"Return={train_stats.get('Total Return [%]', 'N/A'):.2f}%, "
-          f"MaxDD={train_stats.get('Max Drawdown [%]', 'N/A'):.2f}%, "
-          f"Trades={pf_train.trades.count()}")
-    print(f"  Test:  Sharpe={test_stats.get('Sharpe Ratio', 'N/A'):.4f}, "
-          f"Return={test_stats.get('Total Return [%]', 'N/A'):.2f}%, "
-          f"MaxDD={test_stats.get('Max Drawdown [%]', 'N/A'):.2f}%, "
-          f"Trades={pf_test.trades.count()}")
+    print(
+        f"  Train: Sharpe={train_stats.get('Sharpe Ratio', 'N/A'):.4f}, "
+        f"Return={train_stats.get('Total Return [%]', 'N/A'):.2f}%, "
+        f"MaxDD={train_stats.get('Max Drawdown [%]', 'N/A'):.2f}%, "
+        f"Trades={pf_train.trades.count()}"
+    )
+    print(
+        f"  Test:  Sharpe={test_stats.get('Sharpe Ratio', 'N/A'):.4f}, "
+        f"Return={test_stats.get('Total Return [%]', 'N/A'):.2f}%, "
+        f"MaxDD={test_stats.get('Max Drawdown [%]', 'N/A'):.2f}%, "
+        f"Trades={pf_test.trades.count()}"
+    )
     print(f"  Time: {t_train:.1f}s")
 
     return {
@@ -108,11 +112,16 @@ if __name__ == "__main__":
     try:
         from mr_v1_no_leverage import run_backtest as run_v1
 
-        results.append(run_variation(
-            "V1: No Leverage, SL catastrophe",
-            run_v1, raw, index_ns, ann_factor,
-            {"lookback": 60, "band_width": 2.0, "sl_stop": 0.005},
-        ))
+        results.append(
+            run_variation(
+                "V1: No Leverage, SL catastrophe",
+                run_v1,
+                raw,
+                index_ns,
+                ann_factor,
+                {"lookback": 60, "band_width": 2.0, "sl_stop": 0.005},
+            )
+        )
     except Exception as e:
         print(f"  V1 FAILED: {e}")
 
@@ -120,11 +129,16 @@ if __name__ == "__main__":
     try:
         from mr_v2_zscore_exit import run_backtest as run_v2
 
-        results.append(run_variation(
-            "V2: Z-Score Exit + SL catastrophe",
-            run_v2, raw, index_ns, ann_factor,
-            {"lookback": 60, "entry_z": 2.0, "exit_z": 0.5, "sl_stop": 0.005},
-        ))
+        results.append(
+            run_variation(
+                "V2: Z-Score Exit + SL catastrophe",
+                run_v2,
+                raw,
+                index_ns,
+                ann_factor,
+                {"lookback": 60, "entry_z": 2.0, "exit_z": 0.5, "sl_stop": 0.005},
+            )
+        )
     except Exception as e:
         print(f"  V2 FAILED: {e}")
 
@@ -132,12 +146,22 @@ if __name__ == "__main__":
     try:
         from mr_v3_session_filter import run_backtest as run_v3
 
-        results.append(run_variation(
-            "V3: Session Filter (8h-16h UTC)",
-            run_v3, raw, index_ns, ann_factor,
-            {"lookback": 60, "band_width": 2.0, "sl_stop": 0.005,
-             "session_start": 8, "session_end": 16},
-        ))
+        results.append(
+            run_variation(
+                "V3: Session Filter (8h-16h UTC)",
+                run_v3,
+                raw,
+                index_ns,
+                ann_factor,
+                {
+                    "lookback": 60,
+                    "band_width": 2.0,
+                    "sl_stop": 0.005,
+                    "session_start": 8,
+                    "session_end": 16,
+                },
+            )
+        )
     except Exception as e:
         print(f"  V3 FAILED: {e}")
 
@@ -145,11 +169,16 @@ if __name__ == "__main__":
     try:
         from mr_v4_adaptive_bands import run_backtest as run_v4
 
-        results.append(run_variation(
-            "V4: Adaptive EWM Bands",
-            run_v4, raw, index_ns, ann_factor,
-            {"ewm_span": 60, "band_width": 2.0, "sl_stop": 0.005},
-        ))
+        results.append(
+            run_variation(
+                "V4: Adaptive EWM Bands",
+                run_v4,
+                raw,
+                index_ns,
+                ann_factor,
+                {"ewm_span": 60, "band_width": 2.0, "sl_stop": 0.005},
+            )
+        )
     except Exception as e:
         print(f"  V4 FAILED: {e}")
 
@@ -164,7 +193,7 @@ if __name__ == "__main__":
         # Save
         os.makedirs("results/comparison", exist_ok=True)
         df.to_csv("results/comparison/variations_summary.csv")
-        print(f"\nSaved to results/comparison/variations_summary.csv")
+        print("\nSaved to results/comparison/variations_summary.csv")
 
         # Best variation
         viable = df[df["test_sharpe"] > 0]
@@ -178,6 +207,6 @@ if __name__ == "__main__":
             print("    Ranking by least negative test Sharpe:")
             ranking = df.sort_values("test_sharpe", ascending=False)
             for i, (name, row) in enumerate(ranking.iterrows()):
-                print(f"    {i+1}. {name}: Sharpe={row['test_sharpe']:.4f}")
+                print(f"    {i + 1}. {name}: Sharpe={row['test_sharpe']:.4f}")
     else:
         print("\nNo variations ran successfully.")

@@ -7,13 +7,20 @@ import numpy as np
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
+from framework.spec import (
+    IndicatorSpec,
+    OverlayLine,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
+)
 from utils import (
-    compute_daily_adx_broadcast_nb,
+    compute_adx_regime_nb,
+    compute_deviation_nb,
     compute_intraday_twap_nb,
     compute_intraday_zscore_nb,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════
 # INDICATOR KERNEL
@@ -32,25 +39,12 @@ def compute_mr_v2_indicators_nb(
     adx_threshold: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute TWAP, rolling z-score, and ADX regime filter."""
-    n = len(close)
-
     twap = compute_intraday_twap_nb(index_ns, high, low, close)
-
-    deviation = np.empty(n)
-    for i in range(n):
-        if np.isnan(twap[i]) or np.isnan(close[i]):
-            deviation[i] = np.nan
-        else:
-            deviation[i] = close[i] - twap[i]
-
+    deviation = compute_deviation_nb(close, twap)
     zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
-
-    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
-    regime_ok = np.ones(n, dtype=np.float64)
-    for i in range(n):
-        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
-            regime_ok[i] = 0.0
-
+    regime_ok = compute_adx_regime_nb(
+        index_ns, high, low, close, open_, adx_period, adx_threshold
+    )
     return twap, zscore, regime_ok
 
 
@@ -166,6 +160,10 @@ spec = StrategySpec(
         "sl_stop": ParamDef(0.005, sweep=[0.002, 0.003, 0.005]),
     },
     portfolio_config=PortfolioConfig(leverage=1.0, sl_stop=0.005),
+    plot_config=PlotConfig(
+        overlays=(OverlayLine("ind.twap", "TWAP", color="#FF9800", dash="dash"),),
+        subplot_indicators=(("ind.zscore", "Z-Score", True),),
+    ),
 )
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Deep RSI sweep with Numba prange multicore + train/test validation."""
+
 import os
 import sys
 import warnings
@@ -7,13 +8,13 @@ import warnings
 import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
-from numba import njit, prange
 
 warnings.filterwarnings("ignore")
 os.environ["NUMBA_DISABLE_PERFORMANCE_WARNINGS"] = "1"
 sys.path.insert(0, os.path.dirname(__file__))
+from cv_rsi_validated import _run_rsi_sim, rsi_batch
+
 from utils import load_fx_data
-from cv_rsi_validated import _run_rsi_sim, rsi_batch, batch_to_series
 
 RESULTS_DIR = "results/exploration/parallel"
 FEES = 0.0001
@@ -48,11 +49,16 @@ if __name__ == "__main__":
         for idx in range(len(train_res)):
             rw_i = idx // len(entry_ts)
             eth_i = idx % len(entry_ts)
-            results_all.append({
-                "tf": tf, "window": int(rsi_ws[rw_i]),
-                "lo": int(entry_ts[eth_i]), "hi": int(100 - entry_ts[eth_i]),
-                "sharpe_train": train_res[idx], "sharpe_test": test_res[idx],
-            })
+            results_all.append(
+                {
+                    "tf": tf,
+                    "window": int(rsi_ws[rw_i]),
+                    "lo": int(entry_ts[eth_i]),
+                    "hi": int(100 - entry_ts[eth_i]),
+                    "sharpe_train": train_res[idx],
+                    "sharpe_test": test_res[idx],
+                }
+            )
 
     df = pd.DataFrame(results_all)
     valid = df[(df["sharpe_train"] > 0) & (df["sharpe_test"] > 0)]

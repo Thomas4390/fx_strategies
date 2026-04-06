@@ -4,18 +4,20 @@ Shared utilities for FX intraday strategies.
 Numba-compiled kernels and common settings reused across all strategy modules.
 """
 
+from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import vectorbtpro as vbt
-from numba import njit, prange
+from numba import njit
 
 # ═══════════════════════════════════════════════════════════════════════
 # PLOTTING
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def configure_figure_for_fullscreen(fig):
+def configure_figure_for_fullscreen(fig: go.Figure) -> go.Figure:
     fig.update_layout(
         width=None,
         height=None,
@@ -81,9 +83,7 @@ def load_fx_data(
 
     # VBT Data wrapper with capitalized columns for native functions
     df.columns = [c.capitalize() for c in df.columns]
-    data = vbt.Data.from_data(
-        {symbol: df}, tz_localize=False, tz_convert=False
-    )
+    data = vbt.Data.from_data({symbol: df}, tz_localize=False, tz_convert=False)
     return raw, data
 
 
@@ -433,36 +433,157 @@ def compute_intraday_zscore_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# METRIC CONSTANTS + DISPATCH (shared across strategies)
+# SHARED MR INDICATOR HELPERS
 # ═══════════════════════════════════════════════════════════════════════
-
-TOTAL_RETURN = 0
-SHARPE_RATIO = 1
-CALMAR_RATIO = 2
-SORTINO_RATIO = 3
-OMEGA_RATIO = 4
-ANNUALIZED_RETURN = 5
-MAX_DRAWDOWN = 6
-PROFIT_FACTOR = 7
 
 
 @njit(nogil=True)
-def compute_metric_nb(returns, metric_type, ann_factor, cutoff=0.05):
-    if metric_type == TOTAL_RETURN:
-        return vbt.ret_nb.total_return_nb(returns=returns)
-    elif metric_type == SHARPE_RATIO:
-        return vbt.ret_nb.sharpe_ratio_nb(returns=returns, ann_factor=ann_factor)
-    elif metric_type == CALMAR_RATIO:
-        return vbt.ret_nb.calmar_ratio_nb(returns=returns, ann_factor=ann_factor)
-    elif metric_type == SORTINO_RATIO:
-        return vbt.ret_nb.sortino_ratio_nb(returns=returns, ann_factor=ann_factor)
-    elif metric_type == OMEGA_RATIO:
-        return vbt.ret_nb.omega_ratio_nb(returns=returns)
-    elif metric_type == ANNUALIZED_RETURN:
-        return vbt.ret_nb.annualized_return_nb(returns=returns, ann_factor=ann_factor)
-    elif metric_type == MAX_DRAWDOWN:
-        return -vbt.ret_nb.max_drawdown_nb(returns=returns)
-    elif metric_type == PROFIT_FACTOR:
-        return vbt.ret_nb.profit_factor_nb(returns=returns)
-    else:
-        return vbt.ret_nb.total_return_nb(returns=returns)
+def compute_deviation_nb(
+    close: np.ndarray,
+    twap: np.ndarray,
+) -> np.ndarray:
+    """Compute close-to-TWAP deviation, NaN-safe."""
+    n = len(close)
+    deviation = np.empty(n)
+    for i in range(n):
+        if np.isnan(twap[i]) or np.isnan(close[i]):
+            deviation[i] = np.nan
+        else:
+            deviation[i] = close[i] - twap[i]
+    return deviation
+
+
+@njit(nogil=True)
+def compute_intraday_bands_nb(
+    index_ns: np.ndarray,
+    twap: np.ndarray,
+    deviation: np.ndarray,
+    lookback: int,
+    band_width: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute upper/lower bands from intraday rolling std of deviation."""
+    n = len(twap)
+    rolling_std = compute_intraday_rolling_std_nb(index_ns, deviation, lookback)
+    upper_band = np.full(n, np.nan)
+    lower_band = np.full(n, np.nan)
+    for i in range(n):
+        s = rolling_std[i]
+        if not np.isnan(s) and s > 1e-10 and not np.isnan(twap[i]):
+            upper_band[i] = twap[i] + band_width * s
+            lower_band[i] = twap[i] - band_width * s
+    return upper_band, lower_band
+
+
+@njit(nogil=True)
+def compute_adx_regime_nb(
+    index_ns: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    open_: np.ndarray,
+    adx_period: int,
+    adx_threshold: float,
+) -> np.ndarray:
+    """Compute ADX and return binary regime_ok array (1=MR allowed, 0=trending)."""
+    n = len(close)
+    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
+    regime_ok = np.ones(n, dtype=np.float64)
+    for i in range(n):
+        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
+            regime_ok[i] = 0.0
+    return regime_ok
+
+
+@njit(nogil=True)
+def compute_mr_base_indicators_nb(
+    index_ns: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    open_: np.ndarray,
+    lookback: int,
+    band_width: float,
+    adx_period: int,
+    adx_threshold: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Full MR base indicators: TWAP + zscore + bands + regime_ok."""
+    twap = compute_intraday_twap_nb(index_ns, high, low, close)
+    deviation = compute_deviation_nb(close, twap)
+    zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
+    upper_band, lower_band = compute_intraday_bands_nb(
+        index_ns, twap, deviation, lookback, band_width
+    )
+    regime_ok = compute_adx_regime_nb(
+        index_ns, high, low, close, open_, adx_period, adx_threshold
+    )
+    return twap, zscore, upper_band, lower_band, regime_ok
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SHARED MR SIGNAL FUNCTION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+@njit(nogil=True)
+def mr_band_signal_nb(
+    c: object,
+    close_arr: np.ndarray,
+    upper_arr: np.ndarray,
+    lower_arr: np.ndarray,
+    twap_arr: np.ndarray,
+    regime_ok_arr: np.ndarray,
+    index_ns_arr: np.ndarray,
+    eod_hour_arr: np.ndarray,
+    eod_minute_arr: np.ndarray,
+    eval_freq_arr: np.ndarray,
+) -> tuple[bool, bool, bool, bool]:
+    """Shared MR signal: band entry, TWAP exit, EOD forced exit, regime filter."""
+    ts_ns = index_ns_arr[c.i]
+    cur_hour = vbt.dt_nb.hour_nb(ts_ns)
+    cur_minute = vbt.dt_nb.minute_nb(ts_ns)
+
+    eod_hour = vbt.pf_nb.select_nb(c, eod_hour_arr)
+    eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
+
+    # EOD forced exit
+    is_eod = (cur_hour > eod_hour) or (
+        cur_hour == eod_hour and cur_minute >= eod_minute
+    )
+    if is_eod:
+        el = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
+        es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
+        return False, el, False, es
+
+    # Evaluate at parametric frequency
+    eval_freq = vbt.pf_nb.select_nb(c, eval_freq_arr)
+    if eval_freq > 0 and cur_minute % eval_freq != 0:
+        return False, False, False, False
+
+    px = vbt.pf_nb.select_nb(c, close_arr)
+    ub = vbt.pf_nb.select_nb(c, upper_arr)
+    lb = vbt.pf_nb.select_nb(c, lower_arr)
+    tw = vbt.pf_nb.select_nb(c, twap_arr)
+    regime = vbt.pf_nb.select_nb(c, regime_ok_arr)
+
+    if np.isnan(px) or np.isnan(ub) or np.isnan(lb) or np.isnan(tw):
+        return False, False, False, False
+
+    in_long = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
+    in_short = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
+
+    # Regime filter: no new entries in trending market, but allow exits
+    if not in_long and not in_short:
+        if regime < 0.5:
+            return False, False, False, False
+        if px < lb:
+            return True, False, False, False
+        elif px > ub:
+            return False, False, True, False
+    elif in_long:
+        if px >= tw:
+            return False, True, False, False
+    elif in_short:
+        if px <= tw:
+            return False, False, False, True
+
+    return False, False, False, False

@@ -7,8 +7,9 @@ to execute backtests, parameter sweeps, and cross-validation pipelines.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -86,6 +87,37 @@ class PortfolioConfig:
 
 
 @dataclass(frozen=True)
+class OverlayLine:
+    """A line to overlay on the price/trade-signals chart.
+
+    Attributes:
+        source: ``"ind.<output>"`` or ``"data.<col>"`` following signal_args_map convention.
+        label: Legend label for the trace.
+        color: CSS color string (e.g. ``"#FF9800"``). None = auto.
+        dash: Line dash style: ``"solid"``, ``"dash"``, or ``"dot"``.
+    """
+
+    source: str
+    label: str
+    color: str | None = None
+    dash: str | None = None
+
+
+@dataclass(frozen=True)
+class PlotConfig:
+    """Per-strategy plotting configuration.
+
+    Attributes:
+        overlays: Lines to draw on the price/trade-signals chart.
+        subplot_indicators: Indicator outputs to plot as separate subplots.
+            Each tuple is ``(source, label, fill_to_zero)``.
+    """
+
+    overlays: tuple[OverlayLine, ...] = ()
+    subplot_indicators: tuple[tuple[str, str, bool], ...] = ()
+
+
+@dataclass(frozen=True)
 class StrategySpec:
     """Complete, self-contained strategy specification.
 
@@ -112,6 +144,7 @@ class StrategySpec:
     signal_args_map: tuple[tuple[str, str], ...]
     params: dict[str, ParamDef]
     portfolio_config: PortfolioConfig = field(default_factory=PortfolioConfig)
+    plot_config: PlotConfig = field(default_factory=PlotConfig)
     takeable_args: tuple[str, ...] = (
         "high_arr",
         "low_arr",

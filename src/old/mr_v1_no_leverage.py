@@ -28,22 +28,12 @@ import vectorbtpro as vbt
 from numba import njit
 
 from utils import (
-    ANNUALIZED_RETURN,
-    CALMAR_RATIO,
-    MAX_DRAWDOWN,
-    OMEGA_RATIO,
-    PROFIT_FACTOR,
-    SHARPE_RATIO,
-    SORTINO_RATIO,
-    TOTAL_RETURN,
     apply_vbt_settings,
     compute_ann_factor,
     compute_daily_adx_broadcast_nb,
     compute_intraday_rolling_std_nb,
     compute_intraday_twap_nb,
     compute_intraday_zscore_nb,
-    compute_metric_nb,
-    find_day_boundaries_nb,
     load_fx_data,
 )
 
@@ -210,7 +200,13 @@ def run_backtest(
     MR_V1 = vbt.IF(
         class_name="MR_V1",
         short_name="mr_v1",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+        ],
         param_names=[
             "lookback",
             "band_width",
@@ -316,7 +312,13 @@ def _build_cv_runner(splitter):
         MR_V1 = vbt.IF(
             class_name="MR_V1",
             short_name="mr_v1",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+            ],
             param_names=[
                 "lookback",
                 "band_width",
@@ -544,9 +546,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     best_idx = (
-        best_perf.idxmax()
-        if isinstance(best_perf.index, pd.MultiIndex)
-        else None
+        best_perf.idxmax() if isinstance(best_perf.index, pd.MultiIndex) else None
     )
     print(f"  Walk-Forward best: {best_idx} (Sharpe: {best_perf.max():.4f})")
 
@@ -651,7 +651,7 @@ if __name__ == "__main__":
         for k, v in opt_params.items():
             f.write(f"  {k}: {v}\n")
         f.write(f"  tp_stop: {opt_sl} (= sl_stop, symmetric)\n")
-        f.write(f"  leverage: 1.0 (fixed, no vol-targeting)\n\n")
+        f.write("  leverage: 1.0 (fixed, no vol-targeting)\n\n")
         f.write("TRAIN SET STATS\n")
         f.write("-" * 40 + "\n")
         f.write(pf_opt_train.stats().to_string() + "\n\n")

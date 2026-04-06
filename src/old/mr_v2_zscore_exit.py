@@ -23,21 +23,11 @@ import vectorbtpro as vbt
 from numba import njit
 
 from utils import (
-    ANNUALIZED_RETURN,
-    CALMAR_RATIO,
-    MAX_DRAWDOWN,
-    OMEGA_RATIO,
-    PROFIT_FACTOR,
-    SHARPE_RATIO,
-    SORTINO_RATIO,
-    TOTAL_RETURN,
     apply_vbt_settings,
     compute_ann_factor,
     compute_daily_adx_broadcast_nb,
     compute_intraday_twap_nb,
     compute_intraday_zscore_nb,
-    compute_metric_nb,
-    find_day_boundaries_nb,
     load_fx_data,
 )
 
@@ -210,7 +200,13 @@ def run_backtest(
     MRV2 = vbt.IF(
         class_name="IntradayMRv2",
         short_name="mrv2",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+        ],
         param_names=["lookback", "adx_period", "adx_threshold"],
         output_names=["twap", "zscore", "regime_ok"],
     ).with_apply_func(
@@ -301,7 +297,13 @@ def _build_cv_runner(splitter):
         MRV2 = vbt.IF(
             class_name="IntradayMRv2",
             short_name="mrv2",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+            ],
             param_names=["lookback", "adx_period", "adx_threshold"],
             output_names=["twap", "zscore", "regime_ok"],
         ).with_apply_func(
@@ -315,15 +317,9 @@ def _build_cv_runner(splitter):
         close_s = (
             pd.Series(close_arr[:, 0]) if close_arr.ndim > 1 else pd.Series(close_arr)
         )
-        high_s = (
-            pd.Series(high_arr[:, 0]) if high_arr.ndim > 1 else pd.Series(high_arr)
-        )
-        low_s = (
-            pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
-        )
-        open_s = (
-            pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
-        )
+        high_s = pd.Series(high_arr[:, 0]) if high_arr.ndim > 1 else pd.Series(high_arr)
+        low_s = pd.Series(low_arr[:, 0]) if low_arr.ndim > 1 else pd.Series(low_arr)
+        open_s = pd.Series(open_arr[:, 0]) if open_arr.ndim > 1 else pd.Series(open_arr)
 
         mrv2 = MRV2.run(
             index_ns=idx_ns,
@@ -401,8 +397,18 @@ def plot_monthly_heatmap(
     )
     pivot = df.pivot(index="year", columns="month", values="ret")
     pivot.columns = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
     ]
     fig = go.Figure(
         data=go.Heatmap(
@@ -467,9 +473,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # ── Plots (standard) ──────────────────────────────────────────
-    fig_pf = pf_default.plot(
-        subplots=["cumulative_returns", "drawdowns", "underwater"]
-    )
+    fig_pf = pf_default.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
     fig_pf.update_layout(
         title="MR V2 (Z-Score Exit) — Portfolio Overview (realistic)", height=900
     )
@@ -543,9 +547,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     best_idx = (
-        best_perf.idxmax()
-        if isinstance(best_perf.index, pd.MultiIndex)
-        else None
+        best_perf.idxmax() if isinstance(best_perf.index, pd.MultiIndex) else None
     )
     print(f"  Walk-Forward best: {best_idx} (Sharpe: {best_perf.max():.4f})")
 
@@ -614,9 +616,7 @@ if __name__ == "__main__":
     fig_holdout = pf_holdout.plot(
         subplots=["cumulative_returns", "drawdowns", "underwater"]
     )
-    fig_holdout.update_layout(
-        title="MR V2 (Z-Score Exit) — Hold-Out Test", height=900
-    )
+    fig_holdout.update_layout(title="MR V2 (Z-Score Exit) — Hold-Out Test", height=900)
     fig_holdout.write_html(f"{results_dir}/portfolio_holdout.html")
 
     fig_monthly_holdout = plot_monthly_heatmap(
@@ -627,9 +627,7 @@ if __name__ == "__main__":
     fig_opt = pf_opt_train.plot(
         subplots=["cumulative_returns", "drawdowns", "underwater"]
     )
-    fig_opt.update_layout(
-        title="MR V2 (Z-Score Exit) — Optimized (Train)", height=900
-    )
+    fig_opt.update_layout(title="MR V2 (Z-Score Exit) — Optimized (Train)", height=900)
     fig_opt.write_html(f"{results_dir}/portfolio_optimized.html")
 
     fig_monthly_opt = plot_monthly_heatmap(

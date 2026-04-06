@@ -4,9 +4,15 @@ import numpy as np
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
+from framework.spec import (
+    IndicatorSpec,
+    OverlayLine,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
+)
 from utils import find_day_boundaries_nb
-
 
 # ═══════════════════════════════════════════════════════════════════════
 # NUMBA KERNELS
@@ -217,6 +223,14 @@ spec = StrategySpec(
         "eod_minute": ParamDef(0),
     },
     portfolio_config=PortfolioConfig(freq="1min"),
+    plot_config=PlotConfig(
+        overlays=(
+            OverlayLine("ind.kalman_price", "Kalman Price", color="#2196F3"),
+            OverlayLine("ind.ema_fast_line", "EMA Fast", color="#4CAF50", dash="dash"),
+            OverlayLine("ind.ema_slow_line", "EMA Slow", color="#FF5722", dash="dash"),
+            OverlayLine("ind.vwap", "VWAP", color="#9C27B0", dash="dot"),
+        ),
+    ),
     takeable_args=(
         "high_arr",
         "low_arr",

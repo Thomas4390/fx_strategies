@@ -4,41 +4,19 @@ import numpy as np
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
+from framework.spec import (
+    IndicatorSpec,
+    OverlayLine,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
+)
 from utils import find_day_boundaries_nb
 
-
 # ═══════════════════════════════════════════════════════════════════════
-# NUMBA KERNELS
+# INDICATOR KERNEL
 # ═══════════════════════════════════════════════════════════════════════
-
-
-@njit
-def rolling_max_nb(data: np.ndarray, period: int) -> np.ndarray:
-    """Rolling max over [i-period, i-1] (lagged by 1 bar)."""
-    n = len(data)
-    out = np.full(n, np.nan)
-    for i in range(period + 1, n):
-        mx = data[i - period]
-        for j in range(i - period + 1, i):
-            if data[j] > mx:
-                mx = data[j]
-        out[i] = mx
-    return out
-
-
-@njit
-def rolling_min_nb(data: np.ndarray, period: int) -> np.ndarray:
-    """Rolling min over [i-period, i-1] (lagged by 1 bar)."""
-    n = len(data)
-    out = np.full(n, np.nan)
-    for i in range(period + 1, n):
-        mn = data[i - period]
-        for j in range(i - period + 1, i):
-            if data[j] < mn:
-                mn = data[j]
-        out[i] = mn
-    return out
 
 
 @njit
@@ -52,10 +30,19 @@ def compute_intraday_donchian_nb(
     entry_period: int,
     exit_period: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    upper = rolling_max_nb(high, entry_period)
-    lower = rolling_min_nb(low, entry_period)
-    exit_upper = rolling_max_nb(high, exit_period)
-    exit_lower = rolling_min_nb(low, exit_period)
+    # Lagged rolling max/min via VBT native functions
+    upper = vbt.generic.nb.fshift_1d_nb(
+        vbt.generic.nb.rolling_max_1d_nb(high, entry_period, minp=entry_period), 1
+    )
+    lower = vbt.generic.nb.fshift_1d_nb(
+        vbt.generic.nb.rolling_min_1d_nb(low, entry_period, minp=entry_period), 1
+    )
+    exit_upper = vbt.generic.nb.fshift_1d_nb(
+        vbt.generic.nb.rolling_max_1d_nb(high, exit_period, minp=exit_period), 1
+    )
+    exit_lower = vbt.generic.nb.fshift_1d_nb(
+        vbt.generic.nb.rolling_min_1d_nb(low, exit_period, minp=exit_period), 1
+    )
 
     start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
     group_lens = end_arr[:n_days] - start_arr[:n_days]
@@ -173,6 +160,15 @@ spec = StrategySpec(
         "eod_minute": ParamDef(0),
     },
     portfolio_config=PortfolioConfig(freq="1min"),
+    plot_config=PlotConfig(
+        overlays=(
+            OverlayLine("ind.upper_channel", "Upper Channel", color="#4CAF50"),
+            OverlayLine("ind.lower_channel", "Lower Channel", color="#F44336"),
+            OverlayLine("ind.exit_upper", "Exit Upper", color="#4CAF50", dash="dot"),
+            OverlayLine("ind.exit_lower", "Exit Lower", color="#F44336", dash="dot"),
+            OverlayLine("ind.vwap", "VWAP", color="#9C27B0", dash="dash"),
+        ),
+    ),
     takeable_args=(
         "high_arr",
         "low_arr",

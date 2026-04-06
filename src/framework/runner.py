@@ -3,7 +3,7 @@
 Consumes a ``StrategySpec`` and data, providing three execution modes:
 - ``backtest()``  — single run with concrete parameters
 - ``cv()``        — cross-validation with parameter grid + splitter
-- ``full_pipeline()`` — complete holdout → CV → best params → rerun → test → save
+- ``full_pipeline()`` — complete holdout -> CV -> best params -> rerun -> test -> save
 """
 
 from __future__ import annotations
@@ -16,8 +16,6 @@ import pandas as pd
 import vectorbtpro as vbt
 
 from framework.spec import DEFAULT_INPUT_MAP, StrategySpec
-from utils import apply_vbt_settings, compute_ann_factor, load_fx_data
-
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -37,7 +35,6 @@ class StrategyRunner:
         self.raw = raw
         self.data = data
         self.index_ns = vbt.dt.to_ns(raw.index)
-        self.ann_factor = compute_ann_factor(raw.index)
 
     # -- Single run ---------------------------------------------------------
 
@@ -97,7 +94,7 @@ class StrategyRunner:
         metric: str = "sharpe_ratio",
         results_dir: str | None = None,
     ) -> dict[str, Any]:
-        """Complete pipeline: holdout → CV → best params → rerun → test → save.
+        """Complete pipeline: holdout -> CV -> best params -> rerun -> test -> save.
 
         Returns a dict with keys: ``opt_params``, ``pf_train``, ``pf_test``,
         ``grid_perf``, ``best_perf``, ``comparison``.
@@ -116,10 +113,10 @@ class StrategyRunner:
         ns_train = vbt.dt.to_ns(raw_train.index)
 
         print(
-            f"  Train: {len(raw_train)} bars ({raw_train.index[0]} → {raw_train.index[-1]})"
+            f"  Train: {len(raw_train)} bars ({raw_train.index[0]} -> {raw_train.index[-1]})"
         )
         print(
-            f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} → {raw_test.index[-1]})"
+            f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} -> {raw_test.index[-1]})"
         )
 
         # -- Walk-forward CV on train ---------------------------------------
@@ -136,7 +133,7 @@ class StrategyRunner:
             n_combos *= len(v)
         n_splits = len(splitter.splits)
         print(
-            f"\n  Grid: {n_combos} combos × {n_splits} splits = {n_combos * n_splits} backtests"
+            f"\n  Grid: {n_combos} combos x {n_splits} splits = {n_combos * n_splits} backtests"
         )
 
         grid_perf, best_perf = self.cv(
@@ -153,21 +150,23 @@ class StrategyRunner:
 
         # -- Re-run on train with best params -------------------------------
         train_runner = StrategyRunner(self.spec, raw_train, self.data)
-        pf_train, _ = train_runner.backtest(**opt_params)
+        pf_train, ind_train = train_runner.backtest(**opt_params)
 
         print(f"\n{'=' * 60}")
         print(f"OPTIMIZED — TRAIN ({self.spec.name})")
         print(f"{'=' * 60}")
         print(pf_train.stats().to_string())
+        self._print_trade_stats(pf_train)
 
         # -- Holdout test ---------------------------------------------------
         test_runner = StrategyRunner(self.spec, raw_test, self.data)
-        pf_test, _ = test_runner.backtest(**opt_params)
+        pf_test, ind_test = test_runner.backtest(**opt_params)
 
         print(f"\n{'=' * 60}")
         print(f"HOLD-OUT TEST ({self.spec.name})")
         print(f"{'=' * 60}")
         print(pf_test.stats().to_string())
+        self._print_trade_stats(pf_test)
 
         # -- Comparison -----------------------------------------------------
         comparison = pd.DataFrame(
@@ -189,6 +188,10 @@ class StrategyRunner:
             pf_test,
             comparison,
             grid_perf,
+            raw_train,
+            raw_test,
+            ind_train,
+            ind_test,
         )
 
         return {
@@ -199,6 +202,49 @@ class StrategyRunner:
             "best_perf": best_perf,
             "comparison": comparison,
         }
+
+    # -- Backtest visualization (opt-in) ------------------------------------
+
+    def save_backtest_plots(
+        self,
+        pf: vbt.Portfolio,
+        ind: Any,
+        results_dir: str,
+        label: str = "backtest",
+    ) -> None:
+        """Save plots for a single backtest run."""
+        from framework.plotting import (
+            build_trade_report,
+            plot_monthly_heatmap,
+            plot_portfolio_summary,
+            plot_trade_analysis,
+            plot_trade_signals,
+            resolve_overlays,
+        )
+
+        os.makedirs(results_dir, exist_ok=True)
+        name = self.spec.name
+
+        fig = plot_portfolio_summary(pf, f"{name} — {label.title()}")
+        fig.write_html(f"{results_dir}/portfolio_{label}.html")
+
+        fig_m = plot_monthly_heatmap(
+            pf, f"{name} — {label.title()} Monthly Returns (%)"
+        )
+        fig_m.write_html(f"{results_dir}/monthly_{label}.html")
+
+        overlays = resolve_overlays(self.spec, self.raw, ind)
+        fig_ts = plot_trade_signals(pf, f"{name} — {label.title()} Signals", overlays)
+        fig_ts.write_html(f"{results_dir}/trade_signals_{label}.html")
+
+        fig_ta = plot_trade_analysis(pf, f"{name} — {label.title()} Trade Analysis")
+        fig_ta.write_html(f"{results_dir}/trade_analysis_{label}.html")
+
+        with open(f"{results_dir}/summary_{label}.txt", "w") as f:
+            f.write(f"{name} — {label.title()}\n{'=' * 60}\n\n")
+            f.write(build_trade_report(pf) + "\n")
+
+        print(f"\n  Results saved to {results_dir}/")
 
     # -----------------------------------------------------------------------
     # Private helpers
@@ -234,7 +280,7 @@ class StrategyRunner:
             **ind_params,
         )
 
-        # Build input kwargs from input_names → raw columns
+        # Build input kwargs from input_names -> raw columns
         input_kwargs = self._build_input_kwargs(raw, index_ns, ispec.input_names)
 
         return factory.run(
@@ -497,6 +543,17 @@ class StrategyRunner:
                 opt_params[name] = val.item() if hasattr(val, "item") else val
         return opt_params
 
+    # -- Printing helpers ---------------------------------------------------
+
+    @staticmethod
+    def _print_trade_stats(pf: vbt.Portfolio) -> None:
+        """Print returns and trade stats if trades exist."""
+        print(f"\nRETURNS STATS\n{'-' * 40}")
+        print(pf.returns_stats().to_string())
+        if pf.trades.count() > 0:
+            print(f"\nTRADE STATS\n{'-' * 40}")
+            print(pf.trades.stats().to_string())
+
     # -- Saving results -----------------------------------------------------
 
     def _save_results(
@@ -507,22 +564,48 @@ class StrategyRunner:
         pf_test: vbt.Portfolio,
         comparison: pd.DataFrame,
         grid_perf: Any,
+        raw_train: pd.DataFrame,
+        raw_test: pd.DataFrame,
+        ind_train: Any,
+        ind_test: Any,
     ) -> None:
         """Save plots and summary to *results_dir*."""
-        from framework.plotting import plot_monthly_heatmap
+        from framework.plotting import (
+            build_trade_report,
+            plot_monthly_heatmap,
+            plot_portfolio_summary,
+            plot_trade_analysis,
+            plot_trade_signals,
+            resolve_overlays,
+        )
 
         name = self.spec.name
 
-        # Portfolio plots
-        for label, pf in [("train", pf_train), ("test", pf_test)]:
-            fig = pf.plot(subplots=["cumulative_returns", "drawdowns", "underwater"])
-            fig.update_layout(title=f"{name} — {label.title()}", height=900)
+        # Per-split plots
+        for label, pf, raw, ind in [
+            ("train", pf_train, raw_train, ind_train),
+            ("test", pf_test, raw_test, ind_test),
+        ]:
+            # Portfolio summary (enhanced with trade_pnl)
+            fig = plot_portfolio_summary(pf, f"{name} — {label.title()}")
             fig.write_html(f"{results_dir}/portfolio_{label}.html")
 
+            # Monthly heatmap
             fig_m = plot_monthly_heatmap(
                 pf, f"{name} — {label.title()} Monthly Returns (%)"
             )
             fig_m.write_html(f"{results_dir}/monthly_{label}.html")
+
+            # Trade signals with indicator overlays
+            overlays = resolve_overlays(self.spec, raw, ind)
+            fig_ts = plot_trade_signals(
+                pf, f"{name} — {label.title()} Signals", overlays
+            )
+            fig_ts.write_html(f"{results_dir}/trade_signals_{label}.html")
+
+            # Trade analysis grid
+            fig_ta = plot_trade_analysis(pf, f"{name} — {label.title()} Trade Analysis")
+            fig_ta.write_html(f"{results_dir}/trade_analysis_{label}.html")
 
         # CV heatmap (pick first two sweep params for axes)
         sweep_keys = list(self.spec.sweep_grid().keys())
@@ -537,7 +620,7 @@ class StrategyRunner:
             except Exception:
                 pass  # heatmap may fail with >2 sweep dims
 
-        # Text summary
+        # Text summary (enhanced with trade stats)
         summary_path = f"{results_dir}/summary.txt"
         with open(summary_path, "w") as f:
             f.write(f"{name}\n{'=' * 60}\n\n")
@@ -545,11 +628,12 @@ class StrategyRunner:
             f.write("-" * 40 + "\n")
             for k, v in opt_params.items():
                 f.write(f"  {k}: {v}\n")
-            f.write(f"\nTRAIN SET STATS\n{'-' * 40}\n")
-            f.write(pf_train.stats().to_string() + "\n\n")
-            f.write(f"HOLD-OUT SET STATS\n{'-' * 40}\n")
-            f.write(pf_test.stats().to_string() + "\n\n")
-            f.write(f"COMPARISON\n{'-' * 40}\n")
+
+            for label, pf in [("TRAIN", pf_train), ("HOLD-OUT", pf_test)]:
+                f.write(f"\n\n{'=' * 40}\n{label} SET\n{'=' * 40}\n\n")
+                f.write(build_trade_report(pf) + "\n")
+
+            f.write(f"\n\nCOMPARISON\n{'-' * 40}\n")
             f.write(comparison.to_string() + "\n")
 
         print(f"\n  Results saved to {results_dir}/")
@@ -571,15 +655,21 @@ def run_strategy(
 
     Modes: ``"backtest"`` (single run), ``"full"`` (full pipeline with CV).
     """
+    from utils import apply_vbt_settings, compute_ann_factor, load_fx_data
+
     apply_vbt_settings()
     raw, data = load_fx_data(data_path, shift_hours)
     runner = StrategyRunner(spec, raw, data)
 
-    print(f"  {len(raw)} bars: {raw.index[0]} → {raw.index[-1]}")
-    print(f"  Annualization factor: {runner.ann_factor:.0f}")
+    ann_factor = compute_ann_factor(raw.index)
+    print(f"  {len(raw)} bars: {raw.index[0]} -> {raw.index[-1]}")
+    print(f"  Annualization factor: {ann_factor:.0f}")
 
     if mode == "backtest":
-        return runner.backtest(**kwargs)
+        pf, ind = runner.backtest(**kwargs)
+        results_dir = f"results/{spec.indicator.short_name}"
+        runner.save_backtest_plots(pf, ind, results_dir)
+        return pf, ind
     if mode == "full":
         return runner.full_pipeline(**kwargs)
 

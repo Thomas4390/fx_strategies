@@ -21,14 +21,7 @@ import vectorbtpro as vbt
 from numba import njit
 
 from utils import (
-    ANNUALIZED_RETURN,
-    CALMAR_RATIO,
-    MAX_DRAWDOWN,
-    OMEGA_RATIO,
-    PROFIT_FACTOR,
     SHARPE_RATIO,
-    SORTINO_RATIO,
-    TOTAL_RETURN,
     apply_vbt_settings,
     compute_ann_factor,
     compute_daily_adx_broadcast_nb,
@@ -38,7 +31,6 @@ from utils import (
     compute_intraday_zscore_nb,
     compute_leverage_nb,
     compute_metric_nb,
-    find_day_boundaries_nb,
     load_fx_data,
 )
 
@@ -212,7 +204,13 @@ def run_standard_backtest(
     IMR = vbt.IF(
         class_name="IntradayMR",
         short_name="imr",
-        input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+        input_names=[
+            "index_ns",
+            "high_minute",
+            "low_minute",
+            "close_minute",
+            "open_minute",
+        ],
         param_names=[
             "lookback",
             "band_width",
@@ -425,7 +423,13 @@ def _build_cv_runner(splitter):
         IMR = vbt.IF(
             class_name="IntradayMR",
             short_name="imr",
-            input_names=["index_ns", "high_minute", "low_minute", "close_minute", "open_minute"],
+            input_names=[
+                "index_ns",
+                "high_minute",
+                "low_minute",
+                "close_minute",
+                "open_minute",
+            ],
             param_names=[
                 "lookback",
                 "band_width",

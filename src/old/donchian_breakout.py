@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
+
 from utils import apply_vbt_settings, find_day_boundaries_nb, load_fx_data
 
 # ═══════════════════════════════════════════════════════════════════════

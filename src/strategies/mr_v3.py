@@ -7,67 +7,19 @@ import numpy as np
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
-from utils import (
-    compute_daily_adx_broadcast_nb,
-    compute_intraday_rolling_std_nb,
-    compute_intraday_twap_nb,
-    compute_intraday_zscore_nb,
+from framework.spec import (
+    IndicatorSpec,
+    OverlayLine,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
 )
+from utils import compute_mr_base_indicators_nb
 
-
-# ═══════════════════════════════════════════════════════════════════════
-# INDICATOR KERNEL
-# ═══════════════════════════════════════════════════════════════════════
-
-
-@njit(nogil=True)
-def compute_mr_v3_indicators_nb(
-    index_ns: np.ndarray,
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    open_: np.ndarray,
-    lookback: int,
-    band_width: float,
-    adx_period: int,
-    adx_threshold: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Compute TWAP, z-score, bands, and ADX regime filter."""
-    n = len(close)
-
-    twap = compute_intraday_twap_nb(index_ns, high, low, close)
-
-    deviation = np.empty(n)
-    for i in range(n):
-        if np.isnan(twap[i]) or np.isnan(close[i]):
-            deviation[i] = np.nan
-        else:
-            deviation[i] = close[i] - twap[i]
-
-    zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
-
-    rolling_std = compute_intraday_rolling_std_nb(index_ns, deviation, lookback)
-    upper_band = np.full(n, np.nan)
-    lower_band = np.full(n, np.nan)
-    for i in range(n):
-        s = rolling_std[i]
-        if not np.isnan(s) and s > 1e-10 and not np.isnan(twap[i]):
-            upper_band[i] = twap[i] + band_width * s
-            lower_band[i] = twap[i] - band_width * s
-
-    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
-    regime_ok = np.ones(n, dtype=np.float64)
-    for i in range(n):
-        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
-            regime_ok[i] = 0.0
-
-    return twap, zscore, upper_band, lower_band, regime_ok
-
-
-# ═══════════════════════════════════════════════════════════════════════
+# ═════════════��═══════════════════════════���═════════════════════════════
 # SIGNAL FUNCTION
-# ═══════════════════════════════════════════════════════════════════════
+# ════════════════════���═══════════════════════════════════���══════════════
 
 
 @njit(nogil=True)
@@ -147,9 +99,9 @@ def mr_v3_signal_nb(
     return False, False, False, False
 
 
-# ═══════════════════════════════════════════════════════════════════════
+# ══════════════��════════════════════════════════════���═══════════════════
 # STRATEGY SPECIFICATION
-# ═══════════════════════════════════════════════════════════════════════
+# ═══════════════���═══════════════════════��════════════════════���══════════
 
 spec = StrategySpec(
     name="MR V3: Session Filter",
@@ -165,7 +117,7 @@ spec = StrategySpec(
         ),
         param_names=("lookback", "band_width", "adx_period", "adx_threshold"),
         output_names=("twap", "zscore", "upper_band", "lower_band", "regime_ok"),
-        kernel_func=compute_mr_v3_indicators_nb,
+        kernel_func=compute_mr_base_indicators_nb,
     ),
     signal_func=mr_v3_signal_nb,
     signal_args_map=(
@@ -194,6 +146,13 @@ spec = StrategySpec(
         "sl_stop": ParamDef(0.005, sweep=[0.001, 0.002, 0.003, 0.005]),
     },
     portfolio_config=PortfolioConfig(leverage=1.0, sl_stop=0.005),
+    plot_config=PlotConfig(
+        overlays=(
+            OverlayLine("ind.twap", "TWAP", color="#FF9800", dash="dash"),
+            OverlayLine("ind.upper_band", "Upper Band", color="#E91E63", dash="dot"),
+            OverlayLine("ind.lower_band", "Lower Band", color="#E91E63", dash="dot"),
+        ),
+    ),
 )
 
 

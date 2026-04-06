@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Deep BBands sweep with Numba prange multicore + train/test + alignment."""
+
 import os
 import sys
 import warnings
@@ -7,13 +8,13 @@ import warnings
 import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
-from numba import njit, prange
 
 warnings.filterwarnings("ignore")
 os.environ["NUMBA_DISABLE_PERFORMANCE_WARNINGS"] = "1"
 sys.path.insert(0, os.path.dirname(__file__))
+from cv_rsi_validated import _run_bb_sim, bbands_batch
+
 from utils import load_fx_data
-from cv_rsi_validated import _run_bb_sim, bbands_batch, batch_to_series
 
 RESULTS_DIR = "results/exploration/parallel"
 FEES = 0.0001
@@ -47,11 +48,17 @@ if __name__ == "__main__":
         for idx in range(len(train_res)):
             w_i = idx // len(bb_as)
             a_i = idx % len(bb_as)
-            results_all.append({
-                "tf": tf, "window": int(bb_ws[w_i]), "alpha": bb_as[a_i],
-                "shift": 0, "subset": "standard",
-                "sharpe_train": train_res[idx], "sharpe_test": test_res[idx],
-            })
+            results_all.append(
+                {
+                    "tf": tf,
+                    "window": int(bb_ws[w_i]),
+                    "alpha": bb_as[a_i],
+                    "shift": 0,
+                    "subset": "standard",
+                    "sharpe_train": train_res[idx],
+                    "sharpe_test": test_res[idx],
+                }
+            )
 
     # Part 2: 4H alignment robustness
     print("\n=== 4H Alignment Robustness ===")
@@ -72,12 +79,20 @@ if __name__ == "__main__":
         for idx in range(len(test_res)):
             w_i = idx // len(bb_as_align)
             a_i = idx % len(bb_as_align)
-            results_all.append({
-                "tf": "4h", "window": int(bb_ws_align[w_i]), "alpha": bb_as_align[a_i],
-                "shift": shift_h, "subset": f"test_shift{shift_h}",
-                "sharpe_train": np.nan, "sharpe_test": test_res[idx],
-            })
-            print(f"  shift={shift_h} BB({bb_ws_align[w_i]},{bb_as_align[a_i]}): Sharpe={test_res[idx]:.4f}")
+            results_all.append(
+                {
+                    "tf": "4h",
+                    "window": int(bb_ws_align[w_i]),
+                    "alpha": bb_as_align[a_i],
+                    "shift": shift_h,
+                    "subset": f"test_shift{shift_h}",
+                    "sharpe_train": np.nan,
+                    "sharpe_test": test_res[idx],
+                }
+            )
+            print(
+                f"  shift={shift_h} BB({bb_ws_align[w_i]},{bb_as_align[a_i]}): Sharpe={test_res[idx]:.4f}"
+            )
 
     df = pd.DataFrame(results_all)
     standard = df[df["subset"] == "standard"]
@@ -90,7 +105,9 @@ if __name__ == "__main__":
     # Alignment robustness
     align = df[df["subset"].str.startswith("test_shift")]
     if len(align) > 0:
-        pivot = align.pivot_table(index=["tf", "window", "alpha"], columns="subset", values="sharpe_test")
+        pivot = align.pivot_table(
+            index=["tf", "window", "alpha"], columns="subset", values="sharpe_test"
+        )
         pivot["worst"] = pivot.min(axis=1)
         pivot["best"] = pivot.max(axis=1)
         print("\n=== 4H ALIGNMENT ROBUSTNESS ===")

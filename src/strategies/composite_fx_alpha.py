@@ -8,8 +8,13 @@ import numpy as np
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
-
+from framework.spec import (
+    IndicatorSpec,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
+)
 
 # ═══════════════════════════════════════════════════════════════════════
 # NUMBA KERNELS
@@ -332,6 +337,14 @@ spec = StrategySpec(
         accumulate=True,
         upon_opposite_entry="Reverse",
         extra_kwargs={"fees": 0.00035, "leverage_mode": "lazy"},
+    ),
+    plot_config=PlotConfig(
+        subplot_indicators=(
+            ("ind.momentum", "Momentum", False),
+            ("ind.vol_regime", "Vol Regime", False),
+            ("ind.vol_scale", "Vol Scale", False),
+            ("ind.target_weight", "Target Weight", True),
+        ),
     ),
     takeable_args=("close_arr",),
 )

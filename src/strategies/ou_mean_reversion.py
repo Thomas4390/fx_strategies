@@ -4,27 +4,30 @@ Original intraday TWAP mean reversion with volatility-targeted position sizing.
 """
 
 import numpy as np
-import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import IndicatorSpec, ParamDef, PortfolioConfig, StrategySpec
+from framework.spec import (
+    IndicatorSpec,
+    OverlayLine,
+    ParamDef,
+    PlotConfig,
+    PortfolioConfig,
+    StrategySpec,
+)
 from utils import (
-    compute_daily_adx_broadcast_nb,
     compute_daily_rolling_volatility_nb,
-    compute_intraday_rolling_std_nb,
-    compute_intraday_twap_nb,
-    compute_intraday_zscore_nb,
     compute_leverage_nb,
+    compute_mr_base_indicators_nb,
+    mr_band_signal_nb,
 )
 
-
 # ═══════════════════════════════════════════════════════════════════════
-# INDICATOR KERNEL
+# INDICATOR KERNEL (thin wrapper adding leverage to shared MR base)
 # ═══════════════════════════════════════════════════════════════════════
 
 
 @njit(nogil=True)
-def compute_intraday_mr_indicators_nb(
+def compute_ou_mr_indicators_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
     low: np.ndarray,
@@ -38,105 +41,21 @@ def compute_intraday_mr_indicators_nb(
     sigma_target: float,
     max_leverage: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Compute TWAP, z-score, bands, ADX filter, and leverage."""
-    n = len(close)
-
-    twap = compute_intraday_twap_nb(index_ns, high, low, close)
-
-    deviation = np.empty(n)
-    for i in range(n):
-        if np.isnan(twap[i]) or np.isnan(close[i]):
-            deviation[i] = np.nan
-        else:
-            deviation[i] = close[i] - twap[i]
-
-    zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
-
-    rolling_std = compute_intraday_rolling_std_nb(index_ns, deviation, lookback)
-    upper_band = np.full(n, np.nan)
-    lower_band = np.full(n, np.nan)
-    for i in range(n):
-        s = rolling_std[i]
-        if not np.isnan(s) and s > 1e-10 and not np.isnan(twap[i]):
-            upper_band[i] = twap[i] + band_width * s
-            lower_band[i] = twap[i] - band_width * s
-
-    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
-    regime_ok = np.ones(n, dtype=np.float64)
-    for i in range(n):
-        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
-            regime_ok[i] = 0.0
-
+    """MR base indicators + vol-targeted leverage."""
+    twap, zscore, upper_band, lower_band, regime_ok = compute_mr_base_indicators_nb(
+        index_ns,
+        high,
+        low,
+        close,
+        open_,
+        lookback,
+        band_width,
+        adx_period,
+        adx_threshold,
+    )
     rolling_vol = compute_daily_rolling_volatility_nb(index_ns, close, vol_window)
     leverage = compute_leverage_nb(rolling_vol, sigma_target, max_leverage)
-
     return twap, zscore, upper_band, lower_band, regime_ok, leverage
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# SIGNAL FUNCTION
-# ═══════════════════════════════════════════════════════════════════════
-
-
-@njit(nogil=True)
-def intraday_mr_signal_nb(
-    c,
-    close_arr: np.ndarray,
-    upper_arr: np.ndarray,
-    lower_arr: np.ndarray,
-    twap_arr: np.ndarray,
-    regime_ok_arr: np.ndarray,
-    index_ns_arr: np.ndarray,
-    eod_hour_arr: np.ndarray,
-    eod_minute_arr: np.ndarray,
-    eval_freq_arr: np.ndarray,
-):
-    ts_ns = index_ns_arr[c.i]
-    cur_hour = vbt.dt_nb.hour_nb(ts_ns)
-    cur_minute = vbt.dt_nb.minute_nb(ts_ns)
-
-    eod_hour = vbt.pf_nb.select_nb(c, eod_hour_arr)
-    eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
-
-    is_eod = (cur_hour > eod_hour) or (
-        cur_hour == eod_hour and cur_minute >= eod_minute
-    )
-    if is_eod:
-        el = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
-        es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
-        return False, el, False, es
-
-    eval_freq = vbt.pf_nb.select_nb(c, eval_freq_arr)
-    if eval_freq > 0 and cur_minute % eval_freq != 0:
-        return False, False, False, False
-
-    px = vbt.pf_nb.select_nb(c, close_arr)
-    ub = vbt.pf_nb.select_nb(c, upper_arr)
-    lb = vbt.pf_nb.select_nb(c, lower_arr)
-    tw = vbt.pf_nb.select_nb(c, twap_arr)
-    regime = vbt.pf_nb.select_nb(c, regime_ok_arr)
-
-    if np.isnan(px) or np.isnan(ub) or np.isnan(lb) or np.isnan(tw):
-        return False, False, False, False
-
-    in_long = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
-    in_short = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
-
-    if not in_long and not in_short:
-        if regime < 0.5:
-            return False, False, False, False
-        if px < lb:
-            return True, False, False, False
-        elif px > ub:
-            return False, False, True, False
-    elif in_long:
-        if px >= tw:
-            return False, True, False, False
-    elif in_short:
-        if px <= tw:
-            return False, False, False, True
-
-    return False, False, False, False
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -172,9 +91,9 @@ spec = StrategySpec(
             "regime_ok",
             "leverage",
         ),
-        kernel_func=compute_intraday_mr_indicators_nb,
+        kernel_func=compute_ou_mr_indicators_nb,
     ),
-    signal_func=intraday_mr_signal_nb,
+    signal_func=mr_band_signal_nb,
     signal_args_map=(
         ("close_arr", "data.close"),
         ("upper_arr", "ind.upper_band"),
@@ -200,6 +119,13 @@ spec = StrategySpec(
         "sl_stop": ParamDef(0.005, sweep=[0.002, 0.003, 0.005]),
     },
     portfolio_config=PortfolioConfig(leverage="ind.leverage", sl_stop=0.005),
+    plot_config=PlotConfig(
+        overlays=(
+            OverlayLine("ind.twap", "TWAP", color="#FF9800", dash="dash"),
+            OverlayLine("ind.upper_band", "Upper Band", color="#E91E63", dash="dot"),
+            OverlayLine("ind.lower_band", "Lower Band", color="#E91E63", dash="dot"),
+        ),
+    ),
 )
 
 

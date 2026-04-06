@@ -34,9 +34,12 @@ INIT_CASH = 1_000_000
 
 # Realistic FX costs: slippage (half-spread) + commission
 TF_COSTS = {
-    "1h": {"slippage": 0.00008, "fees": 0.0001},   # 0.8 pip + 1 bps
-    "4h": {"slippage": 0.00008, "fees": 0.0001},   # same — execution window helps but spread same
-    "1d": {"slippage": 0.00005, "fees": 0.0001},   # better TWAP execution
+    "1h": {"slippage": 0.00008, "fees": 0.0001},  # 0.8 pip + 1 bps
+    "4h": {
+        "slippage": 0.00008,
+        "fees": 0.0001,
+    },  # same — execution window helps but spread same
+    "1d": {"slippage": 0.00005, "fees": 0.0001},  # better TWAP execution
 }
 
 
@@ -59,7 +62,9 @@ def pf_stats(pf: vbt.Portfolio, strategy: str, tf: str, params: str) -> dict:
     """Extract key metrics from a portfolio."""
     stats = pf.stats()
     return {
-        "strategy": strategy, "timeframe": tf, "params": params,
+        "strategy": strategy,
+        "timeframe": tf,
+        "params": params,
         "sharpe": pf.sharpe_ratio,
         "total_return": pf.total_return,
         "max_dd": pf.max_drawdown,
@@ -76,10 +81,15 @@ def backtest(close, entries, exits, entries_short, exits_short, tf, **kwargs):
     costs = TF_COSTS[tf]
     return vbt.PF.from_signals(
         close=close,
-        long_entries=entries, long_exits=exits,
-        short_entries=entries_short, short_exits=exits_short,
-        slippage=costs["slippage"], fees=costs["fees"],
-        init_cash=INIT_CASH, freq=tf, **kwargs,
+        long_entries=entries,
+        long_exits=exits,
+        short_entries=entries_short,
+        short_exits=exits_short,
+        slippage=costs["slippage"],
+        fees=costs["fees"],
+        init_cash=INIT_CASH,
+        freq=tf,
+        **kwargs,
     )
 
 
@@ -109,7 +119,9 @@ def run_ma_crossover(closes: dict[str, pd.Series]) -> list[dict]:
                 p = f"{wtype.upper()} {fast_w}/{slow_w}"
                 r = pf_stats(pf, "MA Crossover", tf, p)
                 results.append(r)
-                print(f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}")
+                print(
+                    f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}"
+                )
 
     # With trailing stop
     for tf, close in closes.items():
@@ -145,7 +157,9 @@ def run_rsi_reversal(closes: dict[str, pd.Series]) -> list[dict]:
                 p = f"RSI({window}) {lo}/{hi}"
                 r = pf_stats(pf, "RSI Reversal", tf, p)
                 results.append(r)
-                print(f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}")
+                print(
+                    f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}"
+                )
 
     return results
 
@@ -170,7 +184,9 @@ def run_bbands_reversal(closes: dict[str, pd.Series]) -> list[dict]:
                 p = f"BB({window},{mult})"
                 r = pf_stats(pf, "BBands", tf, p)
                 results.append(r)
-                print(f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}")
+                print(
+                    f"  {tf} {p}: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}"
+                )
 
     return results
 
@@ -186,7 +202,9 @@ def run_macd_trend(closes: dict[str, pd.Series]) -> list[dict]:
         for fw, sw, sigw, label in configs:
             if sw >= len(close):
                 continue
-            macd = vbt.MACD.run(close, fast_window=fw, slow_window=sw, signal_window=sigw)
+            macd = vbt.MACD.run(
+                close, fast_window=fw, slow_window=sw, signal_window=sigw
+            )
             ent = macd.macd_crossed_above(macd.signal)
             ext = macd.macd_crossed_below(macd.signal)
             pf = backtest(close, ent, ext, ext, ent, tf)
@@ -243,8 +261,16 @@ def run_multifactor(closes: dict[str, pd.Series]) -> list[dict]:
         print(f"  {tf} RSI+BB MR: Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}")
 
         # B: 2-of-3 scoring
-        s_long = rsi.rsi_below(35).astype(int) + (close < bb.lower).astype(int) + (mom > 0).astype(int)
-        s_short = rsi.rsi_above(65).astype(int) + (close > bb.upper).astype(int) + (mom < 0).astype(int)
+        s_long = (
+            rsi.rsi_below(35).astype(int)
+            + (close < bb.lower).astype(int)
+            + (mom > 0).astype(int)
+        )
+        s_short = (
+            rsi.rsi_above(65).astype(int)
+            + (close > bb.upper).astype(int)
+            + (mom < 0).astype(int)
+        )
         el2 = s_long.vbt.crossed_above(1)
         es2 = s_short.vbt.crossed_above(1)
         xl2 = rsi.rsi_crossed_above(50)
@@ -252,7 +278,9 @@ def run_multifactor(closes: dict[str, pd.Series]) -> list[dict]:
         pf2 = backtest(close, el2, xl2, es2, xs2, tf)
         r2 = pf_stats(pf2, "MultiFactor", tf, "2of3 score")
         results.append(r2)
-        print(f"  {tf} 2of3 score: Sharpe={r2['sharpe']:.4f} PF={r2['profit_factor']:.3f}")
+        print(
+            f"  {tf} 2of3 score: Sharpe={r2['sharpe']:.4f} PF={r2['profit_factor']:.3f}"
+        )
 
     return results
 
@@ -281,15 +309,22 @@ def run_4h_alignment_test(data_base: vbt.Data) -> list[dict]:
             es = close.vbt.crossed_above(bb.upper)
             xs = close.vbt.crossed_below(bb.middle)
             pf = vbt.PF.from_signals(
-                close=close, long_entries=el, long_exits=xl,
-                short_entries=es, short_exits=xs,
-                slippage=costs["slippage"], fees=costs["fees"],
-                init_cash=INIT_CASH, freq="4h",
+                close=close,
+                long_entries=el,
+                long_exits=xl,
+                short_entries=es,
+                short_exits=xs,
+                slippage=costs["slippage"],
+                fees=costs["fees"],
+                init_cash=INIT_CASH,
+                freq="4h",
             )
             p = f"BB({window},{mult}) shift={shift_h}h"
             r = pf_stats(pf, "BB 4H Align", f"4h+{shift_h}", p)
             results.append(r)
-            print(f"  shift={shift_h}h BB({window},{mult}): Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}")
+            print(
+                f"  shift={shift_h}h BB({window},{mult}): Sharpe={r['sharpe']:.4f} PF={r['profit_factor']:.3f}"
+            )
 
     return results
 
@@ -318,15 +353,37 @@ def compare_all(all_results: list[dict]) -> pd.DataFrame:
     display["profit_factor"] = display["profit_factor"].map(
         lambda x: f"{x:.3f}" if pd.notna(x) else "N/A"
     )
-    print(display[["strategy", "timeframe", "params", "sharpe", "total_return",
-                    "max_dd", "profit_factor", "total_trades"]].to_string(index=False))
+    print(
+        display[
+            [
+                "strategy",
+                "timeframe",
+                "params",
+                "sharpe",
+                "total_return",
+                "max_dd",
+                "profit_factor",
+                "total_trades",
+            ]
+        ].to_string(index=False)
+    )
 
     profitable = df[(df["sharpe"] > 0) & (df["total_trades"] >= 30)]
     print(f"\n>>> {len(profitable)} strategies with Sharpe > 0 and >= 30 trades")
     if len(profitable) > 0:
         print("\nTOP 10 (filtered):")
-        print(profitable.head(10)[["strategy", "timeframe", "params", "sharpe",
-                                    "profit_factor", "total_trades"]].to_string(index=False))
+        print(
+            profitable.head(10)[
+                [
+                    "strategy",
+                    "timeframe",
+                    "params",
+                    "sharpe",
+                    "profit_factor",
+                    "total_trades",
+                ]
+            ].to_string(index=False)
+        )
 
     print(f"\nResults saved to {csv_path}")
     return df
