@@ -19,7 +19,7 @@ from utils import find_day_boundaries_nb
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def compute_intraday_donchian_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
@@ -56,7 +56,7 @@ def compute_intraday_donchian_nb(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def intraday_donchian_signal_nb(
     c,
     close_arr: np.ndarray,

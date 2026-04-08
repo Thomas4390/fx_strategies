@@ -19,6 +19,17 @@ from plotly.subplots import make_subplots
 # ═══════════════════════════════════════════════════════════════════════
 
 
+# Maximum bars for minute-frequency charts (~1 week of FX data: 5d × 21h × 60min)
+_MAX_MINUTE_BARS = 7_200
+
+
+def _infer_sim_start(idx: pd.DatetimeIndex, max_bars: int = _MAX_MINUTE_BARS) -> Any:
+    """Return a sim_start timestamp if the index exceeds max_bars, else None."""
+    if len(idx) > max_bars:
+        return idx[-max_bars]
+    return None
+
+
 def plot_monthly_heatmap(
     pf: vbt.Portfolio,
     title: str = "Monthly Returns (%)",
@@ -73,33 +84,14 @@ def plot_trade_signals(
     pf: vbt.Portfolio,
     title: str = "Trade Signals",
     overlays: dict[str, tuple[pd.Series, str | None, str | None]] | None = None,
-    max_bars: int = 5000,
     height: int = 700,
 ) -> go.Figure:
     """Price chart with entry/exit markers, position zones, and indicator overlays.
 
-    Uses ``pf.plot_trade_signals()`` for the base chart, then adds custom
-    indicator lines (TWAP, bands, channels, etc.).
-
-    Parameters
-    ----------
-    pf : vbt.Portfolio
-        Portfolio with trade records.
-    title : str
-        Chart title.
-    overlays : dict or None
-        ``{label: (series, color, dash)}`` lines to overlay on price axis.
-    max_bars : int
-        Maximum bars to display (windows to recent trades for intraday data).
-    height : int
-        Figure height in pixels.
+    Automatically windows to ~1 week for minute-frequency data.
     """
     idx = pf.wrapper.index
-
-    # Window to recent bars if data is too large
-    sim_start = None
-    if len(idx) > max_bars:
-        sim_start = idx[-max_bars]
+    sim_start = _infer_sim_start(idx)
 
     fig = pf.plot_trade_signals(
         plot_positions="zones",
@@ -142,10 +134,14 @@ def plot_portfolio_summary(
     height: int = 1000,
 ) -> go.Figure:
     """Composite VBT subplot figure with cumulative returns, drawdowns,
-    underwater, and trade P&L."""
-    fig = pf.plot(
-        subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"],
-    )
+    underwater, and trade P&L. Automatically windows to ~1 week for minute data."""
+    sim_start = _infer_sim_start(pf.wrapper.index)
+    plot_kwargs: dict[str, Any] = {
+        "subplots": ["cumulative_returns", "drawdowns", "underwater", "trade_pnl"],
+    }
+    if sim_start is not None:
+        plot_kwargs["sim_start"] = sim_start
+    fig = pf.plot(**plot_kwargs)
     fig.update_layout(title=title, height=height)
     return fig
 

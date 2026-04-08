@@ -62,6 +62,24 @@ DEFAULT_INPUT_MAP: dict[str, str] = {
 
 
 @dataclass(frozen=True)
+class MarketConfig:
+    """Market-level conventions shared across strategies for the same asset class.
+
+    Avoids duplicating FX-specific constants (EOD hour, evaluation frequency)
+    in every strategy spec.
+    """
+
+    eod_hour: int = 21
+    eod_minute: int = 0
+    eval_freq: int = 5
+    trading_days_per_year: int = 252
+
+
+FX_MARKET = MarketConfig()
+CRYPTO_MARKET = MarketConfig(eod_hour=0, eval_freq=1, trading_days_per_year=365)
+
+
+@dataclass(frozen=True)
 class PortfolioConfig:
     """Strategy-specific portfolio settings beyond global defaults.
 
@@ -144,6 +162,7 @@ class StrategySpec:
     signal_args_map: tuple[tuple[str, str], ...]
     params: dict[str, ParamDef]
     portfolio_config: PortfolioConfig = field(default_factory=PortfolioConfig)
+    market: MarketConfig = field(default_factory=lambda: FX_MARKET)
     plot_config: PlotConfig = field(default_factory=PlotConfig)
     takeable_args: tuple[str, ...] = (
         "high_arr",
@@ -152,6 +171,37 @@ class StrategySpec:
         "open_arr",
         "idx_ns",
     )
+
+    def __post_init__(self) -> None:
+        """Validate spec consistency at construction time."""
+        # Indicator param_names must have corresponding ParamDef entries
+        missing = set(self.indicator.param_names) - set(self.params.keys())
+        if missing:
+            raise ValueError(
+                f"[{self.name}] Indicator params missing from spec.params: {missing}"
+            )
+
+        # Indicator output_names referenced in signal_args_map must exist
+        for _, source in self.signal_args_map:
+            if source.startswith("ind."):
+                output_name = source.partition(".")[2]
+                if output_name not in self.indicator.output_names:
+                    raise ValueError(
+                        f"[{self.name}] signal_args_map references unknown "
+                        f"indicator output: {source!r}"
+                    )
+
+        # Source prefixes must be valid
+        valid_prefixes = {"data", "ind", "extra", "param", "eval"}
+        for _, source in self.signal_args_map:
+            prefix = source.partition(".")[0]
+            if prefix.startswith("eval:"):
+                continue
+            if prefix not in valid_prefixes:
+                raise ValueError(
+                    f"[{self.name}] Unknown source prefix in "
+                    f"signal_args_map: {source!r}"
+                )
 
     def default_params(self) -> dict[str, Any]:
         """Return a dict of parameter_name → default_value."""

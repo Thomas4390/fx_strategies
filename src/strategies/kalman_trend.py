@@ -19,7 +19,7 @@ from utils import find_day_boundaries_nb
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def kalman_filter_1d_nb(
     close: np.ndarray,
     process_var: float,
@@ -80,7 +80,7 @@ def kalman_filter_1d_nb(
     return kf_price, kf_velocity
 
 
-@njit
+@njit(nogil=True)
 def compute_intraday_kalman_indicators_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
@@ -114,7 +114,7 @@ def compute_intraday_kalman_indicators_nb(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def intraday_kalman_signal_nb(
     c,
     close_arr: np.ndarray,

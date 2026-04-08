@@ -1,7 +1,7 @@
 """
-Shared utilities for FX intraday strategies.
+Shared utilities for FX strategy notebooks.
 
-Numba-compiled kernels and common settings reused across all strategy modules.
+Numba-compiled kernels and common settings — standalone module with no framework imports.
 """
 
 from __future__ import annotations
@@ -15,19 +15,15 @@ import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
 from numba.core.errors import NumbaPerformanceWarning
+from plotly.subplots import make_subplots
 
-# Suppress Numba prange warning from vectorbtpro internals (from_signal_func_nb).
-# This is a known VBT Pro issue — their prange loop has multiple exit points.
 warnings.filterwarnings("ignore", category=NumbaPerformanceWarning)
-
-# Suppress VBT chunking warnings when signal_func_nb args are not in take_spec.
 warnings.filterwarnings(
     "ignore",
     message="Argument at index .* not found in SequenceTaker",
     module=r"vectorbtpro\.utils\.chunking",
 )
 
-# Project root: two levels up from this file (src/utils.py -> project/)
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -68,7 +64,7 @@ def apply_vbt_settings() -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# DATA LOADING (VBT Pro native)
+# DATA LOADING
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -76,31 +72,19 @@ def load_fx_data(
     path: str = "data/EUR-USD.parquet",
     shift_hours: int = 0,
 ) -> tuple[pd.DataFrame, vbt.Data]:
-    """Load EUR-USD parquet via vbt.Data.from_parquet and prep for OHLCV.
-
-    Uses VBT Pro native parquet loading, then sets the date index
-    and capitalizes column names for OHLCV recognition.
+    """Load EUR-USD parquet and return (raw DataFrame, vbt.Data wrapper).
 
     Parameters
     ----------
     path : str
-        Path to parquet file.
+        Path to parquet file (relative to project root).
     shift_hours : int
         Hours to shift index (7 for FX 5pm ET convention on daily, 0 for intraday).
-
-    Returns
-    -------
-    raw : pd.DataFrame
-        Raw OHLC DataFrame with lowercase columns (for Numba kernels).
-    data : vbt.Data
-        VBT Data wrapper with capitalized columns (for native VBT functions).
     """
-    # Resolve relative paths against project root
     resolved = Path(path)
     if not resolved.is_absolute():
         resolved = _PROJECT_ROOT / resolved
 
-    # Load via VBT Pro native parquet reader
     data_raw = vbt.Data.from_parquet(str(resolved))
     symbol = data_raw.symbols[0]
     df = data_raw.data[symbol]
@@ -108,11 +92,9 @@ def load_fx_data(
     if shift_hours:
         df.index = df.index + pd.Timedelta(hours=shift_hours)
 
-    # Raw DataFrame with lowercase columns for Numba kernels
     raw = df.copy()
     raw.columns = [c.lower() for c in raw.columns]
 
-    # VBT Data wrapper with capitalized columns for native functions
     df.columns = [c.capitalize() for c in df.columns]
     data = vbt.Data.from_data({symbol: df}, tz_localize=False, tz_convert=False)
     return raw, data
@@ -196,10 +178,7 @@ def compute_daily_rolling_volatility_nb(
         return np.full(n, np.nan)
 
     rolling_std = vbt.generic.nb.rolling_std_1d_nb(
-        returns,
-        window=window_size,
-        minp=window_size,
-        ddof=1,
+        returns, window=window_size, minp=window_size, ddof=1,
     )
 
     vol_per_minute = np.full(n, np.nan)
@@ -303,21 +282,13 @@ def compute_daily_adx_broadcast_nb(
     open_: np.ndarray,
     adx_period: int,
 ) -> np.ndarray:
-    """Compute ADX on daily-resampled OHLC, then broadcast to minute bars.
-
-    The raw ADX is calculated on 14 *minutes* when applied directly to
-    minute data — meaningless noise.  This helper resamples to daily first
-    (open=first, high=max, low=min, close=last), computes ADX on daily bars,
-    then broadcasts each daily value to the *next* trading day's minute bars
-    (1-day lag to avoid look-ahead bias).
-    """
+    """ADX on daily-resampled OHLC, broadcast to minute bars with 1-day lag."""
     n = len(close)
     start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
 
     if n_days < adx_period + 2:
         return np.full(n, np.nan)
 
-    # ── Resample to daily OHLC ───────────────────────────────────────
     d_high = np.empty(n_days)
     d_low = np.empty(n_days)
     d_close = np.empty(n_days)
@@ -336,13 +307,11 @@ def compute_daily_adx_broadcast_nb(
         d_low[d] = mn
         d_close[d] = close[e - 1]
 
-    # ── ADX on daily bars ────────────────────────────────────────────
     daily_adx = compute_adx_nb(d_high, d_low, d_close, adx_period)
 
-    # ── Broadcast to minute bars with 1-day lag ──────────────────────
     adx_minute = np.full(n, np.nan)
     for d in range(1, n_days):
-        adx_val = daily_adx[d - 1]  # previous day's ADX
+        adx_val = daily_adx[d - 1]
         s = start_arr[d]
         e = end_arr[d]
         for i in range(s, e):
@@ -351,8 +320,28 @@ def compute_daily_adx_broadcast_nb(
     return adx_minute
 
 
+@njit(nogil=True)
+def compute_adx_regime_nb(
+    index_ns: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    open_: np.ndarray,
+    adx_period: int,
+    adx_threshold: float,
+) -> np.ndarray:
+    """Binary regime_ok array (1=MR allowed, 0=trending)."""
+    n = len(close)
+    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
+    regime_ok = np.ones(n, dtype=np.float64)
+    for i in range(n):
+        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
+            regime_ok[i] = 0.0
+    return regime_ok
+
+
 # ═══════════════════════════════════════════════════════════════════════
-# INTRADAY TWAP (shared across MR strategies)
+# INTRADAY TWAP
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -387,7 +376,7 @@ def compute_intraday_twap_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# INTRADAY Z-SCORE & ROLLING STD (day-boundary aware)
+# INTRADAY Z-SCORE & ROLLING STD
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -397,11 +386,7 @@ def compute_intraday_rolling_std_nb(
     data: np.ndarray,
     lookback: int,
 ) -> np.ndarray:
-    """Rolling std that resets at each day boundary.
-
-    Prevents cross-day contamination when TWAP resets at midnight.
-    Uses minp=min(lookback, 20) to allow early-day values.
-    """
+    """Rolling std that resets at each day boundary."""
     n = len(data)
     out = np.full(n, np.nan)
     if n == 0:
@@ -433,11 +418,7 @@ def compute_intraday_zscore_nb(
     data: np.ndarray,
     lookback: int,
 ) -> np.ndarray:
-    """Rolling z-score that resets at each day boundary.
-
-    Prevents spurious spikes when TWAP resets produce discontinuities
-    in the deviation series across day boundaries.
-    """
+    """Rolling z-score that resets at each day boundary."""
     n = len(data)
     out = np.full(n, np.nan)
     if n == 0:
@@ -492,7 +473,7 @@ def compute_intraday_bands_nb(
     lookback: int,
     band_width: float,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute upper/lower bands from intraday rolling std of deviation."""
+    """Upper/lower bands from intraday rolling std of deviation."""
     n = len(twap)
     rolling_std = compute_intraday_rolling_std_nb(index_ns, deviation, lookback)
     upper_band = np.full(n, np.nan)
@@ -503,26 +484,6 @@ def compute_intraday_bands_nb(
             upper_band[i] = twap[i] + band_width * s
             lower_band[i] = twap[i] - band_width * s
     return upper_band, lower_band
-
-
-@njit(nogil=True)
-def compute_adx_regime_nb(
-    index_ns: np.ndarray,
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    open_: np.ndarray,
-    adx_period: int,
-    adx_threshold: float,
-) -> np.ndarray:
-    """Compute ADX and return binary regime_ok array (1=MR allowed, 0=trending)."""
-    n = len(close)
-    adx = compute_daily_adx_broadcast_nb(index_ns, high, low, close, open_, adx_period)
-    regime_ok = np.ones(n, dtype=np.float64)
-    for i in range(n):
-        if not np.isnan(adx[i]) and adx[i] > adx_threshold:
-            regime_ok[i] = 0.0
-    return regime_ok
 
 
 @njit(nogil=True)
@@ -576,7 +537,6 @@ def mr_band_signal_nb(
     eod_hour = vbt.pf_nb.select_nb(c, eod_hour_arr)
     eod_minute = vbt.pf_nb.select_nb(c, eod_minute_arr)
 
-    # EOD forced exit
     is_eod = (cur_hour > eod_hour) or (
         cur_hour == eod_hour and cur_minute >= eod_minute
     )
@@ -585,7 +545,6 @@ def mr_band_signal_nb(
         es = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
         return False, el, False, es
 
-    # Evaluate at parametric frequency
     eval_freq = vbt.pf_nb.select_nb(c, eval_freq_arr)
     if eval_freq > 0 and cur_minute % eval_freq != 0:
         return False, False, False, False
@@ -602,7 +561,6 @@ def mr_band_signal_nb(
     in_long = vbt.pf_nb.ctx_helpers.in_long_position_nb(c)
     in_short = vbt.pf_nb.ctx_helpers.in_short_position_nb(c)
 
-    # Regime filter: no new entries in trending market, but allow exits
     if not in_long and not in_short:
         if regime < 0.5:
             return False, False, False, False
@@ -618,3 +576,69 @@ def mr_band_signal_nb(
             return False, False, False, True
 
     return False, False, False, False
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# PLOTTING HELPERS
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def plot_monthly_heatmap(pf) -> go.Figure:
+    """Monthly returns heatmap (Year x Month)."""
+    rets = pf.returns
+    monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
+    df = pd.DataFrame({"return": monthly})
+    df["year"] = df.index.year
+    df["month"] = df.index.month
+    pivot = df.pivot_table(values="return", index="year", columns="month", aggfunc="first")
+    pivot.columns = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ][: len(pivot.columns)]
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values * 100,
+            x=pivot.columns.tolist(),
+            y=[str(y) for y in pivot.index],
+            colorscale="RdYlGn",
+            texttemplate="%{z:.1f}%",
+            textfont={"size": 10},
+            zmid=0,
+        )
+    )
+    fig.update_layout(title="Monthly Returns (%)", height=300 + len(pivot) * 30)
+    return fig
+
+
+def plot_trade_analysis(pf) -> go.Figure:
+    """2x2 trade analysis: PnL, MAE, MFE, Edge Ratio."""
+    if pf.trades.count() == 0:
+        fig = go.Figure()
+        fig.add_annotation(text="No trades", xref="paper", yref="paper", x=0.5, y=0.5)
+        return fig
+
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=("Trade PnL (%)", "MAE", "MFE", "Running Edge Ratio"),
+    )
+    pf.trades.plot_pnl(pct_scale=True, fig=fig, add_trace_kwargs=dict(row=1, col=1))
+    pf.trades.plot_mae(fig=fig, add_trace_kwargs=dict(row=1, col=2))
+    pf.trades.plot_mfe(fig=fig, add_trace_kwargs=dict(row=2, col=1))
+    pf.trades.plot_running_edge_ratio(fig=fig, add_trace_kwargs=dict(row=2, col=2))
+    fig.update_layout(height=800, showlegend=False)
+    return fig
+
+
+def print_stats(pf) -> None:
+    """Print portfolio, returns, and trade statistics."""
+    print("PORTFOLIO STATS")
+    print("=" * 50)
+    print(pf.stats().to_string())
+    print(f"\nRETURNS STATS\n{'=' * 50}")
+    print(pf.returns_stats().to_string())
+    if pf.trades.count() > 0:
+        print(f"\nTRADE STATS\n{'=' * 50}")
+        print(pf.trades.stats().to_string())
+    else:
+        print("\nNo trades.")

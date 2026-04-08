@@ -21,7 +21,7 @@ from framework.spec import (
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def momentum_signal_nb(close: np.ndarray, w_short: int, w_long: int) -> np.ndarray:
     """Blended momentum: 0.5 * log_return(21d) + 0.5 * log_return(63d)."""
     n = len(close)
@@ -33,7 +33,7 @@ def momentum_signal_nb(close: np.ndarray, w_short: int, w_long: int) -> np.ndarr
     return out
 
 
-@njit
+@njit(nogil=True)
 def regime_weight_nb(
     vr: np.ndarray,
     low_th: float,
@@ -57,7 +57,7 @@ def regime_weight_nb(
     return out
 
 
-@njit
+@njit(nogil=True)
 def vol_scaling_nb(ewma_vol: np.ndarray, target: float, cap: float) -> np.ndarray:
     """lambda_t = min(sigma_target / sigma_Pt, lambda_max)."""
     n = len(ewma_vol)
@@ -69,7 +69,7 @@ def vol_scaling_nb(ewma_vol: np.ndarray, target: float, cap: float) -> np.ndarra
     return out
 
 
-@njit
+@njit(nogil=True)
 def drawdown_control_nb(
     dd: np.ndarray,
     soft: float,
@@ -101,7 +101,7 @@ def drawdown_control_nb(
     return mult
 
 
-@njit
+@njit(nogil=True)
 def sub_portfolio_weights_nb(
     direction: np.ndarray,
     regime_wt: np.ndarray,
@@ -133,7 +133,7 @@ def sub_portfolio_weights_nb(
     return weights
 
 
-@njit
+@njit(nogil=True)
 def compute_composite_nb(
     close: np.ndarray,
     returns: np.ndarray,
@@ -196,9 +196,12 @@ def compute_composite_nb(
 
     proxy_equity = np.ones(n)
     for i in range(1, n):
-        d, v, r = direction[i - 1], vol_scale[i - 1], returns[i]
-        if not (np.isnan(d) or np.isnan(v) or np.isnan(r)):
-            proxy_equity[i] = proxy_equity[i - 1] * (1 + r * d * v)
+        d = direction[i - 1]
+        rw = regime_wt[i - 1]
+        v = vol_scale[i - 1]
+        r = returns[i]
+        if not (np.isnan(d) or np.isnan(rw) or np.isnan(v) or np.isnan(r)):
+            proxy_equity[i] = proxy_equity[i - 1] * (1 + r * d * rw * v)
         else:
             proxy_equity[i] = proxy_equity[i - 1]
 
@@ -225,7 +228,7 @@ def compute_composite_nb(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit
+@njit(nogil=True)
 def composite_signal_nb(c, target_weights, size_arr):
     """Rebalance to target weight each bar using delta sizing."""
     tw = vbt.pf_nb.select_nb(c, target_weights)

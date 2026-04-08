@@ -9,6 +9,7 @@ Consumes a ``StrategySpec`` and data, providing three execution modes:
 from __future__ import annotations
 
 import os
+import webbrowser
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +40,8 @@ class StrategyRunner:
         self.raw = raw
         self.data = data
         self.index_ns = vbt.dt.to_ns(raw.index)
+        # Pre-compute log returns (avoids recalculation per indicator call)
+        self._returns = np.log(raw["close"] / raw["close"].shift(1))
 
     # -- Single run ---------------------------------------------------------
 
@@ -65,26 +68,100 @@ class StrategyRunner:
     ) -> tuple[Any, Any]:
         """Run cross-validation over *param_grid* using *splitter*.
 
+        Runs ALL parameter combinations at once per split via VBT native
+        broadcasting, enabling true multicore parallelization through
+        ``jitted={"parallel": True}`` and ``chunked="threadpool"``.
+
         Returns ``(grid_perf, best_perf)`` — the full grid and best-per-split.
-        Pass *raw* / *index_ns* to run on a subset (e.g. train split).
         """
         raw = raw if raw is not None else self.raw
-        index_ns = index_ns if index_ns is not None else vbt.dt.to_ns(raw.index)
 
-        cv_func = self._build_cv_func(splitter)
-        vbt_params = {k: vbt.Param(v) for k, v in param_grid.items()}
-        fixed = self._fixed_params(param_grid)
+        # Merge param grid with defaults (arrays for swept, scalars for fixed)
+        params = self.spec.default_params()
+        params.update(param_grid)
 
-        takeable = self._takeable_data(raw, index_ns)
+        split_results = []
+        n_splits = len(splitter.splits)
 
-        return cv_func(
-            **takeable,
-            **vbt_params,
-            **fixed,
-            metric=metric,
-            _return_grid="all",
-            _index=raw.index,
+        for split_idx in range(n_splits):
+            for set_idx in range(splitter.n_sets):
+                raw_split = splitter.take(raw, split=split_idx, set_=set_idx)
+                if len(raw_split) < 2:
+                    continue
+                ns_split = vbt.dt.to_ns(raw_split.index)
+
+                # Run ALL combos at once — VBT broadcasts params to columns
+                ind = self._run_indicator(raw_split, ns_split, params, parallel=True)
+                pf = self._run_portfolio(
+                    raw_split, ns_split, ind, params, parallel=True
+                )
+
+                metric_val = getattr(pf, metric)
+
+                # Build index: (split, set, param1, param2, ...)
+                set_label = (
+                    splitter.set_labels[set_idx]
+                    if hasattr(splitter, "set_labels")
+                    and splitter.set_labels is not None
+                    else set_idx
+                )
+                if isinstance(metric_val, pd.Series) and len(metric_val) > 1:
+                    orig_idx = metric_val.index
+                    tuples = []
+                    for t in (
+                        orig_idx
+                        if isinstance(orig_idx, pd.MultiIndex)
+                        else [(v,) for v in orig_idx]
+                    ):
+                        tuples.append((split_idx, set_label, *t))
+                    names = ["split", "set"] + list(
+                        orig_idx.names
+                        if isinstance(orig_idx, pd.MultiIndex)
+                        else [orig_idx.name]
+                    )
+                    new_idx = pd.MultiIndex.from_tuples(tuples, names=names)
+                    split_results.append(pd.Series(metric_val.values, index=new_idx))
+                else:
+                    val = (
+                        metric_val
+                        if isinstance(metric_val, (int, float, np.floating))
+                        else metric_val.iloc[0]
+                    )
+                    idx = pd.MultiIndex.from_tuples(
+                        [(split_idx, set_label)], names=["split", "set"]
+                    )
+                    split_results.append(pd.Series([val], index=idx))
+
+            print(
+                f"\r  Split {split_idx + 1}/{n_splits}", end="", flush=True
+            )
+
+        print()
+
+        grid_perf = pd.concat(split_results)
+
+        # Best: mean metric per swept-param combo across train splits.
+        # VBT prefixes param names (e.g. "lookback" → "mr_v1_lookback"),
+        # so match by suffix.
+        train_mask = grid_perf.index.get_level_values("set").isin(
+            ["train", "set_0", 0]
         )
+        train_perf = grid_perf[train_mask]
+
+        idx_names = list(train_perf.index.names)
+        sweep_levels = []
+        for pname in param_grid:
+            for iname in idx_names:
+                if iname and iname.endswith(pname):
+                    sweep_levels.append(iname)
+                    break
+
+        if sweep_levels:
+            best_perf = train_perf.groupby(sweep_levels).mean()
+        else:
+            best_perf = train_perf
+
+        return grid_perf, best_perf
 
     # -- Full pipeline ------------------------------------------------------
 
@@ -111,11 +188,16 @@ class StrategyRunner:
             )
         os.makedirs(results_dir, exist_ok=True)
 
-        # -- Holdout split --------------------------------------------------
-        split_idx = int(len(self.raw) * (1 - holdout_ratio))
-        holdout_date = self.raw.index[split_idx]
-        raw_train = self.raw.loc[:holdout_date]
-        raw_test = self.raw.loc[holdout_date:]
+        # -- Holdout split (VBT native) ------------------------------------
+        n = len(self.raw)
+        split_idx = int(n * (1 - holdout_ratio))
+        holdout_splitter = vbt.Splitter.from_splits(
+            self.raw.index,
+            [[slice(0, split_idx), slice(split_idx, n)]],
+            set_labels=["train", "test"],
+        )
+        raw_train = holdout_splitter.take(self.raw, split=0, set_="train")
+        raw_test = holdout_splitter.take(self.raw, split=0, set_="test")
         ns_train = vbt.dt.to_ns(raw_train.index)
 
         print(
@@ -161,7 +243,7 @@ class StrategyRunner:
         print(f"\n{'=' * 60}")
         print(f"OPTIMIZED — TRAIN ({self.spec.name})")
         print(f"{'=' * 60}")
-        print(pf_train.stats().to_string())
+        print(self._safe_stats(pf_train).to_string())
         self._print_trade_stats(pf_train)
 
         # -- Holdout test ---------------------------------------------------
@@ -171,14 +253,14 @@ class StrategyRunner:
         print(f"\n{'=' * 60}")
         print(f"HOLD-OUT TEST ({self.spec.name})")
         print(f"{'=' * 60}")
-        print(pf_test.stats().to_string())
+        print(self._safe_stats(pf_test).to_string())
         self._print_trade_stats(pf_test)
 
         # -- Comparison -----------------------------------------------------
         comparison = pd.DataFrame(
             {
-                "Optimized (train)": pf_train.stats(),
-                "Hold-out (test)": pf_test.stats(),
+                "Optimized (train)": self._safe_stats(pf_train),
+                "Hold-out (test)": self._safe_stats(pf_test),
             }
         )
         print(f"\n{'=' * 60}")
@@ -252,6 +334,17 @@ class StrategyRunner:
 
         print(f"\n  Results saved to {results_dir}/")
 
+        # Open key plots in browser
+        self._open_html(f"{results_dir}/portfolio_{label}.html")
+        self._open_html(f"{results_dir}/trade_signals_{label}.html")
+
+    # -- Browser helpers -----------------------------------------------------
+
+    @staticmethod
+    def _open_html(path: str) -> None:
+        """Open an HTML file in the default browser."""
+        webbrowser.open(f"file://{os.path.abspath(path)}")
+
     # -----------------------------------------------------------------------
     # Private helpers
     # -----------------------------------------------------------------------
@@ -267,6 +360,8 @@ class StrategyRunner:
         raw: pd.DataFrame,
         index_ns: np.ndarray,
         params: dict[str, Any],
+        *,
+        parallel: bool = True,
     ) -> Any:
         """Build ``vbt.IF``, run it, return the indicator result."""
         ispec = self.spec.indicator
@@ -274,6 +369,11 @@ class StrategyRunner:
         # Collect indicator-level params (those declared in param_names)
         ind_params = {k: params[k] for k in ispec.param_names if k in params}
 
+        # with_apply_func needs scalar defaults (for compilation);
+        # lists/arrays are sweep values passed only to run().
+        scalar_defaults = {
+            k: (v[0] if isinstance(v, list) else v) for k, v in ind_params.items()
+        }
         factory = vbt.IF(
             class_name=ispec.class_name,
             short_name=ispec.short_name,
@@ -283,19 +383,23 @@ class StrategyRunner:
         ).with_apply_func(
             ispec.kernel_func,
             takes_1d=True,
-            **ind_params,
+            **scalar_defaults,
         )
 
         # Build input kwargs from input_names -> raw columns
         input_kwargs = self._build_input_kwargs(raw, index_ns, ispec.input_names)
 
-        return factory.run(
+        run_kwargs: dict[str, Any] = {
             **input_kwargs,
             **ind_params,
-            jitted_loop=True,
-            jitted_warmup=True,
-            execute_kwargs={"engine": "threadpool", "n_chunks": "auto"},
-        )
+            "jitted_loop": True,
+            "jitted_warmup": True,
+            "param_product": True,
+        }
+        if parallel:
+            # Multi-column sweep: parallelize across parameter combos
+            run_kwargs["execute_kwargs"] = {"engine": "threadpool", "n_chunks": "auto"}
+        return factory.run(**run_kwargs)
 
     def _run_portfolio(
         self,
@@ -303,6 +407,8 @@ class StrategyRunner:
         index_ns: np.ndarray,
         ind_result: Any,
         params: dict[str, Any],
+        *,
+        parallel: bool = True,
     ) -> vbt.Portfolio:
         """Resolve signal mapping and call ``Portfolio.from_signals``."""
         pcfg = self.spec.portfolio_config
@@ -325,16 +431,40 @@ class StrategyRunner:
                     params,
                 )
 
+        # Detect multi-column mode from indicator output width
+        n_cols = ind_result.wrapper.shape_2d[1]
+        ind_columns = ind_result.wrapper.columns if n_cols > 1 else None
+
+        # Broadcast 1D data arrays to match indicator column count.
+        # Only broadcast "data.*" sources — "extra.*" (index_ns) and "param.*"
+        # are accessed directly in signal functions, not via select_nb.
+        if n_cols > 1:
+            data_sources = {
+                rep for rep, src in self.spec.signal_args_map if src.startswith("data.")
+            }
+            for key in data_sources:
+                if key in broadcast_named_args:
+                    arr = np.asarray(broadcast_named_args[key])
+                    if arr.ndim == 1:
+                        broadcast_named_args[key] = np.tile(arr[:, None], n_cols)
+
         # Resolve portfolio-level params
         leverage = self._resolve_portfolio_ref(pcfg.leverage, ind_result, params)
         sl_stop = self._resolve_portfolio_ref(pcfg.sl_stop, ind_result, params)
         tp_stop = self._resolve_portfolio_ref(pcfg.tp_stop, ind_result, params)
 
+        # Broadcast close (and OHLC) to match indicator column count
+        close_val = raw["close"]
+        if ind_columns is not None:
+            close_val = pd.DataFrame(
+                np.tile(raw["close"].values[:, None], n_cols),
+                index=raw.index,
+                columns=ind_columns,
+            )
+
         # Build from_signals kwargs
         pf_kwargs: dict[str, Any] = {
-            "close": raw["close"],
-            "jitted": {"parallel": True},
-            "chunked": "threadpool",
+            "close": close_val,
             "signal_func_nb": self.spec.signal_func,
             "signal_args": tuple(signal_args),
             "broadcast_named_args": broadcast_named_args,
@@ -345,21 +475,33 @@ class StrategyRunner:
             "freq": pcfg.freq,
         }
 
+        if parallel:
+            # Numba prange parallelization across columns
+            pf_kwargs["jitted"] = {"parallel": True}
+            # Note: chunked="threadpool" breaks broadcast_named_args slicing
+            # with signal_func_nb — prange alone handles multi-column parallelism
+
         # Pass OHLC if available (needed for stop-loss simulation)
         for col in ("open", "high", "low"):
             if col in raw.columns:
-                pf_kwargs[col] = raw[col]
+                if ind_columns is not None:
+                    pf_kwargs[col] = pd.DataFrame(
+                        np.tile(raw[col].values[:, None], n_cols),
+                        index=raw.index,
+                        columns=ind_columns,
+                    )
+                else:
+                    pf_kwargs[col] = raw[col]
 
-        if sl_stop is not None:
-            pf_kwargs["sl_stop"] = sl_stop
-        if tp_stop is not None:
-            pf_kwargs["tp_stop"] = tp_stop
-        if pcfg.size_type is not None:
-            pf_kwargs["size_type"] = pcfg.size_type
+        optional = {
+            "sl_stop": sl_stop,
+            "tp_stop": tp_stop,
+            "size_type": pcfg.size_type,
+            "upon_opposite_entry": pcfg.upon_opposite_entry,
+        }
+        pf_kwargs.update({k: v for k, v in optional.items() if v is not None})
         if pcfg.accumulate:
             pf_kwargs["accumulate"] = True
-        if pcfg.upon_opposite_entry is not None:
-            pf_kwargs["upon_opposite_entry"] = pcfg.upon_opposite_entry
 
         # RepEval top-level args (e.g., size=RepEval("np.full(...)"))
         pf_kwargs.update(extra_top_level)
@@ -370,45 +512,7 @@ class StrategyRunner:
 
         return vbt.Portfolio.from_signals(**pf_kwargs)
 
-    def _build_cv_func(self, splitter: Any) -> Any:
-        """Build the ``vbt.cv_split``-wrapped function for this strategy."""
-        spec = self.spec
-
-        def _run_pipeline(
-            *,
-            metric: str = "sharpe_ratio",
-            **kwargs: Any,
-        ) -> Any:
-            # Separate takeable data from params
-            takeable_names = set(spec.takeable_args)
-            data_kw = {k: kwargs[k] for k in takeable_names if k in kwargs}
-            param_kw = {k: v for k, v in kwargs.items() if k not in takeable_names}
-
-            # Reconstruct raw-like DataFrame from takeable arrays
-            raw_cv = self._arrays_to_raw(data_kw)
-            idx_ns = data_kw.get("idx_ns", vbt.dt.to_ns(raw_cv.index))
-            if idx_ns.ndim > 1:
-                idx_ns = idx_ns[:, 0]
-
-            # Resolve params: merge defaults with what cv_split passes
-            params = spec.default_params()
-            params.update(param_kw)
-
-            # Run indicator
-            ind = self._run_indicator(raw_cv, idx_ns, params)
-
-            # Run portfolio
-            pf = self._run_portfolio(raw_cv, idx_ns, ind, params)
-
-            return pf.deep_getattr(metric)
-
-        return vbt.cv_split(
-            _run_pipeline,
-            splitter=splitter,
-            takeable_args=list(spec.takeable_args),
-            parameterized_kwargs={"engine": "threadpool", "chunk_len": "auto"},
-            merge_func="concat",
-        )
+    # (_build_cv_func removed — cv() now runs all combos at once per split)
 
     # -- Source resolution --------------------------------------------------
 
@@ -452,8 +556,8 @@ class StrategyRunner:
 
     # -- Input wiring -------------------------------------------------------
 
-    @staticmethod
     def _build_input_kwargs(
+        self,
         raw: pd.DataFrame,
         index_ns: np.ndarray,
         input_names: tuple[str, ...],
@@ -465,7 +569,11 @@ class StrategyRunner:
             if mapped == "__index_ns__":
                 kwargs[name] = index_ns
             elif mapped == "__returns__":
-                kwargs[name] = np.log(raw["close"] / raw["close"].shift(1))
+                # Use cached returns if raw matches, else compute for slice
+                if len(raw) == len(self._returns):
+                    kwargs[name] = self._returns
+                else:
+                    kwargs[name] = np.log(raw["close"] / raw["close"].shift(1))
             elif mapped is not None and mapped in raw.columns:
                 kwargs[name] = raw[mapped]
             elif name in raw.columns:
@@ -477,57 +585,6 @@ class StrategyRunner:
                 )
         return kwargs
 
-    # -- CV helpers ---------------------------------------------------------
-
-    @staticmethod
-    def _arrays_to_raw(data_kw: dict[str, Any]) -> pd.DataFrame:
-        """Convert CV-sliced arrays back to a DataFrame for the runner."""
-
-        def _col(arr: np.ndarray) -> np.ndarray:
-            return arr[:, 0] if arr.ndim > 1 else arr
-
-        cols: dict[str, Any] = {}
-        key_map = {
-            "high_arr": "high",
-            "low_arr": "low",
-            "close_arr": "close",
-            "open_arr": "open",
-            "volume_arr": "volume",
-        }
-        for arr_key, col_name in key_map.items():
-            if arr_key in data_kw:
-                cols[col_name] = _col(data_kw[arr_key])
-
-        return pd.DataFrame(cols)
-
-    def _takeable_data(
-        self,
-        raw: pd.DataFrame,
-        index_ns: np.ndarray,
-    ) -> dict[str, Any]:
-        """Prepare the takeable arrays for ``vbt.cv_split``."""
-        takeable: dict[str, Any] = {}
-        key_map = {
-            "high_arr": "high",
-            "low_arr": "low",
-            "close_arr": "close",
-            "open_arr": "open",
-            "volume_arr": "volume",
-        }
-        for name in self.spec.takeable_args:
-            if name == "idx_ns":
-                takeable[name] = index_ns
-            elif name in key_map:
-                takeable[name] = vbt.to_2d_array(raw[key_map[name]])
-            else:
-                raise ValueError(f"Unknown takeable arg: {name!r}")
-        return takeable
-
-    def _fixed_params(self, param_grid: dict[str, Any]) -> dict[str, Any]:
-        """Return non-swept params (defaults for params NOT in param_grid)."""
-        defaults = self.spec.default_params()
-        return {k: v for k, v in defaults.items() if k not in param_grid}
-
     # -- Result extraction --------------------------------------------------
 
     @staticmethod
@@ -535,21 +592,42 @@ class StrategyRunner:
         best_perf: Any,
         param_grid: dict[str, Any],
     ) -> dict[str, Any]:
-        """Extract best parameter combination from CV results."""
-        if not isinstance(best_perf.index, pd.MultiIndex):
+        """Extract best parameter combination from CV results.
+
+        Handles VBT-prefixed index names (e.g. ``mr_v1_lookback`` for ``lookback``).
+        """
+        idx = best_perf.index
+        if not isinstance(idx, pd.MultiIndex) and idx.name is None:
             return {}
 
         best_row = best_perf[best_perf == best_perf.max()]
-        level_names = best_perf.index.names
+        level_names = list(
+            idx.names if isinstance(idx, pd.MultiIndex) else [idx.name]
+        )
+
         opt_params: dict[str, Any] = {}
         for name in param_grid:
-            if name in level_names:
-                val = best_row.index.get_level_values(name)[0]
-                # Convert numpy types to Python native for clean display
+            # Match exact name or VBT-prefixed name (e.g. "mr_v1_lookback")
+            matched = name if name in level_names else None
+            if matched is None:
+                for ln in level_names:
+                    if ln and ln.endswith(name):
+                        matched = ln
+                        break
+            if matched is not None:
+                val = best_row.index.get_level_values(matched)[0]
                 opt_params[name] = val.item() if hasattr(val, "item") else val
         return opt_params
 
     # -- Printing helpers ---------------------------------------------------
+
+    @staticmethod
+    def _safe_stats(pf: vbt.Portfolio) -> pd.Series:
+        """Get portfolio stats, skipping duration metrics on overflow."""
+        try:
+            return pf.stats()
+        except OverflowError:
+            return pf.stats(tags="!duration")
 
     @staticmethod
     def _print_trade_stats(pf: vbt.Portfolio) -> None:
@@ -643,6 +721,14 @@ class StrategyRunner:
             f.write(comparison.to_string() + "\n")
 
         print(f"\n  Results saved to {results_dir}/")
+
+        # Open key plots in browser
+        self._open_html(f"{results_dir}/portfolio_train.html")
+        self._open_html(f"{results_dir}/portfolio_test.html")
+        if len(sweep_keys) >= 2:
+            cv_path = f"{results_dir}/cv_heatmap.html"
+            if os.path.exists(cv_path):
+                self._open_html(cv_path)
 
 
 # ---------------------------------------------------------------------------
