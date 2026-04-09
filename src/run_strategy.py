@@ -37,7 +37,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--data",
-        default="data/EUR-USD.parquet",
+        default="data/EUR-USD-minute.parquet",
         help="Path to data file",
     )
     parser.add_argument(

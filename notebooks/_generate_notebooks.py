@@ -83,11 +83,11 @@ _PROJECT_ROOT = Path(__file__).resolve().parent if "__file__" in dir() else Path
 # When run from project root: "." is project root
 # Fallback: search upward for data/
 for _p in [Path(".").resolve(), Path(".").resolve().parent, Path(".").resolve().parent.parent]:
-    if (_p / "data" / "EUR-USD.parquet").exists():
+    if (_p / "data" / "EUR-USD-minute.parquet").exists():
         _PROJECT_ROOT = _p
         break
 
-def load_fx_data(path="data/EUR-USD.parquet", shift_hours=0):
+def load_fx_data(path="data/EUR-USD-minute.parquet", shift_hours=0):
     resolved = _PROJECT_ROOT / path
     data_raw = vbt.Data.from_parquet(str(resolved))
     symbol = data_raw.symbols[0]
@@ -1595,11 +1595,11 @@ _PROJECT_ROOT = Path(__file__).resolve().parent if "__file__" in dir() else Path
 # When run from project root: "." is project root
 # Fallback: search upward for data/
 for _p in [Path(".").resolve(), Path(".").resolve().parent, Path(".").resolve().parent.parent]:
-    if (_p / "data" / "EUR-USD.parquet").exists():
+    if (_p / "data" / "EUR-USD-minute.parquet").exists():
         _PROJECT_ROOT = _p
         break
 
-def load_fx_data(path="data/EUR-USD.parquet", shift_hours=0):
+def load_fx_data(path="data/EUR-USD-minute.parquet", shift_hours=0):
     resolved = _PROJECT_ROOT / path
     data_raw = vbt.Data.from_parquet(str(resolved))
     symbol = data_raw.symbols[0]
