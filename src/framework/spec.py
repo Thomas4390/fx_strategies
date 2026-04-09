@@ -171,6 +171,7 @@ class StrategySpec:
         "open_arr",
         "idx_ns",
     )
+    prepare_fn: Callable | None = None
 
     def __post_init__(self) -> None:
         """Validate spec consistency at construction time."""
@@ -192,7 +193,7 @@ class StrategySpec:
                     )
 
         # Source prefixes must be valid
-        valid_prefixes = {"data", "ind", "extra", "param", "eval"}
+        valid_prefixes = {"data", "ind", "extra", "param", "eval", "pre"}
         for _, source in self.signal_args_map:
             prefix = source.partition(".")[0]
             if prefix.startswith("eval:"):
