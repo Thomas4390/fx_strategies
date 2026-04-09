@@ -1,6 +1,7 @@
 """MR V2: Z-Score Based Exit.
 
 Entry at |z| > entry_z, exit at |z| < exit_z. No fixed bands, no leverage.
+Native VBT VWAP + talib ADX via prepare_fn.
 """
 
 import numpy as np
@@ -15,12 +16,7 @@ from framework.spec import (
     PortfolioConfig,
     StrategySpec,
 )
-from utils import (
-    compute_adx_regime_nb,
-    compute_deviation_nb,
-    compute_intraday_twap_nb,
-    compute_intraday_zscore_nb,
-)
+from utils import compute_deviation_nb, compute_intraday_zscore_nb, prepare_mr
 
 # ═══════════════════════════════════════════════════════════════════════
 # INDICATOR KERNEL
@@ -30,22 +26,14 @@ from utils import (
 @njit(nogil=True)
 def compute_mr_v2_indicators_nb(
     index_ns: np.ndarray,
-    high: np.ndarray,
-    low: np.ndarray,
     close: np.ndarray,
-    open_: np.ndarray,
+    vwap: np.ndarray,
     lookback: int,
-    adx_period: int,
-    adx_threshold: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute TWAP, rolling z-score, and ADX regime filter."""
-    twap = compute_intraday_twap_nb(index_ns, high, low, close)
-    deviation = compute_deviation_nb(close, twap)
+) -> np.ndarray:
+    """Compute rolling z-score of close-to-VWAP deviation."""
+    deviation = compute_deviation_nb(close, vwap)
     zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
-    regime_ok = compute_adx_regime_nb(
-        index_ns, high, low, close, open_, adx_period, adx_threshold
-    )
-    return twap, zscore, regime_ok
+    return zscore
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -118,6 +106,15 @@ def mr_v2_signal_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# PREPARE FUNCTION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def prepare_mr_v2(raw, data):
+    return prepare_mr(raw, data, adx_period=14, adx_threshold=30.0)
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # STRATEGY SPECIFICATION
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -126,21 +123,15 @@ spec = StrategySpec(
     indicator=IndicatorSpec(
         class_name="IntradayMRv2",
         short_name="mrv2",
-        input_names=(
-            "index_ns",
-            "high_minute",
-            "low_minute",
-            "close_minute",
-            "open_minute",
-        ),
-        param_names=("lookback", "adx_period", "adx_threshold"),
-        output_names=("twap", "zscore", "regime_ok"),
+        input_names=("index_ns", "close_minute", "vwap"),
+        param_names=("lookback",),
+        output_names=("zscore",),
         kernel_func=compute_mr_v2_indicators_nb,
     ),
     signal_func=mr_v2_signal_nb,
     signal_args_map=(
         ("zscore_arr", "ind.zscore"),
-        ("regime_ok_arr", "ind.regime_ok"),
+        ("regime_ok_arr", "pre.regime_ok"),
         ("index_arr", "extra.index_ns"),
         ("eod_hour", "param.eod_hour"),
         ("eod_minute", "param.eod_minute"),
@@ -150,8 +141,6 @@ spec = StrategySpec(
     ),
     params={
         "lookback": ParamDef(60, sweep=[20, 40, 60, 120, 240]),
-        "adx_period": ParamDef(14),
-        "adx_threshold": ParamDef(30.0),
         "eod_hour": ParamDef(21),
         "eod_minute": ParamDef(0),
         "eval_freq": ParamDef(5),
@@ -161,9 +150,10 @@ spec = StrategySpec(
     },
     portfolio_config=PortfolioConfig(leverage=1.0, sl_stop=0.005),
     plot_config=PlotConfig(
-        overlays=(OverlayLine("ind.twap", "TWAP", color="#FF9800", dash="dash"),),
+        overlays=(OverlayLine("pre.vwap", "VWAP", color="#FF9800", dash="dash"),),
         subplot_indicators=(("ind.zscore", "Z-Score", True),),
     ),
+    prepare_fn=prepare_mr_v2,
 )
 
 

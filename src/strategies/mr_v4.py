@@ -1,6 +1,7 @@
 """MR V4: Adaptive EWM Bands.
 
 EWM std replaces rolling std for faster volatility adaptation.
+Native VBT VWAP + talib ADX via prepare_fn.
 """
 
 import numpy as np
@@ -15,35 +16,25 @@ from framework.spec import (
     PortfolioConfig,
     StrategySpec,
 )
-from utils import (
-    compute_adx_regime_nb,
-    compute_deviation_nb,
-    compute_intraday_twap_nb,
-    mr_band_signal_nb,
-)
+from utils import compute_deviation_nb, mr_band_signal_nb, prepare_mr
 
-# ══════���════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════
 # INDICATOR KERNEL
-# ════��══════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════
 
 
 @njit(nogil=True)
 def compute_mr_v4_indicators_nb(
     index_ns: np.ndarray,
-    high: np.ndarray,
-    low: np.ndarray,
     close: np.ndarray,
-    open_: np.ndarray,
+    vwap: np.ndarray,
     ewm_span: int,
     band_width: float,
-    adx_period: int,
-    adx_threshold: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Compute TWAP, EWM z-score, adaptive bands, and ADX filter."""
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute EWM z-score and adaptive bands around pre-computed VWAP."""
     n = len(close)
 
-    twap = compute_intraday_twap_nb(index_ns, high, low, close)
-    deviation = compute_deviation_nb(close, twap)
+    deviation = compute_deviation_nb(close, vwap)
 
     ewm_std = vbt.generic.nb.ewm_std_1d_nb(
         deviation, span=ewm_span, minp=ewm_span, adjust=False
@@ -63,35 +54,34 @@ def compute_mr_v4_indicators_nb(
     lower_band = np.full(n, np.nan)
     for i in range(n):
         s = ewm_std[i]
-        if not np.isnan(s) and s > 1e-10 and not np.isnan(twap[i]):
-            upper_band[i] = twap[i] + band_width * s
-            lower_band[i] = twap[i] - band_width * s
+        if not np.isnan(s) and s > 1e-10 and not np.isnan(vwap[i]):
+            upper_band[i] = vwap[i] + band_width * s
+            lower_band[i] = vwap[i] - band_width * s
 
-    regime_ok = compute_adx_regime_nb(
-        index_ns, high, low, close, open_, adx_period, adx_threshold
-    )
+    return zscore, upper_band, lower_band
 
-    return twap, zscore, upper_band, lower_band, regime_ok
+
+# ═══════════════════════════════════════════════════════════════════════
+# PREPARE FUNCTION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def prepare_mr_v4(raw, data):
+    return prepare_mr(raw, data, adx_period=14, adx_threshold=30.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # STRATEGY SPECIFICATION
-# ════════════════════════════════════════��══════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════
 
 spec = StrategySpec(
     name="MR V4: Adaptive EWM Bands",
     indicator=IndicatorSpec(
         class_name="MR_V4",
         short_name="mr_v4",
-        input_names=(
-            "index_ns",
-            "high_minute",
-            "low_minute",
-            "close_minute",
-            "open_minute",
-        ),
-        param_names=("ewm_span", "band_width", "adx_period", "adx_threshold"),
-        output_names=("twap", "zscore", "upper_band", "lower_band", "regime_ok"),
+        input_names=("index_ns", "close_minute", "vwap"),
+        param_names=("ewm_span", "band_width"),
+        output_names=("zscore", "upper_band", "lower_band"),
         kernel_func=compute_mr_v4_indicators_nb,
     ),
     signal_func=mr_band_signal_nb,
@@ -99,8 +89,8 @@ spec = StrategySpec(
         ("close_arr", "data.close"),
         ("upper_arr", "ind.upper_band"),
         ("lower_arr", "ind.lower_band"),
-        ("twap_arr", "ind.twap"),
-        ("regime_ok_arr", "ind.regime_ok"),
+        ("twap_arr", "pre.vwap"),
+        ("regime_ok_arr", "pre.regime_ok"),
         ("index_arr", "extra.index_ns"),
         ("eod_hour", "param.eod_hour"),
         ("eod_minute", "param.eod_minute"),
@@ -109,8 +99,6 @@ spec = StrategySpec(
     params={
         "ewm_span": ParamDef(60, sweep=[20, 40, 60, 120]),
         "band_width": ParamDef(2.0, sweep=[1.5, 2.0, 2.5, 3.0]),
-        "adx_period": ParamDef(14),
-        "adx_threshold": ParamDef(30.0),
         "eod_hour": ParamDef(21),
         "eod_minute": ParamDef(0),
         "eval_freq": ParamDef(5),
@@ -119,11 +107,12 @@ spec = StrategySpec(
     portfolio_config=PortfolioConfig(leverage=1.0, sl_stop=0.005),
     plot_config=PlotConfig(
         overlays=(
-            OverlayLine("ind.twap", "TWAP", color="#FF9800", dash="dash"),
+            OverlayLine("pre.vwap", "VWAP", color="#FF9800", dash="dash"),
             OverlayLine("ind.upper_band", "Upper Band", color="#E91E63", dash="dot"),
             OverlayLine("ind.lower_band", "Lower Band", color="#E91E63", dash="dot"),
         ),
     ),
+    prepare_fn=prepare_mr_v4,
 )
 
 
