@@ -6,6 +6,7 @@ summaries, and trade-level analysis.
 
 from __future__ import annotations
 
+import calendar
 from typing import Any
 
 import numpy as np
@@ -13,6 +14,17 @@ import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 from plotly.subplots import make_subplots
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BROWSER RENDERING
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def show_browser(fig: go.Figure) -> None:
+    """Show a plotly figure in the default web browser."""
+    fig.show(renderer="browser")
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # MONTHLY HEATMAP
@@ -34,42 +46,25 @@ def plot_monthly_heatmap(
     pf: vbt.Portfolio,
     title: str = "Monthly Returns (%)",
 ) -> go.Figure:
-    """Create a year x month heatmap of portfolio returns."""
-    rets = pf.returns
-    monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    df = pd.DataFrame(
-        {
-            "year": monthly.index.year,
-            "month": monthly.index.month,
-            "ret": monthly.values,
-        }
-    )
-    pivot = df.pivot(index="year", columns="month", values="ret")
-    month_labels = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-    ]
-    pivot.columns = [month_labels[m - 1] for m in pivot.columns]
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=pivot.values,
-            x=pivot.columns,
-            y=pivot.index.astype(str),
-            colorscale="RdYlGn",
+    """Create a year x month heatmap of portfolio returns using native VBT."""
+    pf_daily = pf.resample("1D")
+    mo_rets = pf_daily.resample("ME").returns
+    mo_matrix = pd.Series(
+        mo_rets.values,
+        index=pd.MultiIndex.from_arrays(
+            [mo_rets.index.year, mo_rets.index.month],
+            names=["year", "month"],
+        ),
+    ).unstack("month")
+    mo_matrix.columns = [calendar.month_abbr[m] for m in mo_matrix.columns]
+    fig = mo_matrix.vbt.heatmap(
+        is_x_category=True,
+        trace_kwargs=dict(
             zmid=0,
-            text=np.round(pivot.values * 100, 1),
+            colorscale="RdYlGn",
+            text=np.round(mo_matrix.values * 100, 1),
             texttemplate="%{text}%",
-        )
+        ),
     )
     fig.update_layout(title=title, height=400)
     return fig
@@ -197,6 +192,186 @@ def plot_trade_analysis(
     )
 
     fig.update_layout(title=title, height=height, showlegend=False)
+    return fig
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BEST-COMBINATION ANALYSIS PLOTS
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def plot_equity_top_n(
+    pf_sweep: vbt.Portfolio,
+    n: int = 5,
+    title: str = "Top Parameter Combos — Equity",
+) -> go.Figure:
+    """Overlay equity curves of the top N combos by Sharpe."""
+    sharpes = pf_sweep.sharpe_ratio
+    top_idx = sharpes.nlargest(n).index
+    top_pf = pf_sweep[top_idx]
+    fig = top_pf.value.vbt.plot()
+    fig.update_layout(title=title, height=500)
+    return fig
+
+
+def plot_cv_stability(
+    grid_perf: pd.Series,
+    title: str = "CV Stability — Sharpe per Fold",
+) -> go.Figure:
+    """Bar chart of best-combo Sharpe per CV fold."""
+    if "split" not in grid_perf.index.names:
+        fig = go.Figure()
+        fig.add_annotation(text="No CV splits available", showarrow=False)
+        return fig
+
+    train_mask = grid_perf.index.get_level_values("set").isin(
+        ["train", "set_0", 0]
+    )
+    train = grid_perf[train_mask]
+    sweep_levels = [
+        n for n in train.index.names if n not in ("split", "set")
+    ]
+
+    if sweep_levels:
+        best_combo = train.groupby(sweep_levels).mean().idxmax()
+        if isinstance(best_combo, tuple):
+            mask = pd.Series(True, index=train.index)
+            for level, val in zip(sweep_levels, best_combo):
+                mask &= train.index.get_level_values(level) == val
+            fold_sharpes = train[mask]
+        else:
+            fold_sharpes = train.xs(best_combo, level=sweep_levels[0])
+    else:
+        fold_sharpes = train
+
+    split_vals = fold_sharpes.index.get_level_values("split")
+    fig = go.Figure(
+        data=go.Bar(
+            x=[f"Fold {s}" for s in split_vals], y=fold_sharpes.values
+        )
+    )
+    fig.add_hline(
+        y=fold_sharpes.mean(),
+        line_dash="dash",
+        line_color="red",
+        annotation_text=f"Mean: {fold_sharpes.mean():.2f}",
+    )
+    fig.update_layout(title=title, height=400, yaxis_title="Sharpe Ratio")
+    return fig
+
+
+def plot_rolling_sharpe(
+    pf: vbt.Portfolio,
+    window: int = 252,
+    title: str = "Rolling 1-Year Sharpe Ratio",
+) -> go.Figure:
+    """Rolling Sharpe on daily-resampled portfolio."""
+    pf_daily = pf.resample("1D")
+    rets = pf_daily.returns
+    rolling_sr = rets.rolling(window).apply(
+        lambda x: x.mean() / x.std() * np.sqrt(252) if x.std() > 0 else 0
+    )
+    fig = rolling_sr.vbt.plot()
+    fig.add_hline(y=0, line_color="gray")
+    fig.add_hline(
+        y=1, line_dash="dot", line_color="green", annotation_text="Sharpe=1"
+    )
+    fig.update_layout(title=title, height=400)
+    return fig
+
+
+def plot_partial_dependence(
+    sweep_sharpes: pd.Series,
+    param_grid: dict[str, list],
+    title: str = "Parameter Sensitivity",
+) -> go.Figure:
+    """Marginal mean Sharpe for each swept parameter."""
+    params = list(param_grid.keys())
+    n_params = len(params)
+    if n_params == 0:
+        return go.Figure()
+
+    fig = make_subplots(rows=1, cols=n_params, subplot_titles=params)
+    idx_names = list(sweep_sharpes.index.names)
+
+    for i, param in enumerate(params):
+        matched = param
+        for name in idx_names:
+            if name and name.endswith(param):
+                matched = name
+                break
+        if matched not in idx_names:
+            continue
+        marginal = sweep_sharpes.groupby(matched).mean()
+        fig.add_trace(
+            go.Bar(
+                x=[str(v) for v in marginal.index],
+                y=marginal.values,
+                name=param,
+            ),
+            row=1,
+            col=i + 1,
+        )
+
+    fig.update_layout(title=title, height=350, showlegend=False)
+    return fig
+
+
+def plot_train_vs_test(
+    grid_perf: pd.Series,
+    title: str = "Train vs Test Sharpe (Overfitting Check)",
+) -> go.Figure:
+    """Scatter: train Sharpe (x) vs test Sharpe (y) per param combo."""
+    if "set" not in grid_perf.index.names:
+        return go.Figure()
+
+    train_mask = grid_perf.index.get_level_values("set").isin(
+        ["train", "set_0", 0]
+    )
+    test_mask = grid_perf.index.get_level_values("set").isin(
+        ["test", "set_1", 1]
+    )
+    train = grid_perf[train_mask]
+    test = grid_perf[test_mask]
+
+    sweep_levels = [
+        n for n in train.index.names if n not in ("split", "set")
+    ]
+    if not sweep_levels:
+        return go.Figure()
+
+    train_avg = train.groupby(sweep_levels).mean()
+    test_avg = test.groupby(sweep_levels).mean()
+    common = train_avg.index.intersection(test_avg.index)
+
+    if len(common) == 0:
+        return go.Figure()
+
+    fig = go.Figure(
+        data=go.Scatter(
+            x=train_avg.loc[common].values,
+            y=test_avg.loc[common].values,
+            mode="markers",
+            text=[str(c) for c in common],
+        )
+    )
+    max_val = max(train_avg.max(), test_avg.max(), 0) * 1.1
+    min_val = min(train_avg.min(), test_avg.min(), 0) * 0.9
+    fig.add_trace(
+        go.Scatter(
+            x=[min_val, max_val],
+            y=[min_val, max_val],
+            mode="lines",
+            line=dict(dash="dash", color="gray"),
+            name="y=x",
+        )
+    )
+    fig.update_layout(
+        title=title,
+        height=500,
+        xaxis_title="Train Sharpe",
+        yaxis_title="Test Sharpe",
+    )
     return fig
 
 

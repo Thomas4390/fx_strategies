@@ -9,7 +9,6 @@ Consumes a ``StrategySpec`` and data, providing three execution modes:
 from __future__ import annotations
 
 import os
-import webbrowser
 from pathlib import Path
 from typing import Any
 
@@ -323,6 +322,7 @@ class StrategyRunner:
             plot_trade_analysis,
             plot_trade_signals,
             resolve_overlays,
+            show_browser,
         )
 
         os.makedirs(results_dir, exist_ok=True)
@@ -349,16 +349,8 @@ class StrategyRunner:
 
         print(f"\n  Results saved to {results_dir}/")
 
-        # Open key plots in browser
-        self._open_html(f"{results_dir}/portfolio_{label}.html")
-        self._open_html(f"{results_dir}/trade_signals_{label}.html")
-
-    # -- Browser helpers -----------------------------------------------------
-
-    @staticmethod
-    def _open_html(path: str) -> None:
-        """Open an HTML file in the default browser."""
-        webbrowser.open(f"file://{os.path.abspath(path)}")
+        # Show key plots in browser
+        show_browser(fig)
 
     # -----------------------------------------------------------------------
     # Private helpers
@@ -686,16 +678,22 @@ class StrategyRunner:
         """Save plots and summary to *results_dir*."""
         from framework.plotting import (
             build_trade_report,
+            plot_cv_stability,
             plot_monthly_heatmap,
+            plot_partial_dependence,
             plot_portfolio_summary,
+            plot_rolling_sharpe,
             plot_trade_analysis,
             plot_trade_signals,
+            plot_train_vs_test,
             resolve_overlays,
+            show_browser,
         )
 
         name = self.spec.name
 
-        # Per-split plots
+        # Per-split plots — keep references for browser display
+        fig_portfolio: dict[str, Any] = {}
         for label, pf, raw, ind in [
             ("train", pf_train, raw_train, ind_train),
             ("test", pf_test, raw_test, ind_test),
@@ -703,6 +701,7 @@ class StrategyRunner:
             # Portfolio summary (enhanced with trade_pnl)
             fig = plot_portfolio_summary(pf, f"{name} — {label.title()}")
             fig.write_html(f"{results_dir}/portfolio_{label}.html")
+            fig_portfolio[label] = fig
 
             # Monthly heatmap
             fig_m = plot_monthly_heatmap(
@@ -724,6 +723,7 @@ class StrategyRunner:
 
         # CV heatmap (pick first two sweep params for axes)
         sweep_keys = list(self.spec.sweep_grid().keys())
+        fig_cv = None
         if len(sweep_keys) >= 2:
             try:
                 fig_cv = grid_perf.vbt.heatmap(
@@ -733,7 +733,33 @@ class StrategyRunner:
                 )
                 fig_cv.write_html(f"{results_dir}/cv_heatmap.html")
             except Exception:
-                pass  # heatmap may fail with >2 sweep dims
+                fig_cv = None
+
+        # CV stability
+        fig_stab = plot_cv_stability(grid_perf, f"{name} — CV Stability")
+        fig_stab.write_html(f"{results_dir}/cv_stability.html")
+
+        # Parameter sensitivity
+        train_mask = grid_perf.index.get_level_values("set").isin(
+            ["train", "set_0", 0]
+        )
+        fig_pd = plot_partial_dependence(
+            grid_perf[train_mask],
+            self.spec.sweep_grid(),
+            f"{name} — Parameter Sensitivity",
+        )
+        fig_pd.write_html(f"{results_dir}/partial_dependence.html")
+
+        # Train vs Test
+        fig_tvt = plot_train_vs_test(grid_perf, f"{name} — Overfitting Check")
+        fig_tvt.write_html(f"{results_dir}/train_vs_test.html")
+
+        # Rolling Sharpe for train and test
+        for lbl, pf_set in [("train", pf_train), ("test", pf_test)]:
+            fig_rs = plot_rolling_sharpe(
+                pf_set, title=f"{name} — {lbl.title()} Rolling Sharpe"
+            )
+            fig_rs.write_html(f"{results_dir}/rolling_sharpe_{lbl}.html")
 
         # Text summary (enhanced with trade stats)
         summary_path = f"{results_dir}/summary.txt"
@@ -753,13 +779,13 @@ class StrategyRunner:
 
         print(f"\n  Results saved to {results_dir}/")
 
-        # Open key plots in browser
-        self._open_html(f"{results_dir}/portfolio_train.html")
-        self._open_html(f"{results_dir}/portfolio_test.html")
-        if len(sweep_keys) >= 2:
-            cv_path = f"{results_dir}/cv_heatmap.html"
-            if os.path.exists(cv_path):
-                self._open_html(cv_path)
+        # Show key analysis plots in browser
+        show_browser(fig_portfolio["train"])
+        show_browser(fig_portfolio["test"])
+        if fig_cv is not None:
+            show_browser(fig_cv)
+        show_browser(fig_stab)
+        show_browser(fig_tvt)
 
 
 # ---------------------------------------------------------------------------
