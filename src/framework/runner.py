@@ -325,6 +325,9 @@ class StrategyRunner:
             show_browser,
         )
 
+        if prepared is None:
+            prepared = self._run_prepare(self.raw, self.data)
+
         os.makedirs(results_dir, exist_ok=True)
         name = self.spec.name
 
@@ -795,7 +798,7 @@ class StrategyRunner:
 
 def run_strategy(
     spec: StrategySpec,
-    data_path: str = "data/EUR-USD.parquet",
+    data_path: str = "data/EUR-USD-minute.parquet",
     shift_hours: int = 0,
     mode: str = "full",
     **kwargs: Any,

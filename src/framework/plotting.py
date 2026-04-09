@@ -129,14 +129,11 @@ def plot_portfolio_summary(
     height: int = 1000,
 ) -> go.Figure:
     """Composite VBT subplot figure with cumulative returns, drawdowns,
-    underwater, and trade P&L. Automatically windows to ~1 week for minute data."""
-    sim_start = _infer_sim_start(pf.wrapper.index)
-    plot_kwargs: dict[str, Any] = {
-        "subplots": ["cumulative_returns", "drawdowns", "underwater", "trade_pnl"],
-    }
-    if sim_start is not None:
-        plot_kwargs["sim_start"] = sim_start
-    fig = pf.plot(**plot_kwargs)
+    underwater, and trade P&L. Resamples to daily for fast rendering."""
+    pf_daily = pf.resample("1D")
+    fig = pf_daily.plot(
+        subplots=["cumulative_returns", "drawdowns", "underwater", "trade_pnl"],
+    )
     fig.update_layout(title=title, height=height)
     return fig
 
