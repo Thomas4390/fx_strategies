@@ -51,9 +51,20 @@ class StrategyRunner:
         Returns ``(portfolio, indicator_result)``.
         """
         params = self._resolve_params(overrides)
-        ind = self._run_indicator(self.raw, self.index_ns, params)
-        pf = self._run_portfolio(self.raw, self.index_ns, ind, params)
+        prepared = self._run_prepare(self.raw, self.data)
+        ind = self._run_indicator(self.raw, self.index_ns, params, prepared=prepared)
+        pf = self._run_portfolio(self.raw, self.index_ns, ind, params, prepared=prepared)
         return pf, ind
+
+    def _run_prepare(
+        self,
+        raw: pd.DataFrame,
+        data: vbt.Data | None,
+    ) -> dict[str, Any]:
+        """Run prepare_fn if defined, return pre-computed arrays."""
+        if self.spec.prepare_fn is None:
+            return {}
+        return self.spec.prepare_fn(raw, data)
 
     # -- Cross-validation ---------------------------------------------------
 
@@ -91,9 +102,12 @@ class StrategyRunner:
                 ns_split = vbt.dt.to_ns(raw_split.index)
 
                 # Run ALL combos at once — VBT broadcasts params to columns
-                ind = self._run_indicator(raw_split, ns_split, params, parallel=True)
+                prepared_split = self._run_prepare(raw_split, None)
+                ind = self._run_indicator(
+                    raw_split, ns_split, params, parallel=True, prepared=prepared_split
+                )
                 pf = self._run_portfolio(
-                    raw_split, ns_split, ind, params, parallel=True
+                    raw_split, ns_split, ind, params, parallel=True, prepared=prepared_split
                 )
 
                 metric_val = getattr(pf, metric)
@@ -299,6 +313,7 @@ class StrategyRunner:
         ind: Any,
         results_dir: str,
         label: str = "backtest",
+        prepared: dict[str, Any] | None = None,
     ) -> None:
         """Save plots for a single backtest run."""
         from framework.plotting import (
@@ -321,7 +336,7 @@ class StrategyRunner:
         )
         fig_m.write_html(f"{results_dir}/monthly_{label}.html")
 
-        overlays = resolve_overlays(self.spec, self.raw, ind)
+        overlays = resolve_overlays(self.spec, self.raw, ind, prepared)
         fig_ts = plot_trade_signals(pf, f"{name} — {label.title()} Signals", overlays)
         fig_ts.write_html(f"{results_dir}/trade_signals_{label}.html")
 
@@ -362,8 +377,11 @@ class StrategyRunner:
         params: dict[str, Any],
         *,
         parallel: bool = True,
+        prepared: dict[str, Any] | None = None,
     ) -> Any:
         """Build ``vbt.IF``, run it, return the indicator result."""
+        if prepared is None:
+            prepared = {}
         ispec = self.spec.indicator
 
         # Collect indicator-level params (those declared in param_names)
@@ -387,7 +405,7 @@ class StrategyRunner:
         )
 
         # Build input kwargs from input_names -> raw columns
-        input_kwargs = self._build_input_kwargs(raw, index_ns, ispec.input_names)
+        input_kwargs = self._build_input_kwargs(raw, index_ns, ispec.input_names, prepared)
 
         run_kwargs: dict[str, Any] = {
             **input_kwargs,
@@ -409,8 +427,11 @@ class StrategyRunner:
         params: dict[str, Any],
         *,
         parallel: bool = True,
+        prepared: dict[str, Any] | None = None,
     ) -> vbt.Portfolio:
         """Resolve signal mapping and call ``Portfolio.from_signals``."""
+        if prepared is None:
+            prepared = {}
         pcfg = self.spec.portfolio_config
 
         # Build signal_args tuple and broadcast_named_args dict
@@ -429,6 +450,7 @@ class StrategyRunner:
                     index_ns,
                     ind_result,
                     params,
+                    prepared,
                 )
 
         # Detect multi-column mode from indicator output width
@@ -523,8 +545,11 @@ class StrategyRunner:
         index_ns: np.ndarray,
         ind_result: Any,
         params: dict[str, Any],
+        prepared: dict[str, Any] | None = None,
     ) -> Any:
         """Resolve a ``signal_args_map`` source reference to a concrete value."""
+        if prepared is None:
+            prepared = {}
         prefix, _, name = source.partition(".")
         if prefix == "data":
             return raw[name]
@@ -536,6 +561,8 @@ class StrategyRunner:
             raise ValueError(f"Unknown extra source: {name}")
         if prefix == "param":
             return params[name]
+        if prefix == "pre":
+            return prepared[name]
         raise ValueError(f"Unknown source prefix: {prefix!r} in {source!r}")
 
     @staticmethod
@@ -561,10 +588,16 @@ class StrategyRunner:
         raw: pd.DataFrame,
         index_ns: np.ndarray,
         input_names: tuple[str, ...],
+        prepared: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Map ``IndicatorSpec.input_names`` to concrete data arrays."""
+        if prepared is None:
+            prepared = {}
         kwargs: dict[str, Any] = {}
         for name in input_names:
+            if name in prepared:
+                kwargs[name] = prepared[name]
+                continue
             mapped = DEFAULT_INPUT_MAP.get(name)
             if mapped == "__index_ns__":
                 kwargs[name] = index_ns
@@ -681,7 +714,8 @@ class StrategyRunner:
             fig_m.write_html(f"{results_dir}/monthly_{label}.html")
 
             # Trade signals with indicator overlays
-            overlays = resolve_overlays(self.spec, raw, ind)
+            prepared_set = self._run_prepare(raw, None)
+            overlays = resolve_overlays(self.spec, raw, ind, prepared_set)
             fig_ts = plot_trade_signals(
                 pf, f"{name} — {label.title()} Signals", overlays
             )
@@ -760,7 +794,8 @@ def run_strategy(
     if mode == "backtest":
         pf, ind = runner.backtest(**kwargs)
         results_dir = str(_PROJECT_ROOT / "results" / spec.indicator.short_name)
-        runner.save_backtest_plots(pf, ind, results_dir)
+        prepared = runner._run_prepare(raw, data)
+        runner.save_backtest_plots(pf, ind, results_dir, prepared=prepared)
         return pf, ind
     if mode == "full":
         return runner.full_pipeline(**kwargs)

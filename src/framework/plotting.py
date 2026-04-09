@@ -231,11 +231,15 @@ def resolve_overlays(
     spec: Any,  # StrategySpec (avoid circular import)
     raw: pd.DataFrame,
     ind_result: Any,
+    prepared: dict[str, Any] | None = None,
 ) -> dict[str, tuple[pd.Series, str | None, str | None]]:
     """Resolve ``PlotConfig.overlays`` into ``{label: (series, color, dash)}``.
 
-    Uses the same ``"ind.<name>"`` / ``"data.<col>"`` convention as ``signal_args_map``.
+    Uses the same ``"ind.<name>"`` / ``"data.<col>"`` / ``"pre.<name>"``
+    convention as ``signal_args_map``.
     """
+    if prepared is None:
+        prepared = {}
     result = {}
     for overlay in spec.plot_config.overlays:
         prefix, _, name = overlay.source.partition(".")
@@ -243,6 +247,8 @@ def resolve_overlays(
             values = getattr(ind_result, name).values
         elif prefix == "data":
             values = raw[name].values
+        elif prefix == "pre":
+            values = prepared[name]
         else:
             continue
         series = pd.Series(values, index=raw.index, name=overlay.label)
