@@ -1,4 +1,7 @@
-"""Kalman Trend Following: Kalman Filter + EMA Crossover + VWAP Confirmation."""
+"""Kalman Trend Following: Kalman Filter + EMA Crossover + VWAP Confirmation.
+
+Native VBT VWAP via prepare_fn.
+"""
 
 import numpy as np
 import vectorbtpro as vbt
@@ -12,7 +15,6 @@ from framework.spec import (
     PortfolioConfig,
     StrategySpec,
 )
-from utils import find_day_boundaries_nb
 
 # ═══════════════════════════════════════════════════════════════════════
 # NUMBA KERNELS
@@ -82,17 +84,13 @@ def kalman_filter_1d_nb(
 
 @njit(nogil=True)
 def compute_intraday_kalman_indicators_nb(
-    index_ns: np.ndarray,
-    high: np.ndarray,
-    low: np.ndarray,
     close: np.ndarray,
-    open_: np.ndarray,
-    volume: np.ndarray,
     process_var: float,
     measurement_var: float,
     ema_fast: int,
     ema_slow: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Kalman filter + EMA crossover indicators (VWAP pre-computed)."""
     kf_price, kf_velocity = kalman_filter_1d_nb(close, process_var, measurement_var)
 
     ema_fast_line = vbt.generic.nb.ewm_mean_1d_nb(
@@ -102,11 +100,7 @@ def compute_intraday_kalman_indicators_nb(
         kf_price, ema_slow, minp=1, adjust=True
     )
 
-    start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
-    group_lens = end_arr[:n_days] - start_arr[:n_days]
-    vwap = vbt.indicators.nb.vwap_1d_nb(high, low, close, volume, group_lens)
-
-    return kf_price, kf_velocity, ema_fast_line, ema_slow_line, vwap
+    return kf_price, kf_velocity, ema_fast_line, ema_slow_line
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -177,6 +171,19 @@ def intraday_kalman_signal_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# PREPARE FUNCTION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def prepare_kalman(raw, data):
+    """Pre-compute session-anchored VWAP via native VBT."""
+    vwap_ind = vbt.VWAP.run(
+        raw["high"], raw["low"], raw["close"], raw["volume"], anchor="D"
+    )
+    return {"vwap": vwap_ind.vwap.values}
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # STRATEGY SPECIFICATION
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -185,21 +192,13 @@ spec = StrategySpec(
     indicator=IndicatorSpec(
         class_name="IntradayKalman",
         short_name="ikt",
-        input_names=(
-            "index_ns",
-            "high_minute",
-            "low_minute",
-            "close_minute",
-            "open_minute",
-            "volume_minute",
-        ),
+        input_names=("close_minute",),
         param_names=("process_var", "measurement_var", "ema_fast", "ema_slow"),
         output_names=(
             "kalman_price",
             "kalman_velocity",
             "ema_fast_line",
             "ema_slow_line",
-            "vwap",
         ),
         kernel_func=compute_intraday_kalman_indicators_nb,
     ),
@@ -209,7 +208,7 @@ spec = StrategySpec(
         ("ema_fast_arr", "ind.ema_fast_line"),
         ("ema_slow_arr", "ind.ema_slow_line"),
         ("velocity_arr", "ind.kalman_velocity"),
-        ("vwap_arr", "ind.vwap"),
+        ("vwap_arr", "pre.vwap"),
         ("index_arr", "extra.index_ns"),
         ("eod_hour", "param.eod_hour"),
         ("eod_minute", "param.eod_minute"),
@@ -228,17 +227,10 @@ spec = StrategySpec(
             OverlayLine("ind.kalman_price", "Kalman Price", color="#2196F3"),
             OverlayLine("ind.ema_fast_line", "EMA Fast", color="#4CAF50", dash="dash"),
             OverlayLine("ind.ema_slow_line", "EMA Slow", color="#FF5722", dash="dash"),
-            OverlayLine("ind.vwap", "VWAP", color="#9C27B0", dash="dot"),
+            OverlayLine("pre.vwap", "VWAP", color="#9C27B0", dash="dot"),
         ),
     ),
-    takeable_args=(
-        "high_arr",
-        "low_arr",
-        "close_arr",
-        "open_arr",
-        "volume_arr",
-        "idx_ns",
-    ),
+    prepare_fn=prepare_kalman,
 )
 
 

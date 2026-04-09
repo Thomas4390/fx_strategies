@@ -1,4 +1,7 @@
-"""Donchian Channel Breakout: Rolling Max/Min Channels + VWAP Confirmation."""
+"""Donchian Channel Breakout: Rolling Max/Min Channels + VWAP Confirmation.
+
+Native VBT VWAP via prepare_fn.
+"""
 
 import numpy as np
 import vectorbtpro as vbt
@@ -12,7 +15,6 @@ from framework.spec import (
     PortfolioConfig,
     StrategySpec,
 )
-from utils import find_day_boundaries_nb
 
 # ═══════════════════════════════════════════════════════════════════════
 # INDICATOR KERNEL
@@ -21,16 +23,12 @@ from utils import find_day_boundaries_nb
 
 @njit(nogil=True)
 def compute_intraday_donchian_nb(
-    index_ns: np.ndarray,
     high: np.ndarray,
     low: np.ndarray,
-    close: np.ndarray,
-    open_: np.ndarray,
-    volume: np.ndarray,
     entry_period: int,
     exit_period: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    # Lagged rolling max/min via VBT native functions
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Lagged rolling Donchian channels for entry and exit."""
     upper = vbt.generic.nb.fshift_1d_nb(
         vbt.generic.nb.rolling_max_1d_nb(high, entry_period, minp=entry_period), 1
     )
@@ -44,11 +42,7 @@ def compute_intraday_donchian_nb(
         vbt.generic.nb.rolling_min_1d_nb(low, exit_period, minp=exit_period), 1
     )
 
-    start_arr, end_arr, n_days = find_day_boundaries_nb(index_ns)
-    group_lens = end_arr[:n_days] - start_arr[:n_days]
-    vwap = vbt.indicators.nb.vwap_1d_nb(high, low, close, volume, group_lens)
-
-    return upper, lower, exit_upper, exit_lower, vwap
+    return upper, lower, exit_upper, exit_lower
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -115,6 +109,19 @@ def intraday_donchian_signal_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# PREPARE FUNCTION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def prepare_donchian(raw, data):
+    """Pre-compute session-anchored VWAP via native VBT."""
+    vwap_ind = vbt.VWAP.run(
+        raw["high"], raw["low"], raw["close"], raw["volume"], anchor="D"
+    )
+    return {"vwap": vwap_ind.vwap.values}
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # STRATEGY SPECIFICATION
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -124,12 +131,8 @@ spec = StrategySpec(
         class_name="IntradayDonchian",
         short_name="idb",
         input_names=(
-            "index_ns",
             "high_minute",
             "low_minute",
-            "close_minute",
-            "open_minute",
-            "volume_minute",
         ),
         param_names=("entry_period", "exit_period"),
         output_names=(
@@ -137,7 +140,6 @@ spec = StrategySpec(
             "lower_channel",
             "exit_upper",
             "exit_lower",
-            "vwap",
         ),
         kernel_func=compute_intraday_donchian_nb,
     ),
@@ -148,7 +150,7 @@ spec = StrategySpec(
         ("lower_arr", "ind.lower_channel"),
         ("exit_upper_arr", "ind.exit_upper"),
         ("exit_lower_arr", "ind.exit_lower"),
-        ("vwap_arr", "ind.vwap"),
+        ("vwap_arr", "pre.vwap"),
         ("index_arr", "extra.index_ns"),
         ("eod_hour", "param.eod_hour"),
         ("eod_minute", "param.eod_minute"),
@@ -166,17 +168,10 @@ spec = StrategySpec(
             OverlayLine("ind.lower_channel", "Lower Channel", color="#F44336"),
             OverlayLine("ind.exit_upper", "Exit Upper", color="#4CAF50", dash="dot"),
             OverlayLine("ind.exit_lower", "Exit Lower", color="#F44336", dash="dot"),
-            OverlayLine("ind.vwap", "VWAP", color="#9C27B0", dash="dash"),
+            OverlayLine("pre.vwap", "VWAP", color="#9C27B0", dash="dash"),
         ),
     ),
-    takeable_args=(
-        "high_arr",
-        "low_arr",
-        "close_arr",
-        "open_arr",
-        "volume_arr",
-        "idx_ns",
-    ),
+    prepare_fn=prepare_donchian,
 )
 
 
