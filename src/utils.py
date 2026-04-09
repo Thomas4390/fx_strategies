@@ -112,9 +112,14 @@ def load_fx_data(
     raw = df.copy()
     raw.columns = [c.lower() for c in raw.columns]
 
+    # Add dummy volume if missing (FX data has no volume)
+    if "volume" not in raw.columns:
+        raw["volume"] = 1.0
+
     # VBT Data wrapper with capitalized columns for native functions
-    df.columns = [c.capitalize() for c in df.columns]
-    data = vbt.Data.from_data({symbol: df}, tz_localize=False, tz_convert=False)
+    df_cap = raw.copy()
+    df_cap.columns = [c.capitalize() for c in df_cap.columns]
+    data = vbt.Data.from_data({symbol: df_cap}, tz_localize=False, tz_convert=False)
     return raw, data
 
 
