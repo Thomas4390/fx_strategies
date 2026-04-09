@@ -511,6 +511,26 @@ def compute_intraday_bands_nb(
 
 
 @njit(nogil=True)
+def compute_mr_bands_nb(
+    index_ns: np.ndarray,
+    close: np.ndarray,
+    vwap: np.ndarray,
+    lookback: int,
+    band_width: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Session-resetting Bollinger bands around pre-computed VWAP.
+
+    Returns (zscore, upper_band, lower_band).
+    """
+    deviation = compute_deviation_nb(close, vwap)
+    zscore = compute_intraday_zscore_nb(index_ns, deviation, lookback)
+    upper, lower = compute_intraday_bands_nb(
+        index_ns, vwap, deviation, lookback, band_width
+    )
+    return zscore, upper, lower
+
+
+@njit(nogil=True)
 def compute_adx_regime_nb(
     index_ns: np.ndarray,
     high: np.ndarray,
@@ -553,6 +573,46 @@ def compute_mr_base_indicators_nb(
         index_ns, high, low, close, open_, adx_period, adx_threshold
     )
     return twap, zscore, upper_band, lower_band, regime_ok
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# NATIVE VBT PREPARE FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def prepare_mr(
+    raw: pd.DataFrame,
+    data: vbt.Data | None,
+    adx_period: int = 14,
+    adx_threshold: float = 30.0,
+) -> dict[str, np.ndarray]:
+    """Pre-compute VWAP (native) and ADX regime filter (native talib).
+
+    Works with both full vbt.Data and raw-only (CV splits where data=None).
+    """
+    # Native VWAP — session-anchored, resets daily
+    vwap_ind = vbt.VWAP.run(
+        raw["high"], raw["low"], raw["close"], raw["volume"], anchor="D"
+    )
+    vwap = vwap_ind.vwap.values
+
+    # Native ADX on daily timeframe with anti-look-ahead realignment.
+    # Always build a temporary Data from raw to guarantee shape alignment
+    # (data may span the full dataset while raw is a CV/holdout slice).
+    df_cap = raw.copy()
+    df_cap.columns = [c.capitalize() for c in df_cap.columns]
+    temp_data = vbt.Data.from_data(
+        {"tmp": df_cap}, tz_localize=False, tz_convert=False
+    )
+    adx_result = temp_data.run("talib:ADX", timeframe="1D", timeperiod=adx_period)
+    adx_values = adx_result.real.values
+
+    # Regime filter: 1.0 = MR allowed (low ADX), 0.0 = trending
+    regime_ok = np.where(
+        np.isnan(adx_values) | (adx_values < adx_threshold), 1.0, 0.0
+    )
+
+    return {"vwap": vwap, "regime_ok": regime_ok}
 
 
 # ═══════════════════════════════════════════════════════════════════════
