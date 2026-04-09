@@ -466,9 +466,9 @@ class StrategyRunner:
                         broadcast_named_args[key] = np.tile(arr[:, None], n_cols)
 
         # Resolve portfolio-level params
-        leverage = self._resolve_portfolio_ref(pcfg.leverage, ind_result, params)
-        sl_stop = self._resolve_portfolio_ref(pcfg.sl_stop, ind_result, params)
-        tp_stop = self._resolve_portfolio_ref(pcfg.tp_stop, ind_result, params)
+        leverage = self._resolve_portfolio_ref(pcfg.leverage, ind_result, params, prepared)
+        sl_stop = self._resolve_portfolio_ref(pcfg.sl_stop, ind_result, params, prepared)
+        tp_stop = self._resolve_portfolio_ref(pcfg.tp_stop, ind_result, params, prepared)
 
         # Broadcast close (and OHLC) to match indicator column count
         close_val = raw["close"]
@@ -562,6 +562,7 @@ class StrategyRunner:
         value: Any,
         ind_result: Any,
         params: dict[str, Any],
+        prepared: dict[str, Any] | None = None,
     ) -> Any:
         """Resolve a ``PortfolioConfig`` field that may be a string reference."""
         if not isinstance(value, str):
@@ -571,6 +572,10 @@ class StrategyRunner:
             return getattr(ind_result, name).values
         if prefix == "param":
             return params[name]
+        if prefix == "pre":
+            if prepared is None:
+                raise ValueError(f"Portfolio ref {value!r} requires prepared dict")
+            return prepared[name]
         raise ValueError(f"Unknown portfolio ref: {value!r}")
 
     # -- Input wiring -------------------------------------------------------
