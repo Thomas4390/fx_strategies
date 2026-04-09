@@ -81,7 +81,7 @@ class StrategyRunner:
 
         Runs ALL parameter combinations at once per split via VBT native
         broadcasting, enabling true multicore parallelization through
-        ``jitted={"parallel": True}`` and ``chunked="threadpool"``.
+        ``chunked="threadpool"``.
 
         Returns ``(grid_perf, best_perf)`` — the full grid and best-per-split.
         """
@@ -497,11 +497,8 @@ class StrategyRunner:
             "freq": pcfg.freq,
         }
 
-        if parallel:
-            # Numba prange parallelization across columns
-            pf_kwargs["jitted"] = {"parallel": True}
-            # Note: chunked="threadpool" breaks broadcast_named_args slicing
-            # with signal_func_nb — prange alone handles multi-column parallelism
+        if parallel and n_cols > 1:
+            pf_kwargs["chunked"] = "threadpool"
 
         # Pass OHLC if available (needed for stop-loss simulation)
         for col in ("open", "high", "low"):
