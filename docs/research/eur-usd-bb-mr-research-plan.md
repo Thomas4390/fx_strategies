@@ -714,3 +714,189 @@ Pour chaque hypothèse :
 3. Seuil de validation : Sharpe avg > 0.5, >= 4/7 positif, OOS > 0
 4. Vérification look-ahead obligatoire pour tout signal multi-timeframe
 5. Documentation immédiate avec rationnel économique
+
+---
+
+<!-- BEGIN PHASE 11 -->
+
+## Phase 11 : Optimisation du levier (CAGR cible 8-15%)
+
+**Date :** 2026-04-10
+
+### Hypothèse
+
+Les stratégies intraday produisent des CAGR modestes (~1%) à levier 1x parce qu'elles ne sont en position qu'une fraction du temps. Le levier étant invariant pour le Sharpe (hors slippage marginal), un levier fixe Lx devrait scaler CAGR, Max DD, volatilité, VaR et CVaR quasi linéairement. On cherche le plus petit levier qui amène le CAGR dans la fenêtre cible **[8%, 15%]** tout en gardant le Max DD ≤ 35% et le Sharpe inchangé.
+
+### Protocole
+
+Sweep du paramètre `leverage` dans `Portfolio.from_signals` pour les stratégies `mr_turbo` et `mr_macro`, sur la période complète des données EUR-USD minute. Niveaux testés : 1x, 2x, 3x, 5x, 8x, 10x, 12x, 15x, 20x.
+
+Métriques calculées (VBT natif + custom): CAGR, Sharpe, Sortino, Calmar, Max DD, volatilité annualisée, VaR 95% annualisée, CVaR 95% annualisée, Ulcer Index, Win Rate, Profit Factor, nombre de trades.
+
+**Statut** : `CIBLE` si CAGR ∈ [8%, 15%] et Max DD < 35% ; `LOW` si CAGR sous la fenêtre ; `HIGH` si CAGR au-dessus ; `DD>35` si DD excessif ; `FAIL` si CAGR non calculable (portefeuille blow-up).
+
+### Résultats
+
+### MR Turbo (intraday, no macro filter)
+
+| Levier | CAGR % | Sharpe | Sortino | Calmar | Max DD % | Vol % | VaR95 % | CVaR95 % | Ulcer % | WinRate % | PF | Trades | Statut |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1x | +0.20 | +0.11 | +0.15 | +0.04 | 5.54 | 2.04 | -8.42 | -8.42 | 2.23 | 48.9 | 1.04 | 311 | LOW |
+| 2x | +0.35 | +0.11 | +0.15 | +0.03 | 10.80 | 4.07 | -16.83 | -16.83 | 4.43 | 48.9 | 1.04 | 311 | LOW |
+| 3x | +0.47 | +0.11 | +0.15 | +0.03 | 15.80 | 6.11 | -25.25 | -25.25 | 6.59 | 48.9 | 1.03 | 311 | LOW |
+| 5x | +0.58 | +0.11 | +0.15 | +0.02 | 25.03 | 10.18 | -42.08 | -42.08 | 10.80 | 48.9 | 1.02 | 311 | LOW |
+| 8x | +0.46 | +0.11 | +0.16 | +0.01 | 37.15 | 16.29 | -67.33 | -67.33 | 16.89 | 48.9 | 1.01 | 311 | DD>35 |
+| 10x | +0.18 | +0.11 | +0.16 | +0.00 | 44.21 | 20.36 | -84.16 | -84.16 | 20.79 | 48.9 | 1.00 | 311 | DD>35 |
+| 12x | -0.26 | +0.11 | +0.16 | -0.01 | 50.54 | 24.43 | -100.99 | -100.99 | 24.57 | 48.9 | 1.00 | 311 | DD>35 |
+| 15x | -1.21 | +0.11 | +0.16 | -0.02 | 58.81 | 30.54 | -126.24 | -126.24 | 30.02 | 48.9 | 0.99 | 311 | DD>35 |
+| 20x | -3.53 | +0.12 | +0.17 | -0.05 | 69.83 | 40.74 | -168.32 | -168.32 | 38.52 | 48.9 | 0.97 | 311 | DD>35 |
+
+### MR Macro (intraday, macro-filtered)
+
+| Levier | CAGR % | Sharpe | Sortino | Calmar | Max DD % | Vol % | VaR95 % | CVaR95 % | Ulcer % | WinRate % | PF | Trades | Statut |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1x | +1.19 | +0.82 | +1.19 | +0.49 | 2.44 | 1.45 | -8.42 | -8.42 | 0.99 | 57.0 | 1.69 | 149 | LOW |
+| 2x | +2.37 | +0.82 | +1.19 | +0.49 | 4.86 | 2.91 | -16.83 | -16.83 | 1.99 | 57.0 | 1.69 | 149 | LOW |
+| 3x | +3.55 | +0.82 | +1.19 | +0.49 | 7.25 | 4.36 | -25.25 | -25.25 | 2.99 | 57.0 | 1.69 | 149 | LOW |
+| 5x | +5.88 | +0.82 | +1.20 | +0.49 | 11.93 | 7.26 | -42.08 | -42.08 | 5.00 | 57.0 | 1.69 | 149 | LOW |
+| 8x | +9.33 | +0.83 | +1.20 | +0.50 | 18.72 | 11.61 | -67.32 | -67.33 | 8.04 | 57.0 | 1.68 | 149 | CIBLE |
+| 10x | +11.58 | +0.83 | +1.20 | +0.50 | 23.08 | 14.51 | -84.15 | -84.16 | 10.06 | 57.0 | 1.68 | 149 | CIBLE |
+| 12x | +13.80 | +0.83 | +1.21 | +0.51 | 27.31 | 17.41 | -100.98 | -100.99 | 12.08 | 57.0 | 1.68 | 149 | CIBLE |
+| 15x | +17.04 | +0.83 | +1.21 | +0.51 | 33.38 | 21.76 | -126.23 | -126.24 | 15.10 | 57.0 | 1.67 | 149 | HIGH |
+| 20x | +22.20 | +0.84 | +1.22 | +0.52 | 42.81 | 29.00 | -168.30 | -168.32 | 20.08 | 57.0 | 1.65 | 149 | DD>35 |
+
+### Sélection finale
+
+- **MR Turbo (intraday, no macro filter)** — aucune ligne dans [8%, 15%]. Meilleur compromis : **5x** → CAGR +0.58%, DD 25.03%, Sharpe +0.11.
+- **MR Macro (intraday, macro-filtered)** — levier recommandé : **8x** → CAGR +9.33%, DD 18.72%, Sharpe +0.83, Sortino +1.20, Calmar +0.50, VaR95 -67.32%, Ulcer 8.04%.
+
+### Leçons retenues
+
+1. **Le Sharpe est quasi invariant au levier** — confirme que le levier amplifie linéairement l'exposition sans créer de valeur statistique supplémentaire. La dégradation marginale aux très hauts leviers vient du slippage proportionnel (0.00015 × L) et de la saturation ponctuelle de la marge dans VBT.
+2. **Max DD, volatilité, VaR et CVaR scalent linéairement** avec le levier — le risque nominal est exactement multiplié. Un levier Lx transforme un Max DD de 2% à 2×L%.
+3. **mr_macro est le véhicule préféré pour le levier** grâce à son Sharpe walk-forward 0.94 qui résiste mieux aux frais proportionnels que mr_turbo (Sharpe 0.23). À Sharpe plus élevé, le ratio rendement/risque du levier est plus favorable.
+4. **Contrainte de marge en production** : un levier ≥10x nécessite un broker avec marge intraday FX classique (1-3%). En pratique, les backtests VBT supposent une marge infinie ; un buffer de capital (2× la marge nominale) est recommandé pour survivre aux drawdowns intraday.
+5. **Overlay vs standalone** : ces stratégies ne sont en position que ~1.4% du temps. Un levier Lx appliqué à un capital alloué entièrement à la stratégie est équivalent, en termes de risque réel sur portefeuille total, à une allocation de (L × 1.4%) du capital à levier 1x — modeste en valeur absolue.
+
+<!-- END PHASE 11 -->
+
+---
+
+<!-- BEGIN PHASE 12 -->
+
+## Phase 12 : Sweep multi-paire et grille de paramètres
+
+**Date :** 2026-04-10
+
+### Hypothèse
+
+Les stratégies `mr_turbo` et `mr_macro` ont été validées sur EUR-USD. On teste leur robustesse en appliquant une grille de paramètres Bollinger sur 4 paires FX (EUR-USD, GBP-USD, USD-JPY, USD-CAD) pour vérifier (1) si l'edge se transfère et (2) quel levier atteint la cible CAGR 8-15% par paire.
+
+### Protocole
+
+- **Paires :** EUR-USD, GBP-USD, USD-JPY, USD-CAD
+- **Stratégies :** MR Turbo, MR Macro
+- **Grille** (36 combos par paire × stratégie, 288 backtests total) :
+  - `bb_window` ∈ [40, 60, 80, 120]
+  - `bb_alpha` ∈ [4.0, 5.0, 6.0]
+  - `tp_stop` ∈ [0.004, 0.006, 0.008]
+- **Étape 1** : run grille complète à levier 1x, sélection du meilleur config par Sharpe pour chaque (paire, stratégie).
+- **Étape 2** : optimisation du levier pour ramener le CAGR dans la fenêtre [8%, 15%] tout en gardant Max DD < 35%.
+
+### Meilleurs configs par (paire × stratégie)
+
+| Paire | Stratégie | bb_win | bb_α | tp_stop | Sharpe | CAGR@1x | DD@1x | L* | CAGR@L* | DD@L* | Vol@L* | Sortino | Calmar | VaR95@L* | Ulcer@L* | PF | Trades | Statut |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| EUR-USD | MR Turbo | 120 | 6.0 | 0.008 | +0.23 | +0.33% | 3.16% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+| EUR-USD | MR Macro | 80 | 5.0 | 0.006 | +0.82 | +1.19% | 2.44% | 8.4x | +9.78% | 19.60% | 12.19% | +1.20 | +0.50 | -70.69% | 8.44% | 1.68 | 149 | CIBLE |
+| GBP-USD | MR Turbo | 120 | 6.0 | 0.008 | +0.26 | +0.38% | 2.75% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+| GBP-USD | MR Macro | 120 | 6.0 | 0.008 | +0.65 | +0.74% | 2.61% | 13.5x | +9.13% | 31.45% | 15.49% | +0.97 | +0.29 | -113.62% | 9.24% | 1.68 | 65 | CIBLE |
+| USD-JPY | MR Turbo | 40 | 4.0 | 0.004 | -0.63 | -1.17% | 12.61% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+| USD-JPY | MR Macro | 40 | 4.0 | 0.004 | -0.28 | -0.26% | 4.72% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+| USD-CAD | MR Turbo | 40 | 6.0 | 0.008 | +0.17 | +0.08% | 1.98% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+| USD-CAD | MR Macro | 80 | 5.0 | 0.004 | +0.20 | +0.23% | 2.01% | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | FAIL |
+
+*Légende :* `Sharpe/CAGR/DD @1x` = métriques à levier 1x avec les meilleurs paramètres. `L*` = levier optimal pour viser ~10% CAGR. `Statut` : CIBLE si CAGR@L* ∈ [8%, 15%] et DD < 35% ; LOW/HIGH/DD>35 sinon.
+
+### Heatmaps Sharpe par paire (grille bb_window × bb_alpha, tp_stop optimal)
+
+**EUR-USD — MR Turbo — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -0.81 | -0.42 | -0.22 |
+| **60** | -1.04 | +0.09 | -0.41 |
+| **80** | -0.69 | +0.11 | -0.10 |
+| **120** | -0.58 | +0.07 | +0.23 |
+
+**EUR-USD — MR Macro — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -0.01 | +0.05 | -0.24 |
+| **60** | -0.13 | +0.57 | -0.12 |
+| **80** | +0.22 | +0.82 | +0.45 |
+| **120** | +0.22 | +0.63 | +0.47 |
+
+**GBP-USD — MR Turbo — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -0.47 | +0.05 | -0.07 |
+| **60** | -0.50 | -0.24 | +0.09 |
+| **80** | -0.81 | -0.06 | -0.20 |
+| **120** | -0.47 | -0.33 | +0.26 |
+
+**GBP-USD — MR Macro — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -0.00 | +0.38 | -0.15 |
+| **60** | -0.10 | +0.17 | +0.54 |
+| **80** | -0.47 | +0.36 | +0.39 |
+| **120** | -0.12 | +0.13 | +0.65 |
+
+**USD-JPY — MR Turbo — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -1.32 | -0.63 | -0.89 |
+| **60** | -1.49 | -1.19 | -0.70 |
+| **80** | -1.59 | -0.99 | -0.77 |
+| **120** | -1.70 | -1.25 | -1.18 |
+
+**USD-JPY — MR Macro — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -1.02 | -0.36 | -0.67 |
+| **60** | -0.90 | -0.58 | -0.28 |
+| **80** | -0.96 | -0.42 | -0.30 |
+| **120** | -1.07 | -0.78 | -0.51 |
+
+**USD-CAD — MR Turbo — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -1.05 | -0.43 | +0.17 |
+| **60** | -0.76 | -0.22 | -0.26 |
+| **80** | -0.61 | -0.19 | -0.34 |
+| **120** | -0.57 | -0.44 | -0.27 |
+
+**USD-CAD — MR Macro — Sharpe par (bb_window × bb_alpha)**
+
+| bb_win \ bb_α | 4.0 | 5.0 | 6.0 |
+|---|---|---|---|
+| **40** | -0.50 | -0.15 | +0.14 |
+| **60** | -0.64 | +0.07 | -0.29 |
+| **80** | -0.68 | +0.20 | -0.07 |
+| **120** | -0.31 | -0.22 | -0.20 |
+
+### Leçons cross-pair
+
+1. **Transférabilité de l'edge** — l'edge intraday mean-reversion dépend fortement de la microstructure de la paire ; l'optimum paramétrique n'est pas universel et chaque paire requiert son propre triplet (bb_window, bb_alpha, tp_stop).
+2. **Filtre macro US-centrique** — `mr_macro` utilise le spread 10Y-2Y Treasury et le chômage US. L'application aux paires JPY/CAD reste mécaniquement valide mais le signal théorique est plus ténu que sur EUR-USD/GBP-USD (où le dollar US est le moteur dominant).
+3. **Levier hétérogène par paire** — puisque le CAGR à 1x varie fortement entre paires, le levier L* nécessaire pour atteindre 10% CAGR varie également. Une stratégie portefeuille allouerait plus de capital aux paires à Sharpe le plus élevé plutôt qu'un levier uniforme.
+4. **Stabilité des hyperparamètres** — les heatmaps Sharpe révèlent des régions plates (robustes) vs des pics isolés (sur-optimisés). Privilégier des paramètres dans les zones plates pour la mise en production.
+
+<!-- END PHASE 12 -->

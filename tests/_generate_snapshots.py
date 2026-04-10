@@ -56,7 +56,28 @@ SNAPSHOT_CASES: list[tuple[str, str, str, str, dict[str, Any]]] = [
         "backtest_mr_turbo",
         dict(bb_window=120, bb_alpha=6.0, sl_stop=0.005, tp_stop=0.008),
     ),
-    # ── Phase 2: mr_macro (populated when Phase 2 starts) ────────────
+    # ── Phase 2: mr_macro ───────────────────────────────────────────
+    (
+        "mr_macro",
+        "default",
+        "strategies.mr_macro",
+        "backtest_mr_macro",
+        dict(bb_window=80, bb_alpha=5.0, sl_stop=0.005, tp_stop=0.006, spread_threshold=0.5),
+    ),
+    (
+        "mr_macro",
+        "strict_spread",
+        "strategies.mr_macro",
+        "backtest_mr_macro",
+        dict(bb_window=60, bb_alpha=5.0, sl_stop=0.005, tp_stop=0.006, spread_threshold=0.3),
+    ),
+    (
+        "mr_macro",
+        "loose_bands",
+        "strategies.mr_macro",
+        "backtest_mr_macro",
+        dict(bb_window=120, bb_alpha=6.0, sl_stop=0.005, tp_stop=0.008, spread_threshold=0.5),
+    ),
     # ── Phase 3: rsi_daily ───────────────────────────────────────────
     # ── Phase 4: daily_momentum ──────────────────────────────────────
     # ── Phase 5: ou_mean_reversion ───────────────────────────────────

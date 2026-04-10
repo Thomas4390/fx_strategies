@@ -133,6 +133,35 @@ def test_mr_turbo_pipeline_equivalent(label, params, fx_data):
     assert_stats_equivalent(snapshot["stats"], pf.stats())
 
 
+MR_MACRO_CASES = [
+    (
+        "default",
+        dict(bb_window=80, bb_alpha=5.0, sl_stop=0.005, tp_stop=0.006, spread_threshold=0.5),
+    ),
+    (
+        "strict_spread",
+        dict(bb_window=60, bb_alpha=5.0, sl_stop=0.005, tp_stop=0.006, spread_threshold=0.3),
+    ),
+    (
+        "loose_bands",
+        dict(bb_window=120, bb_alpha=6.0, sl_stop=0.005, tp_stop=0.008, spread_threshold=0.5),
+    ),
+]
+
+
+@pytest.mark.parametrize("label,params", MR_MACRO_CASES, ids=[c[0] for c in MR_MACRO_CASES])
+def test_mr_macro_pipeline_equivalent(label, params, fx_data):
+    """pipeline(data, **params) must match the legacy backtest_mr_macro snapshot."""
+    import importlib
+
+    strategies_mr_macro = importlib.import_module("strategies.mr_macro")
+    pipeline = strategies_mr_macro.pipeline
+
+    snapshot = _load_snapshot(_snapshot_path("mr_macro", label))
+    pf, _ = pipeline(fx_data, **params)
+    assert_stats_equivalent(snapshot["stats"], pf.stats())
+
+
 def test_helper_roundtrip(tmp_path):
     """Sanity: dict → JSON → compare against the same pf.stats() passes."""
     stats = pd.Series(
