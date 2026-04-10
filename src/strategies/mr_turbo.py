@@ -39,14 +39,14 @@ from framework.spec import (
 
 def backtest_mr_turbo(
     data: vbt.Data,
-    bb_window: int = 60,
+    bb_window: int = 80,
     bb_alpha: float = 5.0,
     sl_stop: float = 0.005,
     tp_stop: float = 0.006,
     session_start: int = 6,
     session_end: int = 14,
     dt_stop: str = "21:00",
-    td_stop: str = "4h",
+    td_stop: str = "6h",
     init_cash: float = 1_000_000,
     slippage: float = 0.00015,
 ) -> vbt.Portfolio:

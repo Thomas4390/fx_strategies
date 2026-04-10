@@ -43,12 +43,12 @@ def load_macro_filters(
         data_dir = _PROJECT_ROOT / "data"
 
     # Yield spread (daily)
-    spread_df = pd.read_parquet(data_dir / "SPREAD_10Y2Y-daily.parquet")
+    spread_df = pd.read_parquet(data_dir / "SPREAD_10Y2Y_daily.parquet")
     spread_df["date"] = pd.to_datetime(spread_df["date"])
     spread = spread_df.set_index("date")["spread_10y2y"]
 
     # Unemployment (monthly)
-    unemp_df = pd.read_parquet(data_dir / "UNEMPLOYMENT-monthly.parquet")
+    unemp_df = pd.read_parquet(data_dir / "UNEMPLOYMENT_monthly.parquet")
     unemp_df["date"] = pd.to_datetime(unemp_df["date"])
     unemp = unemp_df.set_index("date")["unemployment"]
     unemp_rising = unemp.diff(3) > 0  # 3-month change
@@ -72,15 +72,15 @@ def load_macro_filters(
 
 def backtest_mr_macro(
     data: vbt.Data,
-    bb_window: int = 60,
+    bb_window: int = 80,
     bb_alpha: float = 5.0,
     sl_stop: float = 0.005,
     tp_stop: float = 0.006,
     session_start: int = 6,
     session_end: int = 14,
-    spread_threshold: float = 0.3,
+    spread_threshold: float = 0.5,
     dt_stop: str = "21:00",
-    td_stop: str = "4h",
+    td_stop: str = "6h",
     init_cash: float = 1_000_000,
     slippage: float = 0.00015,
 ) -> vbt.Portfolio:
