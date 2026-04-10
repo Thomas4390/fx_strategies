@@ -252,20 +252,89 @@ La session 6-14 reste la plus conservative mais toutes les sessions sont profita
 
 ---
 
-## Phase 4 : Portefeuille Multi-Pair — **INVALIDEE**
+## Phase 4 : Multi-Pair MR + Macro (signal 1min validé)
 
-> Les résultats de cette phase étaient basés sur le 1H BB invalidé (look-ahead).
-> Le portefeuille multi-pair utilisant le signal 1min + macro est encore à tester.
+| Paire | Sharpe | Pos/7 | OOS 2025 | Trades |
+|-------|--------|-------|----------|--------|
+| **EUR-USD** | **0.94** | **4/7** | **0.77** | 130 |
+| GBP-USD | 0.39 | 4/7 | -0.15 | 101 |
+| USD-CAD | 0.29 | 4/7 | -0.27 | 94 |
+| USD-JPY | -0.27 | 2/7 | 0.39 | 172 |
+
+**Sans macro filter :** toutes les paires sont proches de zéro ou négatives.
+
+**Conclusion :** Le macro filter (US yield curve + unemployment) fonctionne faiblement sur GBP-USD et USD-CAD car ces paires impliquent le USD. USD-JPY est négatif, probablement car la dynamique JPY est dominée par la BOJ/taux japonais, pas par les indicateurs US.
+
+**Rationnel économique :** Le yield spread et le chômage US capturent le cycle de politique monétaire de la Fed. Cela crée un régime favorable au MR pour toutes les paires impliquant le USD, mais l'effet est le plus fort sur EUR-USD (la paire la plus liquide et la plus sensible aux différentiels de taux US-Europe).
 
 ---
 
-## Phase 5 : Validation de Robustesse — **PARTIELLEMENT INVALIDEE**
+## Phase 6 : Exploration Large Multi-Stratégie
 
-### 5A. Monte Carlo Bootstrap — **INVALIDE** (basé sur 1H BB)
+### 6A. Multi-TF BB safe (.shift(1))
 
-> Le bootstrap était basé sur les trades du 1H BB invalidé. Non applicable.
+Après correction du look-ahead (`.shift(1)` sur les bandes resamplees), TOUTES les configs multi-TF sont négatives :
 
-**P(Sharpe > 0) = 100%, P(Sharpe > 1) = 100%, P(Sharpe > 2) = 100%.**
+| Config | Sharpe | Trades |
+|--------|--------|--------|
+| 15min BB(16,5) + macro | -0.22 | 232 |
+| 5min BB(24,4) + macro | -0.23 | 572 |
+| 1h BB(6,4) + macro | -0.56 | 644 |
+| 1h BB(4,3) + macro | -0.62 | 1234 |
+
+**Conclusion : REJETÉ.** Le signal multi-TF n'a AUCUN pouvoir prédictif une fois le look-ahead corrigé. La VWAP mean reversion ne fonctionne qu'à l'échelle de la minute parce que c'est à cette échelle que les ordres institutionnels créent la force de rappel.
+
+### 6B. Keltner Channel sur déviation VWAP
+
+**Hypothèse :** Les bandes ATR (plus robustes aux outliers que le std) capturent mieux les niveaux d'entrée MR.
+
+**Résultat : REJETÉ.** Toutes les configurations (36 combos × 2 filtres) sont massivement négatives (Sharpe -2 à -4). L'ATR mesure la volatilité directionnelle, pas la déviation du VWAP — les bandes Keltner sont mal adaptées au signal MR.
+
+### 6C. Hurst Exponent comme filtre de régime
+
+**Hypothèse :** Le Hurst H < 0.5 identifie les périodes mean-revertantes.
+
+**Résultat : REJETÉ.** Trop peu de trades (0-32 sur 7 ans). EUR-USD est rarement en régime H < 0.5 sur le daily, ce qui élimine presque toutes les opportunités.
+
+### 6D. EMA Crossover Daily + exécution intraday
+
+**Hypothèse :** Un signal trend daily (EMA fast > slow) capte la direction, et l'exécution à des dips VWAP optimise le timing.
+
+**Résultat : REJETÉ.** Toutes les configs négatives (Sharpe -1.3 à -1.7). Le trend following intraday sur FX génère trop de faux signaux. Le marché FX est dominé par le bruit à l'échelle intraday.
+
+### 6E. SuperTrend Daily
+
+**Résultat : REJETÉ.** 0 trades — le signal de changement de direction quotidien se produit à minuit UTC, hors session de trading. Le SuperTrend est plus adapté aux marchés actions avec sessions fixes.
+
+### 6F. ADX Breakout
+
+**Hypothèse :** Entrer dans la direction du DI quand l'ADX confirme un trend fort.
+
+**Résultat : PARTIELLEMENT POSITIF mais non significatif.**
+- ADX(10,30) : Sharpe 0.22, **5/7 positif**, mais seulement 18 trades sur 7 ans.
+- L'ADX > 30 ne se produit que quelques fois par an sur le daily FX.
+- Trop peu de trades pour une conclusion statistique fiable.
+
+### 6G. Cross-Sectional Momentum
+
+**Résultat : NON CONCLUANT.** 0 trades en raison de problèmes d'alignement signal/session. La stratégie nécessite une implémentation plus sophistiquée avec entrée quotidienne au lieu de conditionnelle.
+
+### Synthèse Phase 6
+
+**Sur 8+ familles de stratégies testées, seul le BB MR + macro filter est profitable.**
+
+| Famille | Meilleur Sharpe | Verdict |
+|---------|----------------|---------|
+| BB MR 1min + macro | 0.94 | **SEUL VIABLE** |
+| Multi-TF BB (safe) | -0.22 | Rejeté |
+| Keltner Channel | -2.30 | Rejeté |
+| Hurst regime filter | 0.17 | Rejeté (trop peu trades) |
+| EMA Cross daily | -1.34 | Rejeté |
+| SuperTrend daily | 0.00 | Rejeté (0 trades) |
+| ADX Breakout | 0.22 | Non significatif (18 trades) |
+| Cross-sectional mom | 0.00 | Non concluant |
+
+**Le FX intraday minute est un marché exceptionnellement difficile.** L'alpha est rare et ne provient ni du trend following, ni des oscillateurs, ni du multi-timeframe (une fois le look-ahead corrigé). La seule source d'alpha trouvée est la combinaison VWAP MR + filtrage macro.
 
 Le 5ème percentile du Sharpe (2.72) est largement supérieur à zéro. Cela confirme que l'alpha n'est pas un artefact statistique.
 
@@ -295,32 +364,46 @@ Le 5ème percentile du Sharpe (2.72) est largement supérieur à zéro. Cela con
 - [ ] Le Sharpe est-il < 2 (seuil de plausibilité pour FX intraday) ?
 - [ ] La stratégie sans filtre donne-t-elle des résultats raisonnables ?
 
-### Ce qui n'a pas fonctionné
+### Ce qui n'a pas fonctionné (inventaire complet)
 
-- **Multi-TF BB (1H, 15min, 5min)** — INVALIDE (look-ahead bias)
+**Phase 1 — Macro alternatives (100+ configs) :**
 - Seuils dynamiques (rolling percentile) — perd la signification économique
 - Score composite z-scoré — détruit les seuils absolus
-- Clustering K-means — trop lâche, pas optimisé pour la stratégie
-- Lead/lag macro — le signal est meilleur en temps réel
-- RSI/Stoch confirmation — tue les trades sur toutes les timeframes
+- Clustering K-means — trop lâche, non-supervisé
+- Lead/lag macro — signal meilleur en temps réel
+
+**Phase 2 — Signal alternatives :**
+- Multi-TF BB (1H, 15min, 5min) — look-ahead bias, puis négatif après correction
+- RSI/Stoch confirmation (toutes TF) — tue les trades
 - Filtre de vélocité — pas d'amélioration
 
-### Risques et limitations de la stratégie validée
+**Phase 6 — Familles de stratégies (8 familles) :**
+- Keltner Channel (36 combos) — massivement négatif (-2 à -4)
+- Hurst regime filter — trop peu de trades (EUR-USD rarement H<0.5)
+- EMA Cross daily + intraday — négatif (-1.3 à -1.7)
+- SuperTrend daily — 0 trades (signal incompatible avec session)
+- ADX Breakout — marginal (18 trades, non significatif)
+- Cross-sectional momentum — non concluant (implémentation à revoir)
+- Opening range breakout — non concluant (implémentation à revoir)
 
-1. **Sharpe modeste (~1.0)** pour une stratégie avec ~130 trades/7 ans. L'edge est petit mais réel.
-2. **Dépendance au régime macro :** le filtre spread+chômage peut ne pas capturer le prochain régime favorable.
-3. **Faible nb de trades :** ~18/an, rendant les statistiques fragiles.
-4. **Pas de multi-pair validé :** seul EUR-USD fonctionne avec le signal 1min + macro.
+### Risques et limitations
+
+1. **Sharpe modeste (~1.0)** pour une stratégie avec ~130 trades/7 ans. L'edge est petit.
+2. **Dépendance au régime macro :** le filtre spread+chômage peut ne pas capturer le prochain régime.
+3. **Faible nb de trades :** ~18/an, statistiques fragiles.
+4. **Multi-pair limité :** GBP-USD (0.39) et USD-CAD (0.29) faiblement positifs, USD-JPY négatif.
+5. **Unicité de l'alpha :** sur 200+ configurations testées, une seule famille fonctionne. Cela suggère un alpha fragile mais réel.
 
 ---
 
 ## Prochaines étapes
 
-1. **Monte Carlo bootstrap sur stratégie 1min validée** — intervalle de confiance
-2. **Multi-pair avec signal 1min + macro pair-spécifique** — tester d'autres paires
-3. **Implémentation QuantConnect** — stratégie 1min + macro + VWAP anchor
-4. **Slippage sensitivity sur stratégie validée** — confirmer marge de sécurité
-5. **Exploration multi-TF CORRECTE** — utiliser `.shift(1)` sur les bandes resamplees
+1. **Implémentation QuantConnect** — déployer la stratégie validée (1min BB + macro + VWAP anchor)
+2. **Paper trading** — comparer exécution réelle vs backtest
+3. **Portefeuille EUR+GBP+CAD** — combiner les 3 paires positives avec weights proportionnels au Sharpe
+4. **Slippage sensitivity** — confirmer marge de sécurité sur stratégie validée
+5. **Macro-filter pair-spécifique** — chercher des variables macro pertinentes pour GBP et CAD (BOE rate, pétrole WTI)
+6. **Opening Range Breakout** — réimplémenter correctement (bug dans la version actuelle)
 
 ## Protocole de test utilisé
 
