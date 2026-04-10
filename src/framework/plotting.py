@@ -426,3 +426,332 @@ def resolve_overlays(
         series = pd.Series(values, index=raw.index, name=overlay.label)
         result[overlay.label] = (series, overlay.color, overlay.dash)
     return result
+
+
+# ===================================================================
+# QUANTSTATS HTML TEARSHEET
+# ===================================================================
+
+
+def generate_html_tearsheet(
+    pf: vbt.Portfolio,
+    output_path: str = "results/tearsheet.html",
+    title: str = "Strategy Tearsheet",
+) -> str | None:
+    """Generate a full QuantStats HTML tearsheet.
+
+    Returns the output path on success, None on failure.
+    """
+    try:
+        pf_daily = pf.resample("1D")
+        pf_daily.qs.html_report(
+            output=output_path,
+            title=title,
+            periods_per_year=252,
+        )
+        print(f"  Tearsheet saved to: {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"  Tearsheet generation failed: {e}")
+        return None
+
+
+# ===================================================================
+# RETURNS DISTRIBUTION ANALYTICS
+# ===================================================================
+
+
+def plot_returns_distribution(
+    pf: vbt.Portfolio,
+    title: str = "Returns Distribution",
+    height: int = 800,
+) -> go.Figure:
+    """3-panel returns analysis: histogram, QQ plot, monthly boxplot."""
+    pf_daily = pf.resample("1D")
+    daily_rets = pf_daily.returns.dropna()
+
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=(
+            "Daily Returns Histogram",
+            "Monthly Returns Boxplot",
+            "Cumulative Returns",
+            "Returns ECDF",
+        ),
+    )
+
+    # Histogram
+    fig.add_trace(
+        go.Histogram(
+            x=daily_rets.values, nbinsx=80,
+            name="Daily Returns", marker_color="#636EFA",
+        ),
+        row=1, col=1,
+    )
+
+    # Monthly boxplot
+    mo_rets = pf_daily.resample("ME").returns
+    months = mo_rets.index.month
+    month_names = [
+        calendar.month_abbr[m] for m in range(1, 13)
+    ]
+    for m in range(1, 13):
+        m_data = mo_rets[months == m].values
+        if len(m_data) > 0:
+            fig.add_trace(
+                go.Box(
+                    y=m_data, name=calendar.month_abbr[m],
+                    marker_color="#636EFA", showlegend=False,
+                ),
+                row=1, col=2,
+            )
+
+    # Cumulative returns
+    cum_rets = (1 + daily_rets).cumprod() - 1
+    fig.add_trace(
+        go.Scatter(
+            x=cum_rets.index, y=cum_rets.values,
+            mode="lines", name="Cumulative",
+            line=dict(color="#00CC96"),
+        ),
+        row=2, col=1,
+    )
+
+    # ECDF
+    sorted_rets = np.sort(daily_rets.values)
+    ecdf_y = np.arange(1, len(sorted_rets) + 1) / len(sorted_rets)
+    fig.add_trace(
+        go.Scatter(
+            x=sorted_rets, y=ecdf_y,
+            mode="lines", name="ECDF",
+            line=dict(color="#EF553B"),
+        ),
+        row=2, col=2,
+    )
+
+    fig.update_layout(title=title, height=height, showlegend=False)
+    return fig
+
+
+# ===================================================================
+# EXTENDED STATS (text output)
+# ===================================================================
+
+
+def print_extended_stats(pf: vbt.Portfolio, name: str = "Strategy") -> None:
+    """Print comprehensive stats: portfolio, returns, trades, drawdowns."""
+    print(f"\n{'=' * 60}")
+    print(f"  {name} — Extended Statistics")
+    print(f"{'=' * 60}")
+
+    print(f"\n--- Portfolio Stats ---")
+    print(pf.stats().to_string())
+
+    print(f"\n--- Returns Stats ---")
+    print(pf.returns_stats().to_string())
+
+    if pf.trades.count() > 0:
+        print(f"\n--- Trade Stats ---")
+        print(pf.trades.stats().to_string())
+
+        # Additional trade metrics
+        trades = pf.trades
+        pnls = trades.pnl.values
+        print(f"\n--- Trade Distribution ---")
+        print(f"  Mean PnL: {pnls.mean():.2f}")
+        print(f"  Median PnL: {np.median(pnls):.2f}")
+        print(f"  Skew: {pd.Series(pnls).skew():.3f}")
+        print(f"  Kurtosis: {pd.Series(pnls).kurtosis():.3f}")
+
+        durations = trades.duration.values
+        dur_hours = durations.astype("timedelta64[m]").astype(float) / 60
+        print(f"  Avg duration: {dur_hours.mean():.1f}h")
+        print(f"  Median duration: {np.median(dur_hours):.1f}h")
+
+    try:
+        dd = pf.drawdowns
+        if dd.count() > 0:
+            print(f"\n--- Drawdown Stats ---")
+            print(dd.stats().to_string())
+    except Exception:
+        pass
+
+
+# ===================================================================
+# TRADE DURATION ANALYSIS
+# ===================================================================
+
+
+def plot_trade_duration(
+    pf: vbt.Portfolio,
+    title: str = "Trade Duration Analysis",
+    height: int = 600,
+) -> go.Figure:
+    """Scatter PnL vs duration + duration histogram."""
+    trades = pf.trades
+    if trades.count() == 0:
+        fig = go.Figure()
+        fig.add_annotation(text="No trades", showarrow=False)
+        return fig
+
+    pnls = trades.pnl.values
+    durations = trades.duration.values
+    dur_hours = durations.astype("timedelta64[m]").astype(float) / 60
+    is_win = pnls > 0
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=("PnL vs Duration", "Duration Distribution"),
+    )
+
+    # Scatter PnL vs duration (wins green, losses red)
+    fig.add_trace(
+        go.Scatter(
+            x=dur_hours[is_win], y=pnls[is_win],
+            mode="markers", name="Winners",
+            marker=dict(color="#00CC96", size=6),
+        ),
+        row=1, col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=dur_hours[~is_win], y=pnls[~is_win],
+            mode="markers", name="Losers",
+            marker=dict(color="#EF553B", size=6),
+        ),
+        row=1, col=1,
+    )
+
+    # Duration histogram
+    fig.add_trace(
+        go.Histogram(
+            x=dur_hours, nbinsx=30,
+            name="Duration", marker_color="#636EFA",
+        ),
+        row=1, col=2,
+    )
+
+    fig.update_xaxes(title_text="Duration (hours)", row=1, col=1)
+    fig.update_xaxes(title_text="Duration (hours)", row=1, col=2)
+    fig.update_yaxes(title_text="PnL ($)", row=1, col=1)
+    fig.update_layout(title=title, height=height)
+    return fig
+
+
+# ===================================================================
+# DRAWDOWN ANALYSIS
+# ===================================================================
+
+
+def plot_drawdown_analysis(
+    pf: vbt.Portfolio,
+    title: str = "Drawdown Analysis",
+    top_n: int = 5,
+    height: int = 600,
+) -> go.Figure:
+    """Underwater plot with top N drawdowns highlighted."""
+    pf_daily = pf.resample("1D")
+    try:
+        fig = pf_daily.plot(subplots=["drawdowns", "underwater"])
+        fig.update_layout(title=title, height=height)
+        return fig
+    except Exception:
+        # Fallback: manual underwater plot
+        rets = pf_daily.returns
+        cum = (1 + rets).cumprod()
+        dd = cum / cum.cummax() - 1
+        fig = go.Figure(
+            go.Scatter(
+                x=dd.index, y=dd.values,
+                fill="tozeroy", mode="lines",
+                line=dict(color="#EF553B"),
+                name="Drawdown",
+            )
+        )
+        fig.update_layout(title=title, height=height // 2)
+        return fig
+
+
+# ===================================================================
+# MULTI-STRATEGY COMPARISON
+# ===================================================================
+
+
+def plot_multi_strategy_equity(
+    portfolios: dict[str, vbt.Portfolio],
+    title: str = "Strategy Comparison — Equity Curves",
+    height: int = 500,
+    normalize: bool = True,
+) -> go.Figure:
+    """Overlay equity curves from multiple portfolios.
+
+    If normalize=True, all curves start at 1.0 for fair comparison.
+    """
+    colors = [
+        "#636EFA", "#EF553B", "#00CC96", "#AB63FA",
+        "#FFA15A", "#19D3F3", "#FF6692", "#B6E880",
+    ]
+    fig = go.Figure()
+
+    for i, (name, pf) in enumerate(portfolios.items()):
+        pf_daily = pf.resample("1D")
+        values = pf_daily.value
+        if normalize:
+            values = values / values.iloc[0]
+        fig.add_trace(
+            go.Scatter(
+                x=values.index, y=values.values,
+                mode="lines", name=name,
+                line=dict(color=colors[i % len(colors)], width=2),
+            )
+        )
+
+    fig.update_layout(
+        title=title, height=height,
+        yaxis_title="Normalized Value" if normalize else "Portfolio Value",
+        hovermode="x unified",
+    )
+    return fig
+
+
+# ===================================================================
+# FULL REPORT GENERATOR
+# ===================================================================
+
+
+def generate_full_report(
+    pf: vbt.Portfolio,
+    name: str = "Strategy",
+    output_dir: str = "results",
+) -> None:
+    """Generate all analytics: text stats, plots, and HTML tearsheet.
+
+    Saves HTML tearsheet to output_dir/ and shows plots in browser.
+    """
+    import os
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 1. Extended text stats
+    print_extended_stats(pf, name)
+
+    # 2. HTML tearsheet
+    tearsheet_path = os.path.join(output_dir, f"{name}_tearsheet.html")
+    generate_html_tearsheet(pf, tearsheet_path, name)
+
+    # 3. Plots
+    plots = [
+        (plot_portfolio_summary, f"{name} — Portfolio Summary"),
+        (plot_monthly_heatmap, f"{name} — Monthly Returns"),
+        (plot_returns_distribution, f"{name} — Returns Distribution"),
+        (plot_trade_analysis, f"{name} — Trade Analysis"),
+        (plot_trade_duration, f"{name} — Trade Duration"),
+        (plot_drawdown_analysis, f"{name} — Drawdown Analysis"),
+        (plot_rolling_sharpe, f"{name} — Rolling Sharpe"),
+    ]
+
+    for plot_fn, plot_title in plots:
+        try:
+            fig = plot_fn(pf, title=plot_title)
+            show_browser(fig)
+        except Exception as e:
+            print(f"  Plot '{plot_title}' failed: {e}")
