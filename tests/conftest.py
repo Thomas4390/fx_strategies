@@ -9,7 +9,7 @@ def raw_and_data():
     """Load 1 week of EUR-USD data for all tests."""
     from utils import load_fx_data
 
-    raw, data = load_fx_data("data/EUR-USD-minute.parquet")
+    raw, data = load_fx_data("data/EUR-USD_minute.parquet")
     # Last ~5 trading days
     raw_mini = raw.iloc[-6300:].copy()
     return raw_mini, data

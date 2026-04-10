@@ -803,7 +803,7 @@ class StrategyRunner:
 
 def run_strategy(
     spec: StrategySpec,
-    data_path: str = "data/EUR-USD-minute.parquet",
+    data_path: str = "data/EUR-USD_minute.parquet",
     shift_hours: int = 0,
     mode: str = "full",
     **kwargs: Any,

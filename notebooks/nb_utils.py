@@ -69,7 +69,7 @@ def apply_vbt_settings() -> None:
 
 
 def load_fx_data(
-    path: str = "data/EUR-USD-minute.parquet",
+    path: str = "data/EUR-USD_minute.parquet",
     shift_hours: int = 0,
 ) -> tuple[pd.DataFrame, vbt.Data]:
     """Load EUR-USD parquet and return (raw DataFrame, vbt.Data wrapper).
