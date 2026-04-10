@@ -354,6 +354,20 @@ spec = StrategySpec(
 
 
 if __name__ == "__main__":
+    import argparse
+    import sys
+    from pathlib import Path as _Path
+
+    # Allow direct execution: `python src/strategies/composite_fx_alpha.py`
+    _SRC = _Path(__file__).resolve().parent.parent
+    if str(_SRC) not in sys.path:
+        sys.path.insert(0, str(_SRC))
+
     from framework.runner import run_strategy
 
-    run_strategy(spec, mode="full")
+    ap = argparse.ArgumentParser(description="Composite FX Alpha (daily)")
+    ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
+    ap.add_argument("--mode", default="full", choices=["backtest", "full"])
+    args = ap.parse_args()
+
+    run_strategy(spec, data_path=args.data, mode=args.mode)

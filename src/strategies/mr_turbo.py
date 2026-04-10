@@ -49,6 +49,7 @@ def backtest_mr_turbo(
     td_stop: str = "6h",
     init_cash: float = 1_000_000,
     slippage: float = 0.00015,
+    leverage: float = 1.0,
 ) -> vbt.Portfolio:
     """Run MR Turbo backtest using 100% VBT native functions.
 
@@ -85,7 +86,98 @@ def backtest_mr_turbo(
         td_stop=td_stop,
         slippage=slippage,
         init_cash=init_cash,
+        leverage=leverage,
         freq="1min",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# MULTI-PARAM VARIANT (fully Numba-parallel via VBT native broadcasting)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def backtest_mr_turbo_multi(
+    data: vbt.Data,
+    bb_window: list | int = 80,
+    bb_alpha: list | float = 5.0,
+    sl_stop: float = 0.005,
+    tp_stop: float = 0.006,
+    session_start: int = 6,
+    session_end: int = 14,
+    dt_stop: str = "21:00",
+    td_stop: str = "6h",
+    init_cash: float = 1_000_000,
+    slippage: float = 0.00015,
+    leverage: float = 1.0,
+    param_product: bool = True,
+) -> vbt.Portfolio:
+    """Multi-column MR Turbo — one broadcasted portfolio for the full grid.
+
+    Accepts lists for ``bb_window`` and ``bb_alpha`` and builds a
+    multi-column portfolio via ``vbt.BBANDS.run(..., param_product=True)``
+    + ``Portfolio.from_signals(chunked="threadpool")``. The entire
+    pipeline runs inside Numba kernels in parallel across combinations —
+    no Python loop, no GIL contention.
+
+    This is the preferred path for parameter sweeps / CV sweeps where
+    throughput matters. Returns a multi-column portfolio whose
+    ``sharpe_ratio``, ``annualized_return`` etc. are ``pd.Series``
+    indexed by the parameter combinations.
+    """
+    import numpy as np
+
+    close = data.close
+
+    # Native VWAP — single column (shared across all param combos)
+    vwap = vbt.VWAP.run(data.high, data.low, close, data.volume, anchor="D").vwap
+    deviation = close - vwap
+
+    # Multi-column BBANDS via native param broadcasting
+    bb = vbt.BBANDS.run(
+        deviation,
+        window=bb_window,
+        alpha=bb_alpha,
+        param_product=param_product,
+    )
+    # upper/lower are DataFrames (N_bars × n_combos)
+    upper = vwap.values[:, None] + bb.upper.values
+    lower = vwap.values[:, None] + bb.lower.values
+
+    # Session filter broadcast to match column count
+    hours = close.index.hour.values
+    session_1d = (hours >= session_start) & (hours < session_end)
+    session = np.broadcast_to(session_1d[:, None], upper.shape)
+
+    close_2d = np.broadcast_to(close.values[:, None], upper.shape)
+    entries = pd.DataFrame(
+        (close_2d < lower) & session,
+        index=close.index,
+        columns=bb.upper.columns,
+    )
+    short_entries = pd.DataFrame(
+        (close_2d > upper) & session,
+        index=close.index,
+        columns=bb.upper.columns,
+    )
+
+    # Pass the vbt.Data object so Portfolio.from_signals broadcasts OHLC
+    # to match the multi-column signal shape (essential for correct
+    # intrabar SL/TP evaluation). VBT auto-aligns on entries.columns.
+    return vbt.Portfolio.from_signals(
+        data,
+        entries=entries,
+        exits=False,
+        short_entries=short_entries,
+        short_exits=False,
+        sl_stop=sl_stop,
+        tp_stop=tp_stop,
+        dt_stop=dt_stop,
+        td_stop=td_stop,
+        slippage=slippage,
+        init_cash=init_cash,
+        leverage=leverage,
+        freq="1min",
+        chunked="threadpool",
     )
 
 
@@ -202,42 +294,9 @@ spec = StrategySpec(
 # CLI ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════
 
-if __name__ == "__main__":
-    import time
-    from framework.plotting import (
-        plot_monthly_heatmap,
-        plot_portfolio_summary,
-        plot_rolling_sharpe,
-        plot_trade_analysis,
-        show_browser,
-    )
-    from utils import load_fx_data
-
-    vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
-
-    print("Loading data...")
-    raw, data = load_fx_data()
-
-    # ── Full dataset backtest ──
-    print(f"\n{'=' * 60}")
-    print("MR TURBO — Full Dataset Backtest (native VBT)")
-    print(f"{'=' * 60}")
-
-    t0 = time.time()
-    pf = backtest_mr_turbo(data)
-    t1 = time.time()
-    print(f"Backtest: {t1 - t0:.1f}s")
-    print(pf.stats().to_string())
-
-    if pf.trades.count() > 0:
-        print(f"\nTrades: {pf.trades.count()}")
-        print(pf.trades.stats().to_string())
-
-    # ── Walk-forward validation ──
-    print(f"\n{'=' * 60}")
-    print("Walk-Forward Validation (per-year)")
-    print(f"{'=' * 60}")
-
+def _walk_forward_report(data: vbt.Data) -> None:
+    """Per-year walk-forward diagnostic table."""
+    print(f"\n{'=' * 60}\nWalk-Forward Validation (per-year)\n{'=' * 60}")
     for year in range(2021, 2027):
         d_yr = data.loc[f"{year}-01-01":f"{year}-12-31"]
         if d_yr.shape[0] < 1000:
@@ -249,18 +308,54 @@ if __name__ == "__main__":
         wr = pf_yr.trades.win_rate * 100 if tc > 0 else 0
         print(f"  {year}: Sharpe={sr:>7.3f}  Ret={ret:>6.2f}%  Trades={tc}  WR={wr:.1f}%")
 
-    # ── Plots ──
-    print("\nGenerating plots...")
-    fig_summary = plot_portfolio_summary(pf, "MR Turbo — Full Dataset")
-    show_browser(fig_summary)
 
-    fig_monthly = plot_monthly_heatmap(pf, "MR Turbo — Monthly Returns")
-    show_browser(fig_monthly)
+if __name__ == "__main__":
+    import argparse
+    import sys
+    from pathlib import Path as _Path
 
-    fig_trades = plot_trade_analysis(pf, "MR Turbo — Trade Analysis")
-    show_browser(fig_trades)
+    # Allow running directly: `python src/strategies/mr_turbo.py`
+    _SRC = _Path(__file__).resolve().parent.parent
+    if str(_SRC) not in sys.path:
+        sys.path.insert(0, str(_SRC))
 
-    fig_sharpe = plot_rolling_sharpe(pf, title="MR Turbo — Rolling Sharpe")
-    show_browser(fig_sharpe)
+    from framework.plotting import generate_standalone_report
+    from utils import apply_vbt_settings, load_fx_data
 
-    print("Done.")
+    ap = argparse.ArgumentParser(description="MR Turbo standalone report")
+    ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
+    ap.add_argument("--leverage", type=float, default=1.0,
+                    help="Fixed leverage for the single run")
+    ap.add_argument("--no-grid", action="store_true",
+                    help="Skip parameter grid sweep (faster)")
+    ap.add_argument("--no-show", action="store_true",
+                    help="Do not open plots in the browser")
+    ap.add_argument("--output-dir", default="results/mrt_standalone",
+                    help="Directory for fullscreen HTML plots")
+    args = ap.parse_args()
+
+    apply_vbt_settings()
+    print("Loading data...")
+    raw, data = load_fx_data(args.data)
+
+    # Annual walk-forward diagnostic still printed to console
+    _walk_forward_report(data)
+
+    # Multi-broadcast-native params only (bb_window × bb_alpha) →
+    # fully Numba-parallel via backtest_mr_turbo_multi.
+    param_grid = None if args.no_grid else {
+        "bb_window": [40, 60, 80, 120],
+        "bb_alpha": [3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
+    }
+
+    generate_standalone_report(
+        backtest_fn=backtest_mr_turbo,
+        backtest_multi_fn=backtest_mr_turbo_multi,  # Numba-parallel path
+        data=data,
+        name="MR Turbo",
+        param_grid=param_grid,
+        fixed_params={"leverage": args.leverage},
+        output_dir=args.output_dir,
+        show=not args.no_show,
+    )
+    print("\nDone.")

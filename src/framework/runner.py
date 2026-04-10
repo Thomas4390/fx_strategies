@@ -21,6 +21,75 @@ from framework.spec import DEFAULT_INPUT_MAP, StrategySpec
 # Project root: three levels up from this file (src/framework/runner.py -> project/)
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
+
+# ---------------------------------------------------------------------------
+# CV splitter factory (VBT native)
+# ---------------------------------------------------------------------------
+
+
+def _build_splitter(
+    index: pd.DatetimeIndex,
+    method: str = "walkforward",
+    *,
+    n_folds: int = 15,
+    min_train_folds: int = 3,
+    max_train_folds: int | None = None,
+    purge_td: str = "1 day",
+    n_test_folds: int = 1,
+) -> "vbt.Splitter":
+    """Build a VBT Splitter from a high-level method name.
+
+    Wraps the various ``vbt.Splitter.from_*`` factory methods behind a
+    single interface so callers can switch CV strategies via a string.
+
+    Supported methods
+    -----------------
+    - ``"walkforward"`` — :meth:`vbt.Splitter.from_purged_walkforward`
+      (purged, expanding or rolling window, chronological). The
+      standard for time-series backtests.
+    - ``"kfold"`` — :meth:`vbt.Splitter.from_purged_kfold` (CPCV,
+      combinatorial purged k-fold). Breaks strict chronology but gives
+      more training data per split.
+    - ``"expanding"`` — :meth:`vbt.Splitter.from_n_expanding`.
+      Expanding window, no purge.
+    - ``"rolling"`` — :meth:`vbt.Splitter.from_n_rolling`. Fixed-size
+      rolling window, no purge.
+    """
+    method = method.lower()
+    if method == "walkforward":
+        return vbt.Splitter.from_purged_walkforward(
+            index,
+            n_folds=n_folds,
+            n_test_folds=n_test_folds,
+            min_train_folds=min_train_folds,
+            max_train_folds=max_train_folds,
+            purge_td=purge_td,
+        )
+    if method == "kfold":
+        return vbt.Splitter.from_purged_kfold(
+            index,
+            n_folds=n_folds,
+            n_test_folds=n_test_folds,
+            purge_td=purge_td,
+        )
+    if method == "expanding":
+        return vbt.Splitter.from_n_expanding(
+            index,
+            n=n_folds,
+            set_lens=(n_test_folds / n_folds,),
+        )
+    if method == "rolling":
+        return vbt.Splitter.from_n_rolling(
+            index,
+            n=n_folds,
+            set_lens=(n_test_folds / n_folds,),
+        )
+    raise ValueError(
+        f"Unknown cv_method={method!r}. "
+        "Expected one of: walkforward, kfold, expanding, rolling"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -182,16 +251,68 @@ class StrategyRunner:
         self,
         param_grid: dict[str, list[Any]] | None = None,
         holdout_ratio: float = 0.2,
-        n_folds: int = 10,
+        n_folds: int = 15,
         min_train_folds: int = 3,
-        purge_td: str = "1 hour",
+        max_train_folds: int | None = None,
+        purge_td: str = "1 day",
+        cv_method: str = "walkforward",
         metric: str = "sharpe_ratio",
         results_dir: str | None = None,
     ) -> dict[str, Any]:
         """Complete pipeline: holdout -> CV -> best params -> rerun -> test -> save.
 
-        Returns a dict with keys: ``opt_params``, ``pf_train``, ``pf_test``,
-        ``grid_perf``, ``best_perf``, ``comparison``.
+        Parameters
+        ----------
+        param_grid
+            Mapping of parameter names to lists of candidate values. If
+            ``None``, uses the spec's default ``sweep_grid``.
+        holdout_ratio
+            Fraction of the dataset reserved for the final hold-out test
+            (chronological, no look-ahead). Default 0.2 = last 20%.
+        n_folds
+            Total number of folds for cross-validation. Default 15
+            (upgraded from 10 for more robust OOS estimates).
+        min_train_folds
+            Minimum consecutive folds required for training before
+            each test fold. Default 3.
+        max_train_folds
+            If set, caps the number of training folds per split. This
+            converts an expanding walk-forward into a *rolling* window
+            which makes the CV insensitive to distant history. ``None``
+            (default) uses the full expanding window.
+        purge_td
+            Time delta used for purging samples between train and test
+            to avoid leakage at fold boundaries. Default ``"1 day"``
+            (upgraded from 1 hour — overnight fundamental jumps can
+            leak through a 1-hour purge).
+        cv_method
+            Cross-validation strategy. One of:
+
+            - ``"walkforward"`` (default) — VBT
+              ``Splitter.from_purged_walkforward``: chronological,
+              expanding or rolling window, with purging and embargo.
+              The standard time-series CV.
+            - ``"kfold"`` — VBT ``Splitter.from_purged_kfold``:
+              combinatorial purged k-fold (CPCV). Folds can be
+              non-contiguous, which gives more training data per split
+              but breaks strict chronology.
+            - ``"expanding"`` — VBT ``Splitter.from_expanding``: pure
+              expanding window with one test slice per split, no
+              purge. Fastest, no leakage guarantee beyond the split
+              boundary.
+            - ``"rolling"`` — VBT ``Splitter.from_rolling``: fixed-size
+              rolling window.
+        metric
+            :class:`vbt.Portfolio` attribute to optimise (e.g.
+            ``"sharpe_ratio"``, ``"sortino_ratio"``,
+            ``"annualized_return"``).
+        results_dir
+            Directory for plots / summary.
+
+        Returns
+        -------
+        dict
+            ``{opt_params, pf_train, pf_test, grid_perf, best_perf, comparison}``.
         """
         if param_grid is None:
             param_grid = self.spec.sweep_grid()
@@ -220,13 +341,20 @@ class StrategyRunner:
             f"  Test:  {len(raw_test)} bars ({raw_test.index[0]} -> {raw_test.index[-1]})"
         )
 
-        # -- Walk-forward CV on train ---------------------------------------
-        splitter = vbt.Splitter.from_purged_walkforward(
+        # -- Cross-validation splitter (VBT native) ------------------------
+        splitter = _build_splitter(
             raw_train.index,
+            method=cv_method,
             n_folds=n_folds,
-            n_test_folds=1,
             min_train_folds=min_train_folds,
+            max_train_folds=max_train_folds,
             purge_td=purge_td,
+        )
+        print(
+            f"  CV: method={cv_method!r}, n_folds={n_folds}, "
+            f"purge_td={purge_td!r}, "
+            f"min_train_folds={min_train_folds}"
+            + (f", max_train_folds={max_train_folds}" if max_train_folds else "")
         )
 
         n_combos = 1
@@ -687,14 +815,23 @@ class StrategyRunner:
         from framework.plotting import (
             build_trade_report,
             plot_cv_stability,
+            plot_exposure,
             plot_monthly_heatmap,
+            plot_orders_heatmap,
+            plot_orders_on_price,
+            plot_param_heatmap,
+            plot_param_heatmap_slider,
+            plot_param_surface,
+            plot_param_volume,
             plot_partial_dependence,
             plot_portfolio_summary,
             plot_rolling_sharpe,
             plot_trade_analysis,
             plot_trade_signals,
+            plot_trades_on_price,
             plot_train_vs_test,
             resolve_overlays,
+            save_fullscreen_html,
             show_browser,
         )
 
@@ -708,14 +845,14 @@ class StrategyRunner:
         ]:
             # Portfolio summary (enhanced with trade_pnl)
             fig = plot_portfolio_summary(pf, f"{name} — {label.title()}")
-            fig.write_html(f"{results_dir}/portfolio_{label}.html")
+            save_fullscreen_html(fig, f"{results_dir}/portfolio_{label}.html")
             fig_portfolio[label] = fig
 
             # Monthly heatmap
             fig_m = plot_monthly_heatmap(
                 pf, f"{name} — {label.title()} Monthly Returns (%)"
             )
-            fig_m.write_html(f"{results_dir}/monthly_{label}.html")
+            save_fullscreen_html(fig_m, f"{results_dir}/monthly_{label}.html")
 
             # Trade signals with indicator overlays
             prepared_set = self._run_prepare(raw, None)
@@ -723,29 +860,143 @@ class StrategyRunner:
             fig_ts = plot_trade_signals(
                 pf, f"{name} — {label.title()} Signals", overlays
             )
-            fig_ts.write_html(f"{results_dir}/trade_signals_{label}.html")
+            save_fullscreen_html(
+                fig_ts, f"{results_dir}/trade_signals_{label}.html"
+            )
 
             # Trade analysis grid
             fig_ta = plot_trade_analysis(pf, f"{name} — {label.title()} Trade Analysis")
-            fig_ta.write_html(f"{results_dir}/trade_analysis_{label}.html")
+            save_fullscreen_html(
+                fig_ta, f"{results_dir}/trade_analysis_{label}.html"
+            )
 
-        # CV heatmap (pick first two sweep params for axes)
-        sweep_keys = list(self.spec.sweep_grid().keys())
-        fig_cv = None
-        if len(sweep_keys) >= 2:
+            # NEW: native orders plot on price (VBT Portfolio.orders.plot)
             try:
-                fig_cv = grid_perf.vbt.heatmap(
-                    x_level=sweep_keys[0],
-                    y_level=sweep_keys[1],
-                    slider_level="split",
+                fig_ord = plot_orders_on_price(
+                    pf, f"{name} — {label.title()} Orders on Price"
                 )
-                fig_cv.write_html(f"{results_dir}/cv_heatmap.html")
-            except Exception:
+                save_fullscreen_html(
+                    fig_ord, f"{results_dir}/orders_on_price_{label}.html"
+                )
+            except Exception as e:
+                print(f"  plot_orders_on_price({label}) skipped: {e}")
+
+            # NEW: native trades plot on price (VBT Portfolio.trades.plot)
+            try:
+                fig_trd = plot_trades_on_price(
+                    pf, f"{name} — {label.title()} Trades on Price"
+                )
+                save_fullscreen_html(
+                    fig_trd, f"{results_dir}/trades_on_price_{label}.html"
+                )
+            except Exception as e:
+                print(f"  plot_trades_on_price({label}) skipped: {e}")
+
+            # NEW: gross exposure timeline (verifies leverage behaviour)
+            try:
+                fig_exp = plot_exposure(
+                    pf, f"{name} — {label.title()} Gross Exposure"
+                )
+                save_fullscreen_html(
+                    fig_exp, f"{results_dir}/exposure_{label}.html"
+                )
+            except Exception as e:
+                print(f"  plot_exposure({label}) skipped: {e}")
+
+            # NEW: weekday × hour trade frequency heatmap
+            try:
+                fig_of = plot_orders_heatmap(
+                    pf, f"{name} — {label.title()} Trades by Hour/Weekday"
+                )
+                save_fullscreen_html(
+                    fig_of, f"{results_dir}/orders_frequency_{label}.html"
+                )
+            except Exception as e:
+                print(f"  plot_orders_heatmap({label}) skipped: {e}")
+
+        # ------------------------------------------------------------------
+        # PARAMETER GRID PLOTS: 2D heatmap (static + per-split) and 3D volume
+        # ------------------------------------------------------------------
+        sweep_keys = list(self.spec.sweep_grid().keys())
+        fig_cv: Any = None
+        fig_static: Any = None
+        fig_volume: Any = None
+        fig_surface: Any = None
+
+        if len(sweep_keys) >= 2:
+            x_param, y_param = sweep_keys[0], sweep_keys[1]
+
+            # (a) Per-split heatmap with slider (train only) — native VBT
+            try:
+                fig_cv = plot_param_heatmap_slider(
+                    grid_perf,
+                    x_param=x_param,
+                    y_param=y_param,
+                    slider_level="split",
+                    set_filter="train",
+                    title=f"{name} — Sharpe by ({x_param} × {y_param}) per split",
+                    metric_name="Sharpe",
+                )
+                save_fullscreen_html(fig_cv, f"{results_dir}/cv_heatmap.html")
+            except Exception as e:
+                print(f"  plot_param_heatmap_slider skipped: {e}")
                 fig_cv = None
+
+            # (b) Static heatmap averaged across splits (train)
+            try:
+                train_mask_a = grid_perf.index.get_level_values("set").isin(
+                    ["train", "set_0", 0]
+                )
+                train_grid = grid_perf[train_mask_a].droplevel("set")
+                fig_static = plot_param_heatmap(
+                    train_grid,
+                    x_param=x_param,
+                    y_param=y_param,
+                    title=f"{name} — Sharpe by ({x_param} × {y_param}) static (mean across splits)",
+                    metric_name="Sharpe",
+                    aggregate="mean",
+                )
+                save_fullscreen_html(
+                    fig_static, f"{results_dir}/param_heatmap_static.html"
+                )
+            except Exception as e:
+                print(f"  plot_param_heatmap(static) skipped: {e}")
+
+            # (c) 3D parameter surface (same data, different perspective)
+            try:
+                fig_surface = plot_param_surface(
+                    train_grid,
+                    x_param=x_param,
+                    y_param=y_param,
+                    title=f"{name} — Sharpe surface ({x_param} × {y_param})",
+                    metric_name="Sharpe",
+                )
+                save_fullscreen_html(
+                    fig_surface, f"{results_dir}/param_surface.html"
+                )
+            except Exception as e:
+                print(f"  plot_param_surface skipped: {e}")
+
+            # (d) 3D volume: params × splits (x=param1, y=param2, z=split)
+            try:
+                fig_volume = plot_param_volume(
+                    grid_perf,
+                    x_param=x_param,
+                    y_param=y_param,
+                    z_param="split",
+                    set_filter="train",
+                    title=f"{name} — 3D Sharpe volume ({x_param} × {y_param} × split)",
+                    metric_name="Sharpe",
+                )
+                save_fullscreen_html(
+                    fig_volume, f"{results_dir}/param_volume.html"
+                )
+            except Exception as e:
+                print(f"  plot_param_volume skipped: {e}")
 
         # CV stability
         fig_stab = plot_cv_stability(grid_perf, f"{name} — CV Stability")
-        fig_stab.write_html(f"{results_dir}/cv_stability.html")
+        save_fullscreen_html(fig_stab, f"{results_dir}/cv_stability.html")
 
         # Parameter sensitivity
         train_mask = grid_perf.index.get_level_values("set").isin(
@@ -756,18 +1007,20 @@ class StrategyRunner:
             self.spec.sweep_grid(),
             f"{name} — Parameter Sensitivity",
         )
-        fig_pd.write_html(f"{results_dir}/partial_dependence.html")
+        save_fullscreen_html(fig_pd, f"{results_dir}/partial_dependence.html")
 
         # Train vs Test
         fig_tvt = plot_train_vs_test(grid_perf, f"{name} — Overfitting Check")
-        fig_tvt.write_html(f"{results_dir}/train_vs_test.html")
+        save_fullscreen_html(fig_tvt, f"{results_dir}/train_vs_test.html")
 
         # Rolling Sharpe for train and test
         for lbl, pf_set in [("train", pf_train), ("test", pf_test)]:
             fig_rs = plot_rolling_sharpe(
                 pf_set, title=f"{name} — {lbl.title()} Rolling Sharpe"
             )
-            fig_rs.write_html(f"{results_dir}/rolling_sharpe_{lbl}.html")
+            save_fullscreen_html(
+                fig_rs, f"{results_dir}/rolling_sharpe_{lbl}.html"
+            )
 
         # Text summary (enhanced with trade stats)
         summary_path = f"{results_dir}/summary.txt"
@@ -787,11 +1040,15 @@ class StrategyRunner:
 
         print(f"\n  Results saved to {results_dir}/")
 
-        # Show key analysis plots in browser
+        # Show key analysis plots in browser (fullscreen HTML wrapper)
         show_browser(fig_portfolio["train"])
         show_browser(fig_portfolio["test"])
         if fig_cv is not None:
             show_browser(fig_cv)
+        if fig_static is not None:
+            show_browser(fig_static)
+        if fig_volume is not None:
+            show_browser(fig_volume)
         show_browser(fig_stab)
         show_browser(fig_tvt)
 
