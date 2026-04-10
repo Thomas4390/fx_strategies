@@ -79,6 +79,27 @@ SNAPSHOT_CASES: list[tuple[str, str, str, str, dict[str, Any]]] = [
         dict(bb_window=120, bb_alpha=6.0, sl_stop=0.005, tp_stop=0.008, spread_threshold=0.5),
     ),
     # ── Phase 3: rsi_daily ───────────────────────────────────────────
+    (
+        "rsi_daily",
+        "default",
+        "strategies.rsi_daily",
+        "backtest_rsi_daily",
+        dict(rsi_period=14, oversold=25.0, overbought=75.0),
+    ),
+    (
+        "rsi_daily",
+        "short_period",
+        "strategies.rsi_daily",
+        "backtest_rsi_daily",
+        dict(rsi_period=7, oversold=20.0, overbought=80.0),
+    ),
+    (
+        "rsi_daily",
+        "wide_band",
+        "strategies.rsi_daily",
+        "backtest_rsi_daily",
+        dict(rsi_period=21, oversold=30.0, overbought=70.0),
+    ),
     # ── Phase 4: daily_momentum ──────────────────────────────────────
     # ── Phase 5: ou_mean_reversion ───────────────────────────────────
     # ── Phase 6: composite_fx_alpha ──────────────────────────────────

@@ -1,0 +1,42 @@
+{
+  "strat": "rsi_daily",
+  "label": "short_period",
+  "module": "strategies.rsi_daily",
+  "callable": "backtest_rsi_daily",
+  "params": {
+    "rsi_period": 7,
+    "oversold": 20.0,
+    "overbought": 80.0
+  },
+  "stats": {
+    "Start Index": "2018-01-01 00:00:00",
+    "End Index": "2026-04-01 00:00:00",
+    "Total Duration": "2575 days 00:00:00",
+    "Start Value": 1000000.0,
+    "Min Value": 939970.7942062819,
+    "Max Value": 1090003.5652902175,
+    "End Value": 1082992.7318239908,
+    "Total Return [%]": 8.299273182399082,
+    "Benchmark Return [%]": -3.7994749302056374,
+    "Position Coverage [%]": 22.485436893203882,
+    "Max Gross Exposure [%]": 108.35277601080244,
+    "Max Drawdown [%]": 6.08778241775476,
+    "Max Drawdown Duration": "1286 days 00:00:00",
+    "Total Orders": 102.0,
+    "Total Fees Paid": 0.0,
+    "Total Trades": 51.0,
+    "Win Rate [%]": 64.70588235294117,
+    "Best Trade [%]": 3.216432892254341,
+    "Worst Trade [%]": -3.229838840300874,
+    "Avg Winning Trade [%]": 0.8116604242904144,
+    "Avg Losing Trade [%]": -1.026904592075109,
+    "Avg Winning Trade Duration": "6 days 22:32:43.636363636",
+    "Avg Losing Trade Duration": "19 days 10:39:59.999999999",
+    "Profit Factor": 1.4329992282750277,
+    "Expectancy": 1627.3084671370843,
+    "Sharpe Ratio": 0.2532518094890007,
+    "Calmar Ratio": 0.12866838631806807,
+    "Omega Ratio": 1.0992586145214394,
+    "Sortino Ratio": 0.35795400272550176
+  }
+}

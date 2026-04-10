@@ -162,6 +162,26 @@ def test_mr_macro_pipeline_equivalent(label, params, fx_data):
     assert_stats_equivalent(snapshot["stats"], pf.stats())
 
 
+RSI_DAILY_CASES = [
+    ("default", dict(rsi_period=14, oversold=25.0, overbought=75.0)),
+    ("short_period", dict(rsi_period=7, oversold=20.0, overbought=80.0)),
+    ("wide_band", dict(rsi_period=21, oversold=30.0, overbought=70.0)),
+]
+
+
+@pytest.mark.parametrize("label,params", RSI_DAILY_CASES, ids=[c[0] for c in RSI_DAILY_CASES])
+def test_rsi_daily_pipeline_equivalent(label, params, fx_data):
+    """pipeline(data, **params) must match the legacy backtest_rsi_daily snapshot."""
+    import importlib
+
+    strategies_rsi_daily = importlib.import_module("strategies.rsi_daily")
+    pipeline = strategies_rsi_daily.pipeline
+
+    snapshot = _load_snapshot(_snapshot_path("rsi_daily", label))
+    pf, _ = pipeline(fx_data, **params)
+    assert_stats_equivalent(snapshot["stats"], pf.stats())
+
+
 def test_helper_roundtrip(tmp_path):
     """Sanity: dict → JSON → compare against the same pf.stats() passes."""
     stats = pd.Series(
