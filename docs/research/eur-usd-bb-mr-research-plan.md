@@ -504,7 +504,11 @@ Nouveau fichier `src/strategies/daily_momentum.py` avec :
 11. **RSI + Trend (EMA 20/50 + RSI7 40/60)** sur GBP-USD : Sharpe 0.70, **7/7 positif** — la plus robuste.
 
 **Portefeuille combiné :**
-12. **Risk Parity MR+XS+TS** : Sharpe 0.67, 6/7 positif (vs 4/7 pour MR seul).
+12. **Risk Parity MR+XS+TS** : Sharpe 0.78, 6/7 positif, Max DD -2.6% (vs 4/7 pour MR seul).
+
+**Validation QuantConnect :**
+13. **MR Macro deploye sur QC** (ID: 29889315) — 430 trades, +7.75% net, CAGR 1.07%, DD 3.9%.
+14. **Daily Momentum deploye sur QC** (ID: 29889410) — 1283 trades, **+52.2% net**, CAGR 6.18%, DD 20%.
 
 ### Erreur majeure et leçon méthodologique
 
