@@ -1,23 +1,46 @@
-"""Composite FX Alpha: Momentum + Volatility Timing (Daily).
+"""Composite FX Alpha — Momentum + Volatility Timing (Daily, ims_pipeline format).
 
-Multi-factor strategy with drawdown control and Jegadeesh-Titman sub-portfolios.
-Uses target-weight rebalancing (size_type=amount), not simple entry/exit signals.
+Multi-factor daily strategy: blended momentum (w_short/w_long), volatility
+regime detection, ewma vol targeting, drawdown control with hysteresis, and
+K-overlapping Jegadeesh-Titman sub-portfolios.
+
+Three entry points:
+- ``pipeline(data, **params) -> (pf, CompositeAlphaIndicator)``
+- ``pipeline_nb(data, **params)`` — ``@vbt.parameterized`` scalar metric
+- ``create_cv_pipeline(splitter, metric_type)`` — ``@vbt.cv_split`` factory
+
+Note
+----
+The Phase 6 rewrite replaces the legacy ``composite_signal_nb`` delta-sizing
+path (which was coupled to StrategyRunner + StrategySpec) with a simpler
+``vbt.Portfolio.from_orders(size=target_weights, size_type='targetpercent')``.
+The five Numba kernels that produce the target weights are unchanged. The
+result is economically equivalent but not bit-identical to the legacy
+StrategyRunner output — see the refactor plan for details.
 """
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
 
-from framework.spec import (
-    IndicatorSpec,
-    ParamDef,
-    PlotConfig,
-    PortfolioConfig,
-    StrategySpec,
+from framework.pipeline_utils import (
+    SHARPE_RATIO,
+    compute_metric_nb,
 )
 
+# Daily strategy → annualization factor = 252
+COMPOSITE_ANN_FACTOR: float = 252.0
+
+
 # ═══════════════════════════════════════════════════════════════════════
-# NUMBA KERNELS
+# NUMBA KERNELS (unchanged from the legacy StrategySpec implementation)
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -224,133 +247,326 @@ def compute_composite_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# SIGNAL FUNCTION
+# 1. INVESTIGATION PATH — pipeline() returns (pf, indicator)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-@njit(nogil=True)
-def composite_signal_nb(c, target_weights, size_arr):
-    """Rebalance to target weight each bar using delta sizing."""
-    tw = vbt.pf_nb.select_nb(c, target_weights)
-    if np.isnan(tw):
-        return False, False, False, False
+@dataclass
+class CompositeAlphaIndicator:
+    """Composite alpha signals for overlay plotting."""
 
-    pos = c.last_position[c.col]
-    price = c.last_val_price[c.col]
-    value = c.last_value[c.group]
+    close: pd.Series
+    momentum: pd.Series
+    vr: pd.Series
+    vol_scale: pd.Series
+    target_weight: pd.Series
+    drawdown: pd.Series
 
-    if value <= 0 or price <= 0:
-        return False, False, False, False
+    def plot(self, fig: go.Figure | None = None, **layout_kwargs) -> go.Figure:
+        from plotly.subplots import make_subplots
 
-    target_pos = tw * value / price
-    delta = target_pos - pos
-
-    if abs(delta * price / value) < 0.005:
-        return False, False, False, False
-
-    size_arr[c.i, c.col] = abs(delta)
-
-    if pos >= 0 and delta > 0:
-        return True, False, False, False
-    elif pos > 0 and delta < 0 and target_pos >= 0:
-        return False, True, False, False
-    elif pos >= 0 and target_pos < 0:
-        return False, False, True, False
-    elif pos <= 0 and delta < 0:
-        return False, False, True, False
-    elif pos < 0 and delta > 0 and target_pos <= 0:
-        return False, False, False, True
-    elif pos <= 0 and target_pos > 0:
-        return True, False, False, False
-
-    return False, False, False, False
+        fig = fig or make_subplots(
+            rows=4, cols=1,
+            shared_xaxes=True,
+            subplot_titles=("Close", "Momentum", "Vol Scale", "Target Weight"),
+            vertical_spacing=0.05,
+        )
+        fig.add_scatter(
+            x=self.close.index, y=self.close.values, name="Close", row=1, col=1,
+        )
+        fig.add_scatter(
+            x=self.momentum.index, y=self.momentum.values, name="Momentum", row=2, col=1,
+        )
+        fig.add_scatter(
+            x=self.vol_scale.index, y=self.vol_scale.values, name="Vol Scale", row=3, col=1,
+        )
+        fig.add_scatter(
+            x=self.target_weight.index, y=self.target_weight.values, name="Target Weight", row=4, col=1,
+        )
+        fig.update_layout(**layout_kwargs)
+        return fig
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# STRATEGY SPECIFICATION
-# ═══════════════════════════════════════════════════════════════════════
+def pipeline(
+    data: vbt.Data | pd.Series,
+    w_short: int = 21,
+    w_long: int = 63,
+    vol_short: int = 21,
+    vol_long: int = 252,
+    ewma_span: int = 30,
+    target_vol: float = 0.10,
+    leverage_cap: float = 3.0,
+    vr_low: float = 0.8,
+    vr_high: float = 1.2,
+    mom_w_low: float = 0.20,
+    mom_w_normal: float = 0.30,
+    mom_w_high: float = 0.50,
+    dd_soft: float = 0.12,
+    dd_hard: float = 0.20,
+    dd_recovery: float = 0.10,
+    n_sub: int = 5,
+    leverage: float = 2.0,
+    fees: float = 0.00035,
+    init_cash: float = 1_000_000.0,
+) -> tuple[vbt.Portfolio, CompositeAlphaIndicator]:
+    """Investigation path — Composite FX Alpha daily rebalance.
 
-spec = StrategySpec(
-    name="Composite FX Alpha",
-    indicator=IndicatorSpec(
-        class_name="CompositeAlpha",
-        short_name="ca",
-        input_names=("close", "returns"),
-        param_names=(
-            "w_short",
-            "w_long",
-            "vol_short",
-            "vol_long",
-            "ewma_span",
-            "target_vol",
-            "leverage_cap",
-            "vr_low",
-            "vr_high",
-            "mom_w_low",
-            "mom_w_normal",
-            "mom_w_high",
-            "dd_soft",
-            "dd_hard",
-            "dd_recovery",
-            "n_sub",
-        ),
-        output_names=(
-            "momentum",
-            "direction",
-            "vol_regime",
-            "regime_weight",
-            "ewma_vol",
-            "vol_scale",
-            "drawdown",
-            "dd_multiplier",
-            "target_weight",
-        ),
-        kernel_func=compute_composite_nb,
-    ),
-    signal_func=composite_signal_nb,
-    signal_args_map=(
-        ("target_weights", "ind.target_weight"),
-        ("size", "eval:np.full(wrapper.shape_2d, np.nan)"),
-    ),
-    params={
-        "w_short": ParamDef(21),
-        "w_long": ParamDef(63),
-        "vol_short": ParamDef(21),
-        "vol_long": ParamDef(252),
-        "ewma_span": ParamDef(30),
-        "target_vol": ParamDef(0.10, sweep=[0.05, 0.08, 0.10, 0.15]),
-        "leverage_cap": ParamDef(3.0),
-        "vr_low": ParamDef(0.8),
-        "vr_high": ParamDef(1.2),
-        "mom_w_low": ParamDef(0.20),
-        "mom_w_normal": ParamDef(0.30),
-        "mom_w_high": ParamDef(0.50),
-        "dd_soft": ParamDef(0.12),
-        "dd_hard": ParamDef(0.20),
-        "dd_recovery": ParamDef(0.10),
-        "n_sub": ParamDef(5),
-    },
-    portfolio_config=PortfolioConfig(
-        slippage=0.0,
-        fixed_fees=0.0,
-        init_cash=1_000_000.0,
+    Resamples minute to daily, runs the 5 Numba kernels through
+    ``compute_composite_nb``, and rebalances to ``target_weight`` via
+    :meth:`vbt.Portfolio.from_orders` with ``size_type='targetpercent'``.
+
+    This differs from the legacy StrategyRunner path (which used
+    ``composite_signal_nb`` delta sizing) — see module docstring.
+    """
+    if hasattr(data, "close"):
+        close_any = data.close
+    else:
+        close_any = data
+    close_daily = close_any.resample("1D").last().dropna()
+    returns_daily = np.log(close_daily / close_daily.shift(1)).fillna(0.0)
+
+    (
+        momentum,
+        direction,
+        vr,
+        regime_wt,
+        ewma_vol,
+        vol_scale,
+        dd,
+        dd_mult,
+        target_weights,
+    ) = compute_composite_nb(
+        close_daily.values,
+        returns_daily.values,
+        w_short, w_long,
+        vol_short, vol_long,
+        ewma_span,
+        target_vol,
+        leverage_cap,
+        vr_low, vr_high,
+        mom_w_low, mom_w_normal, mom_w_high,
+        dd_soft, dd_hard, dd_recovery,
+        n_sub,
+    )
+
+    # Shift by 1 to avoid look-ahead and convert NaN -> 0
+    target_w_series = pd.Series(
+        target_weights, index=close_daily.index, name="target_weight"
+    ).shift(1).fillna(0.0)
+
+    pf = vbt.Portfolio.from_orders(
+        close=close_daily,
+        size=target_w_series,
+        size_type="targetpercent",
+        init_cash=init_cash,
+        leverage=leverage,
+        fees=fees,
         freq="1D",
-        leverage=2.0,
-        size_type="amount",
-        accumulate=True,
-        upon_opposite_entry="Reverse",
-        extra_kwargs={"fees": 0.00035, "leverage_mode": "lazy"},
-    ),
-    plot_config=PlotConfig(
-        subplot_indicators=(
-            ("ind.momentum", "Momentum", False),
-            ("ind.vol_regime", "Vol Regime", False),
-            ("ind.vol_scale", "Vol Scale", False),
-            ("ind.target_weight", "Target Weight", True),
-        ),
-    ),
-    takeable_args=("close_arr",),
+    )
+
+    indicator = CompositeAlphaIndicator(
+        close=close_daily,
+        momentum=pd.Series(momentum, index=close_daily.index, name="momentum"),
+        vr=pd.Series(vr, index=close_daily.index, name="vol_regime"),
+        vol_scale=pd.Series(vol_scale, index=close_daily.index, name="vol_scale"),
+        target_weight=target_w_series,
+        drawdown=pd.Series(dd, index=close_daily.index, name="drawdown"),
+    )
+    return pf, indicator
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 2. GRID-SEARCH PATH — pipeline_nb (@vbt.parameterized)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+@vbt.parameterized(
+    merge_func="concat",
+    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
 )
+def pipeline_nb(
+    data: vbt.Data | pd.Series,
+    w_short: int,
+    w_long: int,
+    target_vol: float = 0.10,
+    leverage_cap: float = 3.0,
+    dd_soft: float = 0.12,
+    dd_hard: float = 0.20,
+    vol_short: int = 21,
+    vol_long: int = 252,
+    ewma_span: int = 30,
+    vr_low: float = 0.8,
+    vr_high: float = 1.2,
+    mom_w_low: float = 0.20,
+    mom_w_normal: float = 0.30,
+    mom_w_high: float = 0.50,
+    dd_recovery: float = 0.10,
+    n_sub: int = 5,
+    leverage: float = 2.0,
+    fees: float = 0.00035,
+    init_cash: float = 1_000_000.0,
+    ann_factor: float = COMPOSITE_ANN_FACTOR,
+    cutoff: float = 0.05,
+    metric_type: int = SHARPE_RATIO,
+) -> float:
+    """Grid-search path — scalar metric per param combo."""
+    pf, _ = pipeline(
+        data,
+        w_short=w_short,
+        w_long=w_long,
+        vol_short=vol_short,
+        vol_long=vol_long,
+        ewma_span=ewma_span,
+        target_vol=target_vol,
+        leverage_cap=leverage_cap,
+        vr_low=vr_low,
+        vr_high=vr_high,
+        mom_w_low=mom_w_low,
+        mom_w_normal=mom_w_normal,
+        mom_w_high=mom_w_high,
+        dd_soft=dd_soft,
+        dd_hard=dd_hard,
+        dd_recovery=dd_recovery,
+        n_sub=n_sub,
+        leverage=leverage,
+        fees=fees,
+        init_cash=init_cash,
+    )
+    returns = pf.returns.values
+    if returns.ndim > 1:
+        returns = returns[:, 0]
+    return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
+
+
+def run_grid(
+    data: vbt.Data | pd.Series,
+    *,
+    w_short: list[int] | int,
+    w_long: list[int] | int,
+    target_vol: list[float] | float = 0.10,
+    metric_type: int = SHARPE_RATIO,
+    **kwargs: Any,
+) -> pd.Series:
+    def _param(v):
+        if isinstance(v, (list, tuple, np.ndarray)):
+            return vbt.Param(list(v))
+        return v
+
+    return pipeline_nb(
+        data,
+        w_short=_param(w_short),
+        w_long=_param(w_long),
+        target_vol=_param(target_vol),
+        metric_type=metric_type,
+        **kwargs,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 3. CV FACTORY — create_cv_pipeline (@vbt.cv_split)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def create_cv_pipeline(
+    splitter: Any,
+    metric_type: int = SHARPE_RATIO,
+    **pipeline_defaults: Any,
+):
+    splitter_kwargs = pipeline_defaults.pop("splitter_kwargs", {})
+    defaults = dict(
+        target_vol=0.10,
+        leverage_cap=3.0,
+        dd_soft=0.12,
+        dd_hard=0.20,
+        vol_short=21,
+        vol_long=252,
+        ewma_span=30,
+        vr_low=0.8,
+        vr_high=1.2,
+        mom_w_low=0.20,
+        mom_w_normal=0.30,
+        mom_w_high=0.50,
+        dd_recovery=0.10,
+        n_sub=5,
+        leverage=2.0,
+        fees=0.00035,
+        init_cash=1_000_000.0,
+        ann_factor=COMPOSITE_ANN_FACTOR,
+        cutoff=0.05,
+        metric_type=metric_type,
+    )
+    defaults.update(pipeline_defaults)
+
+    @vbt.cv_split(
+        splitter=splitter,
+        splitter_kwargs=splitter_kwargs,
+        takeable_args=["data"],
+        parameterized_kwargs=dict(
+            execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+            merge_func="concat",
+        ),
+        merge_func="concat",
+        return_grid="all",
+        attach_bounds="index",
+    )
+    def cv_pipeline(
+        data: vbt.Data | pd.Series,
+        w_short: int,
+        w_long: int,
+        target_vol: float = defaults["target_vol"],
+        leverage_cap: float = defaults["leverage_cap"],
+        dd_soft: float = defaults["dd_soft"],
+        dd_hard: float = defaults["dd_hard"],
+        vol_short: int = defaults["vol_short"],
+        vol_long: int = defaults["vol_long"],
+        ewma_span: int = defaults["ewma_span"],
+        vr_low: float = defaults["vr_low"],
+        vr_high: float = defaults["vr_high"],
+        mom_w_low: float = defaults["mom_w_low"],
+        mom_w_normal: float = defaults["mom_w_normal"],
+        mom_w_high: float = defaults["mom_w_high"],
+        dd_recovery: float = defaults["dd_recovery"],
+        n_sub: int = defaults["n_sub"],
+        leverage: float = defaults["leverage"],
+        fees: float = defaults["fees"],
+        init_cash: float = defaults["init_cash"],
+        ann_factor: float = defaults["ann_factor"],
+        cutoff: float = defaults["cutoff"],
+        metric_type: int = defaults["metric_type"],
+    ) -> float:
+        pf, _ = pipeline(
+            data,
+            w_short=w_short,
+            w_long=w_long,
+            vol_short=vol_short,
+            vol_long=vol_long,
+            ewma_span=ewma_span,
+            target_vol=target_vol,
+            leverage_cap=leverage_cap,
+            vr_low=vr_low,
+            vr_high=vr_high,
+            mom_w_low=mom_w_low,
+            mom_w_normal=mom_w_normal,
+            mom_w_high=mom_w_high,
+            dd_soft=dd_soft,
+            dd_hard=dd_hard,
+            dd_recovery=dd_recovery,
+            n_sub=n_sub,
+            leverage=leverage,
+            fees=fees,
+            init_cash=init_cash,
+        )
+        returns = pf.returns.values
+        if returns.ndim > 1:
+            returns = returns[:, 0]
+        return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
+
+    return cv_pipeline
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 4. CLI — single / grid / cv
+# ═══════════════════════════════════════════════════════════════════════
 
 
 if __name__ == "__main__":
@@ -358,16 +574,91 @@ if __name__ == "__main__":
     import sys
     from pathlib import Path as _Path
 
-    # Allow direct execution: `python src/strategies/composite_fx_alpha.py`
     _SRC = _Path(__file__).resolve().parent.parent
     if str(_SRC) not in sys.path:
         sys.path.insert(0, str(_SRC))
 
-    from framework.runner import run_strategy
+    from framework.pipeline_utils import (
+        analyze_portfolio,
+        apply_vbt_plot_defaults,
+        plot_cv_heatmap,
+        plot_cv_splitter,
+    )
+    from utils import load_fx_data
 
-    ap = argparse.ArgumentParser(description="Composite FX Alpha (daily)")
+    ap = argparse.ArgumentParser(description="Composite FX Alpha (ims format)")
     ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
-    ap.add_argument("--mode", default="full", choices=["backtest", "full"])
+    ap.add_argument("--mode", choices=["single", "grid", "cv"], default="single")
+    ap.add_argument("--target-vol", type=float, default=0.10)
+    ap.add_argument("--leverage", type=float, default=2.0)
+    ap.add_argument("--n-folds", type=int, default=8)
+    ap.add_argument("--show", action="store_true")
+    ap.add_argument("--output-dir", default="results/composite_fx_alpha")
     args = ap.parse_args()
 
-    run_strategy(spec, data_path=args.data, mode=args.mode)
+    apply_vbt_plot_defaults()
+    print("Loading data...")
+    _, data = load_fx_data(args.data)
+
+    if args.mode == "single":
+        pf, ind = pipeline(
+            data,
+            target_vol=args.target_vol,
+            leverage=args.leverage,
+        )
+        print(pf.stats())
+        analyze_portfolio(
+            pf,
+            name="Composite FX Alpha",
+            output_dir=args.output_dir,
+            show_charts=args.show,
+            indicator=ind,
+        )
+
+    elif args.mode == "grid":
+        grid = run_grid(
+            data,
+            w_short=[10, 21, 42],
+            w_long=[42, 63, 126],
+            target_vol=[0.05, 0.08, 0.10, 0.15],
+            metric_type=SHARPE_RATIO,
+        )
+        print("\nTop 20 combos by Sharpe:")
+        print(grid.sort_values(ascending=False).head(20))
+        if args.show:
+            grid.vbt.heatmap(
+                x_level="w_short",
+                y_level="w_long",
+                slider_level="target_vol",
+            ).show()
+
+    elif args.mode == "cv":
+        daily_index = data.close.resample("1D").last().dropna().index
+        splitter = vbt.Splitter.from_purged_walkforward(
+            daily_index,
+            n_folds=args.n_folds,
+            n_test_folds=1,
+            purge_td="1 day",
+            min_train_folds=3,
+        )
+        if args.show:
+            plot_cv_splitter(splitter, title="Composite Alpha — CV Splits").show()
+        cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
+        grid_perf, best_perf = cv_pipeline(
+            data,
+            w_short=vbt.Param([10, 21, 42]),
+            w_long=vbt.Param([42, 63, 126]),
+            target_vol=vbt.Param([0.08, 0.10, 0.15]),
+        )
+        print("\n▶ Best per split:")
+        print(best_perf)
+        if args.show:
+            plot_cv_heatmap(
+                grid_perf,
+                x_level="w_short",
+                y_level="w_long",
+                slider_level="split",
+                title="Composite Alpha — CV Sharpe Heatmap",
+            ).show()
+
+    print("\nDone.")
