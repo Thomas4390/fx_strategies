@@ -482,9 +482,69 @@ Nouveau fichier `src/strategies/daily_momentum.py` avec :
 
 ---
 
-## Synthèse & Leçons apprises
+## Phase 10 : Analyse de performance etendue et levier
 
-### Découvertes validées
+### Metriques de risque par strategie (sans levier)
+
+| Strategie | Sharpe | Sortino | Calmar | Omega | MaxDD | AnnRet | AnnVol | Skew | Kurt | VaR95 | TailR |
+|-----------|--------|---------|--------|-------|-------|--------|--------|------|------|-------|-------|
+| **MR Macro** | **0.79** | 0.34 | **0.51** | **2.75** | **-1.9%** | 0.98% | 1.24% | 3.16 | 51.5 | 0.00% | 0.00 |
+| MR Turbo | 0.10 | 0.06 | 0.04 | 2.05 | -4.9% | 0.18% | 1.80% | 0.74 | 19.2 | -0.07% | 0.58 |
+| XS Momentum | 0.31 | 0.47 | 0.19 | 2.06 | -18.5% | 3.49% | 11.1% | 0.39 | 3.7 | -1.14% | 0.97 |
+| TS Mom+RSI | 0.44 | **0.63** | 0.19 | 2.09 | -11.9% | 2.23% | 5.06% | 0.45 | 5.0 | -0.49% | 1.03 |
+| RSI MR EUR | 0.25 | 0.06 | 0.08 | 2.26 | -6.9% | 0.56% | 2.20% | -0.51 | 92.8 | 0.00% | 0.00 |
+| **Combined RP** | **0.70** | **0.92** | 0.31 | 2.16 | **-2.9%** | 0.90% | 1.28% | 0.35 | 12.5 | -0.10% | **1.08** |
+
+**Observations cles :**
+- **MR Macro** a le meilleur Calmar (0.51) et le plus petit MaxDD (1.9%). La distribution est tres positivement asymetrique (skew 3.16) ce qui signifie pas de tail risk.
+- **TS Mom+RSI** a le meilleur Sortino (0.63) grace a sa faible downside deviation.
+- **Combined RP** a un excellent profil risque/rendement : Sortino 0.92, MaxDD -2.9%, tail ratio 1.08 (queues symetriques).
+- **RSI MR EUR** a un kurtosis extreme (92.8) : distribution a queues epaisses, risque de pertes rares mais severes.
+- **XS Momentum** a le plus haut rendement annuel (3.49%) mais aussi le pire MaxDD (-18.5%).
+
+### Impact du levier
+
+Le Sharpe est invariant au levier (lineaire en rendement et vol). Le Calmar s'ameliore legerement car les rendements composes dominent a haut levier.
+
+**MR Macro avec levier :**
+
+| Levier | AnnRet | MaxDD | Commentaire |
+|--------|--------|-------|-------------|
+| 0.5x | 0.49% | -0.97% | Ultra-conservateur |
+| 1.0x | 0.98% | -1.93% | Standard |
+| 2.0x | 1.96% | -3.85% | Modere |
+| 3.0x | 2.94% | -5.76% | Agressif |
+| 5.0x | 4.90% | -9.55% | Maximum raisonnable |
+
+**Combined RP avec levier :**
+
+| Levier | AnnRet | MaxDD | Commentaire |
+|--------|--------|-------|-------------|
+| 1.0x | 0.90% | -2.86% | Standard |
+| 2.0x | 1.80% | -5.67% | Rendement double |
+| 3.0x | 2.70% | -8.44% | Bon compromis |
+
+**Recommandation :** Le Combined RP a 2-3x levier offre le meilleur profil : rendement 1.8-2.7% avec DD 5.7-8.4%. Le MR Macro a 3x donne un rendement similaire (2.94%) avec un DD plus faible (5.76%) mais moins de diversification.
+
+### Matrice de correlation et diversification
+
+| | MR Macro | MR Turbo | XS Mom | TS Mom | RSI MR |
+|---|---|---|---|---|---|
+| MR Macro | 1.00 | 0.69 | 0.05 | 0.04 | 0.00 |
+| MR Turbo | 0.69 | 1.00 | 0.04 | -0.01 | 0.02 |
+| XS Mom | 0.05 | 0.04 | 1.00 | 0.44 | -0.18 |
+| TS Mom | 0.04 | -0.01 | 0.44 | 1.00 | 0.00 |
+| RSI MR | 0.00 | 0.02 | -0.18 | 0.00 | 1.00 |
+
+**Ratio de diversification : 1.49** (>1 = benefice de diversification confirme).
+
+Les strategies intraday (MR Macro/Turbo) sont quasi-independantes des strategies daily (XS/TS/RSI), avec des correlations de 0.00 a 0.05. RSI MR EUR est negativement correle avec XS Momentum (-0.18) ce qui renforce la diversification.
+
+---
+
+## Synthese & Lecons apprises
+
+### Decouvertes validees
 
 **Intraday (minute) :**
 1. **Le filtre macro (spread<0.5 + chômage stable) est l'alpha** pour le signal 1-minute (>90% du Sharpe).
