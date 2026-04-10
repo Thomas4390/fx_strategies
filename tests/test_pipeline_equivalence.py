@@ -253,6 +253,26 @@ def test_daily_ts_pipeline_equivalent(label, params, gbpusd_daily_close):
     assert_stats_equivalent(snapshot["stats"], pf.stats())
 
 
+OU_MR_CASES = [
+    ("default", dict(bb_window=80, bb_alpha=5.0, sigma_target=0.10, max_leverage=3.0)),
+    ("low_vol", dict(bb_window=60, bb_alpha=5.0, sigma_target=0.05, max_leverage=5.0)),
+    ("high_vol", dict(bb_window=120, bb_alpha=6.0, sigma_target=0.20, max_leverage=2.0)),
+]
+
+
+@pytest.mark.parametrize("label,params", OU_MR_CASES, ids=[c[0] for c in OU_MR_CASES])
+def test_ou_mr_pipeline_equivalent(label, params, fx_data):
+    """pipeline(data, **params) must match the legacy backtest_ou_mr snapshot."""
+    import importlib
+
+    ou = importlib.import_module("strategies.ou_mean_reversion")
+    pipeline = ou.pipeline
+
+    snapshot = _load_snapshot(_snapshot_path("ou_mr", label))
+    pf, _ = pipeline(fx_data, **params)
+    assert_stats_equivalent(snapshot["stats"], pf.stats())
+
+
 def test_helper_roundtrip(tmp_path):
     """Sanity: dict → JSON → compare against the same pf.stats() passes."""
     stats = pd.Series(

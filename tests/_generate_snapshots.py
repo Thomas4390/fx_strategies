@@ -156,6 +156,21 @@ SNAPSHOT_CASES: list[dict[str, Any]] = [
         data_loader="gbpusd_daily_close",
     ),
     # ── Phase 5: ou_mean_reversion ───────────────────────────────────
+    dict(
+        strat="ou_mr", label="default",
+        module="strategies.ou_mean_reversion", callable="backtest_ou_mr",
+        params=dict(bb_window=80, bb_alpha=5.0, sigma_target=0.10, max_leverage=3.0),
+    ),
+    dict(
+        strat="ou_mr", label="low_vol",
+        module="strategies.ou_mean_reversion", callable="backtest_ou_mr",
+        params=dict(bb_window=60, bb_alpha=5.0, sigma_target=0.05, max_leverage=5.0),
+    ),
+    dict(
+        strat="ou_mr", label="high_vol",
+        module="strategies.ou_mean_reversion", callable="backtest_ou_mr",
+        params=dict(bb_window=120, bb_alpha=6.0, sigma_target=0.20, max_leverage=2.0),
+    ),
     # ── Phase 6: composite_fx_alpha ──────────────────────────────────
 ]
 

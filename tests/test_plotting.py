@@ -1,38 +1,44 @@
-"""Test all plot functions return valid figures."""
+"""Test all plot functions return valid figures.
 
-import numpy as np
+Uses ``strategies.mr_turbo.pipeline`` as the portfolio source so the tests
+are decoupled from the removed StrategyRunner / StrategySpec API.
+"""
+
 import pandas as pd
 import plotly.graph_objects as go
 
-from framework.runner import StrategyRunner
+
+def _make_pf(raw_and_data):
+    """Build a small portfolio suitable for plot tests."""
+    _, data = raw_and_data
+    # Use the last 5 days to keep tests fast and independent of full history.
+    data_mini = data.iloc[-6300:]
+    from strategies.mr_turbo import pipeline
+
+    pf, _ = pipeline(data_mini, bb_window=60, bb_alpha=4.0)
+    return pf
 
 
-def test_plot_monthly_heatmap(raw, data):
-    from strategies.ou_mean_reversion import spec
+def test_plot_monthly_heatmap(raw_and_data):
     from framework.plotting import plot_monthly_heatmap
 
-    runner = StrategyRunner(spec, raw, data)
-    pf, _ = runner.backtest()
+    pf = _make_pf(raw_and_data)
     fig = plot_monthly_heatmap(pf)
     assert isinstance(fig, go.Figure)
 
 
-def test_plot_portfolio_summary(raw, data):
-    from strategies.ou_mean_reversion import spec
+def test_plot_portfolio_summary(raw_and_data):
     from framework.plotting import plot_portfolio_summary
 
-    runner = StrategyRunner(spec, raw, data)
-    pf, _ = runner.backtest()
+    pf = _make_pf(raw_and_data)
     fig = plot_portfolio_summary(pf)
     assert isinstance(fig, go.Figure)
 
 
-def test_plot_trade_analysis(raw, data):
-    from strategies.ou_mean_reversion import spec
+def test_plot_trade_analysis(raw_and_data):
     from framework.plotting import plot_trade_analysis
 
-    runner = StrategyRunner(spec, raw, data)
-    pf, _ = runner.backtest()
+    pf = _make_pf(raw_and_data)
     fig = plot_trade_analysis(pf)
     assert isinstance(fig, go.Figure)
 
@@ -68,13 +74,11 @@ def test_plot_partial_dependence():
     assert isinstance(fig, go.Figure)
 
 
-def test_plot_rolling_sharpe(raw, data):
-    from strategies.ou_mean_reversion import spec
+def test_plot_rolling_sharpe(raw_and_data):
     from framework.plotting import plot_rolling_sharpe
 
-    runner = StrategyRunner(spec, raw, data)
-    pf, _ = runner.backtest()
-    fig = plot_rolling_sharpe(pf, window=5)  # small window for test data
+    pf = _make_pf(raw_and_data)
+    fig = plot_rolling_sharpe(pf, window=5)
     assert isinstance(fig, go.Figure)
 
 

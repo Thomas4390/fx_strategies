@@ -17,12 +17,11 @@ Use directly: from strategies.daily_momentum import backtest_xs_momentum, etc.
 """
 
 from strategies.composite_fx_alpha import spec as composite_fx_alpha
-from strategies.ou_mean_reversion import spec as ou_mean_reversion
 
-# NOTE: mr_turbo has been migrated to the ims_pipeline format (Phase 1 of the
-# refactor — see plans/fluttering-imagining-umbrella.md). It no longer exposes
-# a StrategySpec. Use ``from strategies.mr_turbo import pipeline`` instead.
+# NOTE: mr_turbo, mr_macro, rsi_daily, daily_momentum and ou_mean_reversion
+# have been migrated to the ims_pipeline format (Phases 1-5 of the refactor).
+# They no longer expose a StrategySpec — use ``from strategies.<name> import
+# pipeline`` (or pipeline_xs/pipeline_ts for daily_momentum) instead.
 REGISTRY: dict[str, "StrategySpec"] = {  # noqa: F821
-    "ou_mean_reversion": ou_mean_reversion,
     "composite_fx_alpha": composite_fx_alpha,
 }
