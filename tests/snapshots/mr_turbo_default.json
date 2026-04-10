@@ -1,0 +1,43 @@
+{
+  "strat": "mr_turbo",
+  "label": "default",
+  "module": "strategies.mr_turbo",
+  "callable": "backtest_mr_turbo",
+  "params": {
+    "bb_window": 80,
+    "bb_alpha": 5.0,
+    "sl_stop": 0.005,
+    "tp_stop": 0.006
+  },
+  "stats": {
+    "Start Index": "2018-01-01 19:01:00",
+    "End Index": "2026-04-01 00:00:00",
+    "Total Duration": "2122 days 01:16:00",
+    "Start Value": 1000000.0,
+    "Min Value": 964547.3324430588,
+    "Max Value": 1066655.6391139037,
+    "End Value": 1016545.4305743093,
+    "Total Return [%]": 1.6545430574309314,
+    "Benchmark Return [%]": -3.737796373714264,
+    "Position Coverage [%]": 3.017158438042828,
+    "Max Gross Exposure [%]": 101.03544187557272,
+    "Max Drawdown [%]": 5.543092716442584,
+    "Max Drawdown Duration": "1118 days 16:23:00",
+    "Total Orders": 615.0,
+    "Total Fees Paid": 0.0,
+    "Total Trades": 311.0,
+    "Win Rate [%]": 48.87459807073955,
+    "Best Trade [%]": 0.5701755263289654,
+    "Worst Trade [%]": -0.5301545231785032,
+    "Avg Winning Trade [%]": 0.27651114938635313,
+    "Avg Losing Trade [%]": -0.25297244925961765,
+    "Avg Winning Trade Duration": "0 days 04:59:13.421052631",
+    "Avg Losing Trade Duration": "0 days 04:53:48.301886792",
+    "Profit Factor": 1.0404633507779315,
+    "Expectancy": 53.20074139649569,
+    "Sharpe Ratio": 0.10588232060877227,
+    "Calmar Ratio": 0.035190485109391836,
+    "Omega Ratio": 1.0032313183376877,
+    "Sortino Ratio": 0.15159765427928903
+  }
+}
