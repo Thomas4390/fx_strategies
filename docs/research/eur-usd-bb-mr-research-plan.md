@@ -7,18 +7,26 @@
 
 ## Résumé exécutif
 
-**Découverte principale :** Le passage du BB sur 1-minute au BB sur **1-heure** transforme radicalement la stratégie. Le signal horaire capture le flux institutionnel et élimine le bruit micro-structurel, rendant même le filtre macro obsolète.
+**Meilleure stratégie validée :** 1min BB(80,5.0) + macro filter (spread<0.5 + chômage stable) + VWAP anchor ~22h UTC.
 
-| Configuration | Sharpe WF | Pos/7 | OOS 2025 | Trades |
+| Configuration | Sharpe WF | Pos/7 | OOS 2025 | Statut |
 |---------------|-----------|-------|----------|--------|
-| **1H BB(6,4.0) 4 paires EW** | **3.66** | **8/8** | **3.46** | ~1350 |
-| 1H BB(6,4.0) EUR seul | 3.10 | 7/7 | 2.81 | 304 |
-| 1H BB(4,3.0) EUR seul | 5.44 | 7/7 | 5.83 | 1720 |
-| 1min BB(80,5.0) + macro | 0.94 | 4/7 | 0.77 | 130 |
-| 1min BB(80,5.0) sans filtre | 0.08 | 2/7 | -0.66 | 279 |
+| 1min BB + macro + VWAP anchor 22h | **1.12** | **5/7** | **1.08** | **VALIDEE** |
+| 1min BB + macro (baseline) | 0.94 | 4/7 | 0.77 | VALIDEE |
+| 1min BB + macro + excl. Lun/Mar | 1.13 | 4/7 | 1.15 | VALIDEE |
+| ~~1H BB(6,4.0) sans macro~~ | ~~3.10~~ | ~~7/7~~ | ~~2.81~~ | **INVALIDEE (look-ahead)** |
 
-**Meilleure config recommandée :** 1H BB(6,4.0) sans macro filter, 4 paires equal-weight.
-Même avec slippage réaliste (2.5-3.5 pips), le portefeuille maintient un Sharpe de **2.92**.
+> **AVERTISSEMENT CRITIQUE :** Les résultats multi-timeframe (1H BB) initialement rapportés
+> contenaient un **look-ahead bias** confirmé. Le bar horaire resampleé à `08:00` contient
+> le close de `08:59`, rendant les bandes BB disponibles 59 minutes avant que les données
+> soient réellement observables. Après correction (shift +1 période horaire), TOUTES les
+> configurations 1H sont négatives (Sharpe -1.48). Voir Phase 2A-ERRATA ci-dessous.
+
+**Leçons retenues :**
+1. Le filtre macro reste l'alpha dominant pour le signal 1min
+2. L'ancrage VWAP à 22h UTC (session FX) améliore la robustesse (+5ème année positive)
+3. Les stratégies multi-timeframe avec resample+ffill doivent TOUJOURS être vérifiées pour le look-ahead
+4. Un Sharpe > 2-3 en backtest FX intraday doit déclencher une investigation systématique
 
 ---
 
@@ -125,78 +133,63 @@ Même avec slippage réaliste (2.5-3.5 pips), le portefeuille maintient un Sharp
 
 **Le filtre macro (spread<0.5 + chômage stable) est remarquablement difficile à battre.** Aucune des 100+ configurations testées ne le surpasse de manière significative. Sa force vient de sa simplicité et de sa signification économique directe.
 
-**MAIS :** la Phase 2 va montrer que ce filtre n'est nécessaire que pour compenser la faiblesse du signal 1-minute. Avec un signal horaire, il devient inutile.
+Le filtre macro restera essentiel tant qu'une amélioration de signal est trouvée à la bonne fréquence.
 
 ---
 
 ## Phase 2 : Multi-Timeframe BB
 
-### 2A. BB sur timeframe supérieur — **DÉCOUVERTE MAJEURE**
+### 2A. BB sur timeframe supérieur — **INVALIDEE (LOOK-AHEAD BIAS)**
 
-**Hypothèse :** Le BB sur 1-minute est dominé par le bruit micro-structurel. Calculer les BB sur des données resamplees (5min, 15min, 1H) devrait améliorer le ratio signal/bruit.
+> **ERRATA (2026-04-09) :** Les résultats ci-dessous contenaient un look-ahead bias fatal.
+> Ils sont conservés pour documenter l'erreur et la méthodologie de détection.
 
-**Rationnel économique :** La mean reversion intraday opère à l'échelle du flux institutionnel (minutes à heures). L'exécution VWAP des ordres institutionnels crée une force de rappel vers le VWAP qui est mieux capturée par un signal horaire. La littérature en microstructure de marché (Almgren & Chriss 2000) documente cette dynamique.
+**Hypothèse initiale :** Le BB sur 1-minute est dominé par le bruit. Calculer les BB sur 1H resampleé devrait améliorer le signal/bruit.
 
-**Résultats (top 10 avec macro filter sp<0.5+unemp) :**
+**Résultats initiaux (INVALIDES) :**
 
-| Config | Sharpe | Pos/7 | OOS 2025 | Trades |
-|--------|--------|-------|----------|--------|
-| **1H BB(4,3.0)** | **3.14** | **6/7** | **2.07** | 731 |
-| 1H BB(6,3.0) | 2.60 | 6/7 | 1.68 | 378 |
-| 1H BB(4,4.0) | 2.36 | 6/7 | 1.06 | 348 |
-| 1H BB(8,3.0) | 2.12 | 6/7 | 1.49 | 289 |
-| 1H BB(6,4.0) | 2.00 | 5/7 | 1.33 | 119 |
-| 1H BB(8,4.0) | 1.71 | 6/7 | 1.64 | 73 |
-| 1H BB(12,5.0) | 1.40 | 6/7 | 1.73 | 15 |
-| 15min BB(8,4.0) | 1.25 | 6/7 | 0.11 | 107 |
-| 5min BB(16,5.0) | 1.13 | 4/7 | -0.34 | 24 |
-| **BASELINE 1min** | **0.94** | **4/7** | **0.77** | 130 |
+| Config | Sharpe | Note |
+|--------|--------|------|
+| ~~1H BB(4,3.0)~~ | ~~3.14~~ | INVALIDE |
+| ~~1H BB(6,4.0)~~ | ~~3.10~~ | INVALIDE |
+| BASELINE 1min | 0.94 | VALIDE |
 
-**Le signal 1H est 3x meilleur que le 1min sur Sharpe, avec 6/7 années positives vs 4/7.**
+**Investigation critique — Détection du look-ahead :**
 
-### Vérification sans macro filter
+1. **Observation suspecte :** Sharpe > 3 sur toutes les paires, toutes les années, même sans macro filter. C'est irréaliste pour du FX intraday.
 
-| Config | Sharpe | Pos/7 | OOS 2025 | Trades |
-|--------|--------|-------|----------|--------|
-| 1H BB(4,3.0) NO MACRO | 5.44 | 7/7 | 5.83 | 1720 |
-| 1H BB(6,3.0) NO MACRO | 4.39 | 7/7 | 4.06 | 871 |
-| 1H BB(6,4.0) NO MACRO | 3.27 | 7/7 | 2.81 | 269 |
-| 1min BB(80,5.0) NO MACRO | 0.08 | 2/7 | -0.66 | 279 |
+2. **Analyse des exits :** 78.6% des trades sortent par time-stop (6h), seulement 17.8% par TP. La stratégie profite du drift 6h, pas de la convergence rapide.
 
-**Le signal 1H est intrinsèquement profitable SANS filtre macro** (Sharpe 5.44 vs 0.08). Le filtre macro n'est nécessaire que pour le signal 1min.
+3. **Test VWAP hourly vs minute :** Le VWAP approximatif horaire ne cause PAS de biais (Sharpe 3.05 vs 3.10). Fausse piste.
 
-**Pourquoi ça fonctionne :**
-1. **VWAP attraction** : Les institutions exécutent au VWAP, créant une force de rappel naturelle
-2. **Filtrage du bruit** : Le signal 1H lisse le bruit bid-ask et la micro-structure
-3. **Plus de trades** : 1720 trades sur 7 ans = diversification temporelle massive
-4. **Win rate élevé** : 70% (VWAP reversion est très fiable à l'échelle horaire)
-5. **Max DD faible** : -2% grâce aux stops serrés et à la mean reversion rapide
+4. **Test décisif — shift des bandes :** En décalant les BB de +1h (pour n'utiliser que des données complétées), le Sharpe passe de **3.10 à -1.48**.
 
-### Sensibilité au slippage (EUR-USD, 1H BB(4,3.0), no macro)
+5. **Cause racine confirmée :** `close.resample('1h').last()` produit un bar à `08:00` contenant le close de `08:59`. Le forward-fill rend ce bar disponible à 08:00, soit **59 minutes avant que les données soient observables**.
 
-| Slippage (pips) | Sharpe | Commentaire |
-|-----------------|--------|-------------|
-| 1.0 | 6.13 | Optimiste |
-| 1.5 | 5.44 | Hypothèse actuelle |
-| 2.0 | 4.75 | Conservateur |
-| 3.0 | 3.36 | Très conservateur |
-| 5.0 | 0.65 | Extrême |
-| 10.0 | -5.01 | Break-even ~7 pips |
+```
+Bar horaire '08:00' = close[08:59]  ← donnée future !
+Forward-fill: disponible à 08:00    ← 59 min trop tôt
+BB bands utilisant ce close → entrées à 08:01 basées sur le futur
+```
 
-**Le break-even est ~7 pips.** Avec un slippage réaliste de 1.5-2.5 pips, la stratégie est très robuste.
+**Résultats après correction (shift +1 période horaire) :**
 
-### Multi-pair (1H BB, sans macro, 7 années)
+| Config | Sharpe AVANT | Sharpe APRES correction | Trades |
+|--------|-------------|------------------------|--------|
+| 1H BB(4,3.0) | 3.14 | **-2.22** | 3582 |
+| 1H BB(6,4.0) | 3.10 | **-1.48** | 1632 |
+| 1H BB(8,5.0) | 1.32 | **-1.15** | 768 |
+| 1H BB(12,5.0) | 1.40 | **-0.97** | 500 |
 
-| Paire | 1H BB(4,3.0) Sharpe | 1H BB(6,4.0) Sharpe | Trades (6,4) |
-|-------|--------------------|--------------------|--------------|
-| EUR-USD | 5.44 | 3.10 | 304 |
-| GBP-USD | 6.15 | 2.00 | 260 |
-| USD-JPY | 5.39 | 2.88 | 359 |
-| USD-CAD | 4.54 | 2.49 | 431 |
+**TOUTES les configurations sont négatives après correction.** L'alpha multi-TF était entièrement un artefact du look-ahead.
 
-**Toutes les 4 paires sont profitables avec 7/7 années positives.**
+**Leçon méthodologique :**
+- Les stratégies multi-TF avec `resample().last() + reindex(ffill)` introduisent TOUJOURS un look-ahead d'une période.
+- Le fix est `.shift(1)` sur les données resamplees AVANT le forward-fill.
+- Un Sharpe > 2-3 en FX intraday doit systématiquement déclencher une vérification de look-ahead.
+- Le test de détection : décaler les signaux d'une période et vérifier que la performance ne s'effondre pas.
 
-### Session test (EUR-USD, 1H BB(4,3.0), no macro)
+### Session test (INVALIDE — conservé pour référence)
 
 | Session | Sharpe | Trades |
 |---------|--------|--------|
@@ -249,7 +242,7 @@ La session 6-14 reste la plus conservative mais toutes les sessions sont profita
 
 **Résultat : VALIDÉ.** L'anchor ~19-22h UTC améliore le Sharpe de 0.94 à 1.12 et gagne un 5ème année positive. Le VWAP ancré à la session FX réelle est plus pertinent.
 
-**Conclusion :** L'amélioration est modérée (+0.18 Sharpe) mais robuste (5/7 vs 4/7). Pour le signal 1-minute, cela vaut la peine. Pour le signal 1H, l'impact serait à retester.
+**Conclusion :** L'amélioration est modérée (+0.18 Sharpe) mais robuste (5/7 vs 4/7). Validé par re-test indépendant.
 
 ### 3C. Filtre de vélocité
 
@@ -259,61 +252,18 @@ La session 6-14 reste la plus conservative mais toutes les sessions sont profita
 
 ---
 
-## Phase 4 : Portefeuille Multi-Pair
+## Phase 4 : Portefeuille Multi-Pair — **INVALIDEE**
 
-### 4A. Portefeuille 1H BB(6,4.0), 4 paires, sans macro
-
-**Corrélations entre paires :**
-
-|         | EUR | GBP | JPY | CAD |
-|---------|-----|-----|-----|-----|
-| EUR-USD | 1.00 | 0.14 | 0.14 | 0.13 |
-| GBP-USD | 0.14 | 1.00 | 0.17 | 0.05 |
-| USD-JPY | 0.14 | 0.17 | 1.00 | 0.10 |
-| USD-CAD | 0.13 | 0.05 | 0.10 | 1.00 |
-
-**Corrélations extrêmement faibles (0.05-0.17)** — excellente diversification.
-
-**Portefeuille equal-weight :**
-- **Sharpe : 3.66**
-- Rendement annuel : 3.29%
-- Max DD : -0.48%
-- **Toutes les années positives (2019-2026)**
-
-**Portefeuille risk-parity :**
-- Poids : EUR 24%, GBP 28%, JPY 25%, CAD 24%
-- Sharpe : 3.64
-- Max DD : -0.50%
-
-### 4B. Analyse avec coûts réalistes
-
-Slippage + spread + commissions conservateurs :
-
-| Paire | Coût total (pips) | Sharpe réaliste | WR |
-|-------|-------------------|-----------------|-----|
-| EUR-USD | 2.5 | 2.65 | 68.4% |
-| GBP-USD | 3.0 | 1.44 | 64.2% |
-| USD-JPY | 2.5 | 2.38 | 68.5% |
-| USD-CAD | 3.5 | 1.63 | 64.5% |
-| **Portfolio EW** | — | **2.92** | — |
-
-**Même avec des coûts très conservateurs, le portefeuille maintient un Sharpe de 2.92.**
+> Les résultats de cette phase étaient basés sur le 1H BB invalidé (look-ahead).
+> Le portefeuille multi-pair utilisant le signal 1min + macro est encore à tester.
 
 ---
 
-## Phase 5 : Validation de Robustesse
+## Phase 5 : Validation de Robustesse — **PARTIELLEMENT INVALIDEE**
 
-### 5A. Monte Carlo Bootstrap (EUR-USD, 1H BB(6,4.0))
+### 5A. Monte Carlo Bootstrap — **INVALIDE** (basé sur 1H BB)
 
-1000 échantillons avec remplacement des 304 trades :
-
-| Percentile | Sharpe | Return (%) | Max DD (%) |
-|------------|--------|------------|------------|
-| 5ème | 2.72 | 44.3% | -2.03% |
-| 25ème | 3.06 | 49.8% | -1.53% |
-| 50ème (médian) | 3.32 | 53.6% | -1.30% |
-| 75ème | 3.58 | 57.3% | -1.14% |
-| 95ème | 3.95 | 62.7% | -0.90% |
+> Le bootstrap était basé sur les trades du 1H BB invalidé. Non applicable.
 
 **P(Sharpe > 0) = 100%, P(Sharpe > 1) = 100%, P(Sharpe > 2) = 100%.**
 
@@ -323,22 +273,31 @@ Le 5ème percentile du Sharpe (2.72) est largement supérieur à zéro. Cela con
 
 ## Synthèse & Leçons apprises
 
-### Découvertes clés
+### Découvertes validées
 
-1. **Le timeframe du signal est plus important que le filtre macro.** Passer de 1min à 1H multiplie le Sharpe par 3-5x et élimine le besoin de filtrage macro.
+1. **Le filtre macro (spread<0.5 + chômage stable) est l'alpha.** Pour le signal 1-minute, il représente >90% du Sharpe. Aucune des 100+ configurations macro testées ne le surpasse significativement.
 
-2. **VWAP mean reversion est un alpha structurel sur toutes les paires FX.** Les 4 paires testées (EUR, GBP, JPY, CAD) sont profitables avec le même set de paramètres, 7/7 années.
+2. **L'ancrage VWAP à la session FX (19-22h UTC) améliore la robustesse** du signal 1min : Sharpe 0.94 → 1.12, 4/7 → 5/7 années positives. Validé sans look-ahead.
 
-3. **Les filtres de confirmation (RSI, macro, velocity) dégradent le MR.** Le signal d'entrée BB est optimal seul. Chaque couche de filtrage réduit les trades sans améliorer la qualité.
+3. **Mercredi et jeudi sont les meilleurs jours** pour le MR intraday (Sharpe 0.60-0.79 vs 0.02-0.04 pour Lun/Mar). Exclure Lun/Mar donne Sharpe 1.13.
 
-4. **La diversification multi-pair est puissante.** Corrélations 0.05-0.17 → Sharpe portfolio > Sharpe individuel.
+4. **L'inflation élevée (core CPI >= médiane) est le meilleur signal macro individuel** (Sharpe 0.47). Combiné en OR avec le filtre base, il améliore l'OOS (1.11 vs 0.77).
 
-5. **L'ancrage VWAP à la session FX (22h UTC) améliore le signal 1min** (+0.18 Sharpe, +1 année positive).
+5. **Les filtres de confirmation (RSI, velocity) dégradent systématiquement le MR.** Le BB seul est optimal.
 
-6. **Mercredi et jeudi sont les meilleurs jours** pour le MR intraday (autour des publications macro).
+### Erreur majeure et leçon méthodologique
+
+**Les stratégies multi-TF avec resample+ffill avaient un look-ahead bias fatal.** Le bar horaire `08:00` contient le close de `08:59`, rendu disponible à `08:00` par le forward-fill. Après correction, toutes les configs 1H sont négatives.
+
+**Checklist anti-look-ahead pour le multi-TF :**
+- [ ] Le resample utilise-t-il `.shift(1)` avant le forward-fill ?
+- [ ] Le test shift +1 période donne-t-il un Sharpe comparable ?
+- [ ] Le Sharpe est-il < 2 (seuil de plausibilité pour FX intraday) ?
+- [ ] La stratégie sans filtre donne-t-elle des résultats raisonnables ?
 
 ### Ce qui n'a pas fonctionné
 
+- **Multi-TF BB (1H, 15min, 5min)** — INVALIDE (look-ahead bias)
 - Seuils dynamiques (rolling percentile) — perd la signification économique
 - Score composite z-scoré — détruit les seuils absolus
 - Clustering K-means — trop lâche, pas optimisé pour la stratégie
@@ -346,22 +305,22 @@ Le 5ème percentile du Sharpe (2.72) est largement supérieur à zéro. Cela con
 - RSI/Stoch confirmation — tue les trades sur toutes les timeframes
 - Filtre de vélocité — pas d'amélioration
 
-### Risques et limitations
+### Risques et limitations de la stratégie validée
 
-1. **Sharpe trop élevé :** Un Sharpe > 3 est suspect en live. Facteurs non modélisés : spread bid-ask variable, impact de marché, latence d'exécution, fills partiels.
-2. **Overfitting potentiel :** Bien que robuste sur 4 paires et 7 années, les paramètres (window=4-6, alpha=3.0-4.0) sont sélectionnés ex-post.
-3. **Capacité :** ~300-400 trades/paire/an semble gérable, mais l'impact de marché n'est pas modélisé.
-4. **Changement de régime :** Les 7 années testées incluent des régimes variés (COVID, inflation, hausse de taux), ce qui est encourageant mais pas suffisant.
+1. **Sharpe modeste (~1.0)** pour une stratégie avec ~130 trades/7 ans. L'edge est petit mais réel.
+2. **Dépendance au régime macro :** le filtre spread+chômage peut ne pas capturer le prochain régime favorable.
+3. **Faible nb de trades :** ~18/an, rendant les statistiques fragiles.
+4. **Pas de multi-pair validé :** seul EUR-USD fonctionne avec le signal 1min + macro.
 
 ---
 
 ## Prochaines étapes
 
-1. **Validation Monte Carlo** — bootstrap des trades pour intervalle de confiance sur le Sharpe
-2. **Test hors-échantillon 2018** — utiliser 2018 comme période de validation supplémentaire
-3. **Implémentation QuantConnect** — déployer la stratégie 1H BB multi-pair sur la plateforme
-4. **Monitoring live** — paper trading pour comparer exécution réelle vs backtest
-5. **Analyse d'impact de marché** — estimer le slippage variable en fonction de la taille de position
+1. **Monte Carlo bootstrap sur stratégie 1min validée** — intervalle de confiance
+2. **Multi-pair avec signal 1min + macro pair-spécifique** — tester d'autres paires
+3. **Implémentation QuantConnect** — stratégie 1min + macro + VWAP anchor
+4. **Slippage sensitivity sur stratégie validée** — confirmer marge de sécurité
+5. **Exploration multi-TF CORRECTE** — utiliser `.shift(1)` sur les bandes resamplees
 
 ## Protocole de test utilisé
 
@@ -369,4 +328,5 @@ Pour chaque hypothèse :
 1. Walk-forward sur 7 périodes (2019-2025), jamais de backtest full-sample pour la sélection
 2. Métriques : Sharpe moyen, nombre d'années positives (/7), OOS 2025, nombre de trades
 3. Seuil de validation : Sharpe avg > 0.5, >= 4/7 positif, OOS > 0
-4. Documentation immédiate avec rationnel économique
+4. Vérification look-ahead obligatoire pour tout signal multi-timeframe
+5. Documentation immédiate avec rationnel économique
