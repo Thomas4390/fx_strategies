@@ -541,14 +541,16 @@ def plot_train_vs_test(
 
 
 def build_trade_report(pf: vbt.Portfolio) -> str:
-    """Build comprehensive text report: portfolio + returns + trade stats."""
+    """Build a text report with portfolio stats and trade stats.
+
+    ``pf.returns_stats()`` used to be included here, but it triggers a
+    heavy computation (full returns analysis) that is rarely consulted
+    and visibly slows down single-run reports. Dropped intentionally.
+    """
     sections = []
 
     sections.append(f"PORTFOLIO STATS\n{'-' * 40}")
     sections.append(pf.stats().to_string())
-
-    sections.append(f"\nRETURNS STATS\n{'-' * 40}")
-    sections.append(pf.returns_stats().to_string())
 
     trade_count = pf.trades.count()
     # Multi-column portfolios return a Series of per-column counts.

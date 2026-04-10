@@ -151,20 +151,197 @@ def compute_metric_nb(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# EXECUTION DEFAULTS — progress bars + parallelization
+# ═══════════════════════════════════════════════════════════════════════
+
+# Default execution config for @vbt.parameterized and @vbt.cv_split.
+#
+# engine="threadpool" is the right choice for our pipelines because the
+# heavy lifting is done inside vbt.Portfolio.from_signals which releases
+# the GIL in its Numba kernels (from_signals_nb). The outer Python layer
+# holds the GIL briefly but the simulation itself runs nogil.
+#
+# For pure @njit(nogil=True) pipelines, threadpool + chunk_len="auto"
+# scales near-linearly with the number of cores. For Python-level
+# pipelines that delegate to VBT, the scaling is sublinear but still
+# provides a 2-4x speedup on typical grids vs serial execution.
+#
+# If a strategy becomes GIL-bound (e.g. heavy Python-level post-processing
+# per combo), switch to engine="pathos" with distribute="chunks" to use
+# multiprocessing instead — but note the overhead of pickling vbt.Data.
+#
+# NOTE: ``show_progress`` is intentionally omitted. VBT enables progress bars
+# by default (with a delay), and passing ``show_progress=True`` via
+# ``parameterized_kwargs`` inside ``@vbt.cv_split`` triggers a VBT bug where
+# ``cv_split`` injects its own ``show_progress=False`` at the top-level of
+# parameterized_kwargs, causing a conflict with the nested value and leading
+# to ``Parameterizer doesn't expect arguments ['show_progress']``. By omitting
+# it from our defaults, we let VBT's automatic default (enabled with delay)
+# kick in, and ``pbar_kwargs=dict(delay=0)`` forces immediate display.
+DEFAULT_EXECUTE_KWARGS: dict[str, Any] = dict(
+    chunk_len="auto",
+    engine="threadpool",
+    warmup=True,  # compile first chunk serially before parallelizing
+)
+
+
+def make_execute_kwargs(desc: str, **overrides: Any) -> dict[str, Any]:
+    """Build an ``execute_kwargs`` dict with a labelled tqdm progress bar.
+
+    Parameters
+    ----------
+    desc
+        Label shown on the progress bar (e.g. ``"MR Turbo grid"``).
+    **overrides
+        Any key in :data:`DEFAULT_EXECUTE_KWARGS` to override.
+
+    Returns
+    -------
+    dict
+        Dictionary suitable for
+        ``@vbt.parameterized(execute_kwargs=...)`` and
+        ``@vbt.cv_split(execute_kwargs=...)``.
+
+    Example
+    -------
+    >>> @vbt.parameterized(
+    ...     merge_func="concat",
+    ...     execute_kwargs=make_execute_kwargs("MR Turbo grid"),
+    ... )
+    ... def pipeline_nb(...): ...
+    """
+    out: dict[str, Any] = dict(DEFAULT_EXECUTE_KWARGS)
+    # Allow callers to override pbar_kwargs while preserving the desc.
+    pbar_overrides = overrides.pop("pbar_kwargs", None)
+    for key, val in overrides.items():
+        out[key] = val
+    pbar_kwargs: dict[str, Any] = dict(delay=0)  # force immediate display
+    if pbar_overrides:
+        pbar_kwargs.update(pbar_overrides)
+    pbar_kwargs["desc"] = desc
+    out["pbar_kwargs"] = pbar_kwargs
+    return out
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # PLOTTING SETTINGS
 # ═══════════════════════════════════════════════════════════════════════
 
 
 def apply_vbt_plot_defaults() -> None:
-    """Install fullscreen layout + FX 24h annualization as VBT global defaults.
+    """Install fullscreen layout + FX 24h annualization + downsampling defaults.
 
-    Wrapper around ``utils.apply_vbt_settings`` that the strategies' mains
-    call at startup. Kept as a thin re-export so strategies only import from
-    ``framework.pipeline_utils``.
+    In addition to ``utils.apply_vbt_settings`` (which installs
+    ``configure_figure_for_fullscreen`` and the 24h year-freq), this also
+    enables the Plotly performance optimizations needed to plot long
+    minute-frequency series without freezing the browser / IDE:
+
+    - ``use_gl=True``: enable ``Scattergl`` (WebGL) rendering for traces
+      with more than 10000 points. This gives a 10-50x speedup for line
+      plots of long histories.
+    - ``use_resampler=True``: activate the ``plotly-resampler`` plugin if
+      installed. This plugin dynamically downsamples the data client-side
+      so only the visible points are rendered. Silently skipped if the
+      package is not installed.
     """
     from utils import apply_vbt_settings
 
     apply_vbt_settings()
+
+    # Enable WebGL scatter rendering for large traces (>10k points).
+    try:
+        vbt.settings.plotting["use_gl"] = True
+    except Exception:
+        pass
+
+    # Enable plotly-resampler if available — fallback gracefully otherwise.
+    try:
+        import plotly_resampler  # noqa: F401
+
+        vbt.settings.plotting["use_resampler"] = True
+    except ImportError:
+        pass
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# DOWNSAMPLING HELPERS
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _pick_resample_freq(n_source: int, total_seconds: float, max_points: int) -> str:
+    """Choose a human-readable pandas offset that yields ~max_points samples."""
+    if n_source <= max_points or total_seconds <= 0:
+        return ""
+    target_sec = total_seconds / max_points
+    if target_sec < 60:
+        return "1min"
+    if target_sec < 300:
+        return "5min"
+    if target_sec < 900:
+        return "15min"
+    if target_sec < 1800:
+        return "30min"
+    if target_sec < 3600:
+        return "1H"
+    if target_sec < 14400:
+        return "4H"
+    if target_sec < 86400:
+        return "1D"
+    return "1W"
+
+
+def downsample_for_plot(obj: Any, max_points: int = 20_000) -> Any:
+    """Downsample a Series/DataFrame to <= ``max_points`` via temporal resample.
+
+    Returns the object unchanged if it has no DatetimeIndex, if it is
+    already short enough, or if downsampling fails. Used by
+    :func:`analyze_portfolio` before building indicator overlays.
+    """
+    if obj is None:
+        return obj
+    if not hasattr(obj, "index") or not hasattr(obj, "resample"):
+        return obj
+    idx = obj.index
+    if not isinstance(idx, pd.DatetimeIndex) or len(obj) <= max_points:
+        return obj
+    total_sec = (idx[-1] - idx[0]).total_seconds()
+    freq = _pick_resample_freq(len(obj), total_sec, max_points)
+    if not freq:
+        return obj
+    try:
+        return obj.resample(freq).last().dropna()
+    except Exception:
+        return obj
+
+
+def downsample_portfolio_for_plot(
+    pf: vbt.Portfolio, max_points: int = 20_000
+) -> vbt.Portfolio:
+    """Resample a ``vbt.Portfolio`` down to <= ``max_points`` for plotting.
+
+    Uses ``pf.resample(freq)`` which correctly handles intrabar stops and
+    position carry-over. Returns the original ``pf`` if already short
+    enough or if resampling fails.
+
+    The original full-resolution ``pf`` should still be used for
+    ``pf.stats()`` / ``pf.sharpe_ratio`` — only the plotting layer needs
+    the downsampled version.
+    """
+    try:
+        idx = pf.wrapper.index
+    except Exception:
+        return pf
+    if not isinstance(idx, pd.DatetimeIndex) or len(idx) <= max_points:
+        return pf
+    total_sec = (idx[-1] - idx[0]).total_seconds()
+    freq = _pick_resample_freq(len(idx), total_sec, max_points)
+    if not freq:
+        return pf
+    try:
+        return pf.resample(freq)
+    except Exception as e:
+        print(f"  [downsample_portfolio_for_plot] resample({freq!r}) failed: {e}")
+        return pf
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -191,6 +368,41 @@ def resolve_ann_factor(index: pd.DatetimeIndex | None = None) -> float:
 # ═══════════════════════════════════════════════════════════════════════
 
 
+def _downsample_indicator_fields(indicator: Any, max_points: int) -> Any:
+    """Return a copy of ``indicator`` with all Series/DataFrame fields
+    downsampled to ``max_points``.
+
+    Works on dataclass instances that hold pandas Series attributes
+    (``MRTurboIndicator``, ``MRMacroIndicator``, ``OUMRIndicator``,
+    ``CompositeAlphaIndicator``, ``TSMomentumIndicator``,
+    ``XSMomentumIndicator``, ``RSIDailyIndicator``) without requiring any
+    strategy-specific knowledge — inspected at runtime.
+    """
+    if indicator is None:
+        return None
+    # Prefer dataclass copy via __dict__ mutation, fall back to returning
+    # the original if we cannot build a new instance.
+    import copy
+
+    try:
+        ds = copy.copy(indicator)
+    except Exception:
+        return indicator
+    for attr_name in dir(ds):
+        if attr_name.startswith("_"):
+            continue
+        try:
+            val = getattr(ds, attr_name)
+        except Exception:
+            continue
+        if isinstance(val, (pd.Series, pd.DataFrame)):
+            try:
+                object.__setattr__(ds, attr_name, downsample_for_plot(val, max_points))
+            except Exception:
+                pass
+    return ds
+
+
 def analyze_portfolio(
     pf: vbt.Portfolio,
     *,
@@ -199,14 +411,26 @@ def analyze_portfolio(
     show_charts: bool = False,
     save_excel: bool = False,
     indicator: Any | None = None,
+    max_plot_points: int = 20_000,
 ) -> dict[str, Any]:
     """Generate stats + equity + drawdowns + trades + tearsheet.
 
     Thin wrapper around ``framework.plotting`` helpers. Returns a dict with
     ``{"stats": pd.Series, "figures": dict[str, go.Figure], "html_path": Path | None}``.
 
-    The single-run report is the successor of ``backtest_<strat>()`` + the
-    ad-hoc ``_walk_forward_report`` prints scattered in the old main blocks.
+    Parameters
+    ----------
+    pf
+        Full-resolution portfolio. ``pf.stats()`` is computed on this
+        object so the reported metrics reflect the original frequency.
+    indicator
+        Optional indicator holder with a ``.plot()`` method. Any pandas
+        Series/DataFrame attribute is downsampled via
+        :func:`downsample_for_plot` before being passed to ``.plot()``.
+    max_plot_points
+        Target max number of bars per trace. Long histories (e.g. FX
+        minute over 8 years = ~1.2M points) are resampled to a coarser
+        frequency before plotting to prevent Plotly/IDE freezes.
     """
     from framework.plotting import (
         build_trade_report,
@@ -218,37 +442,60 @@ def analyze_portfolio(
     )
 
     figures: dict[str, go.Figure] = {}
+    # Stats always computed on the full-resolution portfolio.
     stats = pf.stats()
 
+    # Downsample the portfolio for plotting only — leaves pf.stats() untouched.
+    pf_plot = downsample_portfolio_for_plot(pf, max_points=max_plot_points)
+
     try:
-        figures["summary"] = plot_portfolio_summary(pf, title=f"{name} — Summary")
+        figures["summary"] = plot_portfolio_summary(pf_plot, title=f"{name} — Summary")
     except Exception as e:
         print(f"  [analyze_portfolio] plot_portfolio_summary failed: {e}")
 
     try:
         figures["monthly_heatmap"] = plot_monthly_heatmap(
-            pf, title=f"{name} — Monthly Returns"
+            pf_plot, title=f"{name} — Monthly Returns"
         )
     except Exception as e:
         print(f"  [analyze_portfolio] plot_monthly_heatmap failed: {e}")
 
     try:
         figures["trade_analysis"] = plot_trade_analysis(
-            pf, title=f"{name} — Trade Analysis"
+            pf_plot, title=f"{name} — Trade Analysis"
         )
     except Exception as e:
         print(f"  [analyze_portfolio] plot_trade_analysis failed: {e}")
 
     if indicator is not None:
+        # Rebuild the indicator with each Series attribute downsampled.
         try:
-            fig = indicator.plot() if callable(getattr(indicator, "plot", None)) else None
+            ds_indicator = _downsample_indicator_fields(indicator, max_plot_points)
+        except Exception as e:
+            print(f"  [analyze_portfolio] indicator downsample failed: {e}")
+            ds_indicator = indicator
+        try:
+            fig = ds_indicator.plot() if callable(getattr(ds_indicator, "plot", None)) else None
             if fig is not None:
                 figures["indicator_overlay"] = fig
         except Exception as e:
             print(f"  [analyze_portfolio] indicator.plot() failed: {e}")
 
+    # Trade signals need fine resolution to show individual trade markers,
+    # but plotting 1M+ points freezes Plotly. Compromise: if the full pf is
+    # too long, slice the last N bars at native resolution instead of
+    # resampling.
     try:
-        figures["trade_signals"] = plot_trade_signals(pf, title=f"{name} — Signals")
+        pf_signals = pf
+        try:
+            idx = pf.wrapper.index
+            if isinstance(idx, pd.DatetimeIndex) and len(idx) > max_plot_points:
+                pf_signals = pf.iloc[-max_plot_points:]
+        except Exception:
+            pass
+        figures["trade_signals"] = plot_trade_signals(
+            pf_signals, title=f"{name} — Signals (last {max_plot_points} bars)"
+        )
     except Exception as e:
         print(f"  [analyze_portfolio] plot_trade_signals failed: {e}")
 

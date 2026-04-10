@@ -25,6 +25,7 @@ import vectorbtpro as vbt
 from framework.pipeline_utils import (
     SHARPE_RATIO,
     compute_metric_nb,
+    make_execute_kwargs,
 )
 
 # RSI daily is resampled to daily frequency → annualization factor = 252
@@ -137,7 +138,7 @@ def pipeline(
 
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    execute_kwargs=make_execute_kwargs("RSI Daily grid"),
 )
 def pipeline_nb(
     data: vbt.Data,
@@ -224,9 +225,12 @@ def create_cv_pipeline(
         splitter_kwargs=splitter_kwargs,
         takeable_args=["data"],
         parameterized_kwargs=dict(
-            execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+            execute_kwargs=make_execute_kwargs(
+                "RSI Daily combos", pbar_kwargs=dict(leave=False)
+            ),
             merge_func="concat",
         ),
+        execute_kwargs=make_execute_kwargs("RSI Daily CV splits"),
         merge_func="concat",
         return_grid="all",
         attach_bounds="index",

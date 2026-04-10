@@ -32,6 +32,7 @@ from framework.pipeline_utils import (
     FX_MINUTE_ANN_FACTOR,
     SHARPE_RATIO,
     compute_metric_nb,
+    make_execute_kwargs,
 )
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -244,7 +245,7 @@ def pipeline(
 
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    execute_kwargs=make_execute_kwargs("MR Macro grid"),
 )
 def pipeline_nb(
     data: vbt.Data,
@@ -354,9 +355,12 @@ def create_cv_pipeline(
         splitter_kwargs=splitter_kwargs,
         takeable_args=["data"],
         parameterized_kwargs=dict(
-            execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+            execute_kwargs=make_execute_kwargs(
+                "MR Macro combos", pbar_kwargs=dict(leave=False)
+            ),
             merge_func="concat",
         ),
+        execute_kwargs=make_execute_kwargs("MR Macro CV splits"),
         merge_func="concat",
         return_grid="all",
         attach_bounds="index",

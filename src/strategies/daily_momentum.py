@@ -32,6 +32,7 @@ import vectorbtpro as vbt
 from framework.pipeline_utils import (
     SHARPE_RATIO,
     compute_metric_nb,
+    make_execute_kwargs,
 )
 from utils import load_fx_data
 
@@ -258,7 +259,7 @@ def pipeline_xs(
 
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    execute_kwargs=make_execute_kwargs("XS Momentum grid"),
 )
 def pipeline_xs_nb(
     closes: pd.DataFrame,
@@ -339,9 +340,12 @@ def create_cv_pipeline_xs(
         splitter_kwargs=splitter_kwargs,
         takeable_args=["closes"],
         parameterized_kwargs=dict(
-            execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+            execute_kwargs=make_execute_kwargs(
+                "XS Momentum combos", pbar_kwargs=dict(leave=False)
+            ),
             merge_func="concat",
         ),
+        execute_kwargs=make_execute_kwargs("XS Momentum CV splits"),
         merge_func="concat",
         return_grid="all",
         attach_bounds="index",
@@ -479,7 +483,7 @@ def pipeline_ts(
 
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+    execute_kwargs=make_execute_kwargs("TS Momentum grid"),
 )
 def pipeline_ts_nb(
     close_daily: pd.Series,
@@ -571,9 +575,12 @@ def create_cv_pipeline_ts(
         splitter_kwargs=splitter_kwargs,
         takeable_args=["close_daily"],
         parameterized_kwargs=dict(
-            execute_kwargs=dict(chunk_len="auto", engine="threadpool"),
+            execute_kwargs=make_execute_kwargs(
+                "TS Momentum combos", pbar_kwargs=dict(leave=False)
+            ),
             merge_func="concat",
         ),
+        execute_kwargs=make_execute_kwargs("TS Momentum CV splits"),
         merge_func="concat",
         return_grid="all",
         attach_bounds="index",
