@@ -1,0 +1,43 @@
+{
+  "strat": "daily_xs",
+  "label": "default",
+  "module": "strategies.daily_momentum",
+  "callable": "backtest_xs_momentum_pf",
+  "params": {
+    "w_short": 21,
+    "w_long": 63,
+    "target_vol": 0.1
+  },
+  "data_loader": "multi_pair_daily_closes",
+  "stats": {
+    "Start Index": "2018-01-01 00:00:00",
+    "End Index": "2026-04-01 00:00:00",
+    "Total Duration": "2575 days 00:00:00",
+    "Start Value": 1000000.0,
+    "Min Value": 891084.1441236433,
+    "Max Value": 1072485.3103210346,
+    "End Value": 975455.1103789435,
+    "Total Return [%]": -2.454488962105642,
+    "Benchmark Return [%]": 11.511094218078064,
+    "Position Coverage [%]": 97.51456310679612,
+    "Max Gross Exposure [%]": 102.67841998565201,
+    "Max Drawdown [%]": 13.961408751060056,
+    "Max Drawdown Duration": "1692 days 06:00:00",
+    "Total Orders": 2243.0,
+    "Total Fees Paid": 13672.055728877012,
+    "Total Trades": 1199.25,
+    "Win Rate [%]": 57.18543769079694,
+    "Best Trade [%]": 8.001294148905458,
+    "Worst Trade [%]": -3.3815377312685824,
+    "Avg Winning Trade [%]": 1.1358050132213942,
+    "Avg Losing Trade [%]": -0.5389305946780357,
+    "Avg Winning Trade Duration": "37 days 15:35:44.159284802",
+    "Avg Losing Trade Duration": "26 days 18:03:26.678608726",
+    "Profit Factor": 0.9377130998794931,
+    "Expectancy": -20.08134386544944,
+    "Sharpe Ratio": -0.08013983544504347,
+    "Calmar Ratio": -0.014179946214223676,
+    "Omega Ratio": 0.9849404167554163,
+    "Sortino Ratio": -0.10359400692117066
+  }
+}

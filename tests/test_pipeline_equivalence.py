@@ -182,6 +182,77 @@ def test_rsi_daily_pipeline_equivalent(label, params, fx_data):
     assert_stats_equivalent(snapshot["stats"], pf.stats())
 
 
+@pytest.fixture(scope="module")
+def daily_closes():
+    """4-pair daily closes used by XS momentum."""
+    import sys
+    from pathlib import Path
+
+    src_dir = Path(__file__).resolve().parent.parent / "src"
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    from utils import apply_vbt_settings
+
+    apply_vbt_settings()
+    from strategies.daily_momentum import load_daily_closes
+
+    return load_daily_closes()
+
+
+@pytest.fixture(scope="module")
+def gbpusd_daily_close():
+    """Single-pair GBP-USD daily close Series used by TS momentum."""
+    import sys
+    from pathlib import Path
+
+    src_dir = Path(__file__).resolve().parent.parent / "src"
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    from utils import apply_vbt_settings, load_fx_data
+
+    apply_vbt_settings()
+    _, data = load_fx_data("data/GBP-USD_minute.parquet")
+    return data.close.resample("1D").last().dropna()
+
+
+DAILY_XS_CASES = [
+    ("default", dict(w_short=21, w_long=63, target_vol=0.10)),
+    ("short_long", dict(w_short=10, w_long=42, target_vol=0.08)),
+]
+
+
+@pytest.mark.parametrize("label,params", DAILY_XS_CASES, ids=[c[0] for c in DAILY_XS_CASES])
+def test_daily_xs_pipeline_equivalent(label, params, daily_closes):
+    """pipeline_xs must match the legacy backtest_xs_momentum_pf snapshot."""
+    import importlib
+
+    daily_momentum = importlib.import_module("strategies.daily_momentum")
+    pipeline_xs = daily_momentum.pipeline_xs
+
+    snapshot = _load_snapshot(_snapshot_path("daily_xs", label))
+    pf, _ = pipeline_xs(daily_closes, **params)
+    assert_stats_equivalent(snapshot["stats"], pf.stats())
+
+
+DAILY_TS_CASES = [
+    ("default", dict(fast_ema=20, slow_ema=50, rsi_period=7, rsi_low=40, rsi_high=60)),
+    ("slow_trend", dict(fast_ema=30, slow_ema=100, rsi_period=14, rsi_low=40, rsi_high=60)),
+]
+
+
+@pytest.mark.parametrize("label,params", DAILY_TS_CASES, ids=[c[0] for c in DAILY_TS_CASES])
+def test_daily_ts_pipeline_equivalent(label, params, gbpusd_daily_close):
+    """pipeline_ts must match the legacy backtest_ts_momentum_pf snapshot."""
+    import importlib
+
+    daily_momentum = importlib.import_module("strategies.daily_momentum")
+    pipeline_ts = daily_momentum.pipeline_ts
+
+    snapshot = _load_snapshot(_snapshot_path("daily_ts", label))
+    pf, _ = pipeline_ts(gbpusd_daily_close, **params)
+    assert_stats_equivalent(snapshot["stats"], pf.stats())
+
+
 def test_helper_roundtrip(tmp_path):
     """Sanity: dict → JSON → compare against the same pf.stats() passes."""
     stats = pd.Series(
