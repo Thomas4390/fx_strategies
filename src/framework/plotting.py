@@ -550,7 +550,13 @@ def build_trade_report(pf: vbt.Portfolio) -> str:
     sections.append(f"\nRETURNS STATS\n{'-' * 40}")
     sections.append(pf.returns_stats().to_string())
 
-    if pf.trades.count() > 0:
+    trade_count = pf.trades.count()
+    # Multi-column portfolios return a Series of per-column counts.
+    if isinstance(trade_count, pd.Series):
+        has_trades = bool((trade_count > 0).any())
+    else:
+        has_trades = trade_count > 0
+    if has_trades:
         sections.append(f"\nTRADE STATS\n{'-' * 40}")
         sections.append(pf.trades.stats().to_string())
 
