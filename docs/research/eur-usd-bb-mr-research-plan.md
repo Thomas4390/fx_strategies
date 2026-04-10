@@ -542,12 +542,23 @@ Verification sur VBT avec differents rf :
 
 **Conclusion : la divergence Sharpe est 100% explicable par le risk-free rate.** Les deux plateformes produisent le meme resultat ajuste pour rf.
 
-**2. Nombre de trades : +67% sur QC**
+**2. Nombre de trades : +67% sur QC (v2), corrige en v3**
 
 VBT : 129 trades (filtre spread<0.5 AND chomage stable).
-QC : ~215 trades (filtre spread<0.5 SEULEMENT — pas de filtre chomage).
+QC v2 : ~215 trades (filtre spread<0.5 SEULEMENT).
+QC v3 : ~194 trades (filtre spread<0.5 + proxy chomage via yield curve steepening).
 
-L'algorithme QC a ete simplifie (pas de donnees chomage USTreasuryYieldCurveRate ne contient pas UNRATE). Les trades supplementaires sur QC sont les periodes ou le spread est favorable mais le chomage monte — ce sont des trades de moindre qualite, d'ou le win rate inferieur (54% vs 58%) et le DD superieur (3.9% vs 2.05%).
+**Correction v3 :** Un proxy du filtre chomage a ete ajoute (spread steepening > 0.3 sur 3 mois = recession fear = block trading). Resultats :
+
+| Metrique | QC v2 (spread seul) | QC v3 (+ unemp proxy) |
+|----------|--------------------|-----------------------|
+| Trades | 430 orders | 388 orders |
+| Win Rate | 54% | **56%** |
+| Net Profit | 7.75% | **8.80%** |
+| Max DD | 3.90% | **3.20%** |
+| Expectancy | 0.132 | **0.164** (+24%) |
+
+Le proxy ameliore tous les metriques. L'ecart residuel avec VBT (8.80% vs 9.89%) provient du feed de donnees (OANDA vs custom) et du modele d'execution.
 
 **3. Data source : OANDA vs parquet custom**
 
