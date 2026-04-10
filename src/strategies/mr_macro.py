@@ -42,9 +42,14 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # MACRO DATA LOADING (VBT native realign + module-level cache)
 # ═══════════════════════════════════════════════════════════════════════
 
-# Module-level cache: (first_ts, last_ts, n_bars, spread_threshold) → np.ndarray
-_MACRO_FILTER_CACHE: dict[tuple, np.ndarray] = {}
-_MACRO_CACHE_MAX = 8
+# Aligned macro series (minute-frequency) cached at module level so
+# walk-forward CV does not re-realign the spread / unemployment series
+# on every call. Keyed by ``(first_ts, last_ts, n_bars)`` — the
+# spread_threshold does NOT enter the key because we cache the raw
+# ``spread_min`` / ``unemp_ok`` arrays and apply the threshold on the
+# fly in :func:`load_macro_filters`.
+_ALIGNED_MACRO_CACHE: dict[tuple, tuple[np.ndarray, np.ndarray]] = {}
+_ALIGNED_MACRO_CACHE_MAX = 4  # plenty for a single strategy run
 
 
 def _load_macro_series(data_dir: Path) -> tuple[pd.Series, pd.Series]:
@@ -60,32 +65,24 @@ def _load_macro_series(data_dir: Path) -> tuple[pd.Series, pd.Series]:
     return spread, unemp_rising
 
 
-def load_macro_filters(
+def _get_aligned_macro(
     minute_index: pd.DatetimeIndex,
-    spread_threshold: float = 0.3,
-    data_dir: Path | None = None,
-) -> pd.Series:
-    """Load macro data and build regime filter aligned to minute index.
+    data_dir: Path,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return (spread_min_vals, unemp_ok_vals) aligned to ``minute_index``.
 
-    Filter: yield spread 10Y-2Y < threshold AND unemployment not rising (3m).
-    Both conditions must be True for trading to be allowed.
-
-    Uses ``vbt.Resampler`` + ``.vbt.realign_opening`` (macro data is as-of the
-    report date, usable from 00:00 of that date). Cached at module level so
-    repeated calls in a grid sweep reuse previous alignment.
+    Results are cached so that repeated calls with the same index reuse
+    the expensive ``vbt.Resampler`` work. This is the hot path in
+    ``@vbt.cv_split`` where the same split ranges are hit many times.
     """
-    if data_dir is None:
-        data_dir = _PROJECT_ROOT / "data"
-
     cache_key = (
         minute_index[0].value,
         minute_index[-1].value,
         len(minute_index),
-        float(spread_threshold),
     )
-    cached = _MACRO_FILTER_CACHE.get(cache_key)
+    cached = _ALIGNED_MACRO_CACHE.get(cache_key)
     if cached is not None:
-        return pd.Series(cached, index=minute_index, name="macro_ok")
+        return cached
 
     spread, unemp_rising = _load_macro_series(data_dir)
 
@@ -108,14 +105,37 @@ def load_macro_filters(
     )
     unemp_ok = unemp_rising_min_f.fillna(0.0).astype(bool)
 
-    macro_ok = (spread_min < spread_threshold) & (~unemp_ok)
-    macro_ok = macro_ok.where(macro_ok.notna(), False).astype(bool)
-    macro_ok.name = "macro_ok"
+    spread_vals = np.asarray(spread_min.values, dtype=float)
+    unemp_vals = np.asarray(unemp_ok.values, dtype=bool)
 
-    if len(_MACRO_FILTER_CACHE) >= _MACRO_CACHE_MAX:
-        _MACRO_FILTER_CACHE.pop(next(iter(_MACRO_FILTER_CACHE)))
-    _MACRO_FILTER_CACHE[cache_key] = macro_ok.values.copy()
-    return macro_ok
+    if len(_ALIGNED_MACRO_CACHE) >= _ALIGNED_MACRO_CACHE_MAX:
+        _ALIGNED_MACRO_CACHE.pop(next(iter(_ALIGNED_MACRO_CACHE)))
+    _ALIGNED_MACRO_CACHE[cache_key] = (spread_vals, unemp_vals)
+    return spread_vals, unemp_vals
+
+
+def load_macro_filters(
+    minute_index: pd.DatetimeIndex,
+    spread_threshold: float = 0.3,
+    data_dir: Path | None = None,
+) -> pd.Series:
+    """Return the boolean macro regime filter aligned to ``minute_index``.
+
+    Filter: yield spread 10Y-2Y < ``spread_threshold`` AND unemployment
+    not rising (3-month diff). The expensive realign step is cached in
+    ``_ALIGNED_MACRO_CACHE`` keyed by the target index only, so sweeping
+    ``spread_threshold`` across a grid is essentially free after the
+    first call.
+    """
+    if data_dir is None:
+        data_dir = _PROJECT_ROOT / "data"
+
+    spread_vals, unemp_vals = _get_aligned_macro(minute_index, data_dir)
+    mask = (spread_vals < float(spread_threshold)) & (~unemp_vals)
+    # NaN spread values (possible at the very start before the first
+    # observation) propagate as False.
+    mask = np.where(np.isnan(spread_vals), False, mask)
+    return pd.Series(mask, index=minute_index, name="macro_ok")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -134,29 +154,45 @@ class MRMacroIndicator:
     macro_ok: pd.Series
 
     def plot(self, fig: go.Figure | None = None, **layout_kwargs) -> go.Figure:
+        """Draw Close + VWAP + filled BB band as plain ``go.Scatter`` traces.
+
+        Lower and Upper bands are added back-to-back so ``fill="tonexty"``
+        on the Upper trace reliably fills between the two bands (Plotly
+        fills to the trace IMMEDIATELY before in the traces list, so
+        inserting Close/VWAP between them would break the fill).
+        """
         fig = fig or go.Figure()
-        self.close.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(name="Close", line=dict(width=2, color="blue")),
+        fig.add_trace(
+            go.Scatter(
+                x=self.close.index, y=self.close.values,
+                mode="lines", name="Close",
+                line=dict(width=2, color="royalblue"),
+            )
         )
-        self.lower.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(name="Lower Band", line=dict(width=1.2, color="grey")),
+        fig.add_trace(
+            go.Scatter(
+                x=self.vwap.index, y=self.vwap.values,
+                mode="lines", name="VWAP",
+                line=dict(color="crimson", width=1, dash="dot"),
+            )
         )
-        self.upper.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(
-                name="Upper Band",
-                line=dict(width=1.2, color="grey"),
+        fig.add_trace(
+            go.Scatter(
+                x=self.lower.index, y=self.lower.values,
+                mode="lines", name="Lower Band",
+                line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
+                showlegend=True,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=self.upper.index, y=self.upper.values,
+                mode="lines", name="Upper Band",
+                line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
                 fill="tonexty",
-                fillcolor="rgba(255, 255, 0, 0.2)",
-            ),
-        )
-        self.vwap.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(
-                name="VWAP", line=dict(color="red", width=1, dash="dot")
-            ),
+                fillcolor="rgba(255,215,0,0.18)",
+                showlegend=True,
+            )
         )
         fig.update_layout(**layout_kwargs)
         return fig
@@ -429,7 +465,6 @@ def _walk_forward_report(data: vbt.Data) -> None:
 
 
 if __name__ == "__main__":
-    import argparse
     import sys
     from pathlib import Path as _Path
 
@@ -438,99 +473,216 @@ if __name__ == "__main__":
         sys.path.insert(0, str(_SRC))
 
     from framework.pipeline_utils import (
+        METRIC_LABELS,
         analyze_portfolio,
         apply_vbt_plot_defaults,
         plot_cv_heatmap,
         plot_cv_splitter,
+        plot_cv_volume,
+        plot_grid_heatmap,
+        plot_grid_surface,
+        plot_grid_volume,
     )
+    from framework.plotting import print_cv_results, print_grid_results
     from utils import load_fx_data
 
-    ap = argparse.ArgumentParser(description="MR Macro pipeline (ims format)")
-    ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
-    ap.add_argument("--mode", choices=["single", "grid", "cv"], default="single")
-    ap.add_argument("--bb-window", type=int, default=80)
-    ap.add_argument("--bb-alpha", type=float, default=5.0)
-    ap.add_argument("--sl-stop", type=float, default=0.005)
-    ap.add_argument("--tp-stop", type=float, default=0.006)
-    ap.add_argument("--spread-threshold", type=float, default=0.5)
-    ap.add_argument("--leverage", type=float, default=1.0)
-    ap.add_argument("--n-folds", type=int, default=15)
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--output-dir", default="results/mr_macro")
-    args = ap.parse_args()
+    # ─────────────────────────────────────────────────────────────────
+    # CONFIGURATION
+    # ─────────────────────────────────────────────────────────────────
+    DATA_PATH = "data/EUR-USD_minute.parquet"
+    OUTPUT_DIR = "results/mr_macro"
+    SHOW_CHARTS = True
+    N_FOLDS = 15
+
+    SINGLE_PARAMS: dict[str, Any] = dict(
+        bb_window=80,
+        bb_alpha=5.0,
+        sl_stop=0.005,
+        tp_stop=0.006,
+        spread_threshold=0.5,
+        leverage=1.0,
+    )
+    GRID_PARAMS: dict[str, Any] = dict(
+        bb_window=[40, 60, 80, 120],
+        bb_alpha=[3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
+        sl_stop=0.005,
+        tp_stop=0.006,
+        spread_threshold=[0.3, 0.5, 0.7],
+    )
+    CV_PARAMS: dict[str, Any] = dict(
+        bb_window=[60, 80, 120],
+        bb_alpha=[4.0, 5.0, 6.0],
+        spread_threshold=[0.3, 0.5],
+    )
+    _METRIC_NAME = METRIC_LABELS[SHARPE_RATIO]
+
+    def _header(label: str) -> None:
+        bar = "█" * 78
+        print(f"\n{bar}")
+        print(f"██  {label.ljust(72)}  ██")
+        print(f"{bar}\n")
 
     apply_vbt_plot_defaults()
     print("Loading data...")
-    _, data = load_fx_data(args.data)
+    _, data = load_fx_data(DATA_PATH)
 
-    if args.mode == "single":
-        _walk_forward_report(data)
-        pf, ind = pipeline(
-            data,
-            bb_window=args.bb_window,
-            bb_alpha=args.bb_alpha,
-            sl_stop=args.sl_stop,
-            tp_stop=args.tp_stop,
-            spread_threshold=args.spread_threshold,
-            leverage=args.leverage,
-        )
-        print(pf.stats())
-        analyze_portfolio(
-            pf,
-            name="MR Macro",
-            output_dir=args.output_dir,
-            show_charts=args.show,
-            indicator=ind,
-        )
+    # ─────────────────────────────────────────────────────────────────
+    # 1) SINGLE RUN
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR MACRO  ·  SINGLE RUN")
+    _walk_forward_report(data)
+    pf, ind = pipeline(data, **SINGLE_PARAMS)
+    analyze_portfolio(
+        pf,
+        name="MR Macro",
+        output_dir=OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+        indicator=ind,
+    )
 
-    elif args.mode == "grid":
-        grid = run_grid(
-            data,
-            bb_window=[40, 60, 80, 120],
-            bb_alpha=[3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
-            sl_stop=0.005,
-            tp_stop=0.006,
-            spread_threshold=[0.3, 0.5, 0.7],
-            metric_type=SHARPE_RATIO,
-        )
-        print("\nTop 20 combos by Sharpe:")
-        print(grid.sort_values(ascending=False).head(20))
-        if args.show:
-            fig = grid.vbt.heatmap(
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="spread_threshold",
-            )
-            fig.show()
+    # ─────────────────────────────────────────────────────────────────
+    # 2) GRID SEARCH
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR MACRO  ·  GRID SEARCH")
+    grid = run_grid(data, metric_type=SHARPE_RATIO, **GRID_PARAMS)
+    print_grid_results(
+        grid,
+        title="MR Macro — Grid Search",
+        metric_name=_METRIC_NAME,
+        top_n=20,
+    )
+    if SHOW_CHARTS:
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="spread_threshold",
+            title=f"MR Macro — {_METRIC_NAME} heatmap (slider: spread_threshold)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"MR Macro — {_METRIC_NAME} heatmap (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_volume(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="spread_threshold",
+            title=f"MR Macro — {_METRIC_NAME} volume",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="spread_threshold",
+            title=f"MR Macro — {_METRIC_NAME} surface (slider: spread_threshold)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"MR Macro — {_METRIC_NAME} surface (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
-    elif args.mode == "cv":
-        splitter = vbt.Splitter.from_purged_walkforward(
-            data.index,
-            n_folds=args.n_folds,
-            n_test_folds=1,
-            purge_td="1 day",
-            min_train_folds=3,
-        )
-        if args.show:
-            plot_cv_splitter(splitter, title="MR Macro — CV Splits").show()
-        cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
-        grid_perf, best_perf = cv_pipeline(
-            data,
-            bb_window=vbt.Param([60, 80, 120]),
-            bb_alpha=vbt.Param([4.0, 5.0, 6.0]),
-            sl_stop=0.005,
-            tp_stop=0.006,
-            spread_threshold=vbt.Param([0.3, 0.5]),
-        )
-        print("\n▶ Best per split:")
-        print(best_perf)
-        if args.show:
-            plot_cv_heatmap(
-                grid_perf,
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="split",
-                title="MR Macro — CV Sharpe Heatmap",
-            ).show()
+    # ─────────────────────────────────────────────────────────────────
+    # 3) WALK-FORWARD CROSS-VALIDATION
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR MACRO  ·  WALK-FORWARD CV")
+    # Daily-resampled index for the splitter so plot_cv_splitter renders
+    # fast and the train/test bounds align on day boundaries.
+    daily_index = data.close.vbt.resample_apply("1D", "last").dropna().index
+    splitter = vbt.Splitter.from_purged_walkforward(
+        daily_index,
+        n_folds=N_FOLDS,
+        n_test_folds=1,
+        purge_td="1 day",
+        min_train_folds=3,
+    )
+    if SHOW_CHARTS:
+        plot_cv_splitter(splitter, title="MR Macro — CV Splits").show()
 
-    print("\nDone.")
+    cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
+    grid_perf, best_perf = cv_pipeline(
+        data,
+        bb_window=vbt.Param(CV_PARAMS["bb_window"]),
+        bb_alpha=vbt.Param(CV_PARAMS["bb_alpha"]),
+        sl_stop=0.005,
+        tp_stop=0.006,
+        spread_threshold=vbt.Param(CV_PARAMS["spread_threshold"]),
+    )
+    print_cv_results(
+        grid_perf,
+        best_perf,
+        splitter=splitter,
+        title="MR Macro — Walk-Forward CV",
+        metric_name=_METRIC_NAME,
+        top_n=10,
+    )
+    if SHOW_CHARTS:
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} heatmap (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} heatmap (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="spread_threshold",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} volume (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="spread_threshold",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} volume (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} surface (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Macro — CV {_METRIC_NAME} surface (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+
+    print("\nAll modes done.")

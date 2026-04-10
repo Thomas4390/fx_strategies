@@ -65,6 +65,26 @@ METRIC_NAMES: dict[int, str] = {
     COND_VALUE_AT_RISK: "cond_value_at_risk",
 }
 
+# Human-readable display labels — used for chart hovers, colorbars, and
+# table headers so the reader sees "Sharpe Ratio: 1.65" instead of the
+# raw snake_case identifier "sharpe_ratio".
+METRIC_LABELS: dict[int, str] = {
+    TOTAL_RETURN: "Total Return",
+    SHARPE_RATIO: "Sharpe Ratio",
+    CALMAR_RATIO: "Calmar Ratio",
+    SORTINO_RATIO: "Sortino Ratio",
+    OMEGA_RATIO: "Omega Ratio",
+    ANNUALIZED_RETURN: "Annualized Return",
+    MAX_DRAWDOWN: "Max Drawdown",
+    PROFIT_FACTOR: "Profit Factor",
+    VALUE_AT_RISK: "Value at Risk",
+    TAIL_RATIO: "Tail Ratio",
+    ANNUALIZED_VOLATILITY: "Annualized Volatility",
+    INFORMATION_RATIO: "Information Ratio",
+    DOWNSIDE_RISK: "Downside Risk",
+    COND_VALUE_AT_RISK: "Conditional VaR",
+}
+
 METRIC_NAME_TO_ID: dict[str, int] = {v: k for k, v in METRIC_NAMES.items()}
 
 # FX minute default: 24h × 252 = 362880 bars/year
@@ -262,6 +282,32 @@ def apply_vbt_plot_defaults() -> None:
     except ImportError:
         pass
 
+    # Silence the "Using right bound of source/target index without
+    # frequency" warnings from vbt.Splitter during @vbt.cv_split. FX
+    # data has weekend gaps so pd.DatetimeIndex.freq is None, and VBT
+    # falls back to the right bound of the index — which is the
+    # correct behaviour, just noisy when repeated per split × param.
+    import warnings as _warnings
+    try:
+        from vectorbtpro.utils.warnings_ import VBTWarning
+
+        _warnings.filterwarnings(
+            "ignore",
+            message=".*right bound of.*index without frequency.*",
+            category=VBTWarning,
+        )
+    except Exception:
+        # Fallback: match by message only in case VBTWarning is not
+        # importable.
+        _warnings.filterwarnings(
+            "ignore",
+            message=".*right bound of.*index without frequency.*",
+        )
+    try:
+        vbt.settings.resampling["silence_warnings"] = True
+    except Exception:
+        pass
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # DOWNSAMPLING HELPERS
@@ -282,16 +328,21 @@ def _pick_resample_freq(n_source: int, total_seconds: float, max_points: int) ->
     if target_sec < 1800:
         return "30min"
     if target_sec < 3600:
-        return "1H"
+        return "1h"
     if target_sec < 14400:
-        return "4H"
+        return "4h"
     if target_sec < 86400:
         return "1D"
     return "1W"
 
 
 def downsample_for_plot(obj: Any, max_points: int = 20_000) -> Any:
-    """Downsample a Series/DataFrame to <= ``max_points`` via temporal resample.
+    """Downsample a Series/DataFrame to <= ``max_points`` via VBT-native resample.
+
+    Uses ``obj.vbt.resample_apply(freq, "last")`` — the VBT Pro native
+    equivalent of ``obj.resample(freq).last()`` which accepts modern
+    lowercase pandas offsets (``"1h"``, ``"4h"``) without FutureWarning
+    and integrates with VBT's internal Resampler.
 
     Returns the object unchanged if it has no DatetimeIndex, if it is
     already short enough, or if downsampling fails. Used by
@@ -299,7 +350,7 @@ def downsample_for_plot(obj: Any, max_points: int = 20_000) -> Any:
     """
     if obj is None:
         return obj
-    if not hasattr(obj, "index") or not hasattr(obj, "resample"):
+    if not hasattr(obj, "index"):
         return obj
     idx = obj.index
     if not isinstance(idx, pd.DatetimeIndex) or len(obj) <= max_points:
@@ -309,9 +360,12 @@ def downsample_for_plot(obj: Any, max_points: int = 20_000) -> Any:
     if not freq:
         return obj
     try:
-        return obj.resample(freq).last().dropna()
+        return obj.vbt.resample_apply(freq, "last")
     except Exception:
-        return obj
+        try:
+            return obj.resample(freq).last().dropna()
+        except Exception:
+            return obj
 
 
 def downsample_portfolio_for_plot(
@@ -435,9 +489,13 @@ def analyze_portfolio(
     from framework.plotting import (
         build_trade_report,
         generate_html_tearsheet,
+        plot_drawdown_analysis,
         plot_monthly_heatmap,
         plot_portfolio_summary,
+        plot_returns_distribution,
+        plot_rolling_sharpe,
         plot_trade_analysis,
+        plot_trade_duration,
         plot_trade_signals,
     )
 
@@ -467,24 +525,46 @@ def analyze_portfolio(
     except Exception as e:
         print(f"  [analyze_portfolio] plot_trade_analysis failed: {e}")
 
+    try:
+        figures["returns_distribution"] = plot_returns_distribution(
+            pf_plot, title=f"{name} — Returns Distribution"
+        )
+    except Exception as e:
+        print(f"  [analyze_portfolio] plot_returns_distribution failed: {e}")
+
+    try:
+        figures["drawdown_analysis"] = plot_drawdown_analysis(
+            pf_plot, title=f"{name} — Drawdown Analysis"
+        )
+    except Exception as e:
+        print(f"  [analyze_portfolio] plot_drawdown_analysis failed: {e}")
+
+    try:
+        figures["rolling_sharpe"] = plot_rolling_sharpe(
+            pf_plot, title=f"{name} — Rolling Sharpe"
+        )
+    except Exception as e:
+        print(f"  [analyze_portfolio] plot_rolling_sharpe failed: {e}")
+
+    try:
+        figures["trade_duration"] = plot_trade_duration(
+            pf_plot, title=f"{name} — Trade Duration"
+        )
+    except Exception as e:
+        print(f"  [analyze_portfolio] plot_trade_duration failed: {e}")
+
+    # Trade signals + indicator overlays combined into a single figure
+    # so all entry/exit context is in one place. The indicator is
+    # downsampled field-by-field first (series attributes only) to keep
+    # the overlay snappy on long histories.
+    ds_indicator: Any | None = None
     if indicator is not None:
-        # Rebuild the indicator with each Series attribute downsampled.
         try:
             ds_indicator = _downsample_indicator_fields(indicator, max_plot_points)
         except Exception as e:
             print(f"  [analyze_portfolio] indicator downsample failed: {e}")
             ds_indicator = indicator
-        try:
-            fig = ds_indicator.plot() if callable(getattr(ds_indicator, "plot", None)) else None
-            if fig is not None:
-                figures["indicator_overlay"] = fig
-        except Exception as e:
-            print(f"  [analyze_portfolio] indicator.plot() failed: {e}")
 
-    # Trade signals need fine resolution to show individual trade markers,
-    # but plotting 1M+ points freezes Plotly. Compromise: if the full pf is
-    # too long, slice the last N bars at native resolution instead of
-    # resampling.
     try:
         pf_signals = pf
         try:
@@ -493,13 +573,15 @@ def analyze_portfolio(
                 pf_signals = pf.iloc[-max_plot_points:]
         except Exception:
             pass
-        figures["trade_signals"] = plot_trade_signals(
-            pf_signals, title=f"{name} — Signals (last {max_plot_points} bars)"
+        figures["signals_and_indicator"] = plot_trade_signals(
+            pf_signals,
+            title=f"{name} — Signals + Indicators (last {max_plot_points} bars)",
+            indicator=ds_indicator,
         )
     except Exception as e:
         print(f"  [analyze_portfolio] plot_trade_signals failed: {e}")
 
-    report_text = build_trade_report(pf)
+    report_text = build_trade_report(pf, name=name)
     print(report_text)
 
     html_path: Path | None = None
@@ -547,38 +629,465 @@ def analyze_portfolio(
 
 def plot_cv_splitter(splitter: Any, title: str = "CV Splitter") -> go.Figure:
     """Visualize train/test ranges of a ``vbt.Splitter``."""
-    from utils import configure_figure_for_fullscreen
+    from framework.plotting import _apply_title_layout, make_fullscreen
 
     fig = splitter.plot()
-    fig.update_layout(title=title)
-    return configure_figure_for_fullscreen(fig)
+    _apply_title_layout(fig, title)
+    return make_fullscreen(fig)
 
 
+def _split_date_labels(splitter: Any, prefer_set: str = "test") -> dict[int, str]:
+    """Return a ``{split_int: "YYYY-MM-DD → YYYY-MM-DD"}`` mapping.
+
+    Looks up the preferred set ("test" or "train") in
+    ``splitter.index_bounds`` and falls back gracefully if the splitter
+    does not expose bounds.
+    """
+    try:
+        bounds = splitter.index_bounds
+    except Exception:
+        return {}
+    out: dict[int, str] = {}
+    try:
+        for (split_i, set_i), row in bounds.iterrows():
+            if set_i == prefer_set or set_i == (1 if prefer_set == "test" else 0):
+                start = pd.Timestamp(row["start"]).strftime("%Y-%m-%d")
+                end = pd.Timestamp(row["end"]).strftime("%Y-%m-%d")
+                out[split_i] = f"{start}/{end}"
+    except Exception:
+        return {}
+    return out
+
+
+def _relabel_split_level(
+    grid_perf: pd.Series, splitter: Any | None
+) -> pd.Series:
+    """Return a copy of ``grid_perf`` with the ``split`` level renamed
+    to human-readable date ranges, if the splitter is provided and has
+    bounds.
+    """
+    if splitter is None or "split" not in (grid_perf.index.names or []):
+        return grid_perf
+    labels = _split_date_labels(splitter, prefer_set="test")
+    if not labels:
+        return grid_perf
+    try:
+        return grid_perf.rename(index=labels, level="split")
+    except Exception:
+        return grid_perf
+
+
+def _select_set(grid_perf: pd.Series, set_name: str = "test") -> pd.Series:
+    """Return the subset of ``grid_perf`` matching the given ``set`` level."""
+    if "set" not in (grid_perf.index.names or []):
+        return grid_perf
+    try:
+        return grid_perf.xs(set_name, level="set")
+    except (KeyError, ValueError):
+        try:
+            return grid_perf.xs(1 if set_name == "test" else 0, level="set")
+        except Exception:
+            return grid_perf
+
+
+def _reduce_to_plot_levels(
+    data: pd.Series,
+    keep_levels: list[str],
+) -> pd.Series:
+    """Collapse ``data`` down to exactly ``keep_levels`` by averaging
+    over every other MultiIndex level.
+
+    Necessary before calling ``data.vbt.heatmap(...)`` or building a
+    Surface because any extra index level (e.g. a parameter the user
+    did not map to an axis) produces an ambiguous render.
+    """
+    if not isinstance(data.index, pd.MultiIndex):
+        return data
+    extras = [n for n in (data.index.names or []) if n not in keep_levels]
+    if not extras:
+        return data
+    # Group by the desired levels only, averaging across the rest.
+    return data.groupby(keep_levels).mean()
+
+
+def _pretty_metric(metric_name: str) -> str:
+    """``sharpe_ratio`` → ``Sharpe Ratio`` for display labels."""
+    return metric_name.replace("_", " ").title()
+
+
+def plot_grid_heatmap(
+    grid_perf: pd.Series,
+    *,
+    x_level: str,
+    y_level: str,
+    slider_level: str | None = None,
+    splitter: Any | None = None,
+    set_name: str = "test",
+    title: str | None = None,
+    metric_name: str = "metric",
+    **layout_kwargs: Any,
+) -> go.Figure:
+    """Render a grid-search (or CV grid) as a 2D heatmap.
+
+    Extra index levels that are neither ``x_level``/``y_level`` nor
+    ``slider_level``/``"split"`` are averaged out so the heatmap is
+    always built from a clean Series with exactly 2 (+ optional
+    slider) dimensions.
+
+    Parameters
+    ----------
+    grid_perf
+        ``pd.Series`` with a ``MultiIndex`` containing ``x_level``,
+        ``y_level`` and optionally ``slider_level``, ``split``, ``set``.
+    x_level, y_level
+        Index level names to map to x and y axes.
+    slider_level
+        Optional level used as a slider. Pass ``"split"`` to page
+        through CV folds, or any swept parameter to slide through its
+        values.  Pass ``None`` for a single aggregated heatmap.
+    splitter
+        Optional ``vbt.Splitter``. When provided, the ``split`` level
+        is relabelled with date ranges for human-readable sliders.
+    set_name
+        Which ``set`` to keep when a ``set`` level exists (``"test"``
+        or ``"train"``). Ignored if no ``set`` level present.
+    """
+    from framework.plotting import _apply_title_layout, make_fullscreen
+
+    data = _select_set(grid_perf, set_name=set_name)
+    data = _relabel_split_level(data, splitter)
+
+    # Build the exact list of index levels needed for rendering.
+    if slider_level is None:
+        keep = [x_level, y_level]
+    else:
+        keep = [x_level, y_level, slider_level]
+    data = _reduce_to_plot_levels(data, keep)
+
+    # Report NaN cells. The VBT heatmap leaves NaN as blank cells,
+    # which is visually correct ("this combo failed to compute") but
+    # can look like a bug without a diagnostic.
+    nan_count = int(data.isna().sum())
+    if nan_count > 0:
+        print(
+            f"  [heatmap] {nan_count}/{len(data)} NaN cells — rendered "
+            f"as blanks (combos where metric computation yielded NaN)"
+        )
+
+    pretty = _pretty_metric(metric_name)
+    kwargs: dict[str, Any] = {
+        "x_level": x_level,
+        "y_level": y_level,
+        "trace_kwargs": dict(
+            colorbar=dict(title=pretty),
+            hovertemplate=(
+                f"{x_level}: %{{x}}<br>"
+                f"{y_level}: %{{y}}<br>"
+                f"{pretty}: %{{z:.2f}}<extra></extra>"
+            ),
+        ),
+    }
+    if slider_level is not None and slider_level in (data.index.names or []):
+        kwargs["slider_level"] = slider_level
+    fig = data.vbt.heatmap(**kwargs)
+    if title:
+        _apply_title_layout(fig, title)
+    if layout_kwargs:
+        fig.update_layout(**layout_kwargs)
+    return make_fullscreen(fig)
+
+
+def _surface_matrix_from_series(
+    s: pd.Series,
+    x_level: str,
+    y_level: str,
+    fill_method: str = "median",
+) -> tuple[list, list, np.ndarray]:
+    """Convert a ``pd.Series`` with at least ``(x_level, y_level)`` in
+    its MultiIndex to a ``(x_values, y_values, z_matrix)`` tuple ready
+    for ``go.Surface``.
+
+    NaN cells are filled with ``median`` (default), ``mean`` or a
+    constant float (``0``/``np.nan``/etc.) so 3D surfaces render as
+    continuous sheets even when a few combos fail. A diagnostic
+    message is printed if any cell was filled.
+    """
+    # Force the Series down to the two plot levels before unstacking.
+    s = _reduce_to_plot_levels(s, [x_level, y_level])
+    mat = s.unstack(y_level)
+    # Sort axes numerically if possible so surfaces read left-to-right.
+    try:
+        mat = mat.sort_index(axis=0)
+        mat = mat.sort_index(axis=1)
+    except Exception:
+        pass
+    x = list(mat.index)
+    y = list(mat.columns)
+    z = mat.values.astype(float)
+    nan_count = int(np.isnan(z).sum())
+    if nan_count > 0:
+        all_nan = nan_count == z.size
+        if all_nan:
+            fill_val = 0.0
+        elif fill_method == "median":
+            import warnings as _w
+            with _w.catch_warnings():
+                _w.simplefilter("ignore", RuntimeWarning)
+                med = np.nanmedian(z)
+            fill_val = float(med) if np.isfinite(med) else 0.0
+        elif fill_method == "mean":
+            import warnings as _w
+            with _w.catch_warnings():
+                _w.simplefilter("ignore", RuntimeWarning)
+                mn = np.nanmean(z)
+            fill_val = float(mn) if np.isfinite(mn) else 0.0
+        else:
+            try:
+                fill_val = float(fill_method)
+            except (TypeError, ValueError):
+                fill_val = 0.0
+        print(
+            f"  [surface] {nan_count}/{z.size} NaN cells filled with "
+            f"{fill_method}={fill_val:.4f}"
+            + ("  (ALL NaN — degenerate frame)" if all_nan else "")
+        )
+        z = np.where(np.isnan(z), fill_val, z)
+    # Plotly expects z[i_y, i_x], i.e. the transpose of a row=x / col=y matrix.
+    return x, y, z.T
+
+
+def plot_grid_surface(
+    grid_perf: pd.Series,
+    *,
+    x_level: str,
+    y_level: str,
+    slider_level: str | None = None,
+    splitter: Any | None = None,
+    set_name: str = "test",
+    title: str | None = None,
+    colorscale: str = "Viridis",
+    fill_method: str = "median",
+    metric_name: str = "metric",
+    **layout_kwargs: Any,
+) -> go.Figure:
+    """Render a grid-search result as a 3D ``go.Surface`` plot.
+
+    Unlike :func:`plot_grid_volume` which needs three swept parameters
+    (x, y, z), the surface uses **two** parameter axes and the metric
+    itself as height. NaN cells (e.g. from CV folds with no trades)
+    are filled with the median of the remaining values so the surface
+    stays a continuous sheet instead of disappearing.
+
+    If ``slider_level`` is provided, one surface is emitted per slider
+    frame. Otherwise extra levels are averaged out.
+    """
+    from framework.plotting import _apply_title_layout, make_fullscreen
+
+    data = _select_set(grid_perf, set_name=set_name)
+    data = _relabel_split_level(data, splitter)
+
+    # Drop every level that is neither x, y nor the slider (start, end,
+    # other params) so the surface matrix is unambiguous.
+    if slider_level is None:
+        keep = [x_level, y_level]
+    else:
+        keep = [x_level, y_level, slider_level]
+    data = _reduce_to_plot_levels(data, keep)
+
+    pretty = _pretty_metric(metric_name)
+    hovertemplate = (
+        f"{x_level}: %{{x}}<br>"
+        f"{y_level}: %{{y}}<br>"
+        f"{pretty}: %{{z:.2f}}<extra></extra>"
+    )
+
+    if slider_level is not None and slider_level in (data.index.names or []):
+        slider_vals = sorted(
+            data.index.get_level_values(slider_level).unique(),
+            key=lambda v: str(v),
+        )
+        frames = []
+        first_x = first_y = first_z = None
+        for sv in slider_vals:
+            sub = data.xs(sv, level=slider_level)
+            x, y, z = _surface_matrix_from_series(
+                sub, x_level, y_level, fill_method=fill_method
+            )
+            if first_z is None:
+                first_x, first_y, first_z = x, y, z
+            frames.append(
+                go.Frame(
+                    data=[
+                        go.Surface(
+                            x=x, y=y, z=z,
+                            colorscale=colorscale,
+                            hovertemplate=hovertemplate,
+                        )
+                    ],
+                    name=str(sv),
+                )
+            )
+        fig = go.Figure(
+            data=[
+                go.Surface(
+                    x=first_x, y=first_y, z=first_z,
+                    colorscale=colorscale,
+                    colorbar=dict(title=pretty),
+                    hovertemplate=hovertemplate,
+                )
+            ],
+            frames=frames,
+        )
+        fig.update_layout(
+            sliders=[
+                dict(
+                    active=0,
+                    pad=dict(t=50),
+                    currentvalue=dict(prefix=f"{slider_level}: "),
+                    steps=[
+                        dict(
+                            method="animate",
+                            label=str(sv),
+                            args=[
+                                [str(sv)],
+                                dict(
+                                    mode="immediate",
+                                    frame=dict(duration=0, redraw=True),
+                                    transition=dict(duration=0),
+                                ),
+                            ],
+                        )
+                        for sv in slider_vals
+                    ],
+                )
+            ],
+        )
+    else:
+        x, y, z = _surface_matrix_from_series(
+            data, x_level, y_level, fill_method=fill_method
+        )
+        fig = go.Figure(
+            go.Surface(
+                x=x, y=y, z=z,
+                colorscale=colorscale,
+                colorbar=dict(title=pretty),
+                hovertemplate=hovertemplate,
+            )
+        )
+
+    fig.update_layout(
+        scene=dict(
+            xaxis_title=x_level,
+            yaxis_title=y_level,
+            zaxis_title=pretty,
+            camera=dict(eye=dict(x=1.5, y=1.5, z=1.1)),
+        ),
+    )
+    if title:
+        _apply_title_layout(fig, title)
+    if layout_kwargs:
+        fig.update_layout(**layout_kwargs)
+    return make_fullscreen(fig)
+
+
+def plot_grid_volume(
+    grid_perf: pd.Series,
+    *,
+    x_level: str,
+    y_level: str,
+    z_level: str,
+    slider_level: str | None = None,
+    splitter: Any | None = None,
+    set_name: str = "test",
+    title: str | None = None,
+    fill_method: str = "median",
+    metric_name: str = "metric",
+    **layout_kwargs: Any,
+) -> go.Figure:
+    """Render a grid-search (or CV grid) as a 3D volume plot.
+
+    NaN cells are filled with the median of the remaining values so
+    the volume stays a continuous blob. See :func:`plot_grid_heatmap`
+    for the rest of the parameter semantics.
+    """
+    from framework.plotting import _apply_title_layout, make_fullscreen
+
+    data = _select_set(grid_perf, set_name=set_name)
+    data = _relabel_split_level(data, splitter)
+
+    if slider_level is None:
+        keep = [x_level, y_level, z_level]
+    else:
+        keep = [x_level, y_level, z_level, slider_level]
+    data = _reduce_to_plot_levels(data, keep)
+
+    nan_count = int(data.isna().sum())
+    if nan_count > 0:
+        if fill_method == "median":
+            fill_val = float(data.median(skipna=True))
+        elif fill_method == "mean":
+            fill_val = float(data.mean(skipna=True))
+        else:
+            try:
+                fill_val = float(fill_method)
+            except (TypeError, ValueError):
+                fill_val = 0.0
+        print(
+            f"  [volume] {nan_count}/{len(data)} NaN cells filled with "
+            f"{fill_method}={fill_val:.4f}"
+        )
+        data = data.fillna(fill_val)
+
+    pretty = _pretty_metric(metric_name)
+    kwargs: dict[str, Any] = {
+        "x_level": x_level,
+        "y_level": y_level,
+        "z_level": z_level,
+        "trace_kwargs": dict(
+            colorbar=dict(title=pretty),
+            hovertemplate=(
+                f"{x_level}: %{{x}}<br>"
+                f"{y_level}: %{{y}}<br>"
+                f"{z_level}: %{{z}}<br>"
+                f"{pretty}: %{{value:.2f}}<extra></extra>"
+            ),
+        ),
+    }
+    if slider_level is not None and slider_level in (data.index.names or []):
+        kwargs["slider_level"] = slider_level
+    fig = data.vbt.volume(**kwargs)
+    if title:
+        _apply_title_layout(fig, title)
+    if layout_kwargs:
+        fig.update_layout(**layout_kwargs)
+    return make_fullscreen(fig)
+
+
+# Back-compat wrappers keeping the old ``plot_cv_*`` names.
 def plot_cv_heatmap(
     grid_perf: pd.Series,
     *,
     x_level: str,
     y_level: str,
     slider_level: str | None = "split",
+    splitter: Any | None = None,
+    set_name: str = "test",
     title: str | None = None,
+    metric_name: str = "metric",
     **layout_kwargs: Any,
 ) -> go.Figure:
-    """Render a CV grid as a heatmap, sliced by split.
-
-    ``grid_perf`` must be a ``pd.Series`` with a ``MultiIndex`` containing at
-    least ``x_level``, ``y_level`` and (optionally) ``slider_level``.
-    """
-    from utils import configure_figure_for_fullscreen
-
-    kwargs: dict[str, Any] = {"x_level": x_level, "y_level": y_level}
-    if slider_level is not None and slider_level in (grid_perf.index.names or []):
-        kwargs["slider_level"] = slider_level
-    fig = grid_perf.vbt.heatmap(**kwargs)
-    if title:
-        layout_kwargs.setdefault("title", title)
-    if layout_kwargs:
-        fig.update_layout(**layout_kwargs)
-    return configure_figure_for_fullscreen(fig)
+    """CV heatmap with split slider. See :func:`plot_grid_heatmap`."""
+    return plot_grid_heatmap(
+        grid_perf,
+        x_level=x_level,
+        y_level=y_level,
+        slider_level=slider_level,
+        splitter=splitter,
+        set_name=set_name,
+        title=title,
+        metric_name=metric_name,
+        **layout_kwargs,
+    )
 
 
 def plot_cv_volume(
@@ -588,25 +1097,25 @@ def plot_cv_volume(
     y_level: str,
     z_level: str,
     slider_level: str | None = "split",
+    splitter: Any | None = None,
+    set_name: str = "test",
     title: str | None = None,
+    metric_name: str = "metric",
     **layout_kwargs: Any,
 ) -> go.Figure:
-    """Render a CV grid as a 3D volume plot, sliced by split."""
-    from utils import configure_figure_for_fullscreen
-
-    kwargs: dict[str, Any] = {
-        "x_level": x_level,
-        "y_level": y_level,
-        "z_level": z_level,
-    }
-    if slider_level is not None and slider_level in (grid_perf.index.names or []):
-        kwargs["slider_level"] = slider_level
-    fig = grid_perf.vbt.volume(**kwargs)
-    if title:
-        layout_kwargs.setdefault("title", title)
-    if layout_kwargs:
-        fig.update_layout(**layout_kwargs)
-    return configure_figure_for_fullscreen(fig)
+    """CV 3D volume with split slider. See :func:`plot_grid_volume`."""
+    return plot_grid_volume(
+        grid_perf,
+        x_level=x_level,
+        y_level=y_level,
+        z_level=z_level,
+        slider_level=slider_level,
+        splitter=splitter,
+        set_name=set_name,
+        title=title,
+        metric_name=metric_name,
+        **layout_kwargs,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════

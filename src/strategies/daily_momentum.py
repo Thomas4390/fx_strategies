@@ -626,7 +626,6 @@ def create_cv_pipeline_ts(
 
 
 if __name__ == "__main__":
-    import argparse
     import sys
     from pathlib import Path as _Path
 
@@ -635,138 +634,288 @@ if __name__ == "__main__":
         sys.path.insert(0, str(_SRC))
 
     from framework.pipeline_utils import (
+        METRIC_LABELS,
         analyze_portfolio,
         apply_vbt_plot_defaults,
         plot_cv_heatmap,
         plot_cv_splitter,
+        plot_cv_volume,
+        plot_grid_heatmap,
+        plot_grid_surface,
+        plot_grid_volume,
     )
+    from framework.plotting import print_cv_results, print_grid_results
 
-    ap = argparse.ArgumentParser(description="Daily momentum pipelines (XS + TS)")
-    ap.add_argument("--strategy", default="xs", choices=["xs", "ts"])
-    ap.add_argument("--mode", choices=["single", "grid", "cv"], default="single")
-    ap.add_argument("--pair", default="GBP-USD",
-                    help="Pair for TS single-pair strategy")
-    ap.add_argument("--leverage", type=float, default=1.0)
-    ap.add_argument("--n-folds", type=int, default=8)
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--output-dir", default=None)
-    args = ap.parse_args()
+    # ─────────────────────────────────────────────────────────────────
+    # CONFIGURATION
+    # ─────────────────────────────────────────────────────────────────
+    TS_PAIR = "GBP-USD"
+    XS_OUTPUT_DIR = "results/daily_xs"
+    TS_OUTPUT_DIR = f"results/daily_ts_{TS_PAIR.lower()}"
+    SHOW_CHARTS = True
+    N_FOLDS = 8
+    LEVERAGE = 1.0
+
+    XS_GRID_PARAMS: dict[str, list] = dict(
+        w_short=[10, 21, 42],
+        w_long=[42, 63, 126],
+        target_vol=[0.08, 0.10, 0.12],
+    )
+    XS_CV_PARAMS: dict[str, list] = dict(
+        w_short=[10, 21, 42],
+        w_long=[42, 63, 126],
+    )
+    TS_GRID_PARAMS: dict[str, list] = dict(
+        fast_ema=[10, 20, 30],
+        slow_ema=[40, 50, 100],
+        rsi_period=[7, 14],
+    )
+    _METRIC_NAME = METRIC_LABELS[SHARPE_RATIO]
+
+    def _header(label: str) -> None:
+        bar = "█" * 78
+        print(f"\n{bar}")
+        print(f"██  {label.ljust(72)}  ██")
+        print(f"{bar}\n")
 
     apply_vbt_plot_defaults()
     print("Loading daily closes for 4 pairs ...")
     closes = load_daily_closes()
     print(f"  {len(closes)} days, {list(closes.columns)}")
 
-    if args.strategy == "xs":
-        output_dir = args.output_dir or "results/daily_xs"
-        if args.mode == "single":
-            pf, ind = pipeline_xs(closes, leverage=args.leverage)
-            print(pf.stats())
-            analyze_portfolio(
-                pf,
-                name="XS Momentum (4-pair)",
-                output_dir=output_dir,
-                show_charts=args.show,
-                indicator=ind,
-            )
-        elif args.mode == "grid":
-            grid = run_grid_xs(
-                closes,
-                w_short=[10, 21, 42],
-                w_long=[42, 63, 126],
-                target_vol=[0.08, 0.10, 0.12],
-                metric_type=SHARPE_RATIO,
-            )
-            print("\nTop 20 combos by Sharpe:")
-            print(grid.sort_values(ascending=False).head(20))
-            if args.show:
-                grid.vbt.heatmap(
-                    x_level="w_short",
-                    y_level="w_long",
-                    slider_level="target_vol",
-                ).show()
-        elif args.mode == "cv":
-            splitter = vbt.Splitter.from_purged_walkforward(
-                closes.index,
-                n_folds=args.n_folds,
-                n_test_folds=1,
-                purge_td="1 day",
-                min_train_folds=3,
-            )
-            if args.show:
-                plot_cv_splitter(splitter, title="XS Momentum — CV Splits").show()
-            cv_pipeline = create_cv_pipeline_xs(splitter, metric_type=SHARPE_RATIO)
-            grid_perf, best_perf = cv_pipeline(
-                closes,
-                w_short=vbt.Param([10, 21, 42]),
-                w_long=vbt.Param([42, 63, 126]),
-            )
-            print("\n▶ Best per split:")
-            print(best_perf)
-            if args.show:
-                plot_cv_heatmap(
-                    grid_perf,
-                    x_level="w_short",
-                    y_level="w_long",
-                    slider_level="split",
-                    title="XS Momentum — CV Sharpe Heatmap",
-                ).show()
+    # ═════════════════════════════════════════════════════════════════
+    # STRATEGY A: CROSS-SECTIONAL MOMENTUM (XS)
+    # ═════════════════════════════════════════════════════════════════
 
-    elif args.strategy == "ts":
-        output_dir = args.output_dir or f"results/daily_ts_{args.pair.lower()}"
-        close_daily = closes[args.pair]
-        if args.mode == "single":
-            pf, ind = pipeline_ts(close_daily, leverage=args.leverage)
-            print(pf.stats())
-            analyze_portfolio(
-                pf,
-                name=f"TS Momentum+RSI ({args.pair})",
-                output_dir=output_dir,
-                show_charts=args.show,
-                indicator=ind,
-            )
-        elif args.mode == "grid":
-            grid = run_grid_ts(
-                close_daily,
-                fast_ema=[10, 20, 30],
-                slow_ema=[40, 50, 100],
-                rsi_period=[7, 14],
-                metric_type=SHARPE_RATIO,
-            )
-            print("\nTop 20 combos by Sharpe:")
-            print(grid.sort_values(ascending=False).head(20))
-            if args.show:
-                grid.vbt.heatmap(
-                    x_level="fast_ema",
-                    y_level="slow_ema",
-                    slider_level="rsi_period",
-                ).show()
-        elif args.mode == "cv":
-            splitter = vbt.Splitter.from_purged_walkforward(
-                close_daily.index,
-                n_folds=args.n_folds,
-                n_test_folds=1,
-                purge_td="1 day",
-                min_train_folds=3,
-            )
-            if args.show:
-                plot_cv_splitter(splitter, title="TS Momentum — CV Splits").show()
-            cv_pipeline = create_cv_pipeline_ts(splitter, metric_type=SHARPE_RATIO)
-            grid_perf, best_perf = cv_pipeline(
-                close_daily,
-                fast_ema=vbt.Param([10, 20, 30]),
-                slow_ema=vbt.Param([40, 50, 100]),
-                rsi_period=vbt.Param([7, 14]),
-            )
-            print("\n▶ Best per split:")
-            print(best_perf)
-            if args.show:
-                plot_cv_heatmap(
-                    grid_perf,
-                    x_level="fast_ema",
-                    y_level="slow_ema",
-                    slider_level="split",
-                    title=f"TS Momentum ({args.pair}) — CV Sharpe",
-                ).show()
+    # 1) XS SINGLE
+    _header("XS MOMENTUM (4-pair)  ·  SINGLE RUN")
+    pf_xs, ind_xs = pipeline_xs(closes, leverage=LEVERAGE)
+    analyze_portfolio(
+        pf_xs,
+        name="XS Momentum (4-pair)",
+        output_dir=XS_OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+        indicator=ind_xs,
+    )
 
-    print("\nDone.")
+    # 2) XS GRID
+    _header("XS MOMENTUM  ·  GRID SEARCH")
+    grid_xs = run_grid_xs(closes, metric_type=SHARPE_RATIO, **XS_GRID_PARAMS)
+    print_grid_results(
+        grid_xs,
+        title="XS Momentum — Grid Search",
+        metric_name=_METRIC_NAME,
+        top_n=20,
+    )
+    if SHOW_CHARTS:
+        plot_grid_heatmap(
+            grid_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level="target_vol",
+            title=f"XS Momentum — {_METRIC_NAME} heatmap (slider: target_vol)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_heatmap(
+            grid_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level=None,
+            title=f"XS Momentum — {_METRIC_NAME} heatmap (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_volume(
+            grid_xs,
+            x_level="w_short",
+            y_level="w_long",
+            z_level="target_vol",
+            title=f"XS Momentum — {_METRIC_NAME} volume",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level="target_vol",
+            title=f"XS Momentum — {_METRIC_NAME} surface (slider: target_vol)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level=None,
+            title=f"XS Momentum — {_METRIC_NAME} surface (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+
+    # 3) XS CV
+    _header("XS MOMENTUM  ·  WALK-FORWARD CV")
+    splitter_xs = vbt.Splitter.from_purged_walkforward(
+        closes.index,
+        n_folds=N_FOLDS,
+        n_test_folds=1,
+        purge_td="1 day",
+        min_train_folds=3,
+    )
+    if SHOW_CHARTS:
+        plot_cv_splitter(splitter_xs, title="XS Momentum — CV Splits").show()
+    cv_pipeline_xs = create_cv_pipeline_xs(splitter_xs, metric_type=SHARPE_RATIO)
+    grid_perf_xs, best_perf_xs = cv_pipeline_xs(
+        closes,
+        w_short=vbt.Param(XS_CV_PARAMS["w_short"]),
+        w_long=vbt.Param(XS_CV_PARAMS["w_long"]),
+    )
+    print_cv_results(
+        grid_perf_xs,
+        best_perf_xs,
+        splitter=splitter_xs,
+        title="XS Momentum — Walk-Forward CV",
+        metric_name=_METRIC_NAME,
+        top_n=10,
+    )
+    if SHOW_CHARTS:
+        plot_cv_heatmap(
+            grid_perf_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level="split",
+            splitter=splitter_xs,
+            title=f"XS Momentum — CV {_METRIC_NAME} heatmap (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_heatmap(
+            grid_perf_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level=None,
+            splitter=splitter_xs,
+            title=f"XS Momentum — CV {_METRIC_NAME} heatmap (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+
+    # ═════════════════════════════════════════════════════════════════
+    # STRATEGY B: TIME-SERIES MOMENTUM + RSI (TS)
+    # ═════════════════════════════════════════════════════════════════
+
+    close_daily = closes[TS_PAIR]
+
+    # 1) TS SINGLE
+    _header(f"TS MOMENTUM+RSI ({TS_PAIR})  ·  SINGLE RUN")
+    pf_ts, ind_ts = pipeline_ts(close_daily, leverage=LEVERAGE)
+    analyze_portfolio(
+        pf_ts,
+        name=f"TS Momentum+RSI ({TS_PAIR})",
+        output_dir=TS_OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+        indicator=ind_ts,
+    )
+
+    # 2) TS GRID
+    _header(f"TS MOMENTUM+RSI ({TS_PAIR})  ·  GRID SEARCH")
+    grid_ts = run_grid_ts(close_daily, metric_type=SHARPE_RATIO, **TS_GRID_PARAMS)
+    print_grid_results(
+        grid_ts,
+        title=f"TS Momentum ({TS_PAIR}) — Grid Search",
+        metric_name=_METRIC_NAME,
+        top_n=20,
+    )
+    if SHOW_CHARTS:
+        plot_grid_heatmap(
+            grid_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level="rsi_period",
+            title=f"TS Momentum — {_METRIC_NAME} heatmap (slider: rsi_period)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_heatmap(
+            grid_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level=None,
+            title=f"TS Momentum — {_METRIC_NAME} heatmap (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_volume(
+            grid_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            z_level="rsi_period",
+            title=f"TS Momentum — {_METRIC_NAME} volume",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level="rsi_period",
+            title=f"TS Momentum — {_METRIC_NAME} surface (slider: rsi_period)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level=None,
+            title=f"TS Momentum — {_METRIC_NAME} surface (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+
+    # 3) TS CV
+    _header(f"TS MOMENTUM+RSI ({TS_PAIR})  ·  WALK-FORWARD CV")
+    splitter_ts = vbt.Splitter.from_purged_walkforward(
+        close_daily.index,
+        n_folds=N_FOLDS,
+        n_test_folds=1,
+        purge_td="1 day",
+        min_train_folds=3,
+    )
+    if SHOW_CHARTS:
+        plot_cv_splitter(splitter_ts, title="TS Momentum — CV Splits").show()
+    cv_pipeline_ts = create_cv_pipeline_ts(splitter_ts, metric_type=SHARPE_RATIO)
+    grid_perf_ts, best_perf_ts = cv_pipeline_ts(
+        close_daily,
+        fast_ema=vbt.Param(TS_GRID_PARAMS["fast_ema"]),
+        slow_ema=vbt.Param(TS_GRID_PARAMS["slow_ema"]),
+        rsi_period=vbt.Param(TS_GRID_PARAMS["rsi_period"]),
+    )
+    print_cv_results(
+        grid_perf_ts,
+        best_perf_ts,
+        splitter=splitter_ts,
+        title=f"TS Momentum ({TS_PAIR}) — Walk-Forward CV",
+        metric_name=_METRIC_NAME,
+        top_n=10,
+    )
+    if SHOW_CHARTS:
+        plot_cv_heatmap(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level="split",
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} heatmap (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_heatmap(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level=None,
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} heatmap (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            z_level="rsi_period",
+            slider_level="split",
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} volume (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+
+    print("\nAll modes done.")

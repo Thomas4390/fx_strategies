@@ -328,7 +328,6 @@ def create_cv_pipeline(
 
 
 if __name__ == "__main__":
-    import argparse
     import sys
     from pathlib import Path as _Path
 
@@ -337,91 +336,194 @@ if __name__ == "__main__":
         sys.path.insert(0, str(_SRC))
 
     from framework.pipeline_utils import (
+        METRIC_LABELS,
         analyze_portfolio,
         apply_vbt_plot_defaults,
         plot_cv_heatmap,
         plot_cv_splitter,
+        plot_cv_volume,
+        plot_grid_heatmap,
+        plot_grid_surface,
+        plot_grid_volume,
     )
+    from framework.plotting import print_cv_results, print_grid_results
     from utils import load_fx_data
 
-    ap = argparse.ArgumentParser(description="OU Mean Reversion pipeline (ims format)")
-    ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
-    ap.add_argument("--mode", choices=["single", "grid", "cv"], default="single")
-    ap.add_argument("--bb-window", type=int, default=80)
-    ap.add_argument("--bb-alpha", type=float, default=5.0)
-    ap.add_argument("--sigma-target", type=float, default=0.10)
-    ap.add_argument("--max-leverage", type=float, default=3.0)
-    ap.add_argument("--leverage-mult", type=float, default=1.0)
-    ap.add_argument("--n-folds", type=int, default=15)
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--output-dir", default="results/ou_mr")
-    args = ap.parse_args()
+    DATA_PATH = "data/EUR-USD_minute.parquet"
+    OUTPUT_DIR = "results/ou_mr"
+    SHOW_CHARTS = True
+    N_FOLDS = 15
+
+    SINGLE_PARAMS: dict[str, Any] = dict(
+        bb_window=80,
+        bb_alpha=5.0,
+        sigma_target=0.10,
+        max_leverage=3.0,
+        leverage_mult=1.0,
+    )
+    GRID_PARAMS: dict[str, list] = dict(
+        bb_window=[60, 80, 120],
+        bb_alpha=[4.0, 5.0, 6.0],
+        sigma_target=[0.05, 0.10, 0.20],
+    )
+    _METRIC_NAME = METRIC_LABELS[SHARPE_RATIO]
+
+    def _header(label: str) -> None:
+        bar = "█" * 78
+        print(f"\n{bar}")
+        print(f"██  {label.ljust(72)}  ██")
+        print(f"{bar}\n")
 
     apply_vbt_plot_defaults()
     print("Loading data...")
-    _, data = load_fx_data(args.data)
+    _, data = load_fx_data(DATA_PATH)
 
-    if args.mode == "single":
-        pf, ind = pipeline(
-            data,
-            bb_window=args.bb_window,
-            bb_alpha=args.bb_alpha,
-            sigma_target=args.sigma_target,
-            max_leverage=args.max_leverage,
-            leverage_mult=args.leverage_mult,
-        )
-        print(pf.stats())
-        analyze_portfolio(
-            pf,
-            name="OU Mean Reversion",
-            output_dir=args.output_dir,
-            show_charts=args.show,
-            indicator=ind,
-        )
+    # 1) SINGLE RUN
+    _header("OU MEAN REVERSION  ·  SINGLE RUN")
+    pf, ind = pipeline(data, **SINGLE_PARAMS)
+    analyze_portfolio(
+        pf,
+        name="OU Mean Reversion",
+        output_dir=OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+        indicator=ind,
+    )
 
-    elif args.mode == "grid":
-        grid = run_grid(
-            data,
-            bb_window=[60, 80, 120],
-            bb_alpha=[4.0, 5.0, 6.0],
-            sigma_target=[0.05, 0.10, 0.20],
-            metric_type=SHARPE_RATIO,
-        )
-        print("\nTop 20 combos by Sharpe:")
-        print(grid.sort_values(ascending=False).head(20))
-        if args.show:
-            grid.vbt.heatmap(
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="sigma_target",
-            ).show()
+    # 2) GRID SEARCH
+    _header("OU MEAN REVERSION  ·  GRID SEARCH")
+    grid = run_grid(data, metric_type=SHARPE_RATIO, **GRID_PARAMS)
+    print_grid_results(
+        grid,
+        title="OU Mean Reversion — Grid Search",
+        metric_name=_METRIC_NAME,
+        top_n=20,
+    )
+    if SHOW_CHARTS:
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="sigma_target",
+            title=f"OU MR — {_METRIC_NAME} heatmap (slider: sigma_target)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"OU MR — {_METRIC_NAME} heatmap (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_volume(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sigma_target",
+            title=f"OU MR — {_METRIC_NAME} volume",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="sigma_target",
+            title=f"OU MR — {_METRIC_NAME} surface (slider: sigma_target)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"OU MR — {_METRIC_NAME} surface (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
-    elif args.mode == "cv":
-        splitter = vbt.Splitter.from_purged_walkforward(
-            data.index,
-            n_folds=args.n_folds,
-            n_test_folds=1,
-            purge_td="1 day",
-            min_train_folds=3,
-        )
-        if args.show:
-            plot_cv_splitter(splitter, title="OU MR — CV Splits").show()
-        cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
-        grid_perf, best_perf = cv_pipeline(
-            data,
-            bb_window=vbt.Param([60, 80, 120]),
-            bb_alpha=vbt.Param([4.0, 5.0, 6.0]),
-            sigma_target=vbt.Param([0.05, 0.10, 0.20]),
-        )
-        print("\n▶ Best per split:")
-        print(best_perf)
-        if args.show:
-            plot_cv_heatmap(
-                grid_perf,
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="split",
-                title="OU MR — CV Sharpe Heatmap",
-            ).show()
+    # 3) CROSS-VALIDATION
+    _header("OU MEAN REVERSION  ·  WALK-FORWARD CV")
+    # Daily-resampled index keeps the splitter plot light and fast.
+    daily_index = data.close.vbt.resample_apply("1D", "last").dropna().index
+    splitter = vbt.Splitter.from_purged_walkforward(
+        daily_index,
+        n_folds=N_FOLDS,
+        n_test_folds=1,
+        purge_td="1 day",
+        min_train_folds=3,
+    )
+    if SHOW_CHARTS:
+        plot_cv_splitter(splitter, title="OU MR — CV Splits").show()
+    cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
+    grid_perf, best_perf = cv_pipeline(
+        data,
+        bb_window=vbt.Param(GRID_PARAMS["bb_window"]),
+        bb_alpha=vbt.Param(GRID_PARAMS["bb_alpha"]),
+        sigma_target=vbt.Param(GRID_PARAMS["sigma_target"]),
+    )
+    print_cv_results(
+        grid_perf,
+        best_perf,
+        splitter=splitter,
+        title="OU Mean Reversion — Walk-Forward CV",
+        metric_name=_METRIC_NAME,
+        top_n=10,
+    )
+    if SHOW_CHARTS:
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} heatmap (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} heatmap (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sigma_target",
+            slider_level="split",
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} volume (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sigma_target",
+            slider_level=None,
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} volume (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} surface (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"OU MR — CV {_METRIC_NAME} surface (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
-    print("\nDone.")
+    print("\nAll modes done.")

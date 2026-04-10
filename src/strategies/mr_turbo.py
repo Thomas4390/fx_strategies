@@ -77,29 +77,48 @@ class MRTurboIndicator:
     lower: pd.Series
 
     def plot(self, fig: go.Figure | None = None, **layout_kwargs) -> go.Figure:
+        """Draw Close + VWAP + filled BB band as plain ``go.Scatter`` traces.
+
+        Lower and Upper bands are added back-to-back so ``fill="tonexty"``
+        on the Upper trace reliably fills between the two bands (Plotly
+        fills to the trace IMMEDIATELY before in the traces list).
+        """
         fig = fig or go.Figure()
-        self.close.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(name="Close", line=dict(width=2, color="blue")),
+        # Close (drawn first so it is UNDERNEATH the band fill, still visible)
+        fig.add_trace(
+            go.Scatter(
+                x=self.close.index, y=self.close.values,
+                mode="lines", name="Close",
+                line=dict(width=2, color="royalblue"),
+            )
         )
-        self.lower.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(name="Lower Band", line=dict(width=1.2, color="grey")),
+        # VWAP
+        fig.add_trace(
+            go.Scatter(
+                x=self.vwap.index, y=self.vwap.values,
+                mode="lines", name="VWAP",
+                line=dict(color="crimson", width=1, dash="dot"),
+            )
         )
-        self.upper.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(
-                name="Upper Band",
-                line=dict(width=1.2, color="grey"),
+        # Lower band — must be added directly BEFORE the upper band so
+        # `fill="tonexty"` on the upper resolves to this trace.
+        fig.add_trace(
+            go.Scatter(
+                x=self.lower.index, y=self.lower.values,
+                mode="lines", name="Lower Band",
+                line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
+                showlegend=True,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=self.upper.index, y=self.upper.values,
+                mode="lines", name="Upper Band",
+                line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
                 fill="tonexty",
-                fillcolor="rgba(255, 255, 0, 0.2)",
-            ),
-        )
-        self.vwap.vbt.plot(
-            fig=fig,
-            trace_kwargs=dict(
-                name="VWAP", line=dict(color="red", width=1, dash="dot")
-            ),
+                fillcolor="rgba(255,215,0,0.18)",
+                showlegend=True,
+            )
         )
         fig.update_layout(**layout_kwargs)
         return fig
@@ -386,7 +405,6 @@ def _walk_forward_report(data: vbt.Data) -> None:
 
 
 if __name__ == "__main__":
-    import argparse
     import sys
     from pathlib import Path as _Path
 
@@ -395,96 +413,212 @@ if __name__ == "__main__":
         sys.path.insert(0, str(_SRC))
 
     from framework.pipeline_utils import (
-        apply_vbt_plot_defaults,
+        METRIC_LABELS,
         analyze_portfolio,
+        apply_vbt_plot_defaults,
         plot_cv_heatmap,
         plot_cv_splitter,
+        plot_cv_volume,
+        plot_grid_heatmap,
+        plot_grid_surface,
+        plot_grid_volume,
     )
+    from framework.plotting import print_cv_results, print_grid_results
     from utils import load_fx_data
 
-    ap = argparse.ArgumentParser(description="MR Turbo pipeline (ims format)")
-    ap.add_argument("--data", default="data/EUR-USD_minute.parquet")
-    ap.add_argument("--mode", choices=["single", "grid", "cv"], default="single")
-    ap.add_argument("--bb-window", type=int, default=80)
-    ap.add_argument("--bb-alpha", type=float, default=5.0)
-    ap.add_argument("--sl-stop", type=float, default=0.005)
-    ap.add_argument("--tp-stop", type=float, default=0.006)
-    ap.add_argument("--leverage", type=float, default=1.0)
-    ap.add_argument("--n-folds", type=int, default=15)
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--output-dir", default="results/mr_turbo")
-    args = ap.parse_args()
+    # ─────────────────────────────────────────────────────────────────
+    # CONFIGURATION — edit these defaults to change the run behaviour
+    # ─────────────────────────────────────────────────────────────────
+    DATA_PATH = "data/EUR-USD_minute.parquet"
+    OUTPUT_DIR = "results/mr_turbo"
+    SHOW_CHARTS = True
+    N_FOLDS = 15
+
+    # Single-run parameters
+    SINGLE_PARAMS: dict[str, Any] = dict(
+        bb_window=80,
+        bb_alpha=5.0,
+        sl_stop=0.005,
+        tp_stop=0.006,
+        leverage=1.0,
+    )
+    # Grid-search sweep
+    GRID_PARAMS: dict[str, list] = dict(
+        bb_window=[40, 60, 80, 120],
+        bb_alpha=[4.0, 5.0, 6.0],
+        sl_stop=[0.004, 0.005, 0.006],
+        tp_stop=[0.004, 0.006, 0.008],
+    )
+    _METRIC_NAME = METRIC_LABELS[SHARPE_RATIO]
+
+    def _header(label: str) -> None:
+        bar = "█" * 78
+        print(f"\n{bar}")
+        print(f"██  {label.ljust(72)}  ██")
+        print(f"{bar}\n")
 
     apply_vbt_plot_defaults()
     print("Loading data...")
-    _, data = load_fx_data(args.data)
+    _, data = load_fx_data(DATA_PATH)
 
-    if args.mode == "single":
-        _walk_forward_report(data)
-        pf, ind = pipeline(
-            data,
-            bb_window=args.bb_window,
-            bb_alpha=args.bb_alpha,
-            sl_stop=args.sl_stop,
-            tp_stop=args.tp_stop,
-            leverage=args.leverage,
-        )
-        print(pf.stats())
-        analyze_portfolio(
-            pf,
-            name="MR Turbo",
-            output_dir=args.output_dir,
-            show_charts=args.show,
-            indicator=ind,
-        )
+    # ─────────────────────────────────────────────────────────────────
+    # 1) SINGLE RUN — full report + all individual plots
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR TURBO  ·  SINGLE RUN")
+    _walk_forward_report(data)
+    pf, ind = pipeline(data, **SINGLE_PARAMS)
+    analyze_portfolio(
+        pf,
+        name="MR Turbo",
+        output_dir=OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+        indicator=ind,
+    )
 
-    elif args.mode == "grid":
-        grid = run_grid(
-            data,
-            bb_window=[40, 60, 80, 120],
-            bb_alpha=[4.0, 5.0, 6.0],
-            sl_stop=[0.004, 0.005, 0.006],
-            tp_stop=[0.004, 0.006, 0.008],
-            metric_type=SHARPE_RATIO,
-        )
-        print("\nTop 20 combos by Sharpe:")
-        print(grid.sort_values(ascending=False).head(20))
-        if args.show:
-            fig = grid.vbt.heatmap(
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="sl_stop",
-            )
-            fig.show()
+    # ─────────────────────────────────────────────────────────────────
+    # 2) GRID SEARCH — parameter sweep + heatmap / volume plots
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR TURBO  ·  GRID SEARCH")
+    grid = run_grid(data, metric_type=SHARPE_RATIO, **GRID_PARAMS)
+    print_grid_results(
+        grid,
+        title="MR Turbo — Grid Search",
+        metric_name=_METRIC_NAME,
+        top_n=20,
+    )
+    if SHOW_CHARTS:
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="sl_stop",
+            title=f"MR Turbo — {_METRIC_NAME} heatmap (slider: sl_stop)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_heatmap(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"MR Turbo — {_METRIC_NAME} heatmap (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_volume(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sl_stop",
+            slider_level="tp_stop",
+            title=f"MR Turbo — {_METRIC_NAME} volume (slider: tp_stop)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="sl_stop",
+            title=f"MR Turbo — {_METRIC_NAME} surface (slider: sl_stop)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            title=f"MR Turbo — {_METRIC_NAME} surface (aggregated)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
-    elif args.mode == "cv":
-        splitter = vbt.Splitter.from_purged_walkforward(
-            data.index,
-            n_folds=args.n_folds,
-            n_test_folds=1,
-            purge_td="1 day",
-            min_train_folds=3,
-        )
-        if args.show:
-            plot_cv_splitter(splitter, title="MR Turbo — CV Splits").show()
+    # ─────────────────────────────────────────────────────────────────
+    # 3) WALK-FORWARD CROSS-VALIDATION — per-fold + aggregated plots
+    # ─────────────────────────────────────────────────────────────────
+    _header("MR TURBO  ·  WALK-FORWARD CV")
+    # Build the splitter on a DAILY-resampled index so the train/test
+    # plot has ~2k points instead of ~3M minute bars, and splits align
+    # on day boundaries (no mid-day cut-offs).
+    daily_index = data.close.vbt.resample_apply("1D", "last").dropna().index
+    splitter = vbt.Splitter.from_purged_walkforward(
+        daily_index,
+        n_folds=N_FOLDS,
+        n_test_folds=1,
+        purge_td="1 day",
+        min_train_folds=3,
+    )
+    if SHOW_CHARTS:
+        plot_cv_splitter(splitter, title="MR Turbo — CV Splits").show()
 
-        cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
-        grid_perf, best_perf = cv_pipeline(
-            data,
-            bb_window=vbt.Param([40, 60, 80, 120]),
-            bb_alpha=vbt.Param([4.0, 5.0, 6.0]),
-            sl_stop=vbt.Param([0.004, 0.005, 0.006]),
-            tp_stop=vbt.Param([0.004, 0.006, 0.008]),
-        )
-        print("\n▶ Best per split:")
-        print(best_perf)
-        if args.show:
-            plot_cv_heatmap(
-                grid_perf,
-                x_level="bb_window",
-                y_level="bb_alpha",
-                slider_level="split",
-                title="MR Turbo — CV Sharpe Heatmap",
-            ).show()
+    cv_pipeline = create_cv_pipeline(splitter, metric_type=SHARPE_RATIO)
+    grid_perf, best_perf = cv_pipeline(
+        data,
+        bb_window=vbt.Param(GRID_PARAMS["bb_window"]),
+        bb_alpha=vbt.Param(GRID_PARAMS["bb_alpha"]),
+        sl_stop=vbt.Param(GRID_PARAMS["sl_stop"]),
+        tp_stop=vbt.Param(GRID_PARAMS["tp_stop"]),
+    )
+    print_cv_results(
+        grid_perf,
+        best_perf,
+        splitter=splitter,
+        title="MR Turbo — Walk-Forward CV",
+        metric_name=_METRIC_NAME,
+        top_n=10,
+    )
+    if SHOW_CHARTS:
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} heatmap (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_heatmap(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} heatmap (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sl_stop",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} volume (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            z_level="sl_stop",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} volume (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level="split",
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} surface (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf,
+            x_level="bb_window",
+            y_level="bb_alpha",
+            slider_level=None,
+            splitter=splitter,
+            title=f"MR Turbo — CV {_METRIC_NAME} surface (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
-    print("\nDone.")
+    print("\nAll modes done.")

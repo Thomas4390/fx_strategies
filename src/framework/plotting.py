@@ -73,11 +73,11 @@ def make_fullscreen(fig: go.Figure) -> go.Figure:
     """
     fig.update_layout(
         autosize=True,
-        margin={"l": 50, "r": 30, "t": 70, "b": 40},
+        margin={"l": 60, "r": 40, "t": 110, "b": 50},
         legend={
             "orientation": "h",
             "yanchor": "bottom",
-            "y": 1.02,
+            "y": 1.015,
             "xanchor": "center",
             "x": 0.5,
         },
@@ -85,6 +85,35 @@ def make_fullscreen(fig: go.Figure) -> go.Figure:
     # Clear any fixed pixel dimensions so CSS 100vh/100vw wins.
     fig.layout.height = None
     fig.layout.width = None
+    return fig
+
+
+def _apply_title_layout(
+    fig: go.Figure,
+    title: str,
+    *,
+    subtitle: str | None = None,
+) -> go.Figure:
+    """Apply a consistent, non-overlapping title style to a figure.
+
+    Places the title well above the plot area with a larger font so it
+    does not collide with subplot annotations or axis labels. Optional
+    subtitle appears as a smaller secondary line.
+    """
+    text = f"<b>{title}</b>"
+    if subtitle:
+        text += f"<br><span style='font-size:13px;color:#888'>{subtitle}</span>"
+    fig.update_layout(
+        title=dict(
+            text=text,
+            x=0.5,
+            xanchor="center",
+            y=0.985,
+            yanchor="top",
+            font=dict(size=20, color="#222"),
+            pad=dict(t=10, b=10),
+        ),
+    )
     return fig
 
 
@@ -167,6 +196,94 @@ def _infer_sim_start(idx: pd.DatetimeIndex, max_bars: int = _MAX_MINUTE_BARS) ->
     return None
 
 
+def _find_featured_trade_window(
+    pf: vbt.Portfolio,
+    indicator: Any | None,
+    max_bars: int = _MAX_MINUTE_BARS,
+) -> tuple[pd.Timestamp | None, pd.Timestamp | None]:
+    """Pick a representative trade and return ``(sim_start, sim_end)``
+    bounds that comfortably contain entry, exit and some context.
+
+    Selection criteria:
+      1. All indicator Series/DataFrame fields must be fully populated
+         across the entry→exit window (no NaN).
+      2. Trade duration should fit within ~40% of the target window so
+         that there is visible pre/post context.
+      3. Prefer trades with larger absolute PnL (more informative).
+
+    Returns ``(None, None)`` if no trade qualifies (caller falls back to
+    the default "last N bars" window).
+    """
+    try:
+        records = pf.trades.records_readable
+    except Exception:
+        return None, None
+    if records.empty:
+        return None, None
+
+    entry_col = "Entry Index" if "Entry Index" in records.columns else "Entry Timestamp"
+    exit_col = "Exit Index" if "Exit Index" in records.columns else "Exit Timestamp"
+    records = records.copy()
+    records[entry_col] = pd.to_datetime(records[entry_col])
+    records[exit_col] = pd.to_datetime(records[exit_col])
+    records["_dur_min"] = (
+        records[exit_col] - records[entry_col]
+    ).dt.total_seconds() / 60.0
+
+    # Gather indicator Series fields for NaN checks.
+    ind_series: list[pd.Series] = []
+    if indicator is not None:
+        for attr_name in dir(indicator):
+            if attr_name.startswith("_"):
+                continue
+            try:
+                val = getattr(indicator, attr_name)
+            except Exception:
+                continue
+            if isinstance(val, pd.Series):
+                ind_series.append(val)
+
+    def _has_nan(trade_start: pd.Timestamp, trade_end: pd.Timestamp) -> bool:
+        for s in ind_series:
+            try:
+                sl = s.loc[trade_start:trade_end]
+                if sl.isna().any():
+                    return True
+            except Exception:
+                return True
+        return False
+
+    target_dur = max_bars * 0.4  # aim for 40% of window being the trade
+    records["_score"] = (
+        records["_dur_min"].sub(target_dur).abs() / max(target_dur, 1.0)
+        - records["PnL"].abs().rank(pct=True)
+    )
+    records = records.sort_values("_score")
+
+    for _, trade in records.iterrows():
+        entry = trade[entry_col]
+        exit_ = trade[exit_col]
+        if _has_nan(entry, exit_):
+            continue
+        dur = trade["_dur_min"]
+        pad = pd.Timedelta(minutes=max(max_bars * 0.3, dur * 1.0))
+        win_start = entry - pad
+        win_end = exit_ + pad
+        # Make sure the window is clamped to the data index so nothing
+        # is sliced out of bounds.
+        try:
+            data_idx = pf.wrapper.index
+            if win_start < data_idx[0]:
+                win_start = data_idx[0]
+            if win_end > data_idx[-1]:
+                win_end = data_idx[-1]
+        except Exception:
+            pass
+        return win_start, win_end
+
+    return None, None
+
+
 def plot_monthly_heatmap(
     pf: vbt.Portfolio,
     title: str = "Monthly Returns (%)",
@@ -198,7 +315,7 @@ def plot_monthly_heatmap(
             texttemplate="%{text}%",
         ),
     )
-    fig.update_layout(title=title)
+    _apply_title_layout(fig, title)
     make_fullscreen(fig)
     return fig
 
@@ -212,25 +329,59 @@ def plot_trade_signals(
     pf: vbt.Portfolio,
     title: str = "Trade Signals",
     overlays: dict[str, tuple[pd.Series, str | None, str | None]] | None = None,
+    indicator: Any | None = None,
     height: int | None = None,
 ) -> go.Figure:
     """Price chart with entry/exit markers, position zones, and indicator overlays.
 
-    Automatically windows to ~1 week for minute-frequency data.
+    Picks a representative trade with fully-populated indicator data
+    (see :func:`_find_featured_trade_window`) so the band fills and
+    indicator lines are drawn consistently over the whole window. Falls
+    back to the last ~7200 bars if no trade qualifies.
     """
     idx = pf.wrapper.index
-    sim_start = _infer_sim_start(idx)
+
+    # 1) Prefer a window centred on a featured trade (full indicator coverage)
+    sim_start, sim_end = _find_featured_trade_window(pf, indicator, max_bars=_MAX_MINUTE_BARS)
+    if sim_start is None:
+        sim_start = _infer_sim_start(idx)
+        sim_end = None
 
     fig = pf.plot_trade_signals(
         plot_positions="zones",
         sim_start=sim_start,
+        sim_end=sim_end,
     )
 
-    # Add indicator overlay lines
+    # 2) Overlay the indicator on the same figure, sliced to the window.
+    if indicator is not None and callable(getattr(indicator, "plot", None)):
+        try:
+            ds_ind = indicator
+            if sim_start is not None or sim_end is not None:
+                import copy
+                ds_ind = copy.copy(indicator)
+                for attr_name in dir(ds_ind):
+                    if attr_name.startswith("_"):
+                        continue
+                    try:
+                        val = getattr(ds_ind, attr_name)
+                    except Exception:
+                        continue
+                    if isinstance(val, (pd.Series, pd.DataFrame)):
+                        try:
+                            sliced = val.loc[sim_start:sim_end]
+                            object.__setattr__(ds_ind, attr_name, sliced)
+                        except Exception:
+                            pass
+            ds_ind.plot(fig=fig)
+        except Exception as e:
+            print(f"  [plot_trade_signals] indicator.plot() failed: {e}")
+
+    # 3) Legacy overlay dict
     if overlays:
         for label, (series, color, dash) in overlays.items():
             if sim_start is not None:
-                series = series.loc[sim_start:]
+                series = series.loc[sim_start:sim_end]
             line_kwargs = {}
             if color:
                 line_kwargs["color"] = color
@@ -244,10 +395,35 @@ def plot_trade_signals(
                     name=label,
                     line=line_kwargs,
                     opacity=0.7,
+                    hovertemplate=(
+                        f"<b>{label}</b>: %{{y:.2f}}"
+                        "<br>%{x|%Y-%m-%d %H:%M}<extra></extra>"
+                    ),
                 )
             )
 
-    fig.update_layout(title=title)
+    subtitle = None
+    if sim_start is not None and sim_end is not None:
+        subtitle = (
+            f"{pd.Timestamp(sim_start).strftime('%Y-%m-%d %H:%M')}"
+            f"  →  {pd.Timestamp(sim_end).strftime('%Y-%m-%d %H:%M')}"
+        )
+    _apply_title_layout(fig, title, subtitle=subtitle)
+    # Move the legend INSIDE the plot area (top-left) so it no longer
+    # collides with the title anchored above the plot.
+    fig.update_layout(
+        legend=dict(
+            orientation="v",
+            x=0.01,
+            y=0.985,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(255,255,255,0.85)",
+            bordercolor="rgba(120,120,120,0.4)",
+            borderwidth=1,
+            font=dict(size=11),
+        ),
+    )
     if height is not None:
         fig.layout.height = height
     else:
@@ -283,7 +459,7 @@ def plot_portfolio_summary(
         fig = pf_daily.plot(subplots=["cumulative_returns", "drawdowns"])
     if col_label:
         title = f"{title} — {col_label}"
-    fig.update_layout(title=title)
+    _apply_title_layout(fig, title)
     if height is not None:
         fig.layout.height = height
     else:
@@ -327,11 +503,78 @@ def plot_trade_analysis(
         ),
     )
 
-    trades.plot_pnl(
-        pct_scale=True,
-        fig=fig,
-        add_trace_kwargs=dict(row=1, col=1),
-    )
+    # Build a time-indexed Trade PnL scatter manually so the x-axis
+    # spans the full backtest (first year → last year) instead of the
+    # default trade-index (0..N). VBT's trades.plot_pnl() uses the
+    # trade record ID on the x-axis which hides the chronology.
+    try:
+        records = trades.records_readable
+        if not records.empty:
+            entry_col = (
+                "Entry Index" if "Entry Index" in records.columns
+                else "Entry Timestamp"
+            )
+            entry_times = pd.to_datetime(records[entry_col].values)
+            pnl_pct = records["Return"].astype(float).values
+            # Clip y-axis to 2-98 percentile so outliers don't crush
+            # the scale, but keep markers inside the clipped range.
+            mask = ~np.isnan(pnl_pct)
+            if mask.sum() >= 5:
+                lo = float(np.percentile(pnl_pct[mask], 2))
+                hi = float(np.percentile(pnl_pct[mask], 98))
+                span = max(hi - lo, 1e-6)
+                pad = span * 0.12
+                y_range = [lo - pad, hi + pad]
+            else:
+                y_range = None
+            wins = pnl_pct > 0
+            losses = ~wins
+            fig.add_trace(
+                go.Scatter(
+                    x=entry_times[wins], y=pnl_pct[wins],
+                    mode="markers", name="Winners",
+                    marker=dict(
+                        color="#00CC96", size=6,
+                        line=dict(color="rgba(0,0,0,0.25)", width=0.5),
+                    ),
+                    hovertemplate=(
+                        "<b>Winning Trade Return</b>: %{y:.2%}"
+                        "<br>Entry: %{x|%Y-%m-%d %H:%M}<extra></extra>"
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=entry_times[losses], y=pnl_pct[losses],
+                    mode="markers", name="Losers",
+                    marker=dict(
+                        color="#EF553B", size=6,
+                        line=dict(color="rgba(0,0,0,0.25)", width=0.5),
+                    ),
+                    hovertemplate=(
+                        "<b>Losing Trade Return</b>: %{y:.2%}"
+                        "<br>Entry: %{x|%Y-%m-%d %H:%M}<extra></extra>"
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.add_hline(y=0, line_color="gray", line_width=1, row=1, col=1)
+            # Force x-axis to span the full data range
+            try:
+                data_idx = pf_single.wrapper.index
+                fig.update_xaxes(
+                    range=[data_idx[0], data_idx[-1]],
+                    row=1, col=1,
+                )
+            except Exception:
+                pass
+            fig.update_yaxes(tickformat=".2%", row=1, col=1)
+            if y_range is not None:
+                fig.update_yaxes(range=y_range, row=1, col=1)
+    except Exception as e:
+        print(f"  [plot_trade_analysis] Trade PnL subplot failed: {e}")
+
     trades.plot_mae(
         fig=fig,
         add_trace_kwargs=dict(row=1, col=2),
@@ -347,11 +590,16 @@ def plot_trade_analysis(
 
     if col_label:
         title = f"{title} — {col_label}"
-    fig.update_layout(title=title, showlegend=False)
+    fig.update_layout(showlegend=False)
+    _apply_title_layout(fig, title)
     if height is not None:
         fig.layout.height = height
     else:
         make_fullscreen(fig)
+    # Push subplot annotations down slightly to leave room for the main title
+    for ann in fig.layout.annotations:
+        if ann.yref == "paper":
+            ann.y = min(ann.y, 0.94)
     return fig
 
 
@@ -370,6 +618,12 @@ def plot_equity_top_n(
     top_idx = sharpes.nlargest(n).index
     top_pf = pf_sweep[top_idx]
     fig = top_pf.value.vbt.plot()
+    fig.update_traces(
+        hovertemplate=(
+            "<b>Portfolio Value</b>: %{y:,.2f}"
+            "<br>%{x|%Y-%m-%d}<extra>%{fullData.name}</extra>"
+        ),
+    )
     fig.update_layout(title=title, height=500)
     return fig
 
@@ -407,7 +661,11 @@ def plot_cv_stability(
     split_vals = fold_sharpes.index.get_level_values("split")
     fig = go.Figure(
         data=go.Bar(
-            x=[f"Fold {s}" for s in split_vals], y=fold_sharpes.values
+            x=[f"Fold {s}" for s in split_vals], y=fold_sharpes.values,
+            hovertemplate=(
+                "<b>Sharpe Ratio</b>: %{y:.2f}"
+                "<br>%{x}<extra></extra>"
+            ),
         )
     )
     fig.add_hline(
@@ -423,20 +681,121 @@ def plot_cv_stability(
 def plot_rolling_sharpe(
     pf: vbt.Portfolio,
     window: int = 252,
-    title: str = "Rolling 1-Year Sharpe Ratio",
+    title: str = "Rolling 1-Year Risk-Adjusted Metrics",
+    y_range: tuple[float, float] = (-4.0, 6.0),
 ) -> go.Figure:
-    """Rolling Sharpe on daily-resampled portfolio."""
+    """Rolling Sharpe + Sortino + Calmar on daily-resampled portfolio.
+
+    All three metrics share the same y-axis (annualized risk-adjusted
+    reward). Values are hard-clipped into ``y_range`` to avoid extreme
+    spikes when the rolling denominator (downside deviation, max
+    drawdown) approaches zero — e.g. a low-volatility window with very
+    few losing days inflates Sortino towards infinity.
+
+    Sortino returns NaN when downside deviation is below a small
+    epsilon (window had no meaningful losses) and NaN gaps are left
+    visible so the reader can tell when the metric is undefined.
+    """
     pf_daily = pf.resample("1D")
     rets = pf_daily.returns
-    rolling_sr = rets.rolling(window).apply(
-        lambda x: x.mean() / x.std() * np.sqrt(252) if x.std() > 0 else 0
+    if isinstance(rets, pd.DataFrame):
+        rets = rets.mean(axis=1)
+    rets = rets.dropna()
+    sqrt_n = np.sqrt(252)
+    eps = 1e-6
+
+    def _sharpe(x: np.ndarray) -> float:
+        s = x.std()
+        if s < eps:
+            return np.nan
+        return float(x.mean() / s * sqrt_n)
+
+    def _sortino(x: np.ndarray) -> float:
+        downside = x[x < 0]
+        if downside.size < 5:
+            return np.nan
+        dd = downside.std()
+        if dd < eps:
+            return np.nan
+        return float(x.mean() / dd * sqrt_n)
+
+    def _calmar(x: np.ndarray) -> float:
+        if len(x) == 0:
+            return np.nan
+        cum = (1 + pd.Series(x)).cumprod()
+        peak = cum.cummax()
+        dd = (cum / peak - 1).min()
+        if dd > -eps:
+            return np.nan
+        ann_ret = cum.iloc[-1] ** (252 / len(x)) - 1
+        return float(ann_ret / abs(dd))
+
+    roll_sharpe = rets.rolling(window).apply(_sharpe, raw=True)
+    roll_sortino = rets.rolling(window).apply(_sortino, raw=True)
+    roll_calmar = rets.rolling(window).apply(_calmar, raw=True)
+
+    # Clip outliers so a single blow-up does not flatten the rest of
+    # the curve. NaN values are kept (plotly draws them as gaps).
+    lo, hi = y_range
+    roll_sharpe = roll_sharpe.clip(lo, hi)
+    roll_sortino = roll_sortino.clip(lo, hi)
+    roll_calmar = roll_calmar.clip(lo, hi)
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=roll_sharpe.index, y=roll_sharpe.values,
+            mode="lines", name="Rolling Sharpe",
+            line=dict(color="#636EFA", width=2),
+            connectgaps=False,
+            hovertemplate=(
+                "<b>Sharpe Ratio</b>: %{y:.2f}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
+        )
     )
-    fig = rolling_sr.vbt.plot()
-    fig.add_hline(y=0, line_color="gray")
+    fig.add_trace(
+        go.Scatter(
+            x=roll_sortino.index, y=roll_sortino.values,
+            mode="lines", name="Rolling Sortino",
+            line=dict(color="#00CC96", width=2),
+            connectgaps=False,
+            hovertemplate=(
+                "<b>Sortino Ratio</b>: %{y:.2f}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=roll_calmar.index, y=roll_calmar.values,
+            mode="lines", name="Rolling Calmar",
+            line=dict(color="#AB63FA", width=2, dash="dot"),
+            connectgaps=False,
+            hovertemplate=(
+                "<b>Calmar Ratio</b>: %{y:.2f}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
+        )
+    )
+    fig.add_hline(y=0, line_color="gray", line_width=1)
     fig.add_hline(
-        y=1, line_dash="dot", line_color="green", annotation_text="Sharpe=1"
+        y=1, line_dash="dot", line_color="#00CC96", opacity=0.5,
+        annotation_text="= 1",
     )
-    fig.update_layout(title=title, height=400)
+    fig.update_yaxes(
+        title_text="Annualized risk-adjusted return",
+        range=list(y_range),
+    )
+    fig.update_xaxes(title_text="Date")
+    _apply_title_layout(
+        fig, title,
+        subtitle=(
+            f"Rolling window: {window} trading days  ·  "
+            f"clipped to [{lo}, {hi}]"
+        ),
+    )
+    make_fullscreen(fig)
     return fig
 
 
@@ -444,8 +803,9 @@ def plot_partial_dependence(
     sweep_sharpes: pd.Series,
     param_grid: dict[str, list],
     title: str = "Parameter Sensitivity",
+    metric_name: str = "Sharpe Ratio",
 ) -> go.Figure:
-    """Marginal mean Sharpe for each swept parameter."""
+    """Marginal mean of *metric_name* for each swept parameter."""
     params = list(param_grid.keys())
     n_params = len(params)
     if n_params == 0:
@@ -468,6 +828,10 @@ def plot_partial_dependence(
                 x=[str(v) for v in marginal.index],
                 y=marginal.values,
                 name=param,
+                hovertemplate=(
+                    f"<b>{metric_name}</b>: %{{y:.2f}}"
+                    f"<br>{param}=%{{x}}<extra></extra>"
+                ),
             ),
             row=1,
             col=i + 1,
@@ -480,8 +844,9 @@ def plot_partial_dependence(
 def plot_train_vs_test(
     grid_perf: pd.Series,
     title: str = "Train vs Test Sharpe (Overfitting Check)",
+    metric_name: str = "Sharpe Ratio",
 ) -> go.Figure:
-    """Scatter: train Sharpe (x) vs test Sharpe (y) per param combo."""
+    """Scatter: train *metric_name* (x) vs test *metric_name* (y) per combo."""
     if "set" not in grid_perf.index.names:
         return go.Figure()
 
@@ -513,6 +878,12 @@ def plot_train_vs_test(
             y=test_avg.loc[common].values,
             mode="markers",
             text=[str(c) for c in common],
+            name="Combos",
+            hovertemplate=(
+                f"<b>Train {metric_name}</b>: %{{x:.2f}}"
+                f"<br><b>Test {metric_name}</b>: %{{y:.2f}}"
+                "<br>params=%{text}<extra></extra>"
+            ),
         )
     )
     max_val = max(train_avg.max(), test_avg.max(), 0) * 1.1
@@ -524,13 +895,14 @@ def plot_train_vs_test(
             mode="lines",
             line=dict(dash="dash", color="gray"),
             name="y=x",
+            hoverinfo="skip",
         )
     )
     fig.update_layout(
         title=title,
         height=500,
-        xaxis_title="Train Sharpe",
-        yaxis_title="Test Sharpe",
+        xaxis_title=f"Train {metric_name}",
+        yaxis_title=f"Test {metric_name}",
     )
     return fig
 
@@ -540,27 +912,123 @@ def plot_train_vs_test(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def build_trade_report(pf: vbt.Portfolio) -> str:
-    """Build a text report with portfolio stats and trade stats.
-
-    ``pf.returns_stats()`` used to be included here, but it triggers a
-    heavy computation (full returns analysis) that is rarely consulted
-    and visibly slows down single-run reports. Dropped intentionally.
+def _stats_to_rows(stats: pd.Series) -> list[list[str]]:
+    """Convert a ``pd.Series`` of stats to ``[[label, value], ...]`` rows
+    with nicely formatted values (durations, percentages, floats).
     """
-    sections = []
+    rows: list[list[str]] = []
+    for label, val in stats.items():
+        if val is None:
+            rows.append([str(label), "—"])
+            continue
+        if isinstance(val, pd.Timedelta):
+            total_min = int(val.total_seconds() / 60)
+            if total_min < 60:
+                rows.append([str(label), f"{total_min} min"])
+            elif total_min < 1440:
+                rows.append([str(label), f"{total_min / 60:.1f} h"])
+            else:
+                rows.append([str(label), f"{total_min / 1440:.1f} d"])
+            continue
+        if isinstance(val, pd.Timestamp):
+            rows.append([str(label), val.strftime("%Y-%m-%d %H:%M")])
+            continue
+        try:
+            f = float(val)
+        except (TypeError, ValueError):
+            rows.append([str(label), str(val)])
+            continue
+        if np.isnan(f):
+            rows.append([str(label), "—"])
+            continue
+        if abs(f) >= 10_000:
+            rows.append([str(label), f"{f:,.2f}"])
+        else:
+            rows.append([str(label), f"{f:.2f}"])
+    return rows
 
-    sections.append(f"PORTFOLIO STATS\n{'-' * 40}")
-    sections.append(pf.stats().to_string())
 
+def _box_title(title: str, width: int = 78) -> str:
+    """Return a Unicode-boxed title header line block."""
+    title = title.strip()
+    inner = f"  {title}  "
+    pad = max(width - len(inner) - 2, 0)
+    top = "╔" + "═" * (width - 2) + "╗"
+    mid = "║" + inner + " " * pad + "║"
+    bot = "╠" + "═" * (width - 2) + "╣"
+    return f"{top}\n{mid}\n{bot}"
+
+
+def build_trade_report(pf: vbt.Portfolio, name: str = "Strategy") -> str:
+    """Build a text report with portfolio stats and trade stats,
+    rendered as aligned tabulate boxes with section headers.
+
+    ``pf.returns_stats()`` is skipped to avoid the heavy returns
+    computation.
+    """
+    from tabulate import tabulate
+
+    sections: list[str] = []
+    sections.append(_box_title(f"{name} — Backtest Report"))
+
+    # ---- Portfolio stats ----
+    try:
+        stats = pf.stats()
+        if isinstance(stats, pd.DataFrame):
+            stats = stats.iloc[:, 0]
+        rows = _stats_to_rows(stats)
+        sections.append("\n  ── Portfolio Stats ──")
+        sections.append(
+            tabulate(rows, headers=["Metric", "Value"], tablefmt="rounded_outline")
+        )
+    except Exception as e:
+        sections.append(f"\n  [portfolio stats failed: {e}]")
+
+    # ---- Trade stats ----
     trade_count = pf.trades.count()
-    # Multi-column portfolios return a Series of per-column counts.
     if isinstance(trade_count, pd.Series):
         has_trades = bool((trade_count > 0).any())
     else:
         has_trades = trade_count > 0
+
     if has_trades:
-        sections.append(f"\nTRADE STATS\n{'-' * 40}")
-        sections.append(pf.trades.stats().to_string())
+        try:
+            ts = pf.trades.stats()
+            if isinstance(ts, pd.DataFrame):
+                ts = ts.iloc[:, 0]
+            rows = _stats_to_rows(ts)
+            sections.append("\n  ── Trade Stats ──")
+            sections.append(
+                tabulate(rows, headers=["Metric", "Value"], tablefmt="rounded_outline")
+            )
+        except Exception as e:
+            sections.append(f"\n  [trade stats failed: {e}]")
+
+        # Quick win/loss summary directly from trade records
+        try:
+            pnls = np.asarray(pf.trades.pnl.values).ravel()
+            pnls = pnls[~np.isnan(pnls)]
+            if pnls.size:
+                wins = pnls[pnls > 0]
+                losses = pnls[pnls < 0]
+                extra = [
+                    ["Mean PnL", f"{pnls.mean():,.2f}"],
+                    ["Median PnL", f"{np.median(pnls):,.2f}"],
+                    ["Std PnL", f"{pnls.std():,.2f}"],
+                    ["Largest Win", f"{pnls.max():,.2f}"],
+                    ["Largest Loss", f"{pnls.min():,.2f}"],
+                    ["Avg Win", f"{wins.mean():,.2f}" if wins.size else "—"],
+                    ["Avg Loss", f"{losses.mean():,.2f}" if losses.size else "—"],
+                    ["Win / Loss ratio",
+                     f"{abs(wins.mean() / losses.mean()):.2f}"
+                     if wins.size and losses.size else "—"],
+                ]
+                sections.append("\n  ── Trade Distribution ──")
+                sections.append(
+                    tabulate(extra, headers=["Metric", "Value"], tablefmt="rounded_outline")
+                )
+        except Exception:
+            pass
 
     return "\n".join(sections)
 
@@ -634,38 +1102,74 @@ def generate_html_tearsheet(
 
 def plot_returns_distribution(
     pf: vbt.Portfolio,
-    title: str = "Returns Distribution",
-    height: int = 800,
+    title: str = "Returns Analysis",
+    height: int | None = None,
 ) -> go.Figure:
-    """3-panel returns analysis: histogram, QQ plot, monthly boxplot."""
+    """4-panel returns analysis.
+
+    Layout:
+    - (1,1) Daily returns per calendar day as a green/red bar chart.
+    - (1,2) Monthly returns boxplot (distribution per calendar month).
+    - (2,1) Cumulative returns curve.
+    - (2,2) Returns ECDF.
+    """
     pf_daily = pf.resample("1D")
     daily_rets = pf_daily.returns.dropna()
+    if isinstance(daily_rets, pd.DataFrame):
+        daily_rets = daily_rets.iloc[:, 0]
 
     fig = make_subplots(
         rows=2, cols=2,
         subplot_titles=(
-            "Daily Returns Histogram",
+            "Avg Strategy Return by Weekday",
             "Monthly Returns Boxplot",
             "Cumulative Returns",
             "Returns ECDF",
         ),
+        vertical_spacing=0.14,
+        horizontal_spacing=0.1,
     )
 
-    # Histogram
+    # (1,1) Mean daily return aggregated by day of week
+    dow_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    dow_index = daily_rets.index.dayofweek  # 0=Mon .. 6=Sun
+    dow_group = pd.Series(daily_rets.values, index=dow_index).groupby(level=0)
+    dow_mean = dow_group.mean().reindex(range(7))
+    dow_std = dow_group.std().reindex(range(7))
+    dow_count = dow_group.count().reindex(range(7)).fillna(0).astype(int)
+    colors = np.where(dow_mean.fillna(0).values >= 0, "#00CC96", "#EF553B")
+    hover = [
+        f"{lbl}: mean={m:.3%}<br>std={s:.3%}<br>n={c}"
+        if not pd.isna(m) else f"{lbl}: no data"
+        for lbl, m, s, c in zip(dow_order, dow_mean.values, dow_std.values, dow_count.values)
+    ]
     fig.add_trace(
-        go.Histogram(
-            x=daily_rets.values, nbinsx=80,
-            name="Daily Returns", marker_color="#636EFA",
+        go.Bar(
+            x=dow_order,
+            y=dow_mean.fillna(0).values,
+            error_y=dict(
+                type="data",
+                array=dow_std.fillna(0).values,
+                visible=True,
+                color="rgba(90,90,90,0.4)",
+                thickness=1.2,
+            ),
+            marker_color=colors,
+            name="Avg daily return",
+            hovertemplate="%{hovertext}<extra></extra>",
+            hovertext=hover,
         ),
         row=1, col=1,
     )
+    fig.add_hline(y=0, line_color="gray", line_width=1, row=1, col=1)
+    fig.update_yaxes(tickformat=".3%", row=1, col=1, title_text="Mean return")
 
-    # Monthly boxplot
+    # (1,2) Monthly returns boxplot
     mo_rets = pf_daily.resample("ME").returns
+    if isinstance(mo_rets, pd.DataFrame):
+        mo_rets = mo_rets.mean(axis=1)
+    mo_rets = mo_rets.dropna()
     months = mo_rets.index.month
-    month_names = [
-        calendar.month_abbr[m] for m in range(1, 13)
-    ]
     for m in range(1, 13):
         m_data = mo_rets[months == m].values
         if len(m_data) > 0:
@@ -676,31 +1180,50 @@ def plot_returns_distribution(
                 ),
                 row=1, col=2,
             )
+    fig.update_yaxes(tickformat=".1%", row=1, col=2)
 
-    # Cumulative returns
+    # (2,1) Cumulative returns
     cum_rets = (1 + daily_rets).cumprod() - 1
     fig.add_trace(
         go.Scatter(
             x=cum_rets.index, y=cum_rets.values,
             mode="lines", name="Cumulative",
-            line=dict(color="#00CC96"),
+            line=dict(color="#00CC96", width=2),
+            hovertemplate=(
+                "<b>Cumulative Return</b>: %{y:.2%}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
         ),
         row=2, col=1,
     )
+    fig.update_yaxes(tickformat=".1%", row=2, col=1)
 
-    # ECDF
+    # (2,2) ECDF
     sorted_rets = np.sort(daily_rets.values)
     ecdf_y = np.arange(1, len(sorted_rets) + 1) / len(sorted_rets)
     fig.add_trace(
         go.Scatter(
             x=sorted_rets, y=ecdf_y,
             mode="lines", name="ECDF",
-            line=dict(color="#EF553B"),
+            line=dict(color="#EF553B", width=2),
+            hovertemplate=(
+                "<b>Daily Return</b>: %{x:.2%}"
+                "<br><b>Cumulative Probability</b>: %{y:.2f}<extra></extra>"
+            ),
         ),
         row=2, col=2,
     )
+    fig.update_xaxes(tickformat=".2%", row=2, col=2)
 
-    fig.update_layout(title=title, height=height, showlegend=False)
+    fig.update_layout(showlegend=False)
+    _apply_title_layout(fig, title)
+    if height is not None:
+        fig.layout.height = height
+    else:
+        make_fullscreen(fig)
+    for ann in fig.layout.annotations:
+        if ann.yref == "paper":
+            ann.y = min(ann.y, 0.94)
     return fig
 
 
@@ -753,8 +1276,8 @@ def print_extended_stats(pf: vbt.Portfolio, name: str = "Strategy") -> None:
                 print(f"\n--- Trade Distribution ---")
                 print(f"  Mean PnL: {pnls.mean():.2f}")
                 print(f"  Median PnL: {np.median(pnls):.2f}")
-                print(f"  Skew: {pd.Series(pnls).skew():.3f}")
-                print(f"  Kurtosis: {pd.Series(pnls).kurtosis():.3f}")
+                print(f"  Skew: {pd.Series(pnls).skew():.2f}")
+                print(f"  Kurtosis: {pd.Series(pnls).kurtosis():.2f}")
         except Exception as e:
             print(f"  (trade distribution skipped: {e})")
 
@@ -802,28 +1325,50 @@ def plot_trade_duration(
         fig.add_annotation(text="No trades after NaN filter", showarrow=False)
         make_fullscreen(fig)
         return fig
-    dur_hours = durations.astype("timedelta64[m]").astype(float) / 60
+    # ``trades.duration`` is an int64 array of bar counts. For FX minute
+    # data that corresponds directly to minutes (1 bar = 1 min). Cast
+    # through timedelta64[m] so the conversion is explicit and safe.
+    dur_minutes = durations.astype("timedelta64[m]").astype(float)
     is_win = pnls > 0
+
+    # Build a subtitle with key duration stats so short-duration trades
+    # (e.g. SL hit on the bar after entry) are immediately visible.
+    dur_stats = (
+        f"n={len(dur_minutes)}  "
+        f"min={int(dur_minutes.min())}m  "
+        f"median={int(np.median(dur_minutes))}m  "
+        f"mean={dur_minutes.mean():.0f}m  "
+        f"max={int(dur_minutes.max())}m"
+    )
 
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=("PnL vs Duration", "Duration Distribution"),
+        horizontal_spacing=0.12,
     )
 
     # Scatter PnL vs duration (wins green, losses red)
     fig.add_trace(
         go.Scatter(
-            x=dur_hours[is_win], y=pnls[is_win],
+            x=dur_minutes[is_win], y=pnls[is_win],
             mode="markers", name="Winners",
             marker=dict(color="#00CC96", size=6),
+            hovertemplate=(
+                "<b>Winning Trade PnL</b>: $%{y:,.2f}"
+                "<br><b>Duration</b>: %{x:.0f} min<extra></extra>"
+            ),
         ),
         row=1, col=1,
     )
     fig.add_trace(
         go.Scatter(
-            x=dur_hours[~is_win], y=pnls[~is_win],
+            x=dur_minutes[~is_win], y=pnls[~is_win],
             mode="markers", name="Losers",
             marker=dict(color="#EF553B", size=6),
+            hovertemplate=(
+                "<b>Losing Trade PnL</b>: $%{y:,.2f}"
+                "<br><b>Duration</b>: %{x:.0f} min<extra></extra>"
+            ),
         ),
         row=1, col=1,
     )
@@ -831,20 +1376,28 @@ def plot_trade_duration(
     # Duration histogram
     fig.add_trace(
         go.Histogram(
-            x=dur_hours, nbinsx=30,
+            x=dur_minutes, nbinsx=30,
             name="Duration", marker_color="#636EFA",
+            hovertemplate=(
+                "<b>Trade Duration</b>: %{x} min"
+                "<br><b>Trade Count</b>: %{y}<extra></extra>"
+            ),
         ),
         row=1, col=2,
     )
 
-    fig.update_xaxes(title_text="Duration (hours)", row=1, col=1)
-    fig.update_xaxes(title_text="Duration (hours)", row=1, col=2)
+    fig.update_xaxes(title_text="Duration (minutes)", row=1, col=1)
+    fig.update_xaxes(title_text="Duration (minutes)", row=1, col=2)
     fig.update_yaxes(title_text="PnL ($)", row=1, col=1)
-    fig.update_layout(title=title)
+    fig.update_yaxes(title_text="Trade count", row=1, col=2)
+    _apply_title_layout(fig, title, subtitle=dur_stats)
     if height is not None:
         fig.layout.height = height
     else:
         make_fullscreen(fig)
+    for ann in fig.layout.annotations:
+        if ann.yref == "paper":
+            ann.y = min(ann.y, 0.94)
     return fig
 
 
@@ -881,11 +1434,15 @@ def plot_drawdown_analysis(
                 fill="tozeroy", mode="lines",
                 line=dict(color="#EF553B"),
                 name="Drawdown",
+                hovertemplate=(
+                    "<b>Max Drawdown</b>: %{y:.2%}"
+                    "<br>%{x|%Y-%m-%d}<extra></extra>"
+                ),
             )
         )
     if col_label:
         title = f"{title} — {col_label}"
-    fig.update_layout(title=title)
+    _apply_title_layout(fig, title)
     if height is not None:
         fig.layout.height = height
     else:
@@ -914,6 +1471,7 @@ def plot_multi_strategy_equity(
     ]
     fig = go.Figure()
 
+    metric_label = "Normalized Equity" if normalize else "Portfolio Value"
     for i, (name, pf) in enumerate(portfolios.items()):
         pf_daily = pf.resample("1D")
         values = pf_daily.value
@@ -924,6 +1482,11 @@ def plot_multi_strategy_equity(
                 x=values.index, y=values.values,
                 mode="lines", name=name,
                 line=dict(color=colors[i % len(colors)], width=2),
+                hovertemplate=(
+                    f"<b>{name}</b><br>"
+                    f"<b>{metric_label}</b>: %{{y:,.2f}}"
+                    "<br>%{x|%Y-%m-%d}<extra></extra>"
+                ),
             )
         )
 
@@ -1063,7 +1626,7 @@ def plot_param_heatmap(
         "text": text,
         "texttemplate": "%{text}",
         "hovertemplate": (
-            f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br>{metric_name}=%{{z:.3f}}"
+            f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br><b>{metric_name}</b>: %{{z:.2f}}"
             "<extra></extra>"
         ),
     }
@@ -1123,7 +1686,7 @@ def plot_param_heatmap_slider(
         "colorscale": colorscale,
         "colorbar": dict(title=metric_name),
         "hovertemplate": (
-            f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br>{metric_name}=%{{z:.3f}}"
+            f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br><b>{metric_name}</b>: %{{z:.2f}}"
             "<extra></extra>"
         ),
     }
@@ -1245,7 +1808,7 @@ def plot_param_surface(
             colorscale=colorscale,
             colorbar=dict(title=metric_name),
             hovertemplate=(
-                f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br>{metric_name}=%{{z:.3f}}"
+                f"{x_param}=%{{x}}<br>{y_param}=%{{y}}<br><b>{metric_name}</b>: %{{z:.2f}}"
                 "<extra></extra>"
             ),
         )
@@ -1375,6 +1938,12 @@ def plot_exposure(
     except Exception:
         exposure = pf_daily.allocations
     fig = exposure.vbt.plot()
+    fig.update_traces(
+        hovertemplate=(
+            "<b>Gross Exposure</b>: %{y:.2f}"
+            "<br>%{x|%Y-%m-%d}<extra></extra>"
+        ),
+    )
     fig.add_hline(y=1.0, line_dash="dot", line_color="gray",
                   annotation_text="100%")
     fig.update_layout(title=title, yaxis_title="Gross Exposure")
@@ -1400,8 +1969,12 @@ def plot_value_and_cash(
     fig.add_trace(
         go.Scatter(
             x=value.index, y=value.values,
-            mode="lines", name="Value",
+            mode="lines", name="Portfolio Value",
             line=dict(color="#00CC96", width=2),
+            hovertemplate=(
+                "<b>Portfolio Value</b>: $%{y:,.2f}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
         ),
         row=1, col=1,
     )
@@ -1410,6 +1983,10 @@ def plot_value_and_cash(
             x=cash.index, y=cash.values,
             mode="lines", name="Cash",
             line=dict(color="#636EFA", width=2),
+            hovertemplate=(
+                "<b>Cash Balance</b>: $%{y:,.2f}"
+                "<br>%{x|%Y-%m-%d}<extra></extra>"
+            ),
         ),
         row=2, col=1,
     )
@@ -1898,3 +2475,180 @@ def generate_standalone_report(
         print(f"\n  ✔ All results saved under {output_dir}/")
 
     return {"pf": pf, "grid_perf": grid_perf, "figures": figures}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# TERMINAL PRETTY-PRINT HELPERS (grid-search + CV results)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _format_metric_header(metric_name: str) -> str:
+    """Convert a snake_case metric name into a Title Case header."""
+    return metric_name.replace("_", " ").title()
+
+
+def _format_cell(val: Any) -> str:
+    """Always format numeric values with 2 decimal places."""
+    if val is None:
+        return "—"
+    try:
+        f = float(val)
+    except (TypeError, ValueError):
+        return str(val)
+    if np.isnan(f):
+        return "—"
+    if abs(f) >= 10_000:
+        return f"{f:,.2f}"
+    return f"{f:.2f}"
+
+
+def print_grid_results(
+    grid: pd.Series,
+    *,
+    title: str = "Grid Search Results",
+    metric_name: str = "metric",
+    top_n: int = 20,
+    ascending: bool = False,
+) -> None:
+    """Pretty-print a grid-search ``pd.Series`` to the terminal.
+
+    Uses ``tabulate`` for a clean aligned layout. The index levels
+    become the left-hand columns and the metric becomes the right-hand
+    column. Shows a header with summary statistics (best/median/worst).
+    """
+    from tabulate import tabulate
+
+    if not isinstance(grid, pd.Series) or len(grid) == 0:
+        print(f"\n(empty {title})")
+        return
+
+    sorted_grid = grid.sort_values(ascending=ascending)
+    head = sorted_grid.head(top_n)
+    df = head.reset_index()
+    metric_col = df.columns[-1]
+    df.rename(columns={metric_col: _format_metric_header(metric_name)}, inplace=True)
+    for col in df.columns[:-1]:
+        df[col] = df[col].apply(
+            lambda v: f"{v:g}" if isinstance(v, (int, float, np.floating)) else str(v)
+        )
+    df[df.columns[-1]] = df[df.columns[-1]].apply(_format_cell)
+
+    bar = "═" * 78
+    print(f"\n{bar}")
+    print(f"  {title}")
+    print(f"{bar}")
+    print(
+        f"  Combos: {len(grid)}   "
+        f"Best: {_format_cell(sorted_grid.iloc[0])}   "
+        f"Median: {_format_cell(sorted_grid.median())}   "
+        f"Worst: {_format_cell(sorted_grid.iloc[-1])}"
+    )
+    print(f"  Top {min(top_n, len(grid))} combos by {metric_name}:")
+    print()
+    print(tabulate(df, headers="keys", tablefmt="rounded_outline", showindex=False))
+    print()
+
+
+def print_cv_results(
+    grid_perf: pd.Series,
+    best_perf: pd.Series | None = None,
+    splitter: Any | None = None,
+    *,
+    title: str = "Cross-Validation Results",
+    metric_name: str = "metric",
+    top_n: int = 5,
+) -> None:
+    """Pretty-print CV grid + best-per-split results.
+
+    Displays two sections:
+      1. Best combo per (split, set) — typically best on train per fold.
+      2. Aggregated ranking across splits (mean metric per combo).
+    """
+    from tabulate import tabulate
+
+    if not isinstance(grid_perf, pd.Series) or len(grid_perf) == 0:
+        print(f"\n(empty {title})")
+        return
+
+    names = list(grid_perf.index.names)
+    has_split = "split" in names
+    has_set = "set" in names
+
+    date_labels: dict[int, str] = {}
+    if splitter is not None and has_split:
+        try:
+            bounds = splitter.index_bounds
+            for (split_i, set_i), row in bounds.iterrows():
+                if set_i in ("test", 1):
+                    start = pd.Timestamp(row["start"]).strftime("%Y-%m-%d")
+                    end = pd.Timestamp(row["end"]).strftime("%Y-%m-%d")
+                    date_labels[split_i] = f"{start} → {end}"
+        except Exception:
+            pass
+
+    bar = "═" * 78
+    print(f"\n{bar}")
+    print(f"  {title}")
+    print(f"{bar}")
+    print(
+        f"  Splits: {len(date_labels) or '?'}   "
+        f"Combos: {len(grid_perf)}   "
+        f"Metric: {metric_name}"
+    )
+
+    # -------- Section 1: best per split (from best_perf if provided) --------
+    if best_perf is not None and len(best_perf) > 0 and has_split:
+        print(f"\n  ── Best combo per split (test range) ──")
+        rows = []
+        bp = best_perf
+        if has_set:
+            try:
+                bp = bp.xs("test", level="set")
+            except (KeyError, ValueError):
+                try:
+                    bp = bp.xs(1, level="set")
+                except Exception:
+                    pass
+        for idx, val in bp.items():
+            if not isinstance(idx, tuple):
+                idx = (idx,)
+            split_val = idx[0]
+            param_vals = idx[1:]
+            param_names = [n for n in bp.index.names if n != "split"]
+            date_str = date_labels.get(split_val, f"Split {split_val}")
+            params_str = ", ".join(
+                f"{n}={v}" for n, v in zip(param_names, param_vals)
+            )
+            rows.append([date_str, params_str, _format_cell(val)])
+        print(
+            tabulate(
+                rows,
+                headers=["Test Range", "Best Params", _format_metric_header(metric_name)],
+                tablefmt="rounded_outline",
+            )
+        )
+
+    # -------- Section 2: aggregated ranking across splits --------
+    sweep_levels = [
+        n for n in names if n not in ("split", "set")
+    ]
+    if sweep_levels:
+        test_perf = grid_perf
+        if has_set:
+            try:
+                test_perf = test_perf.xs("test", level="set")
+            except (KeyError, ValueError):
+                try:
+                    test_perf = test_perf.xs(1, level="set")
+                except Exception:
+                    pass
+        agg = test_perf.groupby(sweep_levels).agg(["mean", "std", "min", "max"])
+        agg = agg.sort_values("mean", ascending=False).head(top_n)
+        df = agg.reset_index()
+        for col in sweep_levels:
+            df[col] = df[col].apply(lambda v: f"{v:g}" if isinstance(v, (int, float, np.floating)) else str(v))
+        for col in ["mean", "std", "min", "max"]:
+            df[col] = df[col].apply(_format_cell)
+        print(f"\n  ── Top {top_n} combos by mean test {metric_name} (across all splits) ──")
+        print(tabulate(df, headers="keys", tablefmt="rounded_outline", showindex=False))
+    print()
