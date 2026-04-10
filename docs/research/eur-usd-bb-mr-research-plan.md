@@ -414,7 +414,71 @@ Après correction du look-ahead (`.shift(1)` sur les bandes resamplees), TOUTES 
 | Composite 50/50 | 0.59 | **7/7** | Oui |
 | MR intraday (baseline) | 0.94 | 4/7 | — |
 
-**Les stratégies daily sont ORTHOGONALES au MR intraday.** Le MR intraday capture la mean reversion à la minute, le momentum daily capture la tendance à 1-3 mois. Un portefeuille combinant les deux bénéficierait d'une diversification temporelle forte.
+**Les stratégies daily sont ORTHOGONALES au MR intraday.** Le MR intraday capture la mean reversion à la minute, le momentum daily capture la tendance à 1-3 mois.
+
+---
+
+## Phase 8 : Portefeuille Combiné + RSI Daily
+
+### 8A. Corrélations inter-stratégies
+
+| | MR intraday | XS momentum | TS momentum |
+|---|---|---|---|
+| MR intraday | 1.00 | **0.05** | **0.04** |
+| XS momentum | 0.05 | 1.00 | 0.76 |
+| TS momentum | 0.04 | 0.76 | 1.00 |
+
+**La corrélation MR intraday vs momentum daily est quasi-nulle (0.04-0.05).** Les deux momentum (XS et TS) sont fortement corrélés (0.76) — essentiellement le même signal.
+
+### 8B. Portefeuille combiné MR + Momentum
+
+| Allocation | Sharpe | Pos/7 | OOS |
+|-----------|--------|-------|-----|
+| MR seul | 0.76 | 4/7 | 0.79 |
+| **Risk Parity (MR=78% XS=9% TS=14%)** | **0.67** | **6/7** | 0.64 |
+| MR 50 + XS 25 + TS 25 | 0.49 | **6/7** | 0.43 |
+| XS + TS 50/50 | 0.39 | 6/7 | 0.34 |
+
+**Conclusion :** Le portefeuille combiné sacrifie du Sharpe (0.76 → 0.67) mais gagne 2 années positives (4/7 → 6/7). Le risk parity pondère MR à 78% car sa volatilité est beaucoup plus faible.
+
+### 8C. RSI Daily — Nouvelle source d'alpha
+
+**Résultat : VALIDÉ.** Le RSI sur daily fonctionne en mean reversion sur EUR, GBP, CAD, et en momentum sur JPY.
+
+| Paire | Meilleur RSI | Mode | Sharpe | Pos/7 | OOS |
+|-------|-------------|------|--------|-------|-----|
+| GBP-USD | p=14 20/80 | MR | **0.62** | 4/7 | 1.05 |
+| EUR-USD | p=14 25/75 | MR | **0.60** | **6/7** | 1.16 |
+| USD-CAD | p=21 25/75 | MR | **0.57** | 5/7 | 0.80 |
+| USD-JPY | p=21 th=55 | **Momentum** | **0.56** | 5/7 | 0.28 |
+
+**Rationnel économique :** EUR/GBP/CAD sont des marchés developed avec des banques centrales crédibles — les déviations de RSI se corrigent. USD-JPY est dominé par la BOJ (politique non-conventionnelle) et le carry trade — le momentum persiste plus longtemps.
+
+### 8D. RSI + Trend Following — **MEILLEURE COMBINAISON**
+
+Le RSI comme filtre de confirmation sur le trend following EMA produit les résultats les plus robustes :
+
+| Config | Sharpe | Pos/7 | OOS |
+|--------|--------|-------|-----|
+| **GBP-USD EMA(20/50) + RSI7 40/60** | **0.70** | **7/7** | **1.10** |
+| GBP-USD EMA(20/50) + RSI14 40/60 | 0.66 | **7/7** | 1.07 |
+| GBP-USD EMA(20/50) pur (sans RSI) | 0.78 | 6/7 | 0.53 |
+
+**Le RSI 40/60 filtre les entrées quand le momentum est excessif** (RSI > 60 pour longs, < 40 pour shorts), évitant les reversals. L'ajout du RSI réduit le Sharpe de 0.78 à 0.70 mais gagne la 7ème année positive et améliore l'OOS de 0.53 à 1.10.
+
+**Rationnel économique :** Le filtre RSI 40/60 capture l'idée que le trend est plus sûr quand le momentum n'est pas encore extrême. Un RSI élevé (>60) en uptrend signale un possible épuisement — mieux vaut attendre un pullback.
+
+### 8E. RSI Cross-Sectionnel
+
+**Résultat : REJETÉ.** RSI cross-sectionnel (rank 4 paires par RSI) donne Sharpe ~0.10. Insuffisant de paires pour un signal cross-sectionnel robuste.
+
+### Stratégies implémentées en production
+
+Nouveau fichier `src/strategies/daily_momentum.py` avec :
+- `backtest_xs_momentum()` — cross-sectional momentum (21/63)
+- `backtest_ts_momentum_rsi()` — trend following + RSI par paire
+- `backtest_ts_momentum_portfolio()` — portefeuille EW 4 paires
+- `backtest_rsi_mr()` — RSI mean reversion standalone
 
 ---
 
@@ -432,7 +496,15 @@ Après correction du look-ahead (`.shift(1)` sur les bandes resamplees), TOUTES 
 5. **Le momentum cross-sectionnel FX fonctionne** (Sharpe 0.72, 6/7 pos). Cohérent avec Menkhoff et al. (2012).
 6. **Le trend following par paire fonctionne** sur GBP-USD (0.78), EUR-USD (0.59), USD-JPY (0.59). Portfolio EW : 0.68.
 7. **Le composite 50% mom + 50% carry atteint 7/7 années positives** (Sharpe 0.59).
-8. **Les stratégies daily sont orthogonales au MR intraday** — potentiel de diversification temporelle fort.
+8. **Les stratégies daily sont orthogonales au MR intraday** (corrélation 0.04-0.05).
+
+**RSI Daily :**
+9. **Le RSI daily mean reversion fonctionne** sur EUR (0.60), GBP (0.62), CAD (0.57).
+10. **USD-JPY répond au RSI momentum** (pas MR) — marché de trend (BOJ/carry).
+11. **RSI + Trend (EMA 20/50 + RSI7 40/60)** sur GBP-USD : Sharpe 0.70, **7/7 positif** — la plus robuste.
+
+**Portefeuille combiné :**
+12. **Risk Parity MR+XS+TS** : Sharpe 0.67, 6/7 positif (vs 4/7 pour MR seul).
 
 ### Erreur majeure et leçon méthodologique
 
