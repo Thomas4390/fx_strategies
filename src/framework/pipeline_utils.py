@@ -500,6 +500,23 @@ def analyze_portfolio(
     )
 
     figures: dict[str, go.Figure] = {}
+
+    # Guard against empty portfolios (M6): pf.stats() still returns NaNs
+    # but downstream trade plots raise on zero trades, so warn early.
+    try:
+        n_trades = int(pf.trades.count())
+    except Exception:
+        n_trades = -1
+    if n_trades == 0:
+        import warnings as _warnings
+
+        _warnings.warn(
+            f"analyze_portfolio({name}): portfolio has zero trades — most "
+            f"metrics will be NaN and trade plots will be skipped.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
     # Stats always computed on the full-resolution portfolio.
     stats = pf.stats()
 

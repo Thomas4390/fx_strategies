@@ -96,6 +96,12 @@ def pipeline(
     indexed at any frequency. It is resampled to daily close before the RSI
     computation to match the original semantics.
     """
+    if not (oversold < exit_mid < overbought):
+        raise ValueError(
+            f"RSI thresholds must satisfy oversold < exit_mid < overbought, "
+            f"got oversold={oversold}, exit_mid={exit_mid}, overbought={overbought}"
+        )
+
     if hasattr(data, "close"):
         close_any = data.close
     else:

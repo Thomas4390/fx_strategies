@@ -14,6 +14,7 @@ Three entry points:
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -125,7 +126,16 @@ def pipeline(
     rolling_vol = compute_daily_rolling_volatility_nb(index_ns, close_vals, vol_window)
     leverage_arr = compute_leverage_nb(rolling_vol, sigma_target, max_leverage)
     leverage_arr = leverage_arr * float(leverage_mult)
-    leverage_arr = np.where(np.isnan(leverage_arr), 1.0, leverage_arr)
+    nan_count = int(np.isnan(leverage_arr).sum())
+    if nan_count > 0:
+        warnings.warn(
+            f"ou_mean_reversion: {nan_count} NaN leverage value(s) replaced "
+            f"with 1.0 (out of {leverage_arr.size}). Likely vol_window warmup "
+            f"or a data gap — check input close series.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        leverage_arr = np.where(np.isnan(leverage_arr), 1.0, leverage_arr)
 
     pf = vbt.Portfolio.from_signals(
         data,
