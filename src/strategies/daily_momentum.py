@@ -156,7 +156,9 @@ def backtest_ts_momentum_portfolio(
             target_vol,
         )
         pair_rets.append(rets)
-    return pd.concat(pair_rets, axis=1).fillna(0).mean(axis=1)
+    # skipna=True so missing data for one pair does not bias the mean
+    # toward zero (H3 fix).
+    return pd.concat(pair_rets, axis=1).mean(axis=1, skipna=True)
 
 
 def backtest_rsi_mr(
@@ -275,7 +277,7 @@ def pipeline_xs_nb(
     metric_type: int = SHARPE_RATIO,
 ) -> float:
     """XS momentum grid-search path — scalar metric per param combo."""
-    pf, _ = pipeline_xs(
+    pf, ind = pipeline_xs(
         closes,
         w_short=w_short,
         w_long=w_long,
@@ -285,10 +287,14 @@ def pipeline_xs_nb(
         slippage=slippage,
         fees=fees,
     )
-    returns = pf.returns.values
-    if returns.ndim > 1:
-        # Aggregate per-asset returns to a single equally-weighted series.
-        returns = returns.mean(axis=1)
+    # H2 fix: pf is ungrouped (4 independent per-asset mini-portfolios) so
+    # ``pf.returns`` is 2D and the old ``mean(axis=1)`` ignored the actual
+    # cross-sectional weights. Reconstruct the true weighted combined return
+    # from ``scaled_weights`` × ``daily_rets`` (same formula as
+    # ``backtest_xs_momentum``), then dispatch to the Numba metric kernel.
+    daily_rets = closes.pct_change().fillna(0.0)
+    combined = (ind.weights * daily_rets).sum(axis=1)
+    returns = np.asarray(combined.values, dtype=np.float64)
     return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
 
 
@@ -363,7 +369,7 @@ def create_cv_pipeline_xs(
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
     ) -> float:
-        pf, _ = pipeline_xs(
+        pf, ind = pipeline_xs(
             closes,
             w_short=w_short,
             w_long=w_long,
@@ -373,9 +379,12 @@ def create_cv_pipeline_xs(
             slippage=slippage,
             fees=fees,
         )
-        returns = pf.returns.values
-        if returns.ndim > 1:
-            returns = returns.mean(axis=1)
+        # H2 fix: reconstruct the true weighted combined return from
+        # scaled_weights × daily_rets (pf is ungrouped so pf.returns is 2D
+        # and .mean(axis=1) would ignore the actual cross-sectional weights).
+        daily_rets = closes.pct_change().fillna(0.0)
+        combined = (ind.weights * daily_rets).sum(axis=1)
+        returns = np.asarray(combined.values, dtype=np.float64)
         return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
 
     return cv_pipeline
