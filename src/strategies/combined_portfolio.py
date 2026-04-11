@@ -16,8 +16,6 @@ Research findings (walk-forward 2019-2025):
 from __future__ import annotations
 
 import os
-import time
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -32,8 +30,6 @@ from strategies.daily_momentum import (
 from strategies.mr_macro import backtest_mr_macro
 from utils import apply_vbt_settings, load_fx_data
 
-
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 WF_PERIODS = [
     (f"{y}-01-01", f"{y}-12-31") for y in range(2019, 2025)
@@ -70,6 +66,54 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
     }
 
 
+_RISK_PARITY_WARMUP = 63  # ~3 months — warmup before expanding-window vol is trusted
+_INIT_CASH = 1_000_000
+
+
+def _compute_weights_ts(
+    common: pd.DataFrame,
+    allocation: str,
+    custom_weights: dict[str, float] | None,
+) -> pd.DataFrame:
+    """Return a time-varying weights DataFrame aligned to ``common``.
+
+    Static allocations broadcast a single Series; ``risk_parity`` uses an
+    expanding-window inverse-vol estimate with ``.shift(1)`` so weights at
+    time ``t`` depend only on returns strictly before ``t`` (no look-ahead).
+    Before ``_RISK_PARITY_WARMUP`` observations, equal weights are used.
+    """
+    n_cols = len(common.columns)
+    eq_w = 1.0 / n_cols
+
+    if allocation == "risk_parity":
+        vol = common.expanding(min_periods=_RISK_PARITY_WARMUP).std().shift(1)
+        inv_vol = vol.where(vol > 0).rdiv(1.0)  # 1 / vol, NaN where vol is 0
+        row_sum = inv_vol.sum(axis=1)
+        weights_ts = inv_vol.div(row_sum.where(row_sum > 0), axis=0)
+        # Warmup rows (before min_periods) fall back to equal weights.
+        return weights_ts.fillna(eq_w)
+
+    if allocation == "equal":
+        static = pd.Series(eq_w, index=common.columns)
+    elif allocation == "mr_heavy":
+        static = pd.Series(
+            {"MR_Macro": 0.50, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.25}
+        )
+    elif allocation == "custom" and custom_weights:
+        static = pd.Series(custom_weights)
+    else:
+        static = pd.Series(eq_w, index=common.columns)
+
+    static = static.reindex(common.columns).fillna(0.0)
+    total = static.sum()
+    static = static / total if total > 0 else static
+    return pd.DataFrame(
+        np.broadcast_to(static.values, common.shape),
+        index=common.index,
+        columns=common.columns,
+    )
+
+
 def build_combined_portfolio(
     strategy_returns: dict[str, pd.Series],
     allocation: str = "risk_parity",
@@ -78,74 +122,54 @@ def build_combined_portfolio(
     """Build combined portfolio from strategy daily returns.
 
     Allocations:
-      risk_parity: weight inversely proportional to volatility
+      risk_parity: expanding-window inverse-vol, shifted by 1 bar (no look-ahead)
       equal: 1/N equal weight
       mr_heavy: MR 50%, XS 25%, TS 25%
       custom: use custom_weights dict
+
+    The returned ``pf_combined`` is built via ``vbt.Portfolio.from_returns`` on
+    the component-net-of-fees daily returns. It therefore reflects fees already
+    paid by each sub-strategy but does NOT charge any rebalancing/turnover cost
+    for the combined allocation.
     """
     # Align to common index
     all_rets = pd.DataFrame(strategy_returns)
     common = all_rets.dropna()
 
-    # Compute weights
-    if allocation == "risk_parity":
-        vols = common.std()
-        inv_vol = 1.0 / vols
-        weights = inv_vol / inv_vol.sum()
-    elif allocation == "equal":
-        n = len(common.columns)
-        weights = pd.Series(1.0 / n, index=common.columns)
-    elif allocation == "mr_heavy":
-        weights = pd.Series({
-            "MR_Macro": 0.50,
-            "XS_Momentum": 0.25,
-            "TS_Momentum_RSI": 0.25,
-        })
-    elif allocation == "custom" and custom_weights:
-        weights = pd.Series(custom_weights)
-    else:
-        weights = pd.Series(1.0 / len(common.columns), index=common.columns)
+    weights_ts = _compute_weights_ts(common, allocation, custom_weights)
+    port_rets = (common * weights_ts).sum(axis=1)
 
-    # Normalize weights
-    weights = weights.reindex(common.columns).fillna(0)
-    weights = weights / weights.sum()
+    pf_combined = vbt.Portfolio.from_returns(
+        port_rets, init_cash=_INIT_CASH, freq="1D"
+    )
 
-    # Combined returns
-    port_rets = (common * weights).sum(axis=1)
-
-    # Walk-forward analysis
-    wf_sharpes = []
+    # Walk-forward analysis — one VBT portfolio per window for native Sharpe.
+    wf_sharpes: list[float] = []
     for start, end in WF_PERIODS:
         p = port_rets.loc[start:end]
         if len(p) < 20:
             wf_sharpes.append(0.0)
             continue
-        sr = p.mean() / p.std() * np.sqrt(252) if p.std() > 0 else 0.0
-        wf_sharpes.append(float(sr) if not np.isnan(sr) else 0.0)
+        pf_w = vbt.Portfolio.from_returns(p, init_cash=_INIT_CASH, freq="1D")
+        sr = float(pf_w.sharpe_ratio)
+        wf_sharpes.append(sr if not np.isnan(sr) else 0.0)
 
-    # Full-period stats
-    full_sr = (
-        port_rets.mean() / port_rets.std() * np.sqrt(252)
-        if port_rets.std() > 0 else 0.0
-    )
-    ann_ret = port_rets.mean() * 252
-    ann_vol = port_rets.std() * np.sqrt(252)
-    cum = (1 + port_rets).cumprod()
-    max_dd = (cum / cum.cummax() - 1).min()
-
-    # Correlation matrix
-    corr = common.corr()
+    full_sr = float(pf_combined.sharpe_ratio)
+    if np.isnan(full_sr):
+        full_sr = 0.0
 
     return {
-        "weights": weights.to_dict(),
+        "weights_ts": weights_ts,
+        "weights": weights_ts.mean().to_dict(),  # average allocation across time
         "allocation": allocation,
         "portfolio_returns": port_rets,
         "component_returns": common,
-        "correlation": corr,
-        "sharpe": float(full_sr),
-        "annual_return": float(ann_ret),
-        "annual_vol": float(ann_vol),
-        "max_drawdown": float(max_dd),
+        "correlation": common.corr(),
+        "pf_combined": pf_combined,
+        "sharpe": full_sr,
+        "annual_return": float(pf_combined.annualized_return),
+        "annual_vol": float(pf_combined.annualized_volatility),
+        "max_drawdown": float(pf_combined.max_drawdown),
         "wf_sharpes": wf_sharpes,
         "wf_avg_sharpe": float(np.mean(wf_sharpes)),
         "wf_pos_years": sum(1 for s in wf_sharpes if s > 0),
@@ -226,21 +250,15 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
         pos = sum(1 for s in sharpes if s > 0)
         print(f"  {name:<25} avg={avg:>5.2f} pos={pos}/7 | {detail}")
 
-    # Generate portfolio from best allocation returns
-    port_rets = best["portfolio_returns"]
+    # Reuse the VBT portfolio built inside build_combined_portfolio —
+    # avoids a duplicate from_returns pass.
+    pf_combined = best["pf_combined"]
 
-    # Create a VBT portfolio from returns for native plotting
-    pf_combined = vbt.Portfolio.from_returns(
-        port_rets,
-        init_cash=1_000_000,
-        freq="1D",
-    )
-
-    # Also create individual strategy portfolios for comparison
+    # Individual strategy portfolios for comparison
     pf_components = {}
     for name, rets in strat_rets.items():
         pf_components[name] = vbt.Portfolio.from_returns(
-            rets, init_cash=1_000_000, freq="1D",
+            rets, init_cash=_INIT_CASH, freq="1D",
         )
     pf_components[f"Combined ({best_alloc})"] = pf_combined
 
