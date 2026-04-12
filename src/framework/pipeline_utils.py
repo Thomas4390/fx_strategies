@@ -198,8 +198,36 @@ def compute_metric_nb(
 # to ``Parameterizer doesn't expect arguments ['show_progress']``. By omitting
 # it from our defaults, we let VBT's automatic default (enabled with delay)
 # kick in, and ``pbar_kwargs=dict(delay=0)`` forces immediate display.
+#
+# RAM hygiene — why we pin ``chunk_len`` instead of using ``"auto"``:
+# with ``chunk_len="auto"`` on a 32-core machine, VBT packs up to 32
+# parameter combinations into a single in-flight batch before any GC runs.
+# On minute-frequency data that can mean 32 × ~3M-bar Portfolios alive at
+# once — 15 GB peak on the mr_macro grid. Capping ``chunk_len`` at 8 bounds
+# the parallel batch to at most 8 live Portfolios.
+#
+# Note: the explicit ``vbt.flush()`` between chunks is NOT in the default
+# anymore (it adds ~1s overhead per small grid), but is re-enabled per
+# strategy by passing ``flush_every=N`` to :func:`make_execute_kwargs`.
+_DEFAULT_CHUNK_LEN = 8
+
+
+def _flush_after_chunk(chunk_idx: int, flush_every: int = 1) -> None:
+    """Post-chunk hook that forces garbage collection + VBT cache clear.
+
+    Called after each chunk of parameter combinations completes. With
+    ``flush_every=1`` (the typical value), it runs ``vbt.flush()`` after
+    every chunk — equivalent to ``gc.collect()`` plus clearing VBT's
+    internal LRU caches, which is the only way to reliably release
+    Portfolio / ndarray memory between batches. Only activated when a
+    strategy passes ``flush_every`` to :func:`make_execute_kwargs`.
+    """
+    if (chunk_idx + 1) % flush_every == 0:
+        vbt.flush()
+
+
 DEFAULT_EXECUTE_KWARGS: dict[str, Any] = dict(
-    chunk_len="auto",
+    chunk_len=_DEFAULT_CHUNK_LEN,
     engine="threadpool",
     warmup=True,  # compile first chunk serially before parallelizing
 )
@@ -213,7 +241,13 @@ def make_execute_kwargs(desc: str, **overrides: Any) -> dict[str, Any]:
     desc
         Label shown on the progress bar (e.g. ``"MR Turbo grid"``).
     **overrides
-        Any key in :data:`DEFAULT_EXECUTE_KWARGS` to override.
+        Any key in :data:`DEFAULT_EXECUTE_KWARGS` to override, plus one
+        convenience kwarg ``flush_every`` (int). When supplied, VBT calls
+        ``vbt.flush()`` every ``flush_every`` chunks — this explicitly
+        releases Portfolio memory between batches, essential for minute-
+        frequency grid sweeps where a single in-flight Portfolio is
+        ~400 MB. Fast daily grids can omit ``flush_every`` to avoid the
+        ~1s-per-grid overhead of repeated GC calls.
 
     Returns
     -------
@@ -226,11 +260,24 @@ def make_execute_kwargs(desc: str, **overrides: Any) -> dict[str, Any]:
     -------
     >>> @vbt.parameterized(
     ...     merge_func="concat",
-    ...     execute_kwargs=make_execute_kwargs("MR Turbo grid"),
+    ...     execute_kwargs=make_execute_kwargs(
+    ...         "MR Macro grid", chunk_len=4, flush_every=1
+    ...     ),
     ... )
     ... def pipeline_nb(...): ...
     """
     out: dict[str, Any] = dict(DEFAULT_EXECUTE_KWARGS)
+    # Opt-in RAM-hygiene: when ``flush_every`` is provided, wire up the
+    # ``vbt.flush`` post-chunk hook with the requested frequency. Strategies
+    # that do not need it (fast daily grids) simply omit the kwarg and skip
+    # the overhead entirely.
+    flush_every_override = overrides.pop("flush_every", None)
+    if flush_every_override is not None:
+        out["post_chunk_func"] = _flush_after_chunk
+        out["post_chunk_kwargs"] = dict(
+            chunk_idx=vbt.Rep("chunk_idx"),
+            flush_every=int(flush_every_override),
+        )
     # Allow callers to override pbar_kwargs while preserving the desc.
     pbar_overrides = overrides.pop("pbar_kwargs", None)
     for key, val in overrides.items():
