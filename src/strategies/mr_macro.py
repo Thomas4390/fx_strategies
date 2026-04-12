@@ -279,9 +279,16 @@ def pipeline(
 # ═══════════════════════════════════════════════════════════════════════
 
 
+# MR Macro runs on 3M-bar minute data, so each in-flight Portfolio is
+# ~400 MB. Cap the parallel chunk at 4 combos (≈1.6 GB peak) and flush
+# the GC + VBT caches between chunks — otherwise the default 8 would
+# peak around 3.2 GB for the live batch AND the 24 merged-but-not-yet-
+# released Portfolios linger in VBT's internal caches until the end.
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=make_execute_kwargs("MR Macro grid"),
+    execute_kwargs=make_execute_kwargs(
+        "MR Macro grid", chunk_len=4, flush_every=1
+    ),
 )
 def pipeline_nb(
     data: vbt.Data,
@@ -392,7 +399,7 @@ def create_cv_pipeline(
         takeable_args=["data"],
         parameterized_kwargs=dict(
             execute_kwargs=make_execute_kwargs(
-                "MR Macro combos", pbar_kwargs=dict(leave=False)
+                "MR Macro combos", chunk_len=4, pbar_kwargs=dict(leave=False)
             ),
             merge_func="concat",
         ),
