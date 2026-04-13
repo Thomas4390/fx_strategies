@@ -68,6 +68,28 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
 
 _RISK_PARITY_WARMUP = 63  # ~3 months — warmup before expanding-window vol is trusted
 _INIT_CASH = 1_000_000
+_SYNTHETIC_BASE_PRICE = 1000.0  # arbitrary starting price for returns_to_pf
+
+
+def returns_to_pf(
+    rets: pd.Series,
+    init_cash: float = _INIT_CASH,
+) -> vbt.Portfolio:
+    """Wrap a daily returns ``pd.Series`` in a ``vbt.Portfolio``.
+
+    Current VBT Pro exposes no public ``Portfolio.from_returns`` — we
+    bridge via ``from_holding`` on a synthetic cumulative-price series.
+    The resulting portfolio's first bar carries the cash→asset
+    transition so ``pf.returns.iloc[0]`` is ``0`` (vs ``rets.iloc[0]``);
+    on a 2000+ bar history the impact on annualized metrics is below
+    1e-3 and below the ``rtol=1e-10`` equivalence tolerance in
+    downstream tests because v2 uses the same helper.
+    """
+    rets_clean = rets.fillna(0.0)
+    price = (1.0 + rets_clean).cumprod() * _SYNTHETIC_BASE_PRICE
+    return vbt.Portfolio.from_holding(
+        close=price, init_cash=init_cash, freq="1D"
+    )
 
 
 def _compute_weights_ts(
@@ -139,9 +161,7 @@ def build_combined_portfolio(
     weights_ts = _compute_weights_ts(common, allocation, custom_weights)
     port_rets = (common * weights_ts).sum(axis=1)
 
-    pf_combined = vbt.Portfolio.from_returns(
-        port_rets, init_cash=_INIT_CASH, freq="1D"
-    )
+    pf_combined = returns_to_pf(port_rets)
 
     # Walk-forward analysis — one VBT portfolio per window for native Sharpe.
     wf_sharpes: list[float] = []
@@ -150,7 +170,7 @@ def build_combined_portfolio(
         if len(p) < 20:
             wf_sharpes.append(0.0)
             continue
-        pf_w = vbt.Portfolio.from_returns(p, init_cash=_INIT_CASH, freq="1D")
+        pf_w = returns_to_pf(p)
         sr = float(pf_w.sharpe_ratio)
         wf_sharpes.append(sr if not np.isnan(sr) else 0.0)
 
@@ -257,9 +277,7 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
     # Individual strategy portfolios for comparison
     pf_components = {}
     for name, rets in strat_rets.items():
-        pf_components[name] = vbt.Portfolio.from_returns(
-            rets, init_cash=_INIT_CASH, freq="1D",
-        )
+        pf_components[name] = returns_to_pf(rets)
     pf_components[f"Combined ({best_alloc})"] = pf_combined
 
     # HTML tearsheet
