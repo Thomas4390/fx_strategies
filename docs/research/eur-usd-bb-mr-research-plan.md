@@ -1013,3 +1013,104 @@ Tests : 6 nouveaux cas dans `tests/test_combined_portfolio_v2.py` — équivalen
 4. **Investiger 2019** — pourquoi MR Macro + momentum était-il unprofitable ce year-là ? La leçon pourrait améliorer tout le combined et pas juste le overlay.
 
 <!-- END PHASE 14 -->
+
+---
+
+## Phase 15 : Stress tests combined v2 (2026-04-13)
+
+**Contexte :** la Phase 14 a produit une config atteignant les gates (`CAGR 12.02% / MaxDD -28.41% / Sharpe 0.72`) en point-estimate, mais la tail risk à 15× leverage n'était pas quantifiée et l'absence d'OOS post-2026-04 laissait un doute sur la robustesse. Phase 15 livre quatre suites diagnostiques dans `scripts/stress_test_combined.py`.
+
+### Suite 1 — Block-bootstrap (1000 runs, block 20j)
+
+| Métrique | Mean | P5 | P50 | P95 |
+|---|---|---|---|---|
+| CAGR | **12.68%** | 2.90% | 12.31% | 22.92% |
+| Max DD | −30.61% | **−47.46%** | −29.41% | −19.86% |
+| Sharpe | 0.735 | 0.246 | — | 1.218 |
+
+**Findings critiques :**
+- **Positive CAGR 98.4%** ★ — la stratégie est rentable sur la quasi-totalité des re-échantillonnages, c'est un signe de robustesse sur le sens du edge.
+- **Target exact hit (CAGR ∈ [10%, 15%] ET MaxDD < 35%) : seulement 25.6%** — dans ~74% des scénarios bootstrap, soit le CAGR dépasse 15% (bon problème) soit le MaxDD dépasse 35% (mauvais problème).
+- **P5 Max DD = −47.46%** — **le cap 35% est FRAGILE**. Dans le pire 5% des scénarios, le drawdown atteint -47%. Cela signifie qu'en production, le compte peut perdre près de la moitié de sa valeur à un moment donné. **Implication opérationnelle : une margin reserve > 30% en cash hors-broker est obligatoire pour absorber ces tails sans wipe.**
+- **P5 Sharpe = 0.246** — le pire 5% des scénarios produit un Sharpe encore positif mais médiocre. Acceptable.
+
+### Suite 2 — Scenario replay
+
+| Scenario | N bars | Total Ret | CAGR | MaxDD | Sharpe |
+|---|---|---|---|---|---|
+| 2019 full year | 313 | **−15.30%** | −12.54% | −22.53% | **−0.659** |
+| 2020 Q1 Covid | 61 | +3.33% | +13.99% | −6.65% | +0.912 |
+| 2020 full year | 313 | +15.37% | +12.12% | −14.65% | +0.802 |
+| 2022 Q3 GBP crisis | 105 | +14.57% | **+39.00%** | −8.66% | **+1.695** |
+| 2023 rate hikes | 309 | −5.13% | −4.17% | −16.14% | −0.132 |
+| 2024 full year | 314 | **+39.74%** | +30.81% | −11.14% | +1.652 |
+
+**Lectures :**
+- **2020 Q1 Covid survit** (+3.33% en 2 mois) — le vol targeting se calibre rapidement, les deux stratégies intraday + daily momentum ont bien géré la volatilité de mars 2020.
+- **2022 Q3 GBP crisis produit +14.57% en 4 mois** — le momentum USD et le MR Macro ont profité du durcissement monétaire et de la fuite vers le dollar.
+- **2019 et 2023 sont les deux années douloureuses** — CAGR négatif mais DD contenu à −22% et −16%. Ces deux années représentent 100% des années négatives sur la période 2019-2025, les autres sont toutes positives.
+
+### Suite 3 — Split In-Sample / Out-of-Sample au 2025-04-01
+
+| Segment | N bars | Total Ret | CAGR | Vol | MaxDD | Sharpe |
+|---|---|---|---|---|---|---|
+| **In-sample** (2019-01 → 2025-04) | 2260 | +185.49% | **12.41%** | 18.21% | **−28.41%** | **0.733** |
+| **Out-of-sample** (2025-04 → 2026-04) | 314 | +1.59% | **1.30%** | 14.27% | −11.81% | **0.161** |
+
+**Interprétation :**
+- La période OOS de 1 an montre une dégradation significative du Sharpe (0.73 → 0.16) et du CAGR (12.4% → 1.3%). Max DD contenu à -11.81%, ce qui reste acceptable.
+- **314 bars est une taille d'échantillon limitée** — le Sharpe a une variance élevée sur une seule année. La dégradation peut être du bruit structurel ou le début d'un changement de régime.
+- **Pas de panique mais vigilance** : le edge tient probablement encore mais a perdu de sa puissance récente. Une hypothèse : les hyperparamètres de MR Macro (bb_window=80, spread_threshold=0.5) peuvent être devenus légèrement sous-optimaux post-2025 avec la normalisation de la courbe des taux.
+
+### Suite 4 — Sensibilité target_vol × max_leverage
+
+| target_vol | max_lev | CAGR | Vol | MaxDD | Sharpe |
+|---|---|---|---|---|---|
+| 0.15 | 10 | 8.43% | 12.26% | −19.89% | 0.721 |
+| 0.18 | 10 | 10.00% | 14.71% | −23.60% | 0.721 |
+| **★ 0.20** | **10** | **11.02%** | 16.35% | **−26.03%** | 0.721 |
+| ★ 0.22 | 10 | 11.40% | 16.79% | −26.23% | 0.727 |
+| ★ 0.25 | 10 | 11.93% | 17.30% | −26.34% | 0.738 |
+| **★ 0.28** | **10** | **12.37%** | 17.55% | **−26.33%** | **0.752** ★ |
+| 0.28 | 15 | 14.90% | 22.89% | −35.29% | 0.721 |
+| 0.28 | 20 | 14.90% | 22.89% | −35.29% | 0.721 |
+
+**Finding majeur — la contrainte `max_leverage=10` est STRICTEMENT meilleure que `max_leverage=15`** sur ce combined :
+- `tv=0.28 ml=10` : CAGR 12.37%, MaxDD **−26.33%**, Sharpe **0.752**
+- `tv=0.22 ml=15` : CAGR 12.02%, MaxDD −28.41%, Sharpe 0.721 (la recommandation Phase 14)
+
+À CAGR équivalent, `ml=10` sauve 2pp de MaxDD et 0.03 de Sharpe. **Raison** : le cap 10× s'active pendant les périodes de calme prolongé où le système veut lever 12-15x — précisément les moments où un choc de vol produirait le maximum de dégâts. Capper la leverage dans ces fenêtres joue le rôle d'un soft DD cap **avant** le drawdown, pas après.
+
+### Nouvelle recommandation production — remplace Phase 14
+
+| Paramètre | Valeur Phase 14 | **Valeur Phase 15** |
+|---|---|---|
+| `allocation` | `custom` | `custom` |
+| `custom_weights` | MR80/XS10/TS10 | MR80/XS10/TS10 |
+| `target_vol` | 0.22 | **0.28** |
+| `max_leverage` | 15.0 | **10.0** |
+| `dd_cap_enabled` | False | False |
+| CAGR attendu (IS) | 12.02% | **12.37%** |
+| MaxDD attendu (IS) | −28.41% | **−26.33%** |
+| Sharpe attendu (IS) | 0.721 | **0.752** |
+| Leverage effectif max | ~12x | **~10x** |
+| Margin retail FX UE requis | ~7% | **~10%** |
+
+### Gate Phase 15
+
+- ✅ Bootstrap mean CAGR > cible low (12.68% > 10%)
+- ✅ Positive CAGR fraction > 90% (98.4%)
+- ⚠️ **P5 Max DD = −47% > cible 45%** — le stress test révèle une tail risk que le point estimate cachait
+- ⚠️ OOS 2025-Q2+ Sharpe = 0.16 < cible 0.8 — signal de dégradation récente, à surveiller mais pas critique à 1-year sample
+- ✅ Scénarios stress (2020 Covid, 2022 GBP crisis) survivables et même profitables
+- ❌ 2019 et 2023 négatifs dans le replay — structurel, à absorber en production
+- ✅ 56 + 6 = 62/62 tests verts (6 nouveaux tests smoke dans `test_stress_sanity.py`)
+
+### Recommandations opérationnelles
+
+1. **Ne pas déployer avant d'avoir traité le tail risk P5 −47%.** Options : (a) garder margin reserve > 40% en cash hors-broker, (b) ajouter un DD cap PLUS sévère qui coupe toute position au-delà de −30%, (c) réduire encore `target_vol` à 0.20 (CAGR 11.02%, MaxDD −26.03%, Sharpe 0.721) pour améliorer la P5 tail.
+2. **Paper-trade 3-6 mois** pour capturer le comportement OOS réel avant le premier euro en réel. Le Sharpe OOS 0.16 est trop bas pour dormir sur ses deux oreilles.
+3. **Revoir la stratégie MR Macro** si les mauvais Sharpe 2019/2023 se reproduisent en 2026 — potentiellement les hyperparamètres `spread_threshold=0.5` sont à re-calibrer pour l'ère post-inversion de courbe (2023-2025).
+4. **Instrumenter une alerte drawdown** : si le drawdown live dépasse −15% réel, stopper le trading automatiquement et audit manuel de la stratégie vs benchmark.
+
+<!-- END PHASE 15 -->

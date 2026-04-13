@@ -462,8 +462,20 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
     # Highlight the currently recommended config for the target.
     print("\nTarget: CAGR ∈ [10%, 15%] AND Max DD < 35% (rows marked with ★)")
     print(
-        "Recommended: v2_MR80/tv=0.22_ml=15_DDcap=OFF "
-        "(CAGR 12%, MaxDD ~28%, Sharpe 0.72, 6/7 WF positive)"
+        "Recommended (Phase 15 post-stress-test): "
+        "MR80/tv=0.28_ml=10_DDcap=OFF"
+    )
+    print(
+        "  → CAGR ~12.4%, MaxDD ~-26%, Sharpe 0.75, 6/7 WF positive"
+    )
+    print(
+        "  → max_leverage=10 is safer for retail FX (30:1 EU cap) "
+        "than the tv=0.22/ml=15 alternative and has a BETTER "
+        "risk-adjusted profile."
+    )
+    print(
+        "  → Bootstrap tail risk: P5 Max DD = -47% on 1000 resamples, "
+        "so real margin headroom > 30% is mandatory in production."
     )
 
     return results
