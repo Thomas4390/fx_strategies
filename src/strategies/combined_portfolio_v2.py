@@ -39,6 +39,11 @@ import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
 
+from strategies.combined_core import (
+    build_native_combined,
+    combined_returns_from_pf,
+    window_metrics,
+)
 from strategies.combined_portfolio import (
     WF_PERIODS,
     _INIT_CASH,
@@ -351,7 +356,10 @@ def build_combined_portfolio_v2(
         vol_regime_ts = pd.Series("normal", index=common.index)
         trend_score_ts = pd.Series(np.nan, index=common.index)
 
-    # Base (unlevered) portfolio returns.
+    # Base (unlevered) proxy returns — kept as a pandas Series because
+    # compute_global_leverage and compute_dd_cap_scale need a 1-D driver
+    # series to derive the leverage/DD scales. These are intermediate
+    # diagnostics, not the final portfolio returns.
     port_rets_base = (common * weights_ts).sum(axis=1)
 
     # Optional vol targeting.
@@ -368,28 +376,30 @@ def build_combined_portfolio_v2(
         dd_scale_ts = compute_dd_cap_scale(port_rets_prelev)
     else:
         dd_scale_ts = pd.Series(1.0, index=common.index)
-    port_rets_v2 = port_rets_prelev * dd_scale_ts
 
-    pf_combined = returns_to_pf(port_rets_v2)
+    # Bake leverage + DD cap into the allocations and route through the
+    # native vbt PFO + from_optimizer pipeline. ``leverage_cap`` must be
+    # >= max row sum of the final allocations, which is bounded by
+    # ``max_leverage × 1.0`` (dd_scale_ts <= 1). Add a safety margin.
+    final_allocations = weights_ts.mul(leverage_ts * dd_scale_ts, axis=0)
+    leverage_cap = max(float(max_leverage) * 1.5, 10.0)
+    pf_combined, _, _ = build_native_combined(
+        common,
+        final_allocations,
+        init_cash=_INIT_CASH,
+        leverage_cap=leverage_cap,
+    )
+    port_rets_v2 = combined_returns_from_pf(pf_combined)
 
-    # Walk-forward per-year metrics — one VBT portfolio per window.
+    # Walk-forward per-year metrics — native window Sharpe/TR/MDD.
     wf_sharpes: list[float] = []
     wf_returns: list[float] = []
     wf_max_dd: list[float] = []
     for start, end in WF_PERIODS:
-        p = port_rets_v2.loc[start:end]
-        if len(p) < 20:
-            wf_sharpes.append(0.0)
-            wf_returns.append(0.0)
-            wf_max_dd.append(0.0)
-            continue
-        pf_w = returns_to_pf(p)
-        sr = float(pf_w.sharpe_ratio)
-        tr = float(pf_w.total_return)
-        mdd = float(pf_w.max_drawdown)
-        wf_sharpes.append(0.0 if np.isnan(sr) else sr)
-        wf_returns.append(0.0 if np.isnan(tr) else tr)
-        wf_max_dd.append(0.0 if np.isnan(mdd) else mdd)
+        m = window_metrics(pf_combined, start, end)
+        wf_sharpes.append(m["sharpe"])
+        wf_returns.append(m["total_return"])
+        wf_max_dd.append(m["max_drawdown"])
 
     full_sr = float(pf_combined.sharpe_ratio)
     if np.isnan(full_sr):

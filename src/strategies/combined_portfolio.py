@@ -22,6 +22,11 @@ import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
 
+from strategies.combined_core import (
+    build_native_combined,
+    combined_returns_from_pf,
+    sharpe_for_window,
+)
 from strategies.daily_momentum import (
     backtest_ts_momentum_portfolio,
     backtest_xs_momentum,
@@ -120,22 +125,23 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
 
 _RISK_PARITY_WARMUP = 63  # ~3 months — warmup before expanding-window vol is trusted
 _INIT_CASH = 1_000_000
-_SYNTHETIC_BASE_PRICE = 1000.0  # arbitrary starting price for returns_to_pf
+_SYNTHETIC_BASE_PRICE = 1000.0  # kept for backwards-compat with returns_to_pf
 
 
 def returns_to_pf(
     rets: pd.Series,
     init_cash: float = _INIT_CASH,
 ) -> vbt.Portfolio:
-    """Wrap a daily returns ``pd.Series`` in a ``vbt.Portfolio``.
+    """Wrap a daily returns Series in a single-column ``vbt.Portfolio``.
 
-    Current VBT Pro exposes no public ``Portfolio.from_returns`` — we
-    bridge via ``from_holding`` on a synthetic cumulative-price series.
-    The resulting portfolio's first bar carries the cash→asset
-    transition so ``pf.returns.iloc[0]`` is ``0`` (vs ``rets.iloc[0]``);
-    on a 2000+ bar history the impact on annualized metrics is below
-    1e-3 and below the ``rtol=1e-10`` equivalence tolerance in
-    downstream tests because v2 uses the same helper.
+    Thin ``from_holding`` wrapper retained for walk-forward window analysis
+    where we want a stand-alone VBT portfolio over a slice of returns. The
+    main ``build_combined_portfolio`` path no longer uses this helper — it
+    routes through ``strategies.combined_core.build_native_combined`` which
+    uses ``Portfolio.from_optimizer`` with a ``PortfolioOptimizer`` built
+    from filled allocations. See ``combined_core`` for the equivalence
+    argument and the ``scripts/spikes/pfo_equivalence_spike.py`` numerical
+    check (bit-identical at 1e-14 on 5 test cases).
     """
     rets_clean = rets.fillna(0.0)
     price = (1.0 + rets_clean).cumprod() * _SYNTHETIC_BASE_PRICE
@@ -211,20 +217,22 @@ def build_combined_portfolio(
     common = all_rets.dropna()
 
     weights_ts = _compute_weights_ts(common, allocation, custom_weights)
-    port_rets = (common * weights_ts).sum(axis=1)
 
-    pf_combined = returns_to_pf(port_rets)
+    # Native multi-strategy portfolio via PFO + from_optimizer. Equivalent
+    # to the previous ``(common * weights_ts).sum(axis=1) → returns_to_pf``
+    # pipeline at machine precision — see combined_core.build_native_combined
+    # docstring and scripts/spikes/pfo_equivalence_spike.py.
+    pf_combined, _, _ = build_native_combined(
+        common,
+        weights_ts,
+        init_cash=_INIT_CASH,
+    )
+    port_rets = combined_returns_from_pf(pf_combined)
 
-    # Walk-forward analysis — one VBT portfolio per window for native Sharpe.
-    wf_sharpes: list[float] = []
-    for start, end in WF_PERIODS:
-        p = port_rets.loc[start:end]
-        if len(p) < 20:
-            wf_sharpes.append(0.0)
-            continue
-        pf_w = returns_to_pf(p)
-        sr = float(pf_w.sharpe_ratio)
-        wf_sharpes.append(sr if not np.isnan(sr) else 0.0)
+    # Walk-forward analysis — native per-window Sharpe via combined_core.
+    wf_sharpes = [
+        sharpe_for_window(pf_combined, start, end) for start, end in WF_PERIODS
+    ]
 
     full_sr = float(pf_combined.sharpe_ratio)
     if np.isnan(full_sr):
@@ -315,6 +323,10 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
             if len(p) < 20:
                 sharpes.append(0.0)
                 continue
+            # Individual strategy walk-forward — these are raw return
+            # series not tied to a multi-strategy pf, so we still build a
+            # single-column from_holding via returns_to_pf for a native
+            # per-window Sharpe.
             sr = float(returns_to_pf(p).sharpe_ratio)
             sharpes.append(sr if not np.isnan(sr) else 0.0)
         detail = " ".join(f"{s:>6.2f}" for s in sharpes)
