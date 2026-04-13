@@ -61,7 +61,7 @@ def load_daily_closes(pairs: list[str] | None = None) -> pd.DataFrame:
     closes = {}
     for pair in pairs:
         _, data = load_fx_data(f"data/{pair}_minute.parquet")
-        closes[pair] = data.close.resample("1D").last().dropna()
+        closes[pair] = data.close.vbt.resample_apply("1D", "last").dropna()
     return pd.DataFrame(closes).dropna()
 
 
@@ -96,10 +96,10 @@ def backtest_xs_momentum(
 ) -> pd.Series:
     """XS momentum as raw daily returns Series (used by combined_portfolio)."""
     weights = compute_xs_momentum_weights(closes, w_short, w_long)
-    daily_rets = closes.pct_change()
+    daily_rets = closes.vbt.pct_change()
     port_ret = (weights * daily_rets).sum(axis=1).dropna()
 
-    vol_21 = port_ret.rolling(21, min_periods=10).std() * np.sqrt(252)
+    vol_21 = port_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1)
     return port_ret * lev.fillna(1.0)
 
@@ -114,8 +114,8 @@ def backtest_ts_momentum_rsi(
     target_vol: float = 0.10,
 ) -> pd.Series:
     """TS momentum + RSI raw returns for a single pair (used by combined)."""
-    ema_f = close_daily.ewm(span=fast_ema, min_periods=fast_ema).mean()
-    ema_s = close_daily.ewm(span=slow_ema, min_periods=slow_ema).mean()
+    ema_f = close_daily.vbt.ewm_mean(span=fast_ema, minp=fast_ema, adjust=True)
+    ema_s = close_daily.vbt.ewm_mean(span=slow_ema, minp=slow_ema, adjust=True)
     rsi = vbt.RSI.run(close_daily, window=rsi_period).rsi
 
     signal = pd.Series(0.0, index=close_daily.index)
@@ -128,8 +128,8 @@ def backtest_ts_momentum_rsi(
     signal[trend_short & rsi_ok_short] = -1.0
     signal = signal.shift(1)
 
-    daily_ret = close_daily.pct_change()
-    vol_21 = daily_ret.rolling(21, min_periods=10).std() * np.sqrt(252)
+    daily_ret = close_daily.vbt.pct_change()
+    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1)
     return (signal * daily_ret * lev.fillna(1.0)).dropna()
 
@@ -176,8 +176,8 @@ def backtest_rsi_mr(
     signal[rsi > overbought] = -1.0
     signal = signal.shift(1)
 
-    daily_ret = close_daily.pct_change()
-    vol_21 = daily_ret.rolling(21, min_periods=10).std() * np.sqrt(252)
+    daily_ret = close_daily.vbt.pct_change()
+    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1)
     return (signal * daily_ret * lev.fillna(1.0)).dropna()
 
@@ -228,9 +228,9 @@ def pipeline_xs(
     """
     weights = compute_xs_momentum_weights(closes, w_short, w_long)
 
-    daily_rets = closes.pct_change().fillna(0)
+    daily_rets = closes.vbt.pct_change().fillna(0)
     proxy_port_ret = (weights * daily_rets).sum(axis=1)
-    vol_21 = proxy_port_ret.rolling(21, min_periods=10).std() * np.sqrt(252)
+    vol_21 = proxy_port_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     lev_mult = (
         (target_vol / vol_21.clip(lower=0.01))
         .clip(upper=5.0)
@@ -292,7 +292,7 @@ def pipeline_xs_nb(
     # cross-sectional weights. Reconstruct the true weighted combined return
     # from ``scaled_weights`` × ``daily_rets`` (same formula as
     # ``backtest_xs_momentum``), then dispatch to the Numba metric kernel.
-    daily_rets = closes.pct_change().fillna(0.0)
+    daily_rets = closes.vbt.pct_change().fillna(0.0)
     combined = (ind.weights * daily_rets).sum(axis=1)
     returns = np.asarray(combined.values, dtype=np.float64)
     return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
@@ -382,7 +382,7 @@ def create_cv_pipeline_xs(
         # H2 fix: reconstruct the true weighted combined return from
         # scaled_weights × daily_rets (pf is ungrouped so pf.returns is 2D
         # and .mean(axis=1) would ignore the actual cross-sectional weights).
-        daily_rets = closes.pct_change().fillna(0.0)
+        daily_rets = closes.vbt.pct_change().fillna(0.0)
         combined = (ind.weights * daily_rets).sum(axis=1)
         returns = np.asarray(combined.values, dtype=np.float64)
         return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
@@ -446,8 +446,8 @@ def pipeline_ts(
     slippage: float = 0.0001,
 ) -> tuple[vbt.Portfolio, TSMomentumIndicator]:
     """Investigation path — bit-equivalent to legacy backtest_ts_momentum_pf."""
-    ema_f = close_daily.ewm(span=fast_ema, min_periods=fast_ema).mean()
-    ema_s = close_daily.ewm(span=slow_ema, min_periods=slow_ema).mean()
+    ema_f = close_daily.vbt.ewm_mean(span=fast_ema, minp=fast_ema, adjust=True)
+    ema_s = close_daily.vbt.ewm_mean(span=slow_ema, minp=slow_ema, adjust=True)
     rsi = vbt.RSI.run(close_daily, window=rsi_period).rsi
 
     trend_long = ema_f > ema_s
@@ -461,8 +461,8 @@ def pipeline_ts(
     short_entries = short_ok & ~short_ok.shift(1).fillna(False)
     short_exits = ~short_ok & short_ok.shift(1).fillna(False)
 
-    daily_ret = close_daily.pct_change()
-    vol_21 = daily_ret.rolling(21, min_periods=10).std() * np.sqrt(252)
+    daily_ret = close_daily.vbt.pct_change()
+    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     dyn_lev = (
         (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1).fillna(1.0)
     )

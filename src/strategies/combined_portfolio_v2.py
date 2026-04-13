@@ -152,8 +152,8 @@ def compute_vol_regime(
     at ``t`` depends only on returns strictly before ``t``. The 0.8 and
     1.2 thresholds are the standard TAA cuts and are not tuned.
     """
-    vol_short = proxy_returns.rolling(short_window, min_periods=short_window // 2).std() * np.sqrt(252)
-    vol_long = proxy_returns.rolling(long_window, min_periods=long_window // 4).std() * np.sqrt(252)
+    vol_short = proxy_returns.vbt.rolling_std(short_window, minp=short_window // 2, ddof=1) * np.sqrt(252)
+    vol_long = proxy_returns.vbt.rolling_std(long_window, minp=long_window // 4, ddof=1) * np.sqrt(252)
     ratio = (vol_short / vol_long.replace(0, np.nan)).shift(1)
 
     regime = pd.Series("normal", index=proxy_returns.index, dtype=object)
@@ -174,7 +174,7 @@ def compute_trend_score(
     ``lookback`` bars, then ``.shift(1)`` ensures no look-ahead. The
     output is in ``[0, 1]`` with NaN during the warmup window.
     """
-    mean_rets = strategy_rets.rolling(lookback, min_periods=min_periods).mean().shift(1)
+    mean_rets = strategy_rets.vbt.rolling_mean(lookback, minp=min_periods).shift(1)
     positive = mean_rets > 0
     return positive.mean(axis=1)
 
@@ -250,8 +250,8 @@ def compute_global_leverage(
     pessimistic during regime transitions (the short window reacts
     faster, the long window is more stable). Annualized via ``sqrt(252)``.
     """
-    vol_21 = port_rets_base.rolling(21, min_periods=10).std() * np.sqrt(252)
-    vol_63 = port_rets_base.rolling(63, min_periods=30).std() * np.sqrt(252)
+    vol_21 = port_rets_base.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
+    vol_63 = port_rets_base.vbt.rolling_std(63, minp=30, ddof=1) * np.sqrt(252)
     realized_vol = pd.concat([vol_21, vol_63], axis=1).max(axis=1)
     leverage = (
         (target_vol / realized_vol.clip(lower=min_vol_floor))

@@ -160,7 +160,7 @@ def _compute_weights_ts(
     eq_w = 1.0 / n_cols
 
     if allocation == "risk_parity":
-        vol = common.expanding(min_periods=_RISK_PARITY_WARMUP).std().shift(1)
+        vol = common.vbt.expanding_std(minp=_RISK_PARITY_WARMUP).shift(1)
         inv_vol = vol.where(vol > 0).rdiv(1.0)  # 1 / vol, NaN where vol is 0
         row_sum = inv_vol.sum(axis=1)
         weights_ts = inv_vol.div(row_sum.where(row_sum > 0), axis=0)
@@ -315,8 +315,8 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
             if len(p) < 20:
                 sharpes.append(0.0)
                 continue
-            sr = p.mean() / p.std() * np.sqrt(252) if p.std() > 0 else 0
-            sharpes.append(float(sr) if not np.isnan(sr) else 0.0)
+            sr = float(returns_to_pf(p).sharpe_ratio)
+            sharpes.append(sr if not np.isnan(sr) else 0.0)
         detail = " ".join(f"{s:>6.2f}" for s in sharpes)
         avg = np.mean(sharpes)
         pos = sum(1 for s in sharpes if s > 0)
