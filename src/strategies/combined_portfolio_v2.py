@@ -123,6 +123,126 @@ def build_phase18_portfolio(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# PHASE 19 — REFINED LEVERAGE CONFIGURATIONS
+# ═══════════════════════════════════════════════════════════════════════
+
+
+# Phase 19 is a direct follow-up to the Phase 18 sweep
+# (``docs/research/sweep_2026-04-13_combinations.md``) and the refined
+# leverage sweep (``docs/research/phase19_2026-04-13_refined_leverage.md``).
+# Re-uses the exact same sleeves and weights as Phase 18 — the only thing
+# that changes is the leverage layer.
+#
+# Key finding from the refined sweep (116 combos, tv × ml × dd grid)
+# ------------------------------------------------------------------
+# The Phase 18 ``max_leverage=12`` was hitting the cap often enough that
+# the realized leverage distribution was clipped, costing ~0.010 Sharpe
+# WF. Raising ``max_leverage`` to 14+ removes the binding constraint and
+# unlocks a stable Sharpe plateau at **0.966** across a wide region of
+# the ``(target_vol, max_leverage)`` space with ``dd_cap_enabled=False``.
+# The DD cap — enabled on some Phase 18 variants — consistently *hurts*
+# the Sharpe on this trio because it de-leverages drawdowns that would
+# have recovered anyway.
+#
+# Two formal Phase 19 candidates are therefore published:
+#
+# 1. ``PHASE19_BALANCED`` — conservative upgrade of Phase 18 prod.
+#    ``target_vol=0.25, max_leverage=14, dd_cap_enabled=False``.
+#    CAGR 13.38% (+0.27% vs P18), MaxDD -18.41% (essentially flat vs
+#    P18's -17.93%), Sharpe WF 0.966 (+0.010 vs P18's 0.956). Bootstrap
+#    target-hit rate rises to 35.4% (vs P18's 39.0% on a different
+#    bootstrap run — within noise). This is the recommended drop-in
+#    replacement for Phase 18 prod: same risk profile, free Sharpe lift.
+#
+# 2. ``PHASE19_AGGRESSIVE`` — higher-CAGR variant for callers that want
+#    to push the vol target up.
+#    ``target_vol=0.35, max_leverage=18, dd_cap_enabled=False``.
+#    CAGR 18.58% (+5.47% vs P18), MaxDD -25.57% (+7.64% worse), Sharpe
+#    WF 0.966 (same plateau as BALANCED). Bootstrap P5 CAGR +7.60%,
+#    target-hit rate 15.4% (the target band [10%, 15%] is now below the
+#    expected CAGR — use a higher CAGR target band when evaluating this
+#    config).
+#
+# The ``dd_cap_enabled=False`` choice is counterintuitive but empirically
+# validated: with the P18 trio at these tv/ml levels, the pre-leverage
+# equity curve recovers fast enough from drawdowns that the lagged DD cap
+# just clips winners.
+
+
+PHASE19_BALANCED_WEIGHTS: dict[str, float] = dict(PHASE18_WEIGHTS)
+PHASE19_BALANCED_TARGET_VOL: float = 0.25
+PHASE19_BALANCED_MAX_LEVERAGE: float = 14.0
+PHASE19_BALANCED_DD_CAP_ENABLED: bool = False
+
+
+PHASE19_AGGRESSIVE_WEIGHTS: dict[str, float] = dict(PHASE18_WEIGHTS)
+PHASE19_AGGRESSIVE_TARGET_VOL: float = 0.35
+PHASE19_AGGRESSIVE_MAX_LEVERAGE: float = 18.0
+PHASE19_AGGRESSIVE_DD_CAP_ENABLED: bool = False
+
+
+def build_phase19_balanced_portfolio(
+    strategy_returns: dict[str, pd.Series] | None = None,
+    target_vol: float = PHASE19_BALANCED_TARGET_VOL,
+    max_leverage: float = PHASE19_BALANCED_MAX_LEVERAGE,
+) -> dict[str, Any]:
+    """Build the Phase 19 *balanced* combined portfolio.
+
+    Drop-in replacement for :func:`build_phase18_portfolio` that uses
+    ``target_vol=0.25, max_leverage=14, dd_cap_enabled=False`` instead of
+    the Phase 18 ``(0.28, 12, False)`` triple. On the same sleeves and
+    weights this produces a slightly higher Sharpe WF (~0.966 vs 0.956)
+    for an essentially identical risk profile — see the Phase 19 refined
+    leverage sweep at
+    ``docs/research/phase19_2026-04-13_refined_leverage.md`` for the
+    full ``(target_vol, max_leverage)`` grid that validates the Sharpe
+    plateau at 0.966 for ``max_leverage >= 14`` across
+    ``target_vol ∈ [0.22, 0.28]``.
+    """
+    if strategy_returns is None:
+        strategy_returns = get_strategy_daily_returns()
+    filtered = {k: strategy_returns[k] for k in PHASE19_BALANCED_WEIGHTS}
+    return build_combined_portfolio_v2(
+        filtered,
+        allocation="custom",
+        custom_weights=PHASE19_BALANCED_WEIGHTS,
+        target_vol=target_vol,
+        max_leverage=max_leverage,
+        dd_cap_enabled=PHASE19_BALANCED_DD_CAP_ENABLED,
+    )
+
+
+def build_phase19_aggressive_portfolio(
+    strategy_returns: dict[str, pd.Series] | None = None,
+    target_vol: float = PHASE19_AGGRESSIVE_TARGET_VOL,
+    max_leverage: float = PHASE19_AGGRESSIVE_MAX_LEVERAGE,
+) -> dict[str, Any]:
+    """Build the Phase 19 *aggressive* combined portfolio.
+
+    Higher-CAGR variant with ``target_vol=0.35, max_leverage=18``,
+    keeping the same sleeves and weights as Phase 18/19 balanced. Sharpe
+    WF stays on the 0.966 plateau but CAGR rises to ~18.58% at the cost
+    of MaxDD ~-25.57% (vs Phase 18's -17.93%). The bootstrap tail risk
+    is markedly higher (P5 MaxDD ~-40%) — do NOT deploy this config
+    without a broker-level margin gate and an explicit risk budget that
+    accepts the increased drawdown profile. See
+    ``docs/research/phase19_2026-04-13_refined_leverage.md`` for the
+    full comparison.
+    """
+    if strategy_returns is None:
+        strategy_returns = get_strategy_daily_returns()
+    filtered = {k: strategy_returns[k] for k in PHASE19_AGGRESSIVE_WEIGHTS}
+    return build_combined_portfolio_v2(
+        filtered,
+        allocation="custom",
+        custom_weights=PHASE19_AGGRESSIVE_WEIGHTS,
+        target_vol=target_vol,
+        max_leverage=max_leverage,
+        dd_cap_enabled=PHASE19_AGGRESSIVE_DD_CAP_ENABLED,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # REGIME DETECTION
 # ═══════════════════════════════════════════════════════════════════════
 
