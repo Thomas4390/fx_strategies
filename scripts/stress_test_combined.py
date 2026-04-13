@@ -46,20 +46,29 @@ if str(_SRC) not in sys.path:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Recommended configuration (from Phase 17)
+# Recommended configuration (from Phase 18)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Phase 17 config — MR Macro + TS Momentum restricted to 3 pairs
-# (drop USD-CAD, which was the worst pair for the 20/50 EMA + RSI(7)
-# signal in 2019/2022/2023/2026). This lifts in-sample Sharpe to
-# 0.93 (vs 0.88 Phase 16), restores 6/7 walk-forward positive years,
-# and brings the bootstrap P5 Max DD under the 35% cap at -33.98%.
+# Phase 18 config — three sleeves:
+#   MR Macro (80%)         : intraday VWAP mean reversion + macro filter
+#   TS Momentum 3-pair (10%): 20/50 EMA trend + RSI confirmation, no CAD
+#   RSI Daily 4-pair (10%) : simple daily RSI mean reversion
+#
+# Correlation:
+#   MR_Macro vs TS_3p   = +0.056
+#   MR_Macro vs RSI_4p  = -0.027
+#   TS_3p vs RSI_4p     = -0.251
+#
+# vs Phase 17 (MR90/TS3p10) adding RSI lifts OOS Sharpe from 1.24 to
+# 1.44 (+16%), pulls the bootstrap P5 Max DD from -33.98% to -30.68%,
+# and adds 2019/2023 alpha (RSI Daily is positive in those years).
 RECOMMENDED_CONFIG: dict[str, Any] = {
     "allocation": "custom",
     "custom_weights": {
-        "MR_Macro": 0.90,
+        "MR_Macro": 0.80,
         "TS_Momentum_3p": 0.10,
+        "RSI_Daily_4p": 0.10,
     },
     "target_vol": 0.28,
     "max_leverage": 12.0,

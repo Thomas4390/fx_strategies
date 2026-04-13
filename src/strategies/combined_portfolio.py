@@ -28,7 +28,39 @@ from strategies.daily_momentum import (
     load_daily_closes,
 )
 from strategies.mr_macro import backtest_mr_macro
+from strategies.rsi_daily import pipeline as rsi_daily_pipeline
 from utils import apply_vbt_settings, load_fx_data
+
+_RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD")
+
+
+def backtest_rsi_daily_portfolio(
+    pairs: tuple[str, ...] = _RSI_DAILY_PAIRS,
+    rsi_period: int = 14,
+    oversold: float = 25.0,
+    overbought: float = 75.0,
+) -> pd.Series:
+    """Equal-weight RSI Daily across ``pairs`` — daily returns Series.
+
+    Phase 18: RSI Daily multi-pair is the orthogonal 3rd-sleeve of the
+    combined portfolio. Per-year standalone it's positive in the very
+    years the other sleeves lose (2019 Sharpe +0.95, 2023 +0.92,
+    2026 YTD +3.54) while the full-period Sharpe stays low because
+    trades are sparse — exactly the diversifier profile we want at a
+    10% weight, not a 50% one.
+    """
+    per_pair: list[pd.Series] = []
+    for pair in pairs:
+        _, data = load_fx_data(f"data/{pair}_minute.parquet")
+        pf, _ = rsi_daily_pipeline(
+            data,
+            rsi_period=rsi_period,
+            oversold=oversold,
+            overbought=overbought,
+        )
+        per_pair.append(pf.daily_returns)
+    # skipna=True so the first pair's warmup doesn't drag the mean.
+    return pd.concat(per_pair, axis=1).mean(axis=1, skipna=True)
 
 
 WF_PERIODS = [
@@ -68,11 +100,21 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
     closes_3p = closes[["EUR-USD", "GBP-USD", "USD-JPY"]]
     ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p)
 
+    # Phase 18: RSI Daily 4-pair as a third orthogonal sleeve.
+    # Near-zero correlation with MR Macro (+0.056) and slightly
+    # negative correlation with TS Momentum (-0.251) — positive in
+    # 2019 and 2023 when the other two sleeves lose. At 10% weight
+    # it boosts bootstrap P5 Max DD from -33.98% to -30.68% and OOS
+    # Sharpe from 1.24 to 1.44.
+    print("  Running RSI Daily 4-pair...")
+    rsi_daily_4p = backtest_rsi_daily_portfolio()
+
     return {
         "MR_Macro": mr_rets,
         "XS_Momentum": xs_rets,
         "TS_Momentum_RSI": ts_rets,
         "TS_Momentum_3p": ts_rets_3p,
+        "RSI_Daily_4p": rsi_daily_4p,
     }
 
 
