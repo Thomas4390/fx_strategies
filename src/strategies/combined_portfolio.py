@@ -265,6 +265,7 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
     """Run complete combined portfolio analysis with full reporting."""
     from framework.plotting import (
         generate_html_tearsheet,
+        generate_portfolio_mix_plots,
         plot_drawdown_analysis,
         plot_monthly_heatmap,
         plot_multi_strategy_equity,
@@ -374,6 +375,12 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
 
     fig_rs = plot_rolling_sharpe(pf_combined, title="Combined — Rolling Sharpe")
     show_browser(fig_rs)
+
+    # Portfolio-mix dedicated plots: weights over time, contributions,
+    # rolling correlation, turnover. Only produced for the best allocation.
+    print("Generating portfolio-mix plots (weights / contributions / correlation)...")
+    mix_figs = generate_portfolio_mix_plots(best, show=True)
+    print(f"  -> {len(mix_figs)} mix plots: {', '.join(sorted(mix_figs))}")
 
     print("\nDone. All reports saved to:", output_dir)
 

@@ -63,6 +63,19 @@ from ._reports import (
     print_extended_stats,
     print_grid_results,
 )
+from ._portfolio_mix import (
+    generate_portfolio_mix_plots,
+    plot_dd_cap_activity,
+    plot_leverage_and_vol,
+    plot_regime_overlay,
+    plot_rolling_correlation_heatmap,
+    plot_rolling_correlation_pairs,
+    plot_strategy_contribution,
+    plot_turnover,
+    plot_weights_distribution,
+    plot_weights_rolling_mean,
+    plot_weights_stacked_area,
+)
 from ._trades import (
     plot_exposure,
     plot_orders_heatmap,
@@ -113,4 +126,15 @@ __all__ = [
     "generate_single_run_plots",
     "generate_param_grid_plots",
     "generate_standalone_report",
+    "plot_weights_stacked_area",
+    "plot_weights_rolling_mean",
+    "plot_weights_distribution",
+    "plot_strategy_contribution",
+    "plot_rolling_correlation_heatmap",
+    "plot_rolling_correlation_pairs",
+    "plot_leverage_and_vol",
+    "plot_dd_cap_activity",
+    "plot_regime_overlay",
+    "plot_turnover",
+    "generate_portfolio_mix_plots",
 ]
