@@ -900,3 +900,48 @@ Les stratégies `mr_turbo` et `mr_macro` ont été validées sur EUR-USD. On tes
 4. **Stabilité des hyperparamètres** — les heatmaps Sharpe révèlent des régions plates (robustes) vs des pics isolés (sur-optimisés). Privilégier des paramètres dans les zones plates pour la mise en production.
 
 <!-- END PHASE 12 -->
+
+---
+
+## Phase 13 : Itération CAGR 10-15% / Max DD < 35% (2026-04-13)
+
+**Contexte :** objectif utilisateur de relever le CAGR du combined portfolio de ~5% à **10-15%** tout en gardant le Max DD sous 35%. Plan initial en 5 phases (cf. `.claude/plans/parallel-stargazing-lighthouse.md`) avec une thèse de Phase 1 : diversifier MR Macro sur les 4 paires minute disponibles pour gagner ~0.1-0.2 Sharpe via effet √N.
+
+### Phase 1 — MR Macro multi-pair : thèse invalidée empiriquement
+
+**Refactor technique livré** (conservé sur main comme infrastructure) :
+- `mr_macro.py::load_all_fx_data(pairs)` — charge N parquets FX, intersection stricte des index (pas de ffill entre pairs), rebuild en `vbt.Data` multi-symbole.
+- `mr_macro.py::pipeline(data, ...)` — détecte automatiquement mono vs multi-pair via `len(data.symbols)`, broadcast session/macro masks column-wise, passe `cash_sharing=True, group_by=True` à `vbt.Portfolio.from_signals` en mode multi.
+- `MRMacroIndicator` étendu pour tenir des DataFrames en multi-pair ; `.plot()` raise clairement en multi-pair (utiliser `analyze_portfolio` à la place).
+- Tests : 50 tests passing (46 existants + 4 nouveaux `tests/test_mr_macro_multipair.py`). Les 3 snapshots d'équivalence mono-pair passent à `rtol=1e-10` → refactor bit-identique pour single-symbol.
+
+**Benchmark empirique full-period 2018-2026 (bb_window=80, bb_alpha=5.0, sl=0.005, tp=0.006, spread_threshold=0.5) :**
+
+| Setup | Full Sharpe | Total Return | Max DD | Trades | WF 2022 | WF 2023 | WF 2024 | WF 2025 |
+|---|---|---|---|---|---|---|---|---|
+| **Mono EUR-USD** | **0.819** | 10.45% | 2.44% | 149 | **2.444** | -0.288 | **1.963** | 0.697 |
+| EUR+GBP | 0.697 | 11.06% | 4.18% | 219 | 2.746 | 0.067 | 0.929 | 0.542 |
+| EUR+GBP+CAD | 0.690 | **12.24%** | 4.00% | 284 | **3.036** | -0.367 | 1.241 | **0.749** |
+| 4 pairs (EGJC) | 0.513 | 9.95% | 4.78% | 381 | 1.698 | -0.149 | 1.982 | 0.611 |
+
+**Conclusions :**
+1. **Aucune config multi-pair ne bat mono EUR-USD sur Sharpe full-period.** Le "gain √N" attendu ne se matérialise pas parce que les hyperparamètres sont calibrés pour EUR-USD — les autres pairs (en particulier JPY/CAD) dégradent le Sharpe aggregate.
+2. **EUR+GBP+CAD produit le meilleur Return absolu (12.24%)** et le meilleur WF 2022 (3.04) et WF 2025 (0.75) — bon candidat pour un vol-targeting downstream, même si son Sharpe brut est moindre.
+3. **Les leçons cross-pair de Phase 12 étaient déjà documentées** : "l'optimum paramétrique n'est pas universel et chaque paire requiert son propre triplet" (Phase 12 §895-899). La thèse Phase 1 a ignoré ces conclusions.
+4. **Le goulot d'étranglement du CAGR n'est PAS MR Macro** (Sharpe 0.82, déjà excellent) — c'est l'absence de **levier global au niveau du combined portfolio**. Le combined v1 ne fait qu'une risk-parity sans vol targeting, donc le CAGR est plafonné par la vol intrinsèque des 3 stratégies à 1x.
+
+### Décision : pivot vers Phase 3 (Combined Portfolio v2)
+
+Le refactor multi-pair est conservé comme infrastructure (il ne casse aucun test et restera utile pour exposer des allocations per-pair au niveau combined), mais les Phases 1 et 2 du plan initial sont **désactivées** au profit d'un accès direct à la Phase 3 :
+
+- **Phase 3 — Combined Portfolio v2** : vol targeting global (target_vol ≈ 12% annualisé, max_leverage ≈ 3), DD cap lagged (soft de-leverage à partir de −20%), et regime-adaptive allocation (vol regime + trend regime avec poids hard-coded, pas de fit).
+- La formule de base devient : `CAGR_v2 = CAGR_v1 * (target_vol / realized_vol)` clip leverage + DD cap → si le combined v1 a un Sharpe 0.67 et vol 5%, lever à vol 12% donne théoriquement un CAGR ~12% avec un DD proportionnel mais borné par le soft cap.
+- **Gate Phase 3** : WF 2019-2025 CAGR ∈ [10%, 15%], Max DD < 30%, Sharpe ≥ 1.0, `wf_pos_years ≥ 6/7`.
+
+### Leçons méthodologiques ajoutées
+
+1. **Tester les thèses avant de propager** — le refactor technique Phase 1 était correct, mais exécuter un simple benchmark A/B sur full-period aurait invalidé la thèse en 5 minutes avant d'ajouter des tests et scripts de tuning per-pair.
+2. **La diversification n'est pas automatique** — sur des stratégies avec un edge dépendant de la microstructure (MR intraday), chaque pair exige son propre triplet paramétrique. Le "broadcast shared params" est une anti-pattern sur ce type de stratégie.
+3. **Vérifier les docs de recherche existantes avant de planifier** — Phase 12 contenait déjà la conclusion "hyperparams per-pair obligatoires", qui aurait dû être un signal rouge pour la thèse Phase 1.
+
+<!-- END PHASE 13 -->
