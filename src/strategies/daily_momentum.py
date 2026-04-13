@@ -801,6 +801,24 @@ if __name__ == "__main__":
             title=f"XS Momentum — CV {_METRIC_NAME} heatmap (mean across splits)",
             metric_name=_METRIC_NAME,
         ).show()
+        plot_grid_surface(
+            grid_perf_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level="split",
+            splitter=splitter_xs,
+            title=f"XS Momentum — CV {_METRIC_NAME} surface (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf_xs,
+            x_level="w_short",
+            y_level="w_long",
+            slider_level=None,
+            splitter=splitter_xs,
+            title=f"XS Momentum — CV {_METRIC_NAME} surface (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
 
     # ═════════════════════════════════════════════════════════════════
     # STRATEGY B: TIME-SERIES MOMENTUM + RSI (TS)
@@ -923,6 +941,34 @@ if __name__ == "__main__":
             slider_level="split",
             splitter=splitter_ts,
             title=f"TS Momentum — CV {_METRIC_NAME} volume (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_cv_volume(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            z_level="rsi_period",
+            slider_level=None,
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} volume (mean across splits)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level="split",
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} surface (per split)",
+            metric_name=_METRIC_NAME,
+        ).show()
+        plot_grid_surface(
+            grid_perf_ts,
+            x_level="fast_ema",
+            y_level="slow_ema",
+            slider_level=None,
+            splitter=splitter_ts,
+            title=f"TS Momentum — CV {_METRIC_NAME} surface (mean across splits)",
             metric_name=_METRIC_NAME,
         ).show()
 
