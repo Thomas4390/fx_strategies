@@ -1,0 +1,122 @@
+\documentclass[11pt, a4paper]{scrartcl}
+
+\input{preamble.tex}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE
+% ═══════════════════════════════════════════════════════════════════
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+
+% Coloured header bar
+\vspace*{-1.5cm}
+\noindent\colorbox{primary}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{1.2cm}
+      \color{white}\sffamily\raggedright
+      {\Large\bfseries DOCUMENT DE RECHERCHE QUANTITATIVE}\\[0.3cm]
+      {\small\textcolor{lightGrey}{Phase 18 — Stratégie combinée FX}}
+      \vspace{1.2cm}
+    }
+  }
+}
+
+\vfill
+
+{\sffamily\color{primary}\Huge\bfseries
+Stratégie FX à trois sleeves\\[0.2cm]
+orthogonaux
+\par}
+\vspace{0.8cm}
+{\sffamily\color{accent}\LARGE\itshape
+MR Macro 80\,\% \, / \, TS Momentum 10\,\% \, / \, RSI Daily 10\,\%
+\par}
+
+\vspace{1.5cm}
+
+\begin{minipage}{0.9\textwidth}
+\centering
+\color{slateGrey}\sffamily\large
+Rapport pédagogique et de résultats complets\\[0.3cm]
+\small Backtest 2019--2026, validation out-of-sample, bootstrap 1000 paths, \\
+rejeu de scénarios historiques, exemples de trades et raisonnement économique
+\end{minipage}
+
+\vfill
+
+{\color{accent}\rule{0.6\textwidth}{1.5pt}}\\[0.6cm]
+
+\begin{tabular}{rl}
+  \color{slateGrey}\sffamily Auteur & \textbf{Thomas Vaudescal} \\[0.2em]
+  \color{slateGrey}\sffamily Avec assistance & \textbf{Claude (Anthropic)} \\[0.2em]
+  \color{slateGrey}\sffamily Date & \textbf{13 avril 2026} \\[0.2em]
+  \color{slateGrey}\sffamily Statut & \textbf{Recommandé pour paper-trade} \\[0.2em]
+  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+\end{tabular}
+
+\vfill
+
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.4cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Confidentiel.} Ce document synthétise la recherche quantitative
+      conduite lors des Phases 14 à 18 du programme de développement de
+      stratégies FX. Il s'appuie sur le module \code{combined\_portfolio\_v2}
+      et les artefacts générés par \code{scripts/generate\_phase18\_report\_artifacts.py}.
+      Toute mention de performance est issue de backtests. Les rendements
+      réels peuvent différer substantiellement.
+      \vspace{0.4cm}
+    }
+  }
+}
+
+\end{titlepage}
+
+% ═══════════════════════════════════════════════════════════════════
+%  TABLE DES MATIÈRES
+% ═══════════════════════════════════════════════════════════════════
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+{\color{primary}\sffamily\Large\bfseries Table des matières}\\[0.3em]
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.5em]
+
+\renewcommand{\contentsname}{}
+\makeatletter
+\renewcommand{\@dotsep}{4.5}
+\makeatother
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ═══════════════════════════════════════════════════════════════════
+%  SECTIONS
+% ═══════════════════════════════════════════════════════════════════
+
+\input{sections/00_executive_summary.tex}
+\input{sections/01_introduction.tex}
+\input{sections/02_methodology.tex}
+\input{sections/03_sleeve_mr_macro.tex}
+\input{sections/04_sleeve_ts_momentum.tex}
+\input{sections/05_sleeve_rsi_daily.tex}
+\input{sections/06_overlay_layer.tex}
+\input{sections/07_in_sample_results.tex}
+\input{sections/08_out_of_sample.tex}
+\input{sections/09_stress_test.tex}
+\input{sections/10_scenarios.tex}
+\input{sections/11_limitations.tex}
+\input{sections/12_production_checklist.tex}
+
+\appendix
+\input{sections/appendix_a_inventory.tex}
+\input{sections/appendix_b_trade_walkthrough.tex}
+
+\end{document}

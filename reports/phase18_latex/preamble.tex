@@ -1,0 +1,231 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Phase 18 — Rapport de stratégie FX
+%  Préambule LaTeX (XeLaTeX + KOMA-Script)
+% ═══════════════════════════════════════════════════════════════════════
+
+% ── Language & fonts ──────────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{french}
+\setotherlanguage{english}
+
+\setmainfont{Latin Modern Roman}[
+  Ligatures=TeX,
+  Numbers={Proportional,OldStyle}
+]
+\setsansfont{Inter}[
+  Scale=MatchLowercase,
+  UprightFont={* Regular},
+  BoldFont={* Bold},
+  ItalicFont={* Italic},
+  BoldItalicFont={* BoldItalic}
+]
+\setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+
+% ── Geometry ──────────────────────────────────────────────────────
+\usepackage[
+  a4paper,
+  top=2.5cm,
+  bottom=2.8cm,
+  left=2.6cm,
+  right=2.6cm,
+  headheight=14pt,
+  footskip=1.2cm
+]{geometry}
+
+% ── Colors — editorial palette ────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{primary}{HTML}{0B2545}   % deep navy
+\definecolor{primaryLight}{HTML}{134074}
+\definecolor{accent}{HTML}{CC6B2F}    % burnt orange
+\definecolor{mrBlue}{HTML}{1F5582}
+\definecolor{tsOrange}{HTML}{CC6B2F}
+\definecolor{rsiGreen}{HTML}{2E8B57}
+\definecolor{combinedBurgundy}{HTML}{8E1616}
+\definecolor{slateGrey}{HTML}{4A4A4A}
+\definecolor{lightGrey}{HTML}{E6E8EB}
+\definecolor{softBlue}{HTML}{DAE6F0}
+\definecolor{softRed}{HTML}{F9E2E2}
+\definecolor{softYellow}{HTML}{FCF4D9}
+\definecolor{softGreen}{HTML}{E3F2E6}
+
+% ── Core packages ─────────────────────────────────────────────────
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=*, labelsep=0.5em}
+
+% siunitx for aligned numerical columns
+\usepackage{siunitx}
+\sisetup{
+  group-separator={\,},
+  output-decimal-marker={,},
+  detect-weight=true,
+  detect-family=true
+}
+
+% Captions — compact editorial style
+\captionsetup{
+  font={small},
+  labelfont={bf, color=primary},
+  textfont={it},
+  labelsep=period,
+  format=plain,
+  width=0.95\textwidth
+}
+
+% ── Section titles — coloured bar style ──────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\sffamily\Large\bfseries\color{primary}}
+  {\thesection}{0.8em}{}
+  [\vspace{-0.3em}{\color{accent}\rule{\linewidth}{1.2pt}}]
+\titleformat{\subsection}
+  {\sffamily\large\bfseries\color{primaryLight}}
+  {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}
+  {\sffamily\normalsize\bfseries\color{slateGrey}}
+  {\thesubsubsection}{0.5em}{}
+
+\titlespacing*{\section}{0pt}{1.8em}{0.9em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.5em}
+\titlespacing*{\subsubsection}{0pt}{0.9em}{0.3em}
+
+% ── Page headers / footers ───────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Phase 18 — Stratégie combinée FX}}
+\fancyhead[R]{\footnotesize\color{slateGrey}\textsf{\leftmark}}
+\fancyfoot[C]{\footnotesize\color{slateGrey}\thepage}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Document de recherche — 2026}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.0pt}
+\renewcommand{\headrule}{\color{primary}\hrule width\headwidth height\headrulewidth}
+
+% Show only section name in the right header, no number
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+% ── Tcolorbox — callouts ─────────────────────────────────────────
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{insightbox}[1][]{
+  enhanced,
+  colback=softBlue,
+  colframe=primary,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=10pt, right=10pt, top=8pt, bottom=8pt,
+  title=\textbf{\color{white}\textsf{Idée clé}},
+  coltitle=white,
+  fonttitle=\bfseries,
+  attach boxed title to top left={xshift=8pt, yshift=-8pt},
+  boxed title style={
+    colback=primary,
+    colframe=primary,
+    arc=2pt,
+    boxrule=0pt,
+    left=6pt, right=6pt, top=2pt, bottom=2pt
+  },
+  #1
+}
+
+\newtcolorbox{warningbox}[1][]{
+  enhanced,
+  colback=softRed,
+  colframe=combinedBurgundy,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=10pt, right=10pt, top=8pt, bottom=8pt,
+  title=\textbf{\color{white}\textsf{Avertissement}},
+  coltitle=white,
+  fonttitle=\bfseries,
+  attach boxed title to top left={xshift=8pt, yshift=-8pt},
+  boxed title style={
+    colback=combinedBurgundy,
+    colframe=combinedBurgundy,
+    arc=2pt,
+    boxrule=0pt,
+    left=6pt, right=6pt, top=2pt, bottom=2pt
+  },
+  #1
+}
+
+\newtcolorbox{examplebox}[1][]{
+  enhanced,
+  colback=softYellow,
+  colframe=accent,
+  boxrule=0.7pt,
+  arc=2pt,
+  left=10pt, right=10pt, top=8pt, bottom=8pt,
+  title=\textbf{\color{white}\textsf{Exemple concret}},
+  coltitle=white,
+  fonttitle=\bfseries,
+  attach boxed title to top left={xshift=8pt, yshift=-8pt},
+  boxed title style={
+    colback=accent,
+    colframe=accent,
+    arc=2pt,
+    boxrule=0pt,
+    left=6pt, right=6pt, top=2pt, bottom=2pt
+  },
+  #1
+}
+
+\newtcolorbox{thesisbox}[1][]{
+  enhanced,
+  colback=softGreen,
+  colframe=rsiGreen,
+  boxrule=0.7pt,
+  arc=2pt,
+  left=10pt, right=10pt, top=8pt, bottom=8pt,
+  title=\textbf{\color{white}\textsf{Thèse économique}},
+  coltitle=white,
+  fonttitle=\bfseries,
+  attach boxed title to top left={xshift=8pt, yshift=-8pt},
+  boxed title style={
+    colback=rsiGreen,
+    colframe=rsiGreen,
+    arc=2pt,
+    boxrule=0pt,
+    left=6pt, right=6pt, top=2pt, bottom=2pt
+  },
+  #1
+}
+
+% ── Drop caps ────────────────────────────────────────────────────
+\usepackage{lettrine}
+\renewcommand{\LettrineFontHook}{\color{primary}\bfseries}
+
+% ── Hyperref (load last) ─────────────────────────────────────────
+\usepackage[
+  colorlinks=true,
+  linkcolor=primary,
+  citecolor=primary,
+  urlcolor=accent,
+  pdfborder={0 0 0},
+  bookmarks=true,
+  bookmarksnumbered=true,
+  pdftitle={Phase 18 — Rapport de stratégie FX combinée},
+  pdfauthor={Thomas Vaudescal},
+  pdfsubject={Stratégie quantitative FX à trois sleeves orthogonaux},
+  pdfkeywords={FX, mean reversion, momentum, RSI, vol targeting, backtest}
+]{hyperref}
+
+% ── Custom commands ──────────────────────────────────────────────
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\sleeve}[1]{\textbf{\color{primary}#1}}
+\newcommand{\metric}[1]{\textbf{\color{accent}#1}}
+
+% Line spacing
+\linespread{1.08}

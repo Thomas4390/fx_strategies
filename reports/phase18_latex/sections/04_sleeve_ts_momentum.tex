@@ -1,0 +1,71 @@
+\section{Sleeve 2 --- TS Momentum 3-pair (10\,\%)}
+\label{sec:ts_momentum}
+
+\subsection{Intuition économique}
+
+\begin{thesisbox}
+\textbf{Les divergences de politique monétaire entre grandes banques centrales créent des \emph{tendances FX durables}.} Lorsque la BCE et la Fed divergent~--- l'une en cycle de hausse, l'autre en pause ou en baisse~--- le différentiel de taux d'intérêt attendu se traduit par un mouvement directionnel sur le taux de change. Ce mouvement est lent, déployé sur plusieurs semaines, et capturable par un signal de tendance simple de type \emph{EMA crossover} combiné à une confirmation RSI.
+\end{thesisbox}
+
+Plus concrètement, le signal exploite trois mécanismes économiques bien documentés~:
+\begin{itemize}
+\item \textbf{Forward guidance asymétrique}~: lorsqu'une banque centrale télégraphe un cycle de hausse prolongé, le marché prend plusieurs semaines à \emph{pricer} l'ensemble de la trajectoire, créant une tendance lente.
+\item \textbf{Carry roll-down}~: le différentiel de taux courts induit un flux d'investissement directionnel (\emph{carry trade}) qui renforce la tendance.
+\item \textbf{Rebalancing des flux de réserves}~: les banques centrales de pays émergents rebalancent leurs réserves en fonction du niveau relatif USD/EUR/JPY, créant des flux prévisibles.
+\end{itemize}
+
+\subsection{Mécanique du signal}
+
+\begin{enumerate}
+\item \textbf{EMA 20 / EMA 50} sur le \emph{close} daily.
+\item \textbf{RSI(7)} comme confirmation~:
+  \begin{itemize}
+  \item Long si $\mathrm{EMA}_{\mathrm{fast}} > \mathrm{EMA}_{\mathrm{slow}}$ \emph{et} $\mathrm{RSI} < 60$
+  \item Short si $\mathrm{EMA}_{\mathrm{fast}} < \mathrm{EMA}_{\mathrm{slow}}$ \emph{et} $\mathrm{RSI} > 40$
+  \end{itemize}
+\item \textbf{Anti look-ahead strict}~: \code{signal = signal.shift(1)} $\Rightarrow$ le signal à $t$ utilise les EMA/RSI sur les clôtures $\le t-1$.
+\item \textbf{Vol targeting par pair} à 10\,\% annualisé, cap de levier à 5$\times$.
+\item \textbf{Portefeuille}~: moyenne \emph{equal-weight} des trois paires (EUR-USD, GBP-USD, USD-JPY).
+\end{enumerate}
+
+\subsection{Pourquoi exclure USD-CAD ?}
+
+La décomposition \emph{per-pair} sur la période 2019-2026 révèle que USD-CAD est le pire \emph{pair} six années sur huit, avec des pertes importantes sur les années fortes des autres paires~:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Année} & \textbf{EUR-USD} & \textbf{GBP-USD} & \textbf{USD-JPY} & \textbf{USD-CAD} \\
+\midrule
+2019 & $-3.36$\,\% & $+3.22$\,\% & $+1.67$\,\% & \textcolor{combinedBurgundy}{$-8.94$\,\%} \\
+2022 & $+12.17$\,\% & $+12.90$\,\% & $+2.58$\,\% & \textcolor{combinedBurgundy}{$-7.32$\,\%} \\
+2023 & $-2.57$\,\% & $+12.52$\,\% & $+6.20$\,\% & \textcolor{combinedBurgundy}{$-5.72$\,\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Retirer USD-CAD lift le Sharpe standalone de TS Momentum de 0.44 à 0.57 ($+30\,\%$)}, avec le même MaxDD d'environ $-12\,\%$. L'hypothèse retenue~: le signal $20/50$ EMA + RSI(7) est mal adapté à la microstructure USD-CAD, trop \emph{range-bound} autour du prix du pétrole WTI. C'est la leçon méthodologique de la Phase~17~: \emph{décomposer chaque composant par input et virer les non-contributeurs}.
+
+\subsection{Performance standalone}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_ts_momentum_3p_equity.png}
+\caption{Équité et drawdown du sleeve TS Momentum 3-pair (EUR-USD, GBP-USD, USD-JPY) en standalone, 2019-2026.}
+\end{figure}
+
+\begin{itemize}
+\item \textbf{Rendement total full-period}~: $+35.70\,\%$
+\item \textbf{Sharpe standalone}~: $0.57$
+\item \textbf{Max Drawdown}~: $-11.76\,\%$
+\item \textbf{Sharpe OOS (2025-04 $\rightarrow$ 2026-04)}~: $1.26$ \textit{(moteur principal en OOS)}
+\end{itemize}
+
+\subsection{Épisodes représentatifs}
+
+\input{tables/trade_examples_ts_momentum.tex}
+
+\begin{insightbox}
+\textbf{TS Momentum est le moteur OOS dominant.} Sur la fenêtre de validation 2025-04 $\rightarrow$ 2026-04, ce sleeve produit un Sharpe de 1.26 (vs 0.57 full-period), largement au-dessus de ses résultats historiques. Cela suggère que le régime 2025-2026 est particulièrement favorable aux tendances FX~--- ce qui confirme l'intérêt de maintenir un sleeve trend-following même lorsque son Sharpe standalone paraît modeste.
+\end{insightbox}
