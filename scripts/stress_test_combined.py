@@ -46,19 +46,22 @@ if str(_SRC) not in sys.path:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Recommended configuration (from Phase 14)
+# Recommended configuration (from Phase 16)
 # ═══════════════════════════════════════════════════════════════════════
 
 
+# Phase 16 config — MR Macro + TS Momentum only, XS Momentum dropped
+# because it was the biggest contributor to the 2019 loss (-3.33% at
+# 11% vol). This config cuts Max DD by ~6pp and lifts Sharpe by ~17%
+# vs the Phase 15 MR80/XS10/TS10 mix at comparable CAGR.
 RECOMMENDED_CONFIG: dict[str, Any] = {
     "allocation": "custom",
     "custom_weights": {
-        "MR_Macro": 0.80,
-        "XS_Momentum": 0.10,
+        "MR_Macro": 0.90,
         "TS_Momentum_RSI": 0.10,
     },
-    "target_vol": 0.22,
-    "max_leverage": 15.0,
+    "target_vol": 0.28,
+    "max_leverage": 12.0,
     "dd_cap_enabled": False,
 }
 
@@ -387,6 +390,15 @@ def run_stress_tests(
 
     print("Loading strategy returns (2019-2025)...")
     strat_rets = get_strategy_daily_returns()
+
+    # Filter to only the strategies actually used by the recommended
+    # config. Passing XS Momentum returns when the custom_weights dict
+    # omits it would still let the bootstrap dropna() shrink the common
+    # index to the XS availability window, which is not what we want
+    # for a 2-strategy config.
+    active = set(RECOMMENDED_CONFIG["custom_weights"].keys())
+    strat_rets = {k: v for k, v in strat_rets.items() if k in active}
+    print(f"Active strategies: {sorted(strat_rets.keys())}")
 
     report: dict[str, Any] = {
         "config": {
