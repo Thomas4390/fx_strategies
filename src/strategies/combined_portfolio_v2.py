@@ -49,6 +49,75 @@ from strategies.combined_portfolio import (
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# PHASE 18 FINAL RECOMMENDED CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════
+
+
+# Phase 18 allocation: the final production-ready configuration.
+# MR Macro carries the bulk of the alpha (intraday VWAP mean reversion
+# filtered by US macro regime, Sharpe 0.82 standalone), while
+# TS Momentum 3-pair (trend following on EUR/GBP/JPY, no USD-CAD) and
+# RSI Daily 4-pair (daily mean reversion on 4 pairs) act as
+# near-orthogonal diversifiers whose 2019/2023 alpha plugs the two
+# weak years of the MR Macro standalone. See
+# docs/research/eur-usd-bb-mr-research-plan.md Phase 18 for the
+# full derivation.
+PHASE18_WEIGHTS: dict[str, float] = {
+    "MR_Macro": 0.80,
+    "TS_Momentum_3p": 0.10,
+    "RSI_Daily_4p": 0.10,
+}
+PHASE18_TARGET_VOL: float = 0.28
+PHASE18_MAX_LEVERAGE: float = 12.0
+
+
+def build_phase18_portfolio(
+    strategy_returns: dict[str, pd.Series] | None = None,
+    target_vol: float = PHASE18_TARGET_VOL,
+    max_leverage: float = PHASE18_MAX_LEVERAGE,
+) -> dict[str, Any]:
+    """Build the Phase 18 recommended combined portfolio in one call.
+
+    Thin wrapper around :func:`build_combined_portfolio_v2` that pins
+    the recipe to the Phase 18 allocation (MR80 / TS3p10 / RSI10),
+    static weights, ``dd_cap_enabled=False`` and the pair
+    ``target_vol=0.28`` / ``max_leverage=12.0`` that passes every IS,
+    OOS and bootstrap gate. Intended as the canonical entry point for
+    reproduction scripts and the pedagogical report — callers that
+    need to tweak the config should call
+    ``build_combined_portfolio_v2`` directly.
+
+    Parameters
+    ----------
+    strategy_returns : dict[str, pd.Series] or None
+        If ``None``, loads fresh component returns via
+        :func:`get_strategy_daily_returns` (slow, ~1 minute). Pass an
+        existing dict to skip the data loading when the caller has
+        already computed it (useful in tests and benchmarks).
+    target_vol : float
+        Annualized vol target for the global vol targeting layer.
+    max_leverage : float
+        Cap on the global leverage multiplier.
+
+    Returns
+    -------
+    dict
+        Identical contract to :func:`build_combined_portfolio_v2`.
+    """
+    if strategy_returns is None:
+        strategy_returns = get_strategy_daily_returns()
+    filtered = {k: strategy_returns[k] for k in PHASE18_WEIGHTS}
+    return build_combined_portfolio_v2(
+        filtered,
+        allocation="custom",
+        custom_weights=PHASE18_WEIGHTS,
+        target_vol=target_vol,
+        max_leverage=max_leverage,
+        dd_cap_enabled=False,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # REGIME DETECTION
 # ═══════════════════════════════════════════════════════════════════════
 
