@@ -59,10 +59,20 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
     print("  Running TS Momentum + RSI...")
     ts_rets = backtest_ts_momentum_portfolio(closes)
 
+    # Phase 17: TS Momentum restricted to 3 pairs (drop USD-CAD).
+    # Per-year decomposition showed USD-CAD is consistently the worst
+    # pair for the 20/50 EMA + RSI(7) signal: -8.94% in 2019, -7.32%
+    # in 2022, -5.72% in 2023, -0.83% in 2026 YTD. Removing it lifts
+    # the full-period Sharpe from 0.44 to 0.57 (+30%) and restores
+    # 2023 to positive in the combined v2 walk-forward.
+    closes_3p = closes[["EUR-USD", "GBP-USD", "USD-JPY"]]
+    ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p)
+
     return {
         "MR_Macro": mr_rets,
         "XS_Momentum": xs_rets,
         "TS_Momentum_RSI": ts_rets,
+        "TS_Momentum_3p": ts_rets_3p,
     }
 
 

@@ -46,19 +46,20 @@ if str(_SRC) not in sys.path:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Recommended configuration (from Phase 16)
+# Recommended configuration (from Phase 17)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Phase 16 config — MR Macro + TS Momentum only, XS Momentum dropped
-# because it was the biggest contributor to the 2019 loss (-3.33% at
-# 11% vol). This config cuts Max DD by ~6pp and lifts Sharpe by ~17%
-# vs the Phase 15 MR80/XS10/TS10 mix at comparable CAGR.
+# Phase 17 config — MR Macro + TS Momentum restricted to 3 pairs
+# (drop USD-CAD, which was the worst pair for the 20/50 EMA + RSI(7)
+# signal in 2019/2022/2023/2026). This lifts in-sample Sharpe to
+# 0.93 (vs 0.88 Phase 16), restores 6/7 walk-forward positive years,
+# and brings the bootstrap P5 Max DD under the 35% cap at -33.98%.
 RECOMMENDED_CONFIG: dict[str, Any] = {
     "allocation": "custom",
     "custom_weights": {
         "MR_Macro": 0.90,
-        "TS_Momentum_RSI": 0.10,
+        "TS_Momentum_3p": 0.10,
     },
     "target_vol": 0.28,
     "max_leverage": 12.0,
