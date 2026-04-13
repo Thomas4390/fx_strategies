@@ -68,9 +68,7 @@ class OUMRIndicator:
         )
         self.vwap.vbt.plot(
             fig=fig,
-            trace_kwargs=dict(
-                name="VWAP", line=dict(color="red", width=1, dash="dot")
-            ),
+            trace_kwargs=dict(name="VWAP", line=dict(color="red", width=1, dash="dot")),
         )
         fig.update_layout(**layout_kwargs)
         return fig

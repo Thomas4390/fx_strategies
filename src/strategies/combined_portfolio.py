@@ -68,9 +68,9 @@ def backtest_rsi_daily_portfolio(
     return pd.concat(per_pair, axis=1).mean(axis=1, skipna=True)
 
 
-WF_PERIODS = [
-    (f"{y}-01-01", f"{y}-12-31") for y in range(2019, 2025)
-] + [("2025-01-01", "2026-04-01")]
+WF_PERIODS = [(f"{y}-01-01", f"{y}-12-31") for y in range(2019, 2025)] + [
+    ("2025-01-01", "2026-04-01")
+]
 
 
 # ===================================================================
@@ -145,9 +145,7 @@ def returns_to_pf(
     """
     rets_clean = rets.fillna(0.0)
     price = (1.0 + rets_clean).cumprod() * _SYNTHETIC_BASE_PRICE
-    return vbt.Portfolio.from_holding(
-        close=price, init_cash=init_cash, freq="1D"
-    )
+    return vbt.Portfolio.from_holding(close=price, init_cash=init_cash, freq="1D")
 
 
 def _compute_weights_ts(
@@ -295,9 +293,9 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
         w = res["weights"]
         print(f"  Weights: {', '.join(f'{k}={v:.1%}' for k, v in w.items())}")
         print(f"  Full-period Sharpe: {res['sharpe']:.2f}")
-        print(f"  Annual Return: {res['annual_return']*100:.2f}%")
-        print(f"  Annual Vol: {res['annual_vol']*100:.2f}%")
-        print(f"  Max Drawdown: {res['max_drawdown']*100:.2f}%")
+        print(f"  Annual Return: {res['annual_return'] * 100:.2f}%")
+        print(f"  Annual Vol: {res['annual_vol'] * 100:.2f}%")
+        print(f"  Max Drawdown: {res['max_drawdown'] * 100:.2f}%")
 
         wf_detail = " ".join(f"{s:>6.2f}" for s in res["wf_sharpes"])
         print(
@@ -309,14 +307,16 @@ def run_full_analysis(output_dir: str = "results/combined") -> None:
     best_alloc = max(results, key=lambda k: results[k]["wf_avg_sharpe"])
     best = results[best_alloc]
 
-    print(f"\n--- Correlation Matrix ---")
+    print("\n--- Correlation Matrix ---")
     print(best["correlation"].round(3).to_string())
 
     print(f"\n--- Best allocation: {best_alloc} ---")
-    print(f"  WF Sharpe: {best['wf_avg_sharpe']:.2f}, {best['wf_pos_years']}/7 positive")
+    print(
+        f"  WF Sharpe: {best['wf_avg_sharpe']:.2f}, {best['wf_pos_years']}/7 positive"
+    )
 
     # Individual strategy walk-forward for comparison
-    print(f"\n--- Individual Strategy Walk-Forward ---")
+    print("\n--- Individual Strategy Walk-Forward ---")
     for name, rets in strat_rets.items():
         sharpes = []
         for start, end in WF_PERIODS:

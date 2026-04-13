@@ -32,9 +32,9 @@ leveraged sum>1). The exact recipe that preserves equivalence:
    costs at the combined level (sub-strategies pay their own fees inside
    their individual portfolios); we preserve this to maintain equivalence.
 """
+
 from __future__ import annotations
 
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -117,9 +117,9 @@ def build_native_combined(
     """
     prices = returns_to_synthetic_prices(strategy_returns)
 
-    aligned = allocations.reindex(
-        index=prices.index, columns=prices.columns
-    ).fillna(0.0)
+    aligned = allocations.reindex(index=prices.index, columns=prices.columns).fillna(
+        0.0
+    )
 
     # Shift forward by 1: PFO applies an allocation at bar t to the
     # position held during bar t+1, while the legacy pattern multiplied

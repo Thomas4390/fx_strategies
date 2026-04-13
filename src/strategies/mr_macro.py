@@ -238,30 +238,38 @@ class MRMacroIndicator:
         fig = fig or go.Figure()
         fig.add_trace(
             go.Scatter(
-                x=self.close.index, y=self.close.values,
-                mode="lines", name="Close",
+                x=self.close.index,
+                y=self.close.values,
+                mode="lines",
+                name="Close",
                 line=dict(width=2, color="royalblue"),
             )
         )
         fig.add_trace(
             go.Scatter(
-                x=self.vwap.index, y=self.vwap.values,
-                mode="lines", name="VWAP",
+                x=self.vwap.index,
+                y=self.vwap.values,
+                mode="lines",
+                name="VWAP",
                 line=dict(color="crimson", width=1, dash="dot"),
             )
         )
         fig.add_trace(
             go.Scatter(
-                x=self.lower.index, y=self.lower.values,
-                mode="lines", name="Lower Band",
+                x=self.lower.index,
+                y=self.lower.values,
+                mode="lines",
+                name="Lower Band",
                 line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
                 showlegend=True,
             )
         )
         fig.add_trace(
             go.Scatter(
-                x=self.upper.index, y=self.upper.values,
-                mode="lines", name="Upper Band",
+                x=self.upper.index,
+                y=self.upper.values,
+                mode="lines",
+                name="Upper Band",
                 line=dict(width=1.1, color="rgba(110,110,110,0.85)"),
                 fill="tonexty",
                 fillcolor="rgba(255,215,0,0.18)",
@@ -352,9 +360,7 @@ def pipeline(
             columns=close.columns,
         )
         macro_ok = pd.DataFrame(
-            np.broadcast_to(
-                macro_ok_1d.values[:, None], (len(close), n_cols)
-            ),
+            np.broadcast_to(macro_ok_1d.values[:, None], (len(close), n_cols)),
             index=close.index,
             columns=close.columns,
         )
@@ -407,9 +413,7 @@ def pipeline(
 # released Portfolios linger in VBT's internal caches until the end.
 @vbt.parameterized(
     merge_func="concat",
-    execute_kwargs=make_execute_kwargs(
-        "MR Macro grid", chunk_len=4, flush_every=1
-    ),
+    execute_kwargs=make_execute_kwargs("MR Macro grid", chunk_len=4, flush_every=1),
 )
 def pipeline_nb(
     data: vbt.Data,
@@ -578,7 +582,7 @@ def create_cv_pipeline(
 def _walk_forward_report(data: vbt.Data) -> None:
     print(f"\n{'=' * 60}\nWalk-Forward Validation (per-year)\n{'=' * 60}")
     for year in range(2021, 2027):
-        d_yr = data.loc[f"{year}-01-01":f"{year}-12-31"]
+        d_yr = data.loc[f"{year}-01-01" : f"{year}-12-31"]
         if d_yr.shape[0] < 1000:
             continue
         pf_yr, _ = pipeline(d_yr)
@@ -587,8 +591,7 @@ def _walk_forward_report(data: vbt.Data) -> None:
         ret = pf_yr.total_return * 100 if tc > 0 else 0
         wr = pf_yr.trades.win_rate * 100 if tc > 0 else 0
         print(
-            f"  {year}: Sharpe={sr:>7.3f}  Ret={ret:>6.2f}%  "
-            f"Trades={tc}  WR={wr:.1f}%"
+            f"  {year}: Sharpe={sr:>7.3f}  Ret={ret:>6.2f}%  Trades={tc}  WR={wr:.1f}%"
         )
 
 

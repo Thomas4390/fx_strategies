@@ -232,10 +232,7 @@ def pipeline_xs(
     proxy_port_ret = (weights * daily_rets).sum(axis=1)
     vol_21 = proxy_port_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     lev_mult = (
-        (target_vol / vol_21.clip(lower=0.01))
-        .clip(upper=5.0)
-        .shift(1)
-        .fillna(1.0)
+        (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1).fillna(1.0)
     )
 
     scaled_weights = weights.mul(lev_mult, axis=0).fillna(0.0)
@@ -539,7 +536,9 @@ def run_grid_ts(
 ) -> pd.Series:
     def _param(v):
         if isinstance(v, (list, tuple, np.ndarray)):
-            return vbt.Param(list(v), condition="fast_ema < slow_ema" if False else None)
+            return vbt.Param(
+                list(v), condition="fast_ema < slow_ema" if False else None
+            )
         return v
 
     # Note: condition support requires all params to share the same level.

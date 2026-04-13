@@ -267,22 +267,39 @@ class CompositeAlphaIndicator:
         from plotly.subplots import make_subplots
 
         fig = fig or make_subplots(
-            rows=4, cols=1,
+            rows=4,
+            cols=1,
             shared_xaxes=True,
             subplot_titles=("Close", "Momentum", "Vol Scale", "Target Weight"),
             vertical_spacing=0.05,
         )
         fig.add_scatter(
-            x=self.close.index, y=self.close.values, name="Close", row=1, col=1,
+            x=self.close.index,
+            y=self.close.values,
+            name="Close",
+            row=1,
+            col=1,
         )
         fig.add_scatter(
-            x=self.momentum.index, y=self.momentum.values, name="Momentum", row=2, col=1,
+            x=self.momentum.index,
+            y=self.momentum.values,
+            name="Momentum",
+            row=2,
+            col=1,
         )
         fig.add_scatter(
-            x=self.vol_scale.index, y=self.vol_scale.values, name="Vol Scale", row=3, col=1,
+            x=self.vol_scale.index,
+            y=self.vol_scale.values,
+            name="Vol Scale",
+            row=3,
+            col=1,
         )
         fig.add_scatter(
-            x=self.target_weight.index, y=self.target_weight.values, name="Target Weight", row=4, col=1,
+            x=self.target_weight.index,
+            y=self.target_weight.values,
+            name="Target Weight",
+            row=4,
+            col=1,
         )
         fig.update_layout(**layout_kwargs)
         return fig
@@ -339,21 +356,30 @@ def pipeline(
     ) = compute_composite_nb(
         close_daily.values,
         returns_daily.values,
-        w_short, w_long,
-        vol_short, vol_long,
+        w_short,
+        w_long,
+        vol_short,
+        vol_long,
         ewma_span,
         target_vol,
         leverage_cap,
-        vr_low, vr_high,
-        mom_w_low, mom_w_normal, mom_w_high,
-        dd_soft, dd_hard, dd_recovery,
+        vr_low,
+        vr_high,
+        mom_w_low,
+        mom_w_normal,
+        mom_w_high,
+        dd_soft,
+        dd_hard,
+        dd_recovery,
         n_sub,
     )
 
     # Shift by 1 to avoid look-ahead and convert NaN -> 0
-    target_w_series = pd.Series(
-        target_weights, index=close_daily.index, name="target_weight"
-    ).shift(1).fillna(0.0)
+    target_w_series = (
+        pd.Series(target_weights, index=close_daily.index, name="target_weight")
+        .shift(1)
+        .fillna(0.0)
+    )
 
     pf = vbt.Portfolio.from_orders(
         close=close_daily,

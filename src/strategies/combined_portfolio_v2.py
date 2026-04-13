@@ -49,7 +49,6 @@ from strategies.combined_portfolio import (
     _INIT_CASH,
     _compute_weights_ts,
     get_strategy_daily_returns,
-    returns_to_pf,
 )
 
 
@@ -254,12 +253,16 @@ def build_phase19_aggressive_portfolio(
 # low-vol trending regimes. DO NOT grid-search these values — they are
 # priors, not hyperparameters.
 DEFAULT_REGIME_WEIGHTS_3STRAT: dict[tuple[str, str], dict[str, float]] = {
-    ("low", "up"):      {"MR_Macro": 0.40, "XS_Momentum": 0.35, "TS_Momentum_RSI": 0.25},
-    ("low", "down"):    {"MR_Macro": 0.55, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.20},
-    ("normal", "up"):   {"MR_Macro": 0.45, "XS_Momentum": 0.30, "TS_Momentum_RSI": 0.25},
-    ("normal", "down"): {"MR_Macro": 0.60, "XS_Momentum": 0.20, "TS_Momentum_RSI": 0.20},
-    ("high", "up"):     {"MR_Macro": 0.60, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.15},
-    ("high", "down"):   {"MR_Macro": 0.75, "XS_Momentum": 0.15, "TS_Momentum_RSI": 0.10},
+    ("low", "up"): {"MR_Macro": 0.40, "XS_Momentum": 0.35, "TS_Momentum_RSI": 0.25},
+    ("low", "down"): {"MR_Macro": 0.55, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.20},
+    ("normal", "up"): {"MR_Macro": 0.45, "XS_Momentum": 0.30, "TS_Momentum_RSI": 0.25},
+    ("normal", "down"): {
+        "MR_Macro": 0.60,
+        "XS_Momentum": 0.20,
+        "TS_Momentum_RSI": 0.20,
+    },
+    ("high", "up"): {"MR_Macro": 0.60, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.15},
+    ("high", "down"): {"MR_Macro": 0.75, "XS_Momentum": 0.15, "TS_Momentum_RSI": 0.10},
 }
 
 
@@ -277,8 +280,12 @@ def compute_vol_regime(
     at ``t`` depends only on returns strictly before ``t``. The 0.8 and
     1.2 thresholds are the standard TAA cuts and are not tuned.
     """
-    vol_short = proxy_returns.vbt.rolling_std(short_window, minp=short_window // 2, ddof=1) * np.sqrt(252)
-    vol_long = proxy_returns.vbt.rolling_std(long_window, minp=long_window // 4, ddof=1) * np.sqrt(252)
+    vol_short = proxy_returns.vbt.rolling_std(
+        short_window, minp=short_window // 2, ddof=1
+    ) * np.sqrt(252)
+    vol_long = proxy_returns.vbt.rolling_std(
+        long_window, minp=long_window // 4, ddof=1
+    ) * np.sqrt(252)
     ratio = (vol_short / vol_long.replace(0, np.nan)).shift(1)
 
     regime = pd.Series("normal", index=proxy_returns.index, dtype=object)
@@ -639,9 +646,7 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
     }
     # Drop XS from the strat_rets dict so the MR/TS-only path uses
     # a correctly indexed common DataFrame.
-    strat_rets_no_xs = {
-        k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_RSI")
-    }
+    strat_rets_no_xs = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_RSI")}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
         key = f"v2_MR90_TS10/tv={target_vol:.2f}_ml={max_lev}_DDcap=OFF"
         results[key] = build_combined_portfolio_v2(
@@ -661,9 +666,7 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
         "MR_Macro": 0.90,
         "TS_Momentum_3p": 0.10,
     }
-    strat_rets_p17 = {
-        k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p")
-    }
+    strat_rets_p17 = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p")}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
         key = f"v2_MR90_TS3p10/tv={target_vol:.2f}_ml={max_lev}_DDcap=OFF"
         results[key] = build_combined_portfolio_v2(
@@ -733,9 +736,7 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
         "Recommended (Phase 18 — add RSI Daily 4-pair as third sleeve): "
         "MR80/TS3p10/RSI10 tv=0.28 ml=12 DDcap=OFF"
     )
-    print(
-        "  → IS CAGR 13.33%, MaxDD -17.93%, Sharpe 0.94, 6/7 WF positive"
-    )
+    print("  → IS CAGR 13.33%, MaxDD -17.93%, Sharpe 0.94, 6/7 WF positive")
     print(
         "  → OOS 2025-04+ CAGR 11.52%, MaxDD -6.27%, Sharpe 1.44 "
         "(vs Phase 17 OOS Sharpe 1.24 — +16% out-of-sample lift)"
