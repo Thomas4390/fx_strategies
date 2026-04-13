@@ -323,7 +323,7 @@ def pipeline(
         close_any = data.close
     else:
         close_any = data
-    close_daily = close_any.resample("1D").last().dropna()
+    close_daily = close_any.vbt.resample_apply("1D", "last").dropna()
     returns_daily = np.log(close_daily / close_daily.shift(1)).fillna(0.0)
 
     (

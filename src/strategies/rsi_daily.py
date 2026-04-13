@@ -106,7 +106,7 @@ def pipeline(
         close_any = data.close
     else:
         close_any = data
-    close_daily = close_any.resample("1D").last().dropna()
+    close_daily = close_any.vbt.resample_apply("1D", "last").dropna()
 
     rsi = vbt.RSI.run(close_daily, window=rsi_period).rsi
 
