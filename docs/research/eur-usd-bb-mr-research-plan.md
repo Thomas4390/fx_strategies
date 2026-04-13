@@ -945,3 +945,71 @@ Le refactor multi-pair est conservé comme infrastructure (il ne casse aucun tes
 3. **Vérifier les docs de recherche existantes avant de planifier** — Phase 12 contenait déjà la conclusion "hyperparams per-pair obligatoires", qui aurait dû être un signal rouge pour la thèse Phase 1.
 
 <!-- END PHASE 13 -->
+
+---
+
+## Phase 14 : Combined Portfolio v2 — CAGR cible atteint (2026-04-13)
+
+**Contexte :** poursuite de la Phase 13 après le pivot. Objectif : porter le CAGR du combined portfolio dans l'intervalle [10%, 15%] avec Max DD < 35% via un overlay de vol targeting + DD cap + regime-adaptive allocation, sans toucher aux sous-stratégies.
+
+### Bug latent corrigé : `vbt.Portfolio.from_returns` n'existe pas
+
+Avant d'exécuter le moindre benchmark v2, le refactor a exposé un bug pré-existant : `combined_portfolio.py` v1 appelait `vbt.Portfolio.from_returns(...)` en 3 endroits, une méthode **qui n'existe pas** dans la version VBT Pro actuelle. Le module v1 levait un `AttributeError` au premier appel, ce qui signifie que le combined portfolio n'avait jamais été exécuté dans l'environnement de développement actuel. Les métriques rapportées dans les Phases 0-12 provenaient probablement d'une version antérieure de VBT, ou d'une branche non-mergée.
+
+**Fix introduit dans la Phase 14** : helper `returns_to_pf(rets)` qui construit un `vbt.Portfolio` via `from_holding(close=cumulative_price)`. Le premier bar du portfolio contient la transition cash→asset (return = 0 au lieu de `rets[0]`) ; sur 2000+ barres l'impact sur les annualized metrics est < 1e-3 et passe sous le `rtol=1e-10` des tests d'équivalence parce que v2 utilise le même helper. v1 et v2 produisent désormais les mêmes Sharpe/CAGR/DD par construction quand on désactive les overlays v2.
+
+### Architecture v2
+
+Nouveau module `src/strategies/combined_portfolio_v2.py` avec trois couches empilables au-dessus de v1 :
+
+1. **Allocation** — `risk_parity | equal | mr_heavy | custom | regime_adaptive`. Les 4 premières déléguent à v1 `_compute_weights_ts` pour garder la compatibilité ; `regime_adaptive` applique une matrice de poids 6-cellules indexée par `(vol_regime, trend_regime)` **hard-coded** (interdit de grid-searcher ces 24 valeurs).
+2. **Vol targeting global** — `leverage_t = clip(target_vol / max(vol_21, vol_63), 0, max_leverage).shift(1)`. Le `max` des deux fenêtres est pessimiste pendant les transitions de régime ; le `shift(1)` garantit l'absence de look-ahead.
+3. **DD cap lagged** — interpolation sur drawdown (−10% → 1.0×, −20% → 0.6×, −30% → 0.35×, −35% → 0.15×). Le DD est calculé sur l'equity **pre-DD-cap** et `shift(1)` évite la circularité avec la leverage qu'il modifie. Pattern TAA standard.
+
+Tests : 6 nouveaux cas dans `tests/test_combined_portfolio_v2.py` — équivalence v1 bit-identique, absence de look-ahead end-to-end, activation du DD cap sur série synthétique, shape des regime weights, vol targeting boost sur données synthétiques.
+
+### Benchmark empirique (2019-2025, combined réel)
+
+| Config | CAGR | Vol | MaxDD | Sharpe | WF avg | Pos |
+|---|---|---|---|---|---|---|
+| v1/risk_parity | 1.21% | 1.92% | −4.27% | 0.64 | 0.77 | 6/7 |
+| v1/equal | 2.14% | 4.75% | −7.17% | 0.47 | 0.49 | 6/7 |
+| v1/mr_heavy | 1.87% | 3.62% | −5.46% | 0.53 | 0.55 | 6/7 |
+| v2_nolev/risk_parity | 1.21% | 1.92% | −4.27% | 0.64 | 0.77 | 6/7 |
+| v2_nolev/regime_adaptive | 1.84% | 3.69% | −6.64% | 0.51 | 0.45 | 6/7 |
+| v2_regime/tv=0.12_ml=3_DDcap=ON | 4.88% | 10.21% | −18.77% | 0.52 | 0.45 | 5/7 |
+| v2_MR80/tv=0.18_ml=15_DDcap=OFF | 10.00% | 14.71% | −23.60% | **0.72** | 0.74 | 6/7 |
+| ★ v2_MR80/tv=0.20_ml=15_DDcap=OFF | **11.02%** | 16.35% | **−26.03%** | **0.72** | 0.74 | 6/7 |
+| ★ v2_MR80/tv=0.22_ml=15_DDcap=OFF | **12.02%** | 17.98% | **−28.41%** | **0.72** | 0.74 | 6/7 |
+| ★ v2_MR80/tv=0.25_ml=15_DDcap=OFF | **13.49%** | 20.44% | **−31.90%** | **0.72** | 0.74 | 6/7 |
+
+**3 configs atteignent la cible** `CAGR ∈ [10%, 15%] ET MaxDD < 35%`. La config recommandée : **`allocation="custom", custom_weights={MR_Macro:0.80, XS_Momentum:0.10, TS_Momentum_RSI:0.10}, target_vol=0.22, max_leverage=15, dd_cap_enabled=False`** — **CAGR 12.02%, MaxDD −28.41%, Sharpe 0.72, 6/7 années positives.**
+
+### Contre-intuitions empiriques
+
+1. **Le DD cap dégrade le Sharpe au lieu de le protéger.** Sur ce combined, les drawdowns sont peu profonds mais lents à récupérer ; le DD cap de-leverage pendant la phase de recovery et fait perdre une partie du rebond. Sharpe passe de 0.72 → 0.62-0.66 quand on active le cap (cf. table du CLI `combined_portfolio_v2.py`). **Décision : DD cap OFF par défaut** sur cette config. Le cap reste utile comme assurance sur des stratégies plus volatiles ou sur un horizon plus long où les crises tail sont plus probables.
+2. **regime_adaptive ne bat pas risk_parity sans leverage.** Mes priors 6-cellules tiltent vers MR Macro en high-vol et vers momentum en low-vol-trending, mais produisent Sharpe 0.51 vs risk_parity 0.64. Raison probable : sur 2019-2025 les régimes sont peu différenciés et le risk_parity inverse-vol capture déjà le bon mix dynamique. Je garde `regime_adaptive` comme option mais le DÉFAUT à viser sur cette config est **`custom` avec MR80/XS10/TS10**.
+3. **max_leverage=15 est nécessaire.** Le Sharpe combined (~0.72) et la vol unlevered (~2%) impliquent qu'un CAGR 12% exige un multiplicateur de 7-8x (vol 17% → 12% / 0.72 = 16.7%). C'est faisable en retail FX (brokers UE offrent jusqu'à 30:1) mais demande une gestion margin serrée. **Implication production** : pas d'excess margin buffer pour absorber un gap, une crise type SNB 2015 ou Brexit 2016 pourrait wipe le compte. Mitigation : tenir une réserve cash hors-broker ≥ 30% et auto-deleverage si margin utilization > 70%.
+4. **Le seul vrai problème est 2019.** WF Sharpe −0.68 sur cette unique année, présent sur toutes les configs testées. Structurel au combined v1 (MR Macro + XS + TS), pas lié à l'overlay v2. À 15x leverage ce −0.68 se traduit en drawdown intraday substantiel dont la magnitude finale dépend de la séquence des bad days — le DD −28% est le pire moment de ce drawdown 2019 amplifié.
+
+### Gate Phase 14 : atteint sur le paper, non-validé en production
+
+- ✅ CAGR 2019-2025 ∈ [10%, 15%] — **12.02%**
+- ✅ Max DD historique < 35% — **−28.41%**
+- ✅ WF avg Sharpe ≥ 0.7 — **0.72**
+- ✅ WF positive years ≥ 6/7 — **6/7** (seule 2019 est négative)
+- ⚠️ 56/56 tests verts, dont équivalence v2/v1 bit-identique (`rtol=1e-10`)
+- ⚠️ **Pas de validation hors-sample post-2026-04** — le risque d'overfitting sur 2019-2025 n'est pas exclu
+- ⚠️ **Pas de stress test bootstrap** — la tail risk au levier 15x reste non-quantifiée
+
+### Recommandations pour la suite
+
+1. **Phase 5 (stress tests)** devient prioritaire **avant** tout déploiement :
+   - Block-bootstrap 1000× sur le combined v2 avec config recommandée, P5(CAGR) > 5%, P95(DD) < 45%.
+   - Scenario replay 2020-Q1 covid, 2022 GBP crisis, 2015 SNB (même si SNB CHF pas dans les pairs, pertinent comme référence).
+   - Sensibilité au slippage (doubler) et aux fees (×2).
+2. **Margin monitoring** en production : ajouter une contrainte opérationnelle `margin_utilization_cap` avec auto-deleverage à 70% d'utilisation.
+3. **Revisiter le DD cap** en Phase 15 sur une stratégie plus volatile (après ajout de carry) — il pourrait redevenir utile avec un signal plus agressif.
+4. **Investiger 2019** — pourquoi MR Macro + momentum était-il unprofitable ce year-là ? La leçon pourrait améliorer tout le combined et pas juste le overlay.
+
+<!-- END PHASE 14 -->
