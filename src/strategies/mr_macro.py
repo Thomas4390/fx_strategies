@@ -37,6 +37,68 @@ from framework.pipeline_utils import (
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
+# Default 4-pair universe for MR Macro multi-pair runs. EUR-USD stays the
+# primary pair for backwards compatibility (single-symbol ``vbt.Data`` is
+# still fully supported by :func:`pipeline`); the other three are added
+# only when the caller explicitly loads them via :func:`load_all_fx_data`.
+DEFAULT_PAIRS: tuple[str, ...] = ("EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD")
+
+
+def load_all_fx_data(
+    pairs: tuple[str, ...] | list[str] | None = None,
+    data_dir: Path | None = None,
+) -> vbt.Data:
+    """Load multiple FX pairs into a single multi-symbol ``vbt.Data``.
+
+    The per-pair parquets are loaded through :func:`utils.load_fx_data`
+    (lazy import to avoid circular deps with strategies importing from
+    ``utils``), then **strictly intersected** on their minute index — no
+    ``ffill`` between pairs — before being re-wrapped into a
+    multi-symbol ``vbt.Data``. A ``ValueError`` is raised if the strict
+    intersection is empty or shrinks by more than 5% relative to the
+    largest input index (a signal that one pair has a gap that would
+    silently bias the backtest).
+
+    Parameters
+    ----------
+    pairs : tuple of str, optional
+        Pair codes like ``"EUR-USD"``. Defaults to :data:`DEFAULT_PAIRS`.
+    data_dir : Path, optional
+        Override for the project ``data/`` directory.
+    """
+    from utils import load_fx_data  # lazy to avoid circular import at module load
+
+    if pairs is None:
+        pairs = DEFAULT_PAIRS
+    if data_dir is None:
+        data_dir = _PROJECT_ROOT / "data"
+
+    per_pair: dict[str, pd.DataFrame] = {}
+    for pair in pairs:
+        _, data_single = load_fx_data(str(data_dir / f"{pair}_minute.parquet"))
+        symbol = data_single.symbols[0]
+        df = data_single.data[symbol]
+        per_pair[pair] = df
+
+    # Strict index intersection — ffill between pairs is forbidden.
+    indexes = [df.index for df in per_pair.values()]
+    common_index = indexes[0]
+    for idx in indexes[1:]:
+        common_index = common_index.intersection(idx)
+    if len(common_index) == 0:
+        raise ValueError(
+            f"load_all_fx_data: empty index intersection across pairs {pairs}"
+        )
+    largest = max(len(idx) for idx in indexes)
+    if len(common_index) < 0.95 * largest:
+        raise ValueError(
+            f"load_all_fx_data: intersection shrinks to {len(common_index)} "
+            f"bars vs largest {largest} (>5% loss) — pair gaps detected."
+        )
+
+    aligned = {p: df.reindex(common_index) for p, df in per_pair.items()}
+    return vbt.Data.from_data(aligned, tz_localize=False, tz_convert=False)
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # MACRO DATA LOADING (VBT native realign + module-level cache)
@@ -145,12 +207,18 @@ def load_macro_filters(
 
 @dataclass
 class MRMacroIndicator:
-    """Lightweight indicator wrapper with a Plotly overlay."""
+    """Lightweight indicator wrapper with a Plotly overlay.
 
-    close: pd.Series
-    vwap: pd.Series
-    upper: pd.Series
-    lower: pd.Series
+    Single-symbol runs hold ``pd.Series`` for price/VWAP/bands (the
+    legacy ``.plot()`` renders a single-pair overlay). Multi-symbol runs
+    hold ``pd.DataFrame`` — ``.plot()`` then raises a clear error: use
+    ``analyze_portfolio`` on the ``pf`` for per-pair breakdowns instead.
+    """
+
+    close: pd.Series | pd.DataFrame
+    vwap: pd.Series | pd.DataFrame
+    upper: pd.Series | pd.DataFrame
+    lower: pd.Series | pd.DataFrame
     macro_ok: pd.Series
 
     def plot(self, fig: go.Figure | None = None, **layout_kwargs) -> go.Figure:
@@ -161,6 +229,12 @@ class MRMacroIndicator:
         fills to the trace IMMEDIATELY before in the traces list, so
         inserting Close/VWAP between them would break the fill).
         """
+        if isinstance(self.close, pd.DataFrame):
+            raise ValueError(
+                "MRMacroIndicator.plot() only supports single-symbol runs. "
+                "For multi-pair runs use pipeline_utils.analyze_portfolio(pf) "
+                "to get per-pair tearsheets."
+            )
         fig = fig or go.Figure()
         fig.add_trace(
             go.Scatter(
@@ -231,25 +305,67 @@ def pipeline(
     Same pre-computed boolean signals passed to ``vbt.Portfolio.from_signals``
     with native ``dt_stop``/``td_stop``. The macro regime filter is applied
     as an additional session-level AND mask before signal generation.
+
+    Supports both single-symbol ``vbt.Data`` (``close`` is a ``pd.Series``,
+    legacy behavior — bit-equivalent to snapshots) and multi-symbol
+    ``vbt.Data`` (``close`` is a ``pd.DataFrame``). In the multi-symbol
+    case ``cash_sharing=True, group_by=True`` is set so the 4-pair
+    MR Macro shares a single cash pool, and the session/macro masks are
+    broadcast column-wise.
     """
+    n_symbols = len(data.symbols) if hasattr(data, "symbols") else 1
+    is_multi = n_symbols > 1
+
     close = data.close
 
     vwap = vbt.VWAP.run(data.high, data.low, close, data.volume, anchor="D").vwap
     deviation = close - vwap
     bb = vbt.BBANDS.run(deviation, window=bb_window, alpha=bb_alpha)
-    upper = vwap + bb.upper
-    lower = vwap + bb.lower
+    if is_multi:
+        # bb.upper/lower carry extra MultiIndex levels (bb_window, bb_alpha)
+        # from the BBANDS indicator — pandas strict arithmetic rejects
+        # adding them to ``vwap`` (simple column index). Drop to numpy,
+        # then rebuild a DataFrame with the pair columns preserved.
+        upper = pd.DataFrame(
+            vwap.values + bb.upper.values,
+            index=close.index,
+            columns=close.columns,
+        )
+        lower = pd.DataFrame(
+            vwap.values + bb.lower.values,
+            index=close.index,
+            columns=close.columns,
+        )
+    else:
+        upper = vwap + bb.upper
+        lower = vwap + bb.lower
 
     hours = close.index.hour
-    session = (hours >= session_start) & (hours < session_end)
+    session_1d = (hours >= session_start) & (hours < session_end)
+    macro_ok_1d = load_macro_filters(close.index, spread_threshold)
 
-    macro_ok = load_macro_filters(close.index, spread_threshold)
+    if is_multi:
+        n_cols = close.shape[1]
+        session = pd.DataFrame(
+            np.broadcast_to(session_1d[:, None], (len(close), n_cols)),
+            index=close.index,
+            columns=close.columns,
+        )
+        macro_ok = pd.DataFrame(
+            np.broadcast_to(
+                macro_ok_1d.values[:, None], (len(close), n_cols)
+            ),
+            index=close.index,
+            columns=close.columns,
+        )
+    else:
+        session = pd.Series(session_1d, index=close.index)
+        macro_ok = macro_ok_1d
 
     entries = (close < lower) & session & macro_ok
     short_entries = (close > upper) & session & macro_ok
 
-    pf = vbt.Portfolio.from_signals(
-        data,
+    pf_kwargs: dict[str, Any] = dict(
         entries=entries,
         exits=False,
         short_entries=short_entries,
@@ -263,13 +379,18 @@ def pipeline(
         leverage=leverage,
         freq="1min",
     )
+    if is_multi:
+        pf_kwargs["cash_sharing"] = True
+        pf_kwargs["group_by"] = True
+
+    pf = vbt.Portfolio.from_signals(data, **pf_kwargs)
 
     indicator = MRMacroIndicator(
         close=close,
-        vwap=vwap.rename("VWAP"),
-        upper=upper.rename("Upper Band"),
-        lower=lower.rename("Lower Band"),
-        macro_ok=macro_ok,
+        vwap=vwap.rename("VWAP") if isinstance(vwap, pd.Series) else vwap,
+        upper=upper.rename("Upper Band") if isinstance(upper, pd.Series) else upper,
+        lower=lower.rename("Lower Band") if isinstance(lower, pd.Series) else lower,
+        macro_ok=macro_ok_1d,
     )
     return pf, indicator
 
