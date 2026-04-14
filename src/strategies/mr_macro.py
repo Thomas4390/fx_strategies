@@ -353,23 +353,25 @@ def pipeline(
     macro_ok_1d = load_macro_filters(close.index, spread_threshold)
 
     if is_multi:
-        n_cols = close.shape[1]
-        session = pd.DataFrame(
-            np.broadcast_to(session_1d[:, None], (len(close), n_cols)),
+        # Row-wise broadcasting via numpy column vectors (T, 1) → (T, K).
+        # Replaces the previous pd.DataFrame(np.broadcast_to(...)) pattern:
+        # same element-wise booleans, no intermediate 2D DataFrames.
+        session_col = session_1d[:, None]
+        macro_col = macro_ok_1d.values[:, None]
+        entries = pd.DataFrame(
+            (close.values < lower.values) & session_col & macro_col,
             index=close.index,
             columns=close.columns,
         )
-        macro_ok = pd.DataFrame(
-            np.broadcast_to(macro_ok_1d.values[:, None], (len(close), n_cols)),
+        short_entries = pd.DataFrame(
+            (close.values > upper.values) & session_col & macro_col,
             index=close.index,
             columns=close.columns,
         )
     else:
         session = pd.Series(session_1d, index=close.index)
-        macro_ok = macro_ok_1d
-
-    entries = (close < lower) & session & macro_ok
-    short_entries = (close > upper) & session & macro_ok
+        entries = (close < lower) & session & macro_ok_1d
+        short_entries = (close > upper) & session & macro_ok_1d
 
     pf_kwargs: dict[str, Any] = dict(
         entries=entries,

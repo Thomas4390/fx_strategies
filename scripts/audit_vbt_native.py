@@ -380,26 +380,65 @@ class VBTAuditVisitor(ast.NodeVisitor):
             self._emit("P05_pd_read_direct", node)
 
     def _detect_reindex_fillna(self, node: ast.Call) -> None:
-        # Match: <...>.reindex(...).fillna(...)
+        # Match: <...>.reindex(index=..., ...).fillna(...)
+        # Only fire on index-reindex (cross-frequency alignment), not
+        # column-reindex (pure column alignment — handled by pandas or
+        # vbt.broadcast, not by vbt.Resampler).
         if _call_method_name(node) != "fillna":
             return
         if not isinstance(node.func, ast.Attribute):
             return
         inner = node.func.value
-        if isinstance(inner, ast.Call) and _call_method_name(inner) == "reindex":
+        if not (isinstance(inner, ast.Call) and _call_method_name(inner) == "reindex"):
+            return
+        # Require an ``index=`` kwarg OR a positional first arg (which
+        # is the index in pd.Series.reindex). A call with only
+        # ``columns=`` is a false positive.
+        has_index = bool(inner.args) or any(
+            kw.arg == "index" for kw in inner.keywords
+        )
+        if has_index:
             self._emit("P06_reindex_fillna", node)
 
     def _detect_shift_fillna(self, node: ast.Call) -> None:
-        # Match: <...>.shift(n).fillna(v)
+        # Match: <...>.shift(n).fillna(v) with n > 0 (causal shift).
+        # A negative n is a forward lookup (PFO semantics), not a
+        # look-ahead fix, so we do NOT flag it.
         if _call_method_name(node) != "fillna":
             return
         if not isinstance(node.func, ast.Attribute):
             return
         inner = node.func.value
-        if isinstance(inner, ast.Call) and _call_method_name(inner) == "shift":
-            inner_chain = _attr_chain(inner.func)
-            if "vbt" in inner_chain:
-                return
+        if not (isinstance(inner, ast.Call) and _call_method_name(inner) == "shift"):
+            return
+        inner_chain = _attr_chain(inner.func)
+        if "vbt" in inner_chain:
+            return
+        # Extract the shift argument. Default shift(1) if no arg.
+        # Handle UnaryOp for negative literals: shift(-1) parses as
+        # Call(args=[UnaryOp(USub, Constant(1))]), not Constant(-1).
+        def _literal_int(expr: ast.AST) -> int | None:
+            if isinstance(expr, ast.Constant) and isinstance(expr.value, int):
+                return expr.value
+            if (
+                isinstance(expr, ast.UnaryOp)
+                and isinstance(expr.op, ast.USub)
+                and isinstance(expr.operand, ast.Constant)
+                and isinstance(expr.operand.value, int)
+            ):
+                return -expr.operand.value
+            return None
+
+        shift_n: int | None = None
+        if inner.args:
+            shift_n = _literal_int(inner.args[0])
+        elif not inner.keywords:
+            shift_n = 1  # default
+        else:
+            for kw in inner.keywords:
+                if kw.arg == "periods":
+                    shift_n = _literal_int(kw.value)
+        if shift_n is None or shift_n > 0:
             self._emit("P07_shift_fillna_causal", node)
 
     def _detect_np_broadcast_to(self, node: ast.Call) -> None:

@@ -7,31 +7,52 @@
 
 ## Résumé exécutif
 
-| Sévérité | Findings bruts | R-REFACTOR | R-REWRITE | R-KEEP-LEGACY |
-|----------|----------------|------------|-----------|----------------|
-| H (haut gain) | 0 | 0 | 0 | 0 |
-| M (moyen)     | 6 | 5 | 1 | 0 |
-| B (bas)       | 11 | 4 | 0 | 7 |
-| **Total**     | **17** | **9** | **1** | **7** |
+### Progression sur la session
 
-**Conclusion** : le codebase est déjà majoritairement idiomatique. Sur
-17 patterns détectés, **7 sont des faux positifs légitimes** (sémantique
-différente de ce que le détecteur cible), **9 sont des refactors
-directs et sans risque** à faible gain (cosmétique/cohérence), et
-**1 seul nécessite un refactor sémantique avec test de régression**.
+| Checkpoint | Findings | Δ | Fichiers clean (0 findings) |
+|---|---|---|---|
+| Audit initial | 17 | — | 3 |
+| Après `vol_target_leverage` helper | 15 | −2 | 3 |
+| Après batch `.vbt.fshift` (2 sites) | 12 | −3 | 4 (+combined_portfolio_v2) |
+| Après refactor cosmétiques + scanner refinement | **8** | −4 | **6** (+composite_fx_alpha, mr_macro) |
 
-Les 3 fichiers **déjà exemplaires** (0 findings, 0 `pd`/`np` calls) :
-- `mr_turbo.py`
-- `ou_mean_reversion.py`
-- `rsi_daily.py`
+### État final
 
-Les 2 fichiers à plus forte densité raw/np :
-- `composite_fx_alpha.py` — **R-KEEP** : 6 kernels `@njit` custom,
-  31 appels `np.*` dont la majorité légitime dans les kernels. Aucun
-  refactor recommandé hors du P02 L349 trivial.
-- `combined_portfolio_v2.py` — densité pd/np due au pipeline
-  multi-étages de régime + dd-cap. Les 2 findings sont des
-  `.shift(1).fillna(v)` cosmétiques.
+| Sévérité | Restants | R-REFACTOR | R-REWRITE | R-KEEP-LEGACY |
+|----------|----------|------------|-----------|----------------|
+| H (haut gain) | 0 | — | — | — |
+| M (moyen)     | 4 | 0 | 0 | 4 |
+| B (bas)       | 4 | 0 | 0 | 4 |
+| **Total**     | **8** | **0** | **0** | **8** |
+
+**Tous les findings restants sont intentionnels ou des faux positifs
+sémantiques du scanner** — aucun refactor productif ne reste sur la
+table. Le R-REWRITE initial (signal ternaire) a été reclassé en
+R-KEEP-LEGACY après analyse sémantique détaillée (voir section
+daily_momentum ci-dessous).
+
+### Refactors appliqués (9 sites au total)
+
+| # | Fichier | Ligne | Pattern | Remplacement |
+|---|---------|-------|---------|--------------|
+| 1 | daily_momentum.py | 108 | vol-target inline | `vol_target_leverage` helper |
+| 2 | daily_momentum.py | 138 | vol-target inline | `vol_target_leverage` helper |
+| 3 | daily_momentum.py | 218 | vol-target inline | `vol_target_leverage` helper |
+| 4 | daily_momentum.py | 449 | vol-target inline | `vol_target_leverage` helper |
+| 5 | combined_portfolio_v2.py | 387 | vol-target inline | `vol_target_leverage` helper |
+| 6 | combined_portfolio_v2.py | 438 | `.shift(1).fillna` | `.vbt.fshift(1, fill_value)` |
+| 7 | composite_fx_alpha.py | 384 | `.shift(1).fillna` | `.vbt.fshift(1, fill_value)` |
+| 8 | composite_fx_alpha.py | 349 | `.pct_change()` raw | `.vbt.pct_change()` |
+| 9 | mr_macro.py | 355-366 | `np.broadcast_to` masks | inline numpy `.values[:, None]` broadcasting |
+
+### Fichiers exemplaires (0 findings)
+
+- `mr_turbo.py` — utilisation exemplaire de `vbt.VWAP`, `vbt.BBANDS`, stops natifs
+- `ou_mean_reversion.py` — idem + per-bar leverage array
+- `rsi_daily.py` — `vbt.RSI.run` + `.vbt.resample_apply`
+- `combined_portfolio_v2.py` — rejoint le club après les 2 refactors vol-target + fshift
+- `composite_fx_alpha.py` — rejoint après le pct_change + fshift cleanup (les 6 kernels `@njit` restants sont légitimes)
+- `mr_macro.py` — rejoint après le refactor des masks (les 2 findings B restants sont des `pd.read_parquet` gardés R-KEEP)
 
 ## Classification par finding
 
@@ -61,7 +82,8 @@ cross-sectional. Le remplacement `np.log1p(closes.vbt.pct_change(w))`
 n'apporte aucun gain de perf (tous deux sont vectorisés) et dégrade la
 lisibilité. **Garder en l'état.**
 
-#### L126-134 — P01 Signal ternaire manuel → **R-REWRITE**
+#### L126-134 — P01 Signal ternaire manuel → **R-KEEP-LEGACY**
+**(reclassification depuis R-REWRITE après analyse sémantique)**
 
 ```python
 signal = pd.Series(0.0, index=close_daily.index)
@@ -69,24 +91,42 @@ signal[trend_long & rsi_ok_long] = 1.0
 signal[trend_short & rsi_ok_short] = -1.0
 signal = signal.shift(1)
 # ...
-return (signal * daily_ret * lev.fillna(1.0)).dropna()
+return (signal * daily_ret * lev).dropna()  # après refactor vol_target_leverage
 ```
 
-**Analyse** : la fonction produit des **returns**, pas un Portfolio.
-Le pattern "Series 0/1/-1 + shift + multiply" est l'ancien modèle
-avant l'adoption complète de `Portfolio.from_signals`. Le refactor
-idiomatique consiste à construire un vrai Portfolio via `from_signals`
-avec entries/short_entries et à en extraire `.returns`. **Attention** :
-la fonction est consommée par `combined_portfolio.build_combined_portfolio`
-qui combine les returns de plusieurs sleeves — toute divergence
-numérique impacte les tests de régression combined.
+**Analyse sémantique** : le pattern `signal * daily_ret * lev`
+produit des **returns additifs** (approximation linéaire au 1er
+ordre). Un refactor vers `Portfolio.from_signals` ou
+`from_orders(size=signal, size_type='targetpercent')` produirait des
+**returns multiplicatifs** (avec compounding journalier de l'equity).
+Ces deux approches ne sont pas bit-equivalentes :
+- Additif : `cum_return[t] ≈ Σ signal[i] * ret[i]`
+- Multiplicatif : `cum_return[t] = ∏(1 + signal[i] * ret[i]) − 1`
 
-**Recommandation** : refactor R-REWRITE avec test
-`assert np.allclose(pf_new.returns, pf_old_returns, atol=1e-9)`.
-Impact combined à valider avec `bench_verify.py`.
+Pour des returns journaliers FX typiques (~0.5% intraday), la
+différence au 1er ordre est négligeable, mais elle devient non-
+négligeable sur 7 ans de données et impacte directement Sharpe / MDD.
 
-**Gain** : cohérence avec `combined_core.py` (même sémantique partout),
-élimination d'une branche raw-returns dans le pipeline.
+**Décision** : garder le pattern additif car
+1. La fonction `backtest_ts_momentum_rsi` est consommée par
+   `combined_portfolio.build_combined_portfolio` qui combine via
+   `PortfolioOptimizer.from_filled_allocations` — le changement de
+   sémantique cascaderait sur des tests de régression existants
+   (`test_combined_portfolio_v2.py`).
+2. Aucun gain de performance ni de clarté : le calcul O(n) reste
+   identique.
+3. La "cohérence avec combined_core" argumentée dans la version
+   R-REWRITE de l'audit initial n'est qu'apparente : `combined_core`
+   utilise `from_optimizer` avec des allocations continues, pas un
+   signal ternaire en entrée.
+
+**Alternative proposée** (non implémentée) : si un jour le
+refactor devient nécessaire, la voie propre est d'étendre le
+helper `build_native_combined` pour qu'il accepte directement
+une Series de signal ternaire comme input plutôt que des returns
+pré-calculés, laissant `PortfolioOptimizer` produire les returns
+multiplicatifs en interne. Cette migration nécessiterait un
+versioning soigneux des baselines combined_portfolio.
 
 #### L219 — P07 vol-target `.shift(1).fillna(1.0)` → **R-REFACTOR**
 

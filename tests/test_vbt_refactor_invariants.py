@@ -264,6 +264,52 @@ def test_composite_fx_alpha_fingerprint_baseline(fx_data):
     )
 
 
+# Multi-pair mr_macro is NOT covered by test_pipeline_equivalence.py
+# (the legacy fx_data fixture is single-pair EUR-USD). The smoke tests
+# in test_mr_macro_multipair.py check structure but not bit-equivalence.
+# This disk-baseline locks a fingerprint so the is_multi=True code path
+# (broadcast masks, cash_sharing) is protected against silent drift.
+_MULTI_SMOKE_START = "2024-01-01"
+_MULTI_SMOKE_END = "2024-07-01"
+
+
+@pytest.fixture(scope="module")
+def mr_macro_multi_data():
+    """6-month 4-pair multi-symbol fixture. Matches the smoke window
+    used in test_mr_macro_multipair.py for consistent timing."""
+    from strategies.mr_macro import load_all_fx_data
+    from utils import apply_vbt_settings
+
+    apply_vbt_settings()
+    data = load_all_fx_data()
+    return data.loc[_MULTI_SMOKE_START:_MULTI_SMOKE_END]
+
+
+def test_mr_macro_multipair_fingerprint_baseline(mr_macro_multi_data):
+    """Disk-baseline for mr_macro.pipeline(is_multi=True).
+
+    First run: creates snapshots_refactor/mr_macro_multipair_default.json
+    and skips. Subsequent runs: asserts fingerprint is unchanged. This
+    is the guard for the upcoming np.broadcast_to → numpy-mask refactor
+    in mr_macro.pipeline.
+    """
+    from strategies.mr_macro import pipeline
+
+    pf, _ = pipeline(
+        mr_macro_multi_data,
+        bb_window=80,
+        bb_alpha=5.0,
+        sl_stop=0.005,
+        tp_stop=0.006,
+        spread_threshold=0.5,
+    )
+    _fingerprint_or_create(
+        pf,
+        _snapshot_path("mr_macro_multipair_default"),
+        "mr_macro_multipair_default",
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # 4. Refactor unit tests — new helpers bit-equivalent to inline patterns
 # ═══════════════════════════════════════════════════════════════════════

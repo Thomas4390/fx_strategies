@@ -263,10 +263,11 @@ def build_combined_portfolio(
       mr_heavy: MR 50%, XS 25%, TS 25%
       custom: use custom_weights dict
 
-    The returned ``pf_combined`` is built via ``vbt.Portfolio.from_returns`` on
-    the component-net-of-fees daily returns. It therefore reflects fees already
-    paid by each sub-strategy but does NOT charge any rebalancing/turnover cost
-    for the combined allocation.
+    The returned ``pf_combined`` is built via ``build_native_combined``
+    (``vbt.Portfolio.from_optimizer`` + ``PortfolioOptimizer.from_filled_allocations``)
+    on the component-net-of-fees daily returns. It therefore reflects fees
+    already paid by each sub-strategy but does NOT charge any rebalancing
+    or turnover cost for the combined allocation itself.
     """
     # Align to common index
     all_rets = pd.DataFrame(strategy_returns)
