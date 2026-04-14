@@ -78,8 +78,15 @@ WF_PERIODS = [(f"{y}-01-01", f"{y}-12-31") for y in range(2019, 2025)] + [
 # ===================================================================
 
 
-def get_strategy_daily_returns() -> dict[str, pd.Series]:
-    """Compute daily returns for each component strategy."""
+def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
+    """Rebuild every sleeve from scratch (no cache).
+
+    Internal helper — prefer :func:`get_strategy_daily_returns` at
+    call-sites so that the Phase 22 disk cache is used whenever the
+    data manifest is fresh. The expensive steps are the EUR-USD minute
+    load (~5 s), the MR Macro backtest (~40 s) and the four RSI Daily
+    backtests (~30 s). Total ~60-90 s on a warm cache, ~2 min cold.
+    """
     print("  Loading EUR-USD minute data...")
     _, data_eur = load_fx_data()
 
@@ -121,6 +128,42 @@ def get_strategy_daily_returns() -> dict[str, pd.Series]:
         "TS_Momentum_3p": ts_rets_3p,
         "RSI_Daily_4p": rsi_daily_4p,
     }
+
+
+def get_strategy_daily_returns(
+    use_cache: bool = True,
+    verbose: bool = True,
+) -> dict[str, pd.Series]:
+    """Compute daily returns for each component strategy.
+
+    By default reads the Phase 22 parquet cache under ``data/cache/``
+    when the on-disk manifest (``data/MANIFEST.json``) has not drifted
+    since the cache was written. Pass ``use_cache=False`` to force a
+    full recompute — useful in tests or when the cache must be
+    regenerated after a sleeves-version bump.
+
+    Parameters
+    ----------
+    use_cache : bool
+        When False, bypass the cache entirely and call
+        :func:`_compute_strategy_daily_returns` directly.
+    verbose : bool
+        Forwarded to :func:`framework.data_cache.cached_strategy_daily_returns`
+        to print hit/miss status.
+
+    Returns
+    -------
+    dict[str, pd.Series]
+        Keyed by ``MR_Macro`` / ``XS_Momentum`` / ``TS_Momentum_RSI`` /
+        ``TS_Momentum_3p`` / ``RSI_Daily_4p``.
+    """
+    if not use_cache:
+        return _compute_strategy_daily_returns()
+    from framework.data_cache import cached_strategy_daily_returns
+
+    return cached_strategy_daily_returns(
+        rebuild=_compute_strategy_daily_returns, verbose=verbose
+    )
 
 
 _RISK_PARITY_WARMUP = 63  # ~3 months — warmup before expanding-window vol is trusted
@@ -168,8 +211,18 @@ def _compute_weights_ts(
         inv_vol = vol.where(vol > 0).rdiv(1.0)  # 1 / vol, NaN where vol is 0
         row_sum = inv_vol.sum(axis=1)
         weights_ts = inv_vol.div(row_sum.where(row_sum > 0), axis=0)
-        # Warmup rows (before min_periods) fall back to equal weights.
-        return weights_ts.fillna(eq_w)
+        # Rows where ALL strategies are NaN are true warmup — assign equal
+        # weights so the row still sums to 1. Rows where only SOME strategies
+        # are NaN (e.g. a sleeve had zero expanding-vol because it hadn't
+        # traded yet) must get 0 weight on the NaN columns, not ``eq_w``:
+        # blindly filling with ``eq_w`` would push the row sum above 1.0
+        # (observed bug: risk_parity weights summing to 1.40 around
+        # 2018-03-16 before this fix).
+        all_nan_mask = weights_ts.isna().all(axis=1)
+        weights_ts = weights_ts.fillna(0.0)
+        if all_nan_mask.any():
+            weights_ts.loc[all_nan_mask, :] = eq_w
+        return weights_ts
 
     if allocation == "equal":
         static = pd.Series(eq_w, index=common.columns)

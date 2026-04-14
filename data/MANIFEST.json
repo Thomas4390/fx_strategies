@@ -1,0 +1,188 @@
+{
+  "generated_at": "2026-04-14T01:45:07.699455+00:00",
+  "project_root": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies",
+  "files": {
+    "CPI_CORE_monthly.parquet": {
+      "sha256": "58a990fda314413b4785f71a5262a036141ecea0158ffc8ba5537bdba9a346dc",
+      "size_bytes": 3461,
+      "size_mb": 0.003,
+      "row_count": 97,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "core_cpi"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-02-02 00:00:00"
+    },
+    "CPI_monthly.parquet": {
+      "sha256": "924db590ba77503fe555a7f8d37ec27cf0559245633a97d27fe0891774774eb7",
+      "size_bytes": 3406,
+      "size_mb": 0.003,
+      "row_count": 97,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "cpi"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-02-02 00:00:00"
+    },
+    "DGS10_daily.parquet": {
+      "sha256": "3e142af9b2a0bd1e82f8545398cff4cd160a986b8ee708dd9fd69601b8c45ac7",
+      "size_bytes": 24046,
+      "size_mb": 0.023,
+      "row_count": 2060,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dgs10"
+      ],
+      "index_start": "2018-01-03 00:00:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "DGS2_daily.parquet": {
+      "sha256": "2a0857940373cef24bf0e654e752617f57e58f9e3c39caab5e63807f737953cc",
+      "size_bytes": 24186,
+      "size_mb": 0.023,
+      "row_count": 2060,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dgs2"
+      ],
+      "index_start": "2018-01-03 00:00:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "EUR-USD_minute.parquet": {
+      "sha256": "bdb8c5ce0d8263380f297a7d8b280c3a17c6a6364b7901ad82441ba60dcd12a8",
+      "size_bytes": 49106175,
+      "size_mb": 46.831,
+      "row_count": 3055756,
+      "column_count": 5,
+      "columns": [
+        "date",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2018-01-01 19:01:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "FED_FUNDS_monthly.parquet": {
+      "sha256": "89f66396d4d448a946e5d345e5a693b16cf02cae41c6d86bea8f16b192c33970",
+      "size_bytes": 3057,
+      "size_mb": 0.003,
+      "row_count": 99,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "fed_funds"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-03-02 00:00:00"
+    },
+    "GBP-USD_minute.parquet": {
+      "sha256": "80f774db927c2d215edcbe595cb533314a74aea02d8946ce358f80426fc8df49",
+      "size_bytes": 50480362,
+      "size_mb": 48.142,
+      "row_count": 3055756,
+      "column_count": 5,
+      "columns": [
+        "date",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2018-01-01 19:01:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "NFP_monthly.parquet": {
+      "sha256": "b19ed24298af8dd91b4f3554b3a209e8611637b9ba7d8c5b69f98e514066e58a",
+      "size_bytes": 3227,
+      "size_mb": 0.003,
+      "row_count": 99,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "nfp"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-03-02 00:00:00"
+    },
+    "PCE_monthly.parquet": {
+      "sha256": "87fc1526f11f87367ddb8b72839ea6c713327cdd79857a6d2797d97c5ab255a6",
+      "size_bytes": 3438,
+      "size_mb": 0.003,
+      "row_count": 98,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "pce"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-02-02 00:00:00"
+    },
+    "SPREAD_10Y2Y_daily.parquet": {
+      "sha256": "0db293c10147f514cb847df506266effdeff70ca0e8a5a996fd21aca8694e197",
+      "size_bytes": 23317,
+      "size_mb": 0.022,
+      "row_count": 2060,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "spread_10y2y"
+      ],
+      "index_start": "2018-01-03 00:00:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "UNEMPLOYMENT_monthly.parquet": {
+      "sha256": "beabe7c07424b851af72c1816b73745a1c8b3316169b8abfb7c320d025851abe",
+      "size_bytes": 2889,
+      "size_mb": 0.003,
+      "row_count": 98,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "unemployment"
+      ],
+      "index_start": "2018-01-02 00:00:00",
+      "index_end": "2026-03-02 00:00:00"
+    },
+    "USD-CAD_minute.parquet": {
+      "sha256": "512f93e544d2d69646ece4ef6a9b806dd20a130d1d61f235b1e1ee522aa50fce",
+      "size_bytes": 48393754,
+      "size_mb": 46.152,
+      "row_count": 3055756,
+      "column_count": 5,
+      "columns": [
+        "date",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2018-01-01 19:01:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "USD-JPY_minute.parquet": {
+      "sha256": "cf653395e6b0b361d44d7afe2cf25066965c30ba9ea1bdeefccb79ea305b65a8",
+      "size_bytes": 48076017,
+      "size_mb": 45.849,
+      "row_count": 3055756,
+      "column_count": 5,
+      "columns": [
+        "date",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2018-01-01 19:01:00",
+      "index_end": "2026-04-01 00:00:00"
+    }
+  },
+  "combined_fingerprint": "666917fda857f7148d8f8c6eb9beeeb9e05554fcb3885d2c249178aa90514daf"
+}

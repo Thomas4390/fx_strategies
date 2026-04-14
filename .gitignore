@@ -1,5 +1,11 @@
-# Data files
-data/
+# Data files — ignore everything *inside* data/ except the small
+# manifest (and README) used for reproducibility. Note: we cannot use
+# `data/` as the pattern because git refuses to re-include files
+# whose parent directory is excluded.
+data/**
+!data/
+!data/MANIFEST.json
+!data/README.md
 *.parquet
 *.ods
 
