@@ -53,37 +53,35 @@ from strategies.combined_portfolio import (
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# PHASE 18 FINAL RECOMMENDED CONFIGURATION
+# PRODUCTION CONFIGURATION (MR-heavy + 2 orthogonal diversifiers)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Phase 18 allocation: the final production-ready configuration.
+# Production allocation: the recommended live-trading configuration.
 # MR Macro carries the bulk of the alpha (intraday VWAP mean reversion
 # filtered by US macro regime, Sharpe 0.82 standalone), while
 # TS Momentum 3-pair (trend following on EUR/GBP/JPY, no USD-CAD) and
 # RSI Daily 4-pair (daily mean reversion on 4 pairs) act as
 # near-orthogonal diversifiers whose 2019/2023 alpha plugs the two
-# weak years of the MR Macro standalone. See
-# docs/research/eur-usd-bb-mr-research-plan.md Phase 18 for the
-# full derivation.
-PHASE18_WEIGHTS: dict[str, float] = {
+# weak years of the MR Macro standalone.
+PRODUCTION_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
     "RSI_Daily_4p": 0.10,
 }
-PHASE18_TARGET_VOL: float = 0.28
-PHASE18_MAX_LEVERAGE: float = 12.0
+PRODUCTION_TARGET_VOL: float = 0.28
+PRODUCTION_MAX_LEVERAGE: float = 12.0
 
 
-def build_phase18_portfolio(
+def build_production_portfolio(
     strategy_returns: dict[str, pd.Series] | None = None,
-    target_vol: float = PHASE18_TARGET_VOL,
-    max_leverage: float = PHASE18_MAX_LEVERAGE,
+    target_vol: float = PRODUCTION_TARGET_VOL,
+    max_leverage: float = PRODUCTION_MAX_LEVERAGE,
 ) -> dict[str, Any]:
-    """Build the Phase 18 recommended combined portfolio in one call.
+    """Build the recommended production combined portfolio in one call.
 
     Thin wrapper around :func:`build_combined_portfolio_v2` that pins
-    the recipe to the Phase 18 allocation (MR80 / TS3p10 / RSI10),
+    the recipe to the production allocation (MR 80% / TS3p 10% / RSI 10%),
     static weights, ``dd_cap_enabled=False`` and the pair
     ``target_vol=0.28`` / ``max_leverage=12.0`` that passes every IS,
     OOS and bootstrap gate. Intended as the canonical entry point for
@@ -110,11 +108,11 @@ def build_phase18_portfolio(
     """
     if strategy_returns is None:
         strategy_returns = get_strategy_daily_returns()
-    filtered = {k: strategy_returns[k] for k in PHASE18_WEIGHTS}
+    filtered = {k: strategy_returns[k] for k in PRODUCTION_WEIGHTS}
     return build_combined_portfolio_v2(
         filtered,
         allocation="custom",
-        custom_weights=PHASE18_WEIGHTS,
+        custom_weights=PRODUCTION_WEIGHTS,
         target_vol=target_vol,
         max_leverage=max_leverage,
         dd_cap_enabled=False,
@@ -122,122 +120,104 @@ def build_phase18_portfolio(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# PHASE 19 — REFINED LEVERAGE CONFIGURATIONS
+# LEVERAGE VARIANTS — conservative and aggressive tunings of PRODUCTION
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Phase 19 is a direct follow-up to the Phase 18 sweep
-# (``docs/research/sweep_2026-04-13_combinations.md``) and the refined
-# leverage sweep (``docs/research/phase19_2026-04-13_refined_leverage.md``).
-# Re-uses the exact same sleeves and weights as Phase 18 — the only thing
-# that changes is the leverage layer.
+# The conservative and aggressive variants re-use the exact same sleeves
+# and weights as PRODUCTION — only the leverage layer changes.
 #
-# Key finding from the refined sweep (116 combos, tv × ml × dd grid)
-# ------------------------------------------------------------------
-# The Phase 18 ``max_leverage=12`` was hitting the cap often enough that
-# the realized leverage distribution was clipped, costing ~0.010 Sharpe
-# WF. Raising ``max_leverage`` to 14+ removes the binding constraint and
-# unlocks a stable Sharpe plateau at **0.966** across a wide region of
-# the ``(target_vol, max_leverage)`` space with ``dd_cap_enabled=False``.
-# The DD cap — enabled on some Phase 18 variants — consistently *hurts*
-# the Sharpe on this trio because it de-leverages drawdowns that would
-# have recovered anyway.
+# Key empirical finding (116-combo ``target_vol × max_leverage × dd_cap``
+# sweep): PRODUCTION's ``max_leverage=12`` was hitting the cap often
+# enough that the realized leverage distribution was clipped, costing
+# ~0.010 Sharpe WF. Raising ``max_leverage`` to 14+ removes the binding
+# constraint and unlocks a stable Sharpe plateau at **0.966** across a
+# wide region of the ``(target_vol, max_leverage)`` space with
+# ``dd_cap_enabled=False``. The DD cap consistently *hurts* the Sharpe
+# on this trio because it de-leverages drawdowns that would have
+# recovered anyway — hence ``dd_cap_enabled=False`` on both variants.
 #
-# Two formal Phase 19 candidates are therefore published:
-#
-# 1. ``PHASE19_BALANCED`` — conservative upgrade of Phase 18 prod.
+# 1. CONSERVATIVE — low-risk upgrade over PRODUCTION.
 #    ``target_vol=0.25, max_leverage=14, dd_cap_enabled=False``.
-#    CAGR 13.38% (+0.27% vs P18), MaxDD -18.41% (essentially flat vs
-#    P18's -17.93%), Sharpe WF 0.966 (+0.010 vs P18's 0.956). Bootstrap
-#    target-hit rate rises to 35.4% (vs P18's 39.0% on a different
-#    bootstrap run — within noise). This is the recommended drop-in
-#    replacement for Phase 18 prod: same risk profile, free Sharpe lift.
+#    CAGR 13.38% (+0.27% vs PRODUCTION), MaxDD -18.41% (essentially flat
+#    vs PRODUCTION's -17.93%), Sharpe WF 0.966 (+0.010 vs 0.956). This is
+#    the recommended drop-in replacement for the PRODUCTION preset: same
+#    risk profile, free Sharpe lift.
 #
-# 2. ``PHASE19_AGGRESSIVE`` — higher-CAGR variant for callers that want
-#    to push the vol target up.
-#    ``target_vol=0.35, max_leverage=18, dd_cap_enabled=False``.
-#    CAGR 18.58% (+5.47% vs P18), MaxDD -25.57% (+7.64% worse), Sharpe
-#    WF 0.966 (same plateau as BALANCED). Bootstrap P5 CAGR +7.60%,
-#    target-hit rate 15.4% (the target band [10%, 15%] is now below the
-#    expected CAGR — use a higher CAGR target band when evaluating this
-#    config).
-#
-# The ``dd_cap_enabled=False`` choice is counterintuitive but empirically
-# validated: with the P18 trio at these tv/ml levels, the pre-leverage
-# equity curve recovers fast enough from drawdowns that the lagged DD cap
-# just clips winners.
+# 2. AGGRESSIVE — higher-CAGR variant for callers that want to push the
+#    vol target up. ``target_vol=0.35, max_leverage=18, dd_cap_enabled=False``.
+#    CAGR 18.58% (+5.47% vs PRODUCTION), MaxDD -25.57% (+7.64% worse),
+#    Sharpe WF 0.966 (same plateau as CONSERVATIVE). Bootstrap P5 CAGR
+#    +7.60%, target-hit rate 15.4% (the target band [10%, 15%] is below
+#    the expected CAGR — use a higher CAGR target band when evaluating
+#    this config).
 
 
-PHASE19_BALANCED_WEIGHTS: dict[str, float] = dict(PHASE18_WEIGHTS)
-PHASE19_BALANCED_TARGET_VOL: float = 0.25
-PHASE19_BALANCED_MAX_LEVERAGE: float = 14.0
-PHASE19_BALANCED_DD_CAP_ENABLED: bool = False
+CONSERVATIVE_WEIGHTS: dict[str, float] = dict(PRODUCTION_WEIGHTS)
+CONSERVATIVE_TARGET_VOL: float = 0.25
+CONSERVATIVE_MAX_LEVERAGE: float = 14.0
+CONSERVATIVE_DD_CAP_ENABLED: bool = False
 
 
-PHASE19_AGGRESSIVE_WEIGHTS: dict[str, float] = dict(PHASE18_WEIGHTS)
-PHASE19_AGGRESSIVE_TARGET_VOL: float = 0.35
-PHASE19_AGGRESSIVE_MAX_LEVERAGE: float = 18.0
-PHASE19_AGGRESSIVE_DD_CAP_ENABLED: bool = False
+AGGRESSIVE_WEIGHTS: dict[str, float] = dict(PRODUCTION_WEIGHTS)
+AGGRESSIVE_TARGET_VOL: float = 0.35
+AGGRESSIVE_MAX_LEVERAGE: float = 18.0
+AGGRESSIVE_DD_CAP_ENABLED: bool = False
 
 
-def build_phase19_balanced_portfolio(
+def build_conservative_portfolio(
     strategy_returns: dict[str, pd.Series] | None = None,
-    target_vol: float = PHASE19_BALANCED_TARGET_VOL,
-    max_leverage: float = PHASE19_BALANCED_MAX_LEVERAGE,
+    target_vol: float = CONSERVATIVE_TARGET_VOL,
+    max_leverage: float = CONSERVATIVE_MAX_LEVERAGE,
 ) -> dict[str, Any]:
-    """Build the Phase 19 *balanced* combined portfolio.
+    """Build the *conservative* combined portfolio.
 
-    Drop-in replacement for :func:`build_phase18_portfolio` that uses
+    Drop-in replacement for :func:`build_production_portfolio` that uses
     ``target_vol=0.25, max_leverage=14, dd_cap_enabled=False`` instead of
-    the Phase 18 ``(0.28, 12, False)`` triple. On the same sleeves and
+    the production ``(0.28, 12, False)`` triple. On the same sleeves and
     weights this produces a slightly higher Sharpe WF (~0.966 vs 0.956)
-    for an essentially identical risk profile — see the Phase 19 refined
-    leverage sweep at
-    ``docs/research/phase19_2026-04-13_refined_leverage.md`` for the
-    full ``(target_vol, max_leverage)`` grid that validates the Sharpe
-    plateau at 0.966 for ``max_leverage >= 14`` across
-    ``target_vol ∈ [0.22, 0.28]``.
+    for an essentially identical risk profile — the full
+    ``(target_vol, max_leverage)`` grid validates the Sharpe plateau at
+    0.966 for ``max_leverage >= 14`` across ``target_vol ∈ [0.22, 0.28]``.
     """
     if strategy_returns is None:
         strategy_returns = get_strategy_daily_returns()
-    filtered = {k: strategy_returns[k] for k in PHASE19_BALANCED_WEIGHTS}
+    filtered = {k: strategy_returns[k] for k in CONSERVATIVE_WEIGHTS}
     return build_combined_portfolio_v2(
         filtered,
         allocation="custom",
-        custom_weights=PHASE19_BALANCED_WEIGHTS,
+        custom_weights=CONSERVATIVE_WEIGHTS,
         target_vol=target_vol,
         max_leverage=max_leverage,
-        dd_cap_enabled=PHASE19_BALANCED_DD_CAP_ENABLED,
+        dd_cap_enabled=CONSERVATIVE_DD_CAP_ENABLED,
     )
 
 
-def build_phase19_aggressive_portfolio(
+def build_aggressive_portfolio(
     strategy_returns: dict[str, pd.Series] | None = None,
-    target_vol: float = PHASE19_AGGRESSIVE_TARGET_VOL,
-    max_leverage: float = PHASE19_AGGRESSIVE_MAX_LEVERAGE,
+    target_vol: float = AGGRESSIVE_TARGET_VOL,
+    max_leverage: float = AGGRESSIVE_MAX_LEVERAGE,
 ) -> dict[str, Any]:
-    """Build the Phase 19 *aggressive* combined portfolio.
+    """Build the *aggressive* combined portfolio.
 
     Higher-CAGR variant with ``target_vol=0.35, max_leverage=18``,
-    keeping the same sleeves and weights as Phase 18/19 balanced. Sharpe
-    WF stays on the 0.966 plateau but CAGR rises to ~18.58% at the cost
-    of MaxDD ~-25.57% (vs Phase 18's -17.93%). The bootstrap tail risk
-    is markedly higher (P5 MaxDD ~-40%) — do NOT deploy this config
-    without a broker-level margin gate and an explicit risk budget that
-    accepts the increased drawdown profile. See
-    ``docs/research/phase19_2026-04-13_refined_leverage.md`` for the
-    full comparison.
+    keeping the same sleeves and weights as PRODUCTION and CONSERVATIVE.
+    Sharpe WF stays on the 0.966 plateau but CAGR rises to ~18.58% at
+    the cost of MaxDD ~-25.57% (vs PRODUCTION's -17.93%). The bootstrap
+    tail risk is markedly higher (P5 MaxDD ~-40%) — do NOT deploy this
+    config without a broker-level margin gate and an explicit risk
+    budget that accepts the increased drawdown profile.
     """
     if strategy_returns is None:
         strategy_returns = get_strategy_daily_returns()
-    filtered = {k: strategy_returns[k] for k in PHASE19_AGGRESSIVE_WEIGHTS}
+    filtered = {k: strategy_returns[k] for k in AGGRESSIVE_WEIGHTS}
     return build_combined_portfolio_v2(
         filtered,
         allocation="custom",
-        custom_weights=PHASE19_AGGRESSIVE_WEIGHTS,
+        custom_weights=AGGRESSIVE_WEIGHTS,
         target_vol=target_vol,
         max_leverage=max_leverage,
-        dd_cap_enabled=PHASE19_AGGRESSIVE_DD_CAP_ENABLED,
+        dd_cap_enabled=AGGRESSIVE_DD_CAP_ENABLED,
     )
 
 
@@ -820,7 +800,34 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# CLI — SINGLE RUN (Phase 18 recommended) + full BENCHMARK
+# BACK-COMPAT ALIASES
+# ═══════════════════════════════════════════════════════════════════════
+# These keep the historic PHASE18_*/PHASE19_*/build_phase18/build_phase19
+# names alive so tests, scripts, and LaTeX report pseudocode that import
+# by the old names continue to work unchanged. Remove once all callers
+# (see git grep for PHASE18_WEIGHTS / build_phase19_balanced_portfolio)
+# have migrated to the semantic names.
+
+PHASE18_WEIGHTS = PRODUCTION_WEIGHTS
+PHASE18_TARGET_VOL = PRODUCTION_TARGET_VOL
+PHASE18_MAX_LEVERAGE = PRODUCTION_MAX_LEVERAGE
+build_phase18_portfolio = build_production_portfolio
+
+PHASE19_BALANCED_WEIGHTS = CONSERVATIVE_WEIGHTS
+PHASE19_BALANCED_TARGET_VOL = CONSERVATIVE_TARGET_VOL
+PHASE19_BALANCED_MAX_LEVERAGE = CONSERVATIVE_MAX_LEVERAGE
+PHASE19_BALANCED_DD_CAP_ENABLED = CONSERVATIVE_DD_CAP_ENABLED
+build_phase19_balanced_portfolio = build_conservative_portfolio
+
+PHASE19_AGGRESSIVE_WEIGHTS = AGGRESSIVE_WEIGHTS
+PHASE19_AGGRESSIVE_TARGET_VOL = AGGRESSIVE_TARGET_VOL
+PHASE19_AGGRESSIVE_MAX_LEVERAGE = AGGRESSIVE_MAX_LEVERAGE
+PHASE19_AGGRESSIVE_DD_CAP_ENABLED = AGGRESSIVE_DD_CAP_ENABLED
+build_phase19_aggressive_portfolio = build_aggressive_portfolio
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CLI — single production run + full benchmark suite
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -858,19 +865,19 @@ if __name__ == "__main__":
     apply_vbt_plot_defaults()
     vbt.settings.returns.year_freq = pd.Timedelta(days=252)
 
-    # 1) SINGLE RUN — Phase 18 recommended production config
-    _header("COMBINED PORTFOLIO v2  ·  PHASE 18 SINGLE RUN")
-    res_p18 = build_phase18_portfolio()
+    # 1) SINGLE RUN — the recommended production config
+    _header("COMBINED PORTFOLIO LEVERED  ·  PRODUCTION SINGLE RUN")
+    res_prod = build_production_portfolio()
     analyze_portfolio(
-        res_p18["pf_combined"],
-        name="Combined v2 — Phase 18 (MR80 / TS3p10 / RSI10)",
+        res_prod["pf_combined"],
+        name="Combined Production Portfolio (MR 80% + TS3p 10% + RSI 10%)",
         output_dir=OUTPUT_DIR,
         show_charts=SHOW_CHARTS,
     )
 
-    # 2) BENCHMARK — full v1/v2 sweep across every published phase config
+    # 2) BENCHMARK — full baseline/variant sweep comparison
     if RUN_BENCHMARK:
-        _header("COMBINED PORTFOLIO v2  ·  BENCHMARK")
+        _header("COMBINED PORTFOLIO LEVERED  ·  BENCHMARK")
         run_v2_benchmark(output_dir=OUTPUT_DIR)
 
     print("\nAll modes done.")
