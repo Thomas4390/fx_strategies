@@ -346,7 +346,7 @@ def pipeline(
     # compute_composite_nb ( proxy_equity[i] = proxy_equity[i-1] * (1 + r) )
     # is numerically consistent. The ewma_vol kernel is scale-invariant so
     # this change is harmless for the vol_scale branch.
-    returns_daily = close_daily.pct_change().fillna(0.0)
+    returns_daily = close_daily.vbt.pct_change().fillna(0.0)
 
     (
         momentum,
@@ -379,12 +379,12 @@ def pipeline(
         n_sub,
     )
 
-    # Shift by 1 to avoid look-ahead and convert NaN -> 0
-    target_w_series = (
-        pd.Series(target_weights, index=close_daily.index, name="target_weight")
-        .shift(1)
-        .fillna(0.0)
-    )
+    # Shift by 1 to avoid look-ahead. target_weights is NaN-free
+    # (sub_portfolio_weights_nb fills warmup with 0.0, not NaN),
+    # so .vbt.fshift is strictly equivalent to .shift(1).fillna(0.0).
+    target_w_series = pd.Series(
+        target_weights, index=close_daily.index, name="target_weight"
+    ).vbt.fshift(1, fill_value=0.0)
 
     pf = vbt.Portfolio.from_orders(
         close=close_daily,

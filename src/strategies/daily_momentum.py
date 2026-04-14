@@ -28,6 +28,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 
+from framework.leverage import vol_target_leverage
 from framework.pipeline_utils import (
     SHARPE_RATIO,
     compute_metric_nb,
@@ -105,8 +106,8 @@ def backtest_xs_momentum(
     port_ret = (weights * daily_rets).sum(axis=1)
 
     vol_21 = port_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
-    lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1)
-    return port_ret * lev.fillna(1.0)
+    lev = vol_target_leverage(vol_21, target_vol, max_leverage=5.0)
+    return port_ret * lev
 
 
 def backtest_ts_momentum_rsi(
@@ -135,8 +136,8 @@ def backtest_ts_momentum_rsi(
 
     daily_ret = close_daily.vbt.pct_change()
     vol_21 = daily_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
-    lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1)
-    return (signal * daily_ret * lev.fillna(1.0)).dropna()
+    lev = vol_target_leverage(vol_21, target_vol, max_leverage=3.0)
+    return (signal * daily_ret * lev).dropna()
 
 
 def backtest_ts_momentum_portfolio(
@@ -215,9 +216,7 @@ def pipeline_xs(
     daily_rets = closes.vbt.pct_change().fillna(0)
     proxy_port_ret = (weights * daily_rets).sum(axis=1)
     vol_21 = proxy_port_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
-    lev_mult = (
-        (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1).fillna(1.0)
-    )
+    lev_mult = vol_target_leverage(vol_21, target_vol, max_leverage=5.0)
 
     scaled_weights = weights.mul(lev_mult, axis=0).fillna(0.0)
 
@@ -446,9 +445,7 @@ def pipeline_ts(
 
     daily_ret = close_daily.vbt.pct_change()
     vol_21 = daily_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
-    dyn_lev = (
-        (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1).fillna(1.0)
-    )
+    dyn_lev = vol_target_leverage(vol_21, target_vol, max_leverage=3.0)
     dyn_lev_arr = (dyn_lev * leverage).values
 
     pf = vbt.Portfolio.from_signals(

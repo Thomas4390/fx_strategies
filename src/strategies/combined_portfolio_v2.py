@@ -40,6 +40,7 @@ import numpy as np
 import pandas as pd
 import vectorbtpro as vbt
 
+from framework.leverage import vol_target_leverage
 from strategies.combined_core import (
     build_native_combined,
     combined_returns_from_pf,
@@ -384,13 +385,12 @@ def compute_global_leverage(
     vol_21 = port_rets_base.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
     vol_63 = port_rets_base.vbt.rolling_std(63, minp=30, ddof=1) * np.sqrt(252)
     realized_vol = pd.concat([vol_21, vol_63], axis=1).max(axis=1)
-    leverage = (
-        (target_vol / realized_vol.clip(lower=min_vol_floor))
-        .clip(upper=max_leverage)
-        .shift(1)
-        .fillna(1.0)
+    return vol_target_leverage(
+        realized_vol,
+        target_vol,
+        max_leverage=max_leverage,
+        vol_floor=min_vol_floor,
     )
-    return leverage
 
 
 # De-leveraging schedule: abs(DD) → leverage multiplier.
@@ -435,7 +435,9 @@ def compute_dd_cap_scale(
         )
     equity = (1.0 + port_rets_prelev.fillna(0.0)).cumprod()
     running_max = equity.expanding().max()
-    dd = (equity / running_max - 1.0).shift(1).fillna(0.0)
+    # equity is NaN-free (port_rets_prelev is filled first), so
+    # .vbt.fshift is strictly equivalent to .shift(1).fillna(0.0) here.
+    dd = (equity / running_max - 1.0).vbt.fshift(1, fill_value=0.0)
     dd_abs = (-dd).clip(lower=0.0)
     scale_values = np.interp(dd_abs.values, bps, scl)
     return pd.Series(scale_values, index=port_rets_prelev.index)
