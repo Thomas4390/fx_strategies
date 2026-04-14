@@ -99,6 +99,11 @@ class SweepConfig:
     dd_cap_enabled: bool
     custom_weights: dict[str, float] | None = None
     regime_weights: dict[tuple[str, str], dict[str, float]] | None = None
+    # Optional DD cap schedule overrides (Phase 20C). Both tuples must
+    # be the same length. When None the module defaults are used (the
+    # historical Phase 13 schedule).
+    dd_breakpoints: tuple[float, ...] | None = None
+    dd_scales: tuple[float, ...] | None = None
 
     def describe(self) -> str:
         tv = f"tv={self.target_vol:.2f}" if self.target_vol is not None else "tv=None"
@@ -305,9 +310,13 @@ def compute_final_allocations(
         )
     port_rets_prelev = port_rets_base * leverage_ts
 
-    # 4. Optional DD cap.
+    # 4. Optional DD cap — with optional per-config schedule override.
     if cfg.dd_cap_enabled:
-        dd_scale_ts = compute_dd_cap_scale(port_rets_prelev)
+        dd_scale_ts = compute_dd_cap_scale(
+            port_rets_prelev,
+            breakpoints=cfg.dd_breakpoints,
+            scales=cfg.dd_scales,
+        )
     else:
         dd_scale_ts = pd.Series(1.0, index=subset.index)
 

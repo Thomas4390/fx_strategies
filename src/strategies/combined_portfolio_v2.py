@@ -405,7 +405,11 @@ _DD_BREAKPOINTS = np.array([0.0, 0.10, 0.20, 0.30, 0.35])
 _DD_LEV_SCALES = np.array([1.0, 1.0, 0.6, 0.35, 0.15])
 
 
-def compute_dd_cap_scale(port_rets_prelev: pd.Series) -> pd.Series:
+def compute_dd_cap_scale(
+    port_rets_prelev: pd.Series,
+    breakpoints: np.ndarray | tuple[float, ...] | None = None,
+    scales: np.ndarray | tuple[float, ...] | None = None,
+) -> pd.Series:
     """Lagged drawdown-based leverage scaling.
 
     Computes running drawdown on the **pre-DD-cap** equity (i.e. the
@@ -414,12 +418,26 @@ def compute_dd_cap_scale(port_rets_prelev: pd.Series) -> pd.Series:
     bar ``t`` depends only on drawdown known strictly before ``t`` via
     ``.shift(1)``, which breaks the circular dependency between the
     DD cap and the equity it modifies.
+
+    Parameters
+    ----------
+    breakpoints, scales : array-like, optional
+        Override the default de-leveraging schedule. Both must be
+        monotonically ordered and the same length. When None (default)
+        the module-level ``_DD_BREAKPOINTS`` / ``_DD_LEV_SCALES``
+        schedule is used — the historical Phase 13 schedule.
     """
+    bps = np.asarray(breakpoints) if breakpoints is not None else _DD_BREAKPOINTS
+    scl = np.asarray(scales) if scales is not None else _DD_LEV_SCALES
+    if bps.shape != scl.shape:
+        raise ValueError(
+            f"DD schedule length mismatch: breakpoints={bps.shape}, scales={scl.shape}"
+        )
     equity = (1.0 + port_rets_prelev.fillna(0.0)).cumprod()
     running_max = equity.expanding().max()
     dd = (equity / running_max - 1.0).shift(1).fillna(0.0)
     dd_abs = (-dd).clip(lower=0.0)
-    scale_values = np.interp(dd_abs.values, _DD_BREAKPOINTS, _DD_LEV_SCALES)
+    scale_values = np.interp(dd_abs.values, bps, scl)
     return pd.Series(scale_values, index=port_rets_prelev.index)
 
 
