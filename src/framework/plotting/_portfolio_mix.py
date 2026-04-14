@@ -2,8 +2,8 @@
 
 These plots are dedicated to aggregator portfolios where multiple sub-strategies
 are combined via time-varying allocations — produced by
-``strategies.combined_portfolio.build_combined_portfolio`` and
-``strategies.combined_portfolio_v2.build_combined_portfolio_v2``.
+``strategies.combined_portfolio.build_combined_portfolio`` and its levered
+variant ``strategies.combined_portfolio_v2.build_combined_portfolio_v2``.
 
 Every function returns a ``plotly.graph_objects.Figure`` with the same layout
 conventions as the other ``framework.plotting`` modules (fullscreen-friendly,
@@ -288,7 +288,7 @@ def plot_rolling_correlation_pairs(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 4. LEVERAGE & VOL TARGETING (v2 specific)
+# 4. LEVERAGE & VOL TARGETING (levered builder only)
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -353,7 +353,7 @@ def plot_leverage_and_vol(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 5. DD CAP ACTIVITY (v2 specific)
+# 5. DD CAP ACTIVITY (levered builder only)
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -430,7 +430,7 @@ def plot_dd_cap_activity(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 6. REGIME OVERLAY (v2 specific)
+# 6. REGIME OVERLAY (levered builder only)
 # ═══════════════════════════════════════════════════════════════════════
 
 

@@ -1213,8 +1213,8 @@ def assert_pf_equivalent(
     """Assert two portfolios produce the same results to float tolerance.
 
     Compares ``total_return``, ``sharpe_ratio``, ``max_drawdown`` and the
-    per-bar ``returns`` array. Used by phase-equivalence tests during the
-    refactor.
+    per-bar ``returns`` array. Used by pipeline-equivalence tests to
+    ensure refactored modules return numerically identical portfolios.
     """
 
     def _scalar(x: Any) -> float:

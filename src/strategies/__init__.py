@@ -16,10 +16,10 @@ Note: daily_momentum is a standalone module (not StrategySpec-based).
 Use directly: from strategies.daily_momentum import backtest_xs_momentum, etc.
 """
 
-# All active strategies have been migrated to the ims_pipeline format
-# (Phases 1-6 of the refactor). None of them expose a StrategySpec anymore.
+# All active strategies expose the ims_pipeline triplet (``pipeline``,
+# ``pipeline_nb``, ``create_cv_pipeline``) directly, so none of them
+# register a StrategySpec anymore.
 #
-# Use ``from strategies.<name> import pipeline`` (or pipeline_xs /
-# pipeline_ts for daily_momentum) to run a strategy. See
-# plans/fluttering-imagining-umbrella.md for the full refactor notes.
+# Use ``from strategies.<name> import pipeline`` (or ``pipeline_xs`` /
+# ``pipeline_ts`` for daily_momentum) to run a strategy.
 REGISTRY: dict = {}
