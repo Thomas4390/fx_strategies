@@ -23,6 +23,8 @@ import pandas as pd
 import vectorbtpro as vbt
 
 from strategies.combined_core import (
+    DEFAULT_INIT_CASH,
+    SYNTHETIC_BASE_PRICE,
     build_native_combined,
     combined_returns_from_pf,
     sharpe_for_window,
@@ -36,18 +38,23 @@ from strategies.mr_macro import backtest_mr_macro
 from strategies.rsi_daily import pipeline as rsi_daily_pipeline
 from utils import apply_vbt_settings, load_fx_data
 
-_RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD")
+RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD")
+
+# Back-compat alias — strategies.combined_portfolio_v2 imports _INIT_CASH
+# directly. Left in place so that module keeps working until its import
+# migrates to ``DEFAULT_INIT_CASH`` (combined_core re-export below).
+_INIT_CASH = DEFAULT_INIT_CASH
 
 
 def backtest_rsi_daily_portfolio(
-    pairs: tuple[str, ...] = _RSI_DAILY_PAIRS,
+    pairs: tuple[str, ...] = RSI_DAILY_PAIRS,
     rsi_period: int = 14,
     oversold: float = 25.0,
     overbought: float = 75.0,
 ) -> pd.Series:
     """Equal-weight RSI Daily across ``pairs`` — daily returns Series.
 
-    Phase 18: RSI Daily multi-pair is the orthogonal 3rd-sleeve of the
+    RSI Daily multi-pair serves as the orthogonal third sleeve of the
     combined portfolio. Per-year standalone it's positive in the very
     years the other sleeves lose (2019 Sharpe +0.95, 2023 +0.92,
     2026 YTD +3.54) while the full-period Sharpe stays low because
@@ -166,14 +173,12 @@ def get_strategy_daily_returns(
     )
 
 
-_RISK_PARITY_WARMUP = 63  # ~3 months — warmup before expanding-window vol is trusted
-_INIT_CASH = 1_000_000
-_SYNTHETIC_BASE_PRICE = 1000.0  # kept for backwards-compat with returns_to_pf
+RISK_PARITY_WARMUP_DAYS = 63  # ~3 months — warmup before expanding-window vol is trusted
 
 
 def returns_to_pf(
     rets: pd.Series,
-    init_cash: float = _INIT_CASH,
+    init_cash: float = DEFAULT_INIT_CASH,
 ) -> vbt.Portfolio:
     """Wrap a daily returns Series in a single-column ``vbt.Portfolio``.
 
@@ -187,7 +192,7 @@ def returns_to_pf(
     check (bit-identical at 1e-14 on 5 test cases).
     """
     rets_clean = rets.fillna(0.0)
-    price = (1.0 + rets_clean).cumprod() * _SYNTHETIC_BASE_PRICE
+    price = (1.0 + rets_clean).cumprod() * SYNTHETIC_BASE_PRICE
     return vbt.Portfolio.from_holding(close=price, init_cash=init_cash, freq="1D")
 
 
@@ -201,13 +206,13 @@ def _compute_weights_ts(
     Static allocations broadcast a single Series; ``risk_parity`` uses an
     expanding-window inverse-vol estimate with ``.shift(1)`` so weights at
     time ``t`` depend only on returns strictly before ``t`` (no look-ahead).
-    Before ``_RISK_PARITY_WARMUP`` observations, equal weights are used.
+    Before ``RISK_PARITY_WARMUP_DAYS`` observations, equal weights are used.
     """
     n_cols = len(common.columns)
     eq_w = 1.0 / n_cols
 
     if allocation == "risk_parity":
-        vol = common.vbt.expanding_std(minp=_RISK_PARITY_WARMUP).shift(1)
+        vol = common.vbt.expanding_std(minp=RISK_PARITY_WARMUP_DAYS).shift(1)
         inv_vol = vol.where(vol > 0).rdiv(1.0)  # 1 / vol, NaN where vol is 0
         row_sum = inv_vol.sum(axis=1)
         weights_ts = inv_vol.div(row_sum.where(row_sum > 0), axis=0)
@@ -276,7 +281,7 @@ def build_combined_portfolio(
     pf_combined, _, _ = build_native_combined(
         common,
         weights_ts,
-        init_cash=_INIT_CASH,
+        init_cash=DEFAULT_INIT_CASH,
     )
     port_rets = combined_returns_from_pf(pf_combined)
 
