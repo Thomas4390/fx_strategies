@@ -24,9 +24,11 @@ from framework.pipeline_utils import (
     TAIL_RATIO,
     TOTAL_RETURN,
     VALUE_AT_RISK,
+    analyze_portfolio,
     assert_pf_equivalent,
     compute_metric_nb,
     resolve_ann_factor,
+    slugify_for_filename,
 )
 
 
@@ -191,3 +193,64 @@ class TestAssertPfEquivalent:
         pf_b = self._make_portfolio(seed=1)
         with pytest.raises(AssertionError):
             assert_pf_equivalent(pf_a, pf_b)
+
+
+class TestSlugifyForFilename:
+    def test_replaces_slashes_with_underscore(self):
+        assert slugify_for_filename("MR80 / TS10 / RSI10") == "MR80_TS10_RSI10"
+
+    def test_replaces_spaces(self):
+        assert slugify_for_filename("Combined Portfolio") == "Combined_Portfolio"
+
+    def test_collapses_runs_of_unsafe_chars(self):
+        assert slugify_for_filename("a  /  b") == "a_b"
+
+    def test_strips_leading_trailing_underscore(self):
+        assert slugify_for_filename("  leading and trailing  ") == "leading_and_trailing"
+
+    def test_preserves_unicode_dash_and_parentheses(self):
+        out = slugify_for_filename("Combined — (MR + TS)")
+        assert out == "Combined_—_(MR_+_TS)"
+
+    def test_replaces_all_windows_reserved(self):
+        # <>:"/\|?* are all forbidden on Windows, plus whitespace
+        out = slugify_for_filename('a<b>c:d"e/f\\g|h?i*j')
+        assert out == "a_b_c_d_e_f_g_h_i_j"
+
+
+class TestAnalyzePortfolioHandlesUnsafeNames:
+    def test_name_with_slashes_writes_into_output_dir(self, tmp_path):
+        """Regression: titles containing '/' previously caused FileNotFoundError
+        because ``name.replace(' ', '_')`` left the slashes intact and
+        ``pathlib.Path`` interpreted them as directory separators."""
+        rng = np.random.default_rng(seed=7)
+        n = 500
+        close = pd.Series(
+            100.0 + np.cumsum(rng.standard_normal(n) * 0.1),
+            index=pd.date_range("2024-01-01", periods=n, freq="1min"),
+            name="close",
+        )
+        entries = pd.Series(False, index=close.index)
+        entries.iloc[50] = True
+        exits = pd.Series(False, index=close.index)
+        exits.iloc[150] = True
+        pf = vbt.Portfolio.from_signals(close, entries=entries, exits=exits)
+
+        # Title includes slashes — must not crash, must not escape tmp_path.
+        analyze_portfolio(
+            pf,
+            name="Combined v2 — Phase 18 (MR80 / TS10 / RSI10)",
+            output_dir=str(tmp_path),
+            show_charts=False,
+            save_excel=False,
+        )
+
+        written = sorted(p.name for p in tmp_path.iterdir())
+        assert written, "analyze_portfolio wrote nothing into output_dir"
+        # Nothing escaped into a subdirectory named after a slashed token.
+        assert not any(p.is_dir() for p in tmp_path.iterdir())
+        # All outputs use a single safe stem with underscores instead of '/'.
+        stem = "Combined_v2_—_Phase_18_(MR80_TS10_RSI10)"
+        assert any(f.startswith(stem) for f in written), (
+            f"expected stem {stem!r} in {written}"
+        )

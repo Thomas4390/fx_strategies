@@ -20,6 +20,7 @@ are adapted for FX minute-frequency data (24h market, annualization via
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,20 @@ import pandas as pd
 import plotly.graph_objects as go
 import vectorbtpro as vbt
 from numba import njit
+
+_FILENAME_UNSAFE_RE = re.compile(r'[<>:"/\\|?*\s]+')
+
+
+def slugify_for_filename(name: str) -> str:
+    """Convert a human-readable name into a filesystem-safe stem.
+
+    Collapses any run of filesystem-reserved characters or whitespace
+    (``<>:"/\\|?*`` and Unicode spaces) into a single underscore and
+    strips leading/trailing underscores. Keeps unicode dashes and
+    parentheses intact so titles like ``"Combined — (A + B)"`` remain
+    readable in the resulting stem.
+    """
+    return _FILENAME_UNSAFE_RE.sub("_", name).strip("_")
 
 # ═══════════════════════════════════════════════════════════════════════
 # METRIC CONSTANTS (Numba-safe integer dispatch)
@@ -652,16 +667,17 @@ def analyze_portfolio(
     if output_dir is not None:
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
+        stem = slugify_for_filename(name)
         for fig_name, fig in figures.items():
-            fig_path = out / f"{name.replace(' ', '_')}_{fig_name}.html"
+            fig_path = out / f"{stem}_{fig_name}.html"
             fig.write_html(str(fig_path))
         try:
-            html_path = out / f"{name.replace(' ', '_')}_tearsheet.html"
+            html_path = out / f"{stem}_tearsheet.html"
             generate_html_tearsheet(pf, output_path=str(html_path), title=name)
         except Exception as e:
             print(f"  [analyze_portfolio] generate_html_tearsheet failed: {e}")
             html_path = None
-        report_path = out / f"{name.replace(' ', '_')}_stats.txt"
+        report_path = out / f"{stem}_stats.txt"
         report_path.write_text(report_text, encoding="utf-8")
 
     if show_charts:
@@ -673,7 +689,7 @@ def analyze_portfolio(
 
     if save_excel and output_dir is not None:
         try:
-            xlsx_path = Path(output_dir) / f"{name.replace(' ', '_')}_stats.xlsx"
+            xlsx_path = Path(output_dir) / f"{slugify_for_filename(name)}_stats.xlsx"
             with pd.ExcelWriter(str(xlsx_path)) as writer:
                 stats.to_frame("value").to_excel(writer, sheet_name="stats")
                 if hasattr(pf, "trades"):
