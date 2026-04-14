@@ -142,7 +142,7 @@ def tex_table_wrap(
 # ────────────────────────────────────────────────────────────────────────
 def main() -> None:
     print("═" * 70)
-    print("  Phase 18 LaTeX Assets Builder")
+    print("  Apogee Quantitative Report --- LaTeX Assets Builder")
     print("═" * 70)
 
     print("\n[1/5] Running build_production_portfolio() (this takes ~60s)...")
@@ -208,7 +208,7 @@ def build_figures(
     ax.plot(
         cum_combined.index,
         cum_combined.values,
-        label="Portefeuille Phase 18",
+        label="Portefeuille combiné Apogee",
         color=PALETTE["combined"],
         linewidth=2.4,
     )
@@ -458,7 +458,7 @@ def build_figures(
         edgecolor="white",
         linewidth=1.5,
         zorder=10,
-        label="Phase 18 IS",
+        label="Observé IS",
     )
     ax.scatter(
         [-6.27],
@@ -469,7 +469,7 @@ def build_figures(
         edgecolor="white",
         linewidth=1.5,
         zorder=10,
-        label="Phase 18 OOS",
+        label="Observé OOS",
     )
     ax.axhline(10, color="#707070", linewidth=0.8, linestyle="--")
     ax.axhline(15, color="#707070", linewidth=0.8, linestyle="--")
@@ -603,7 +603,7 @@ def build_metric_tables(
     content = tex_table_wrap(
         header=r"Métrique & In-sample & Out-of-sample & Bootstrap moyenne & Bootstrap P5 / P95 \\",
         rows=rows,
-        caption=r"Métriques clés du portefeuille Phase 18 sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.",
+        caption=r"Métriques clés du portefeuille Apogee sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.",
         label="tab:metrics_summary",
         col_spec="lrrrr",
     )
