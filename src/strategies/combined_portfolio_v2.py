@@ -568,10 +568,10 @@ def _format_pct(x: float) -> str:
     return f"{x * 100:>7.2f}%"
 
 
-def _collect_v1_baselines(
+def _collect_baseline_results(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
-    """Run the three v1 allocations as reference baselines."""
+    """Run the three unlevered v1 allocations as reference baselines."""
     from strategies.combined_portfolio import build_combined_portfolio
 
     out: dict[str, dict[str, Any]] = {}
@@ -580,7 +580,7 @@ def _collect_v1_baselines(
     return out
 
 
-def _collect_v2_no_leverage(
+def _collect_unlevered_results(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
     """Run v2 with leverage disabled — two variants for the equivalence check."""
@@ -602,7 +602,7 @@ def _collect_v2_no_leverage(
     }
 
 
-def _collect_v2_regime_sweep(
+def _collect_regime_adaptive_sweep(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
     """Conservative regime-adaptive configs with DD cap ON (max_leverage=3)."""
@@ -620,36 +620,36 @@ def _collect_v2_regime_sweep(
 
 
 # Aggressive configs rely on DD cap OFF because on this combined the
-# soft-cap actually hurts the Sharpe (Phase 14 finding) — it de-leverages
-# drawdowns that would have recovered. DO NOT run these in production
-# without a broker-level margin check: 12-15x notional on a daily-rebalanced
+# soft-cap actually hurts the Sharpe — it de-leverages drawdowns that
+# would have recovered. DO NOT run these in production without a
+# broker-level margin check: 12-15x notional on a daily-rebalanced
 # combined requires ~7-10% margin available at all times.
-_MR_HEAVY_WEIGHTS: dict[str, float] = {
+_MR_HEAVY_3SLEEVE_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "XS_Momentum": 0.10,
     "TS_Momentum_RSI": 0.10,
 }
-_MR_TS_WEIGHTS: dict[str, float] = {  # Phase 16
+_MR_TS_RSI_DUO_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.90,
     "TS_Momentum_RSI": 0.10,
 }
-_MR_TS3P_WEIGHTS: dict[str, float] = {  # Phase 17
+_MR_TS_3PAIR_DUO_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.90,
     "TS_Momentum_3p": 0.10,
 }
 
 
-def _collect_v2_mr_heavy_sweep(
+def _collect_mr_heavy_3sleeve_sweep(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
-    """Aggressive MR80/XS10/TS10 configs — Phase 14 aggressive target."""
+    """Aggressive MR80/XS10/TS10 three-sleeve configs over a vol-target sweep."""
     out: dict[str, dict[str, Any]] = {}
     for target_vol in (0.20, 0.22, 0.25, 0.28):
         key = f"v2_MR80/tv={target_vol:.2f}_ml=10_DDcap=OFF"
         out[key] = build_combined_portfolio_v2(
             strat_rets,
             allocation="custom",
-            custom_weights=_MR_HEAVY_WEIGHTS,
+            custom_weights=_MR_HEAVY_3SLEEVE_WEIGHTS,
             target_vol=target_vol,
             max_leverage=10.0,
             dd_cap_enabled=False,
@@ -657,10 +657,10 @@ def _collect_v2_mr_heavy_sweep(
     return out
 
 
-def _collect_v2_phase16_sweep(
+def _collect_mr_ts_rsi_duo_sweep(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
-    """Phase 16 — drop XS Momentum, keep MR Macro + TS Momentum RSI."""
+    """Two-sleeve MR Macro 90% + TS Momentum RSI 10% (XS Momentum dropped)."""
     filtered = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_RSI")}
     out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
@@ -668,7 +668,7 @@ def _collect_v2_phase16_sweep(
         out[key] = build_combined_portfolio_v2(
             filtered,
             allocation="custom",
-            custom_weights=_MR_TS_WEIGHTS,
+            custom_weights=_MR_TS_RSI_DUO_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
@@ -676,10 +676,11 @@ def _collect_v2_phase16_sweep(
     return out
 
 
-def _collect_v2_phase17_sweep(
+def _collect_mr_ts_3pair_duo_sweep(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
-    """Phase 17 — drop USD-CAD from TS Momentum (worst pair 2019/2022/2023)."""
+    """Two-sleeve MR Macro 90% + TS Momentum 3-pair 10% (USD-CAD dropped
+    as the worst TS pair across 2019/2022/2023)."""
     filtered = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p")}
     out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
@@ -687,7 +688,7 @@ def _collect_v2_phase17_sweep(
         out[key] = build_combined_portfolio_v2(
             filtered,
             allocation="custom",
-            custom_weights=_MR_TS3P_WEIGHTS,
+            custom_weights=_MR_TS_3PAIR_DUO_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
@@ -695,10 +696,11 @@ def _collect_v2_phase17_sweep(
     return out
 
 
-def _collect_v2_phase18_sweep(
+def _collect_production_trio_sweep(
     strat_rets: dict[str, pd.Series],
 ) -> dict[str, dict[str, Any]]:
-    """Phase 18 — add RSI Daily 4-pair as third orthogonal sleeve."""
+    """Production trio MR Macro 80% + TS Momentum 3-pair 10% + RSI Daily 4-pair 10%
+    with the RSI sleeve added as third orthogonal diversifier."""
     filtered = {
         k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
     }
@@ -708,7 +710,7 @@ def _collect_v2_phase18_sweep(
         out[key] = build_combined_portfolio_v2(
             filtered,
             allocation="custom",
-            custom_weights=PHASE18_WEIGHTS,
+            custom_weights=PRODUCTION_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
@@ -746,21 +748,20 @@ def _print_summary_table(results: dict[str, dict[str, Any]]) -> None:
 
 
 def _print_recommended_notes() -> None:
-    """Static notes about the Phase 18 recommended configuration."""
+    """Static notes about the recommended production configuration."""
     print("\nTarget: CAGR ∈ [10%, 15%] AND Max DD < 35% (rows marked with ★)")
     print(
-        "Recommended (Phase 18 — add RSI Daily 4-pair as third sleeve): "
-        "MR80/TS3p10/RSI10 tv=0.28 ml=12 DDcap=OFF"
+        "Recommended (production trio — MR Macro + TS Momentum 3-pair + "
+        "RSI Daily 4-pair): MR80/TS3p10/RSI10 tv=0.28 ml=12 DDcap=OFF"
     )
     print("  → IS CAGR 13.33%, MaxDD -17.93%, Sharpe 0.94, 6/7 WF positive")
     print(
         "  → OOS 2025-04+ CAGR 11.52%, MaxDD -6.27%, Sharpe 1.44 "
-        "(vs Phase 17 OOS Sharpe 1.24 — +16% out-of-sample lift)"
+        "(vs MR+TS-only OOS Sharpe 1.24 — +16% out-of-sample lift)"
     )
     print(
-        "  → Bootstrap tail risk: P5 MaxDD = -30.68% (vs -33.98% P17, "
-        "-47.46% P15), P5 CAGR 5.54%, positive fraction 99.8%, "
-        "target hit 39.0% (vs 33.4% P17)."
+        "  → Bootstrap tail risk: P5 MaxDD = -30.68%, P5 CAGR 5.54%, "
+        "positive fraction 99.8%, target hit 39.0%."
     )
     print(
         "  → RSI Daily is near-zero correlated with MR Macro (+0.056) "
@@ -769,34 +770,41 @@ def _print_recommended_notes() -> None:
     )
 
 
-def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
-    """Run v1 and v2 back-to-back and print a comparison table.
+def run_full_benchmark_suite(
+    output_dir: str = "results/combined_v2",
+) -> dict[str, Any]:
+    """Run baselines and levered variants back-to-back, then print a
+    comparison table and the recommended-config notes.
 
-    Thin orchestrator that composes the per-phase sweep helpers and
-    prints the summary. See :func:`_collect_v2_phase18_sweep` for the
-    currently recommended production config.
+    Thin orchestrator that composes the per-sweep collection helpers.
+    See :func:`_collect_production_trio_sweep` for the currently
+    recommended production config.
     """
     import os
 
     os.makedirs(output_dir, exist_ok=True)
     print("=" * 72)
-    print("  Combined Portfolio v2 — Benchmark vs v1")
+    print("  Combined Portfolio Levered — Benchmark vs Baselines")
     print("=" * 72)
 
     strat_rets = get_strategy_daily_returns()
 
     results: dict[str, Any] = {}
-    results.update(_collect_v1_baselines(strat_rets))
-    results.update(_collect_v2_no_leverage(strat_rets))
-    results.update(_collect_v2_regime_sweep(strat_rets))
-    results.update(_collect_v2_mr_heavy_sweep(strat_rets))
-    results.update(_collect_v2_phase16_sweep(strat_rets))
-    results.update(_collect_v2_phase17_sweep(strat_rets))
-    results.update(_collect_v2_phase18_sweep(strat_rets))
+    results.update(_collect_baseline_results(strat_rets))
+    results.update(_collect_unlevered_results(strat_rets))
+    results.update(_collect_regime_adaptive_sweep(strat_rets))
+    results.update(_collect_mr_heavy_3sleeve_sweep(strat_rets))
+    results.update(_collect_mr_ts_rsi_duo_sweep(strat_rets))
+    results.update(_collect_mr_ts_3pair_duo_sweep(strat_rets))
+    results.update(_collect_production_trio_sweep(strat_rets))
 
     _print_summary_table(results)
     _print_recommended_notes()
     return results
+
+
+# Back-compat alias for the historic public benchmark entry point.
+run_v2_benchmark = run_full_benchmark_suite
 
 
 # ═══════════════════════════════════════════════════════════════════════
