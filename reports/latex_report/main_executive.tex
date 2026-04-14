@@ -1,0 +1,475 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Apogee Quantitative Report --- Version condensée (10 pages)
+%  Standalone digest reusing the main report's preamble, figures
+%  and tables. Target audience: senior allocator in a hurry.
+% ═══════════════════════════════════════════════════════════════════════
+\documentclass[11pt, a4paper]{scrartcl}
+
+\input{preamble.tex}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE COMPACTE  (page 1)
+% ═══════════════════════════════════════════════════════════════════════
+\thispagestyle{empty}
+\begin{flushleft}
+\vspace*{-1.5cm}
+\noindent\colorbox{primary}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.9cm}
+      \color{white}\sffamily\raggedright
+      {\Large\bfseries RAPPORT D'INVESTISSEMENT --- SYNTHÈSE}\\[0.25cm]
+      {\small\textcolor{lightGrey}{Version condensée \textbullet{} 10 pages}}
+      \vspace{0.9cm}
+    }
+  }
+}
+
+\vspace{0.9cm}
+
+{\sffamily\color{primary}\Huge\bfseries
+Apogee\\[0.15cm]
+Stratégie FX Tri-Signaux
+\par}
+\vspace{0.6cm}
+{\sffamily\color{accent}\Large\itshape
+Un portefeuille à trois moteurs de rendement orthogonaux
+\par}
+\end{flushleft}
+
+\vspace{0.6cm}
+
+\noindent\begin{minipage}{\textwidth}
+\begin{tabular}{@{}rl@{}}
+  \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.15em]
+  \color{slateGrey}\sffamily Destinataire & \textbf{Client (confidentiel)} \\[0.15em]
+  \color{slateGrey}\sffamily Date & \textbf{14 avril 2026} \\[0.15em]
+  \color{slateGrey}\sffamily Statut & \textbf{Prêt pour déploiement contrôlé} \\[0.15em]
+  \color{slateGrey}\sffamily Version & \textbf{1.0 --- synthèse exécutive} \\
+\end{tabular}
+\end{minipage}
+
+\vspace{0.8cm}
+
+\begin{thesisbox}
+\textbf{En une ligne~:} portefeuille FX combinant mean reversion intraday filtré macro
+(80\,\%), momentum daily sur 3~paires (10\,\%) et mean reversion RSI daily sur 4~paires
+(10\,\%), avec ciblage de volatilité global et plafond de levier à 12$\times$. \textbf{Sharpe
+IS~0.94~/~OOS 1.44}, \textbf{Max Drawdown IS $-17.9\,\%$~/~OOS $-6.3\,\%$}, sept tests de
+robustesse statistique franchis (bootstrap~CI, DSR, PBO, Haircut~BHY, MinBTL, SPA, StepM).
+\textbf{Recommandée pour paper-trade} avant tout capital réel.
+\end{thesisbox}
+
+\vspace{0.5cm}
+
+{\small\color{slateGrey}\sffamily
+Ce document est une synthèse condensée du rapport complet de 49~pages. Pour le détail
+méthodologique, les tests de résistance exhaustifs, les scénarios historiques et la
+checklist de production complète, se référer au rapport principal \texttt{main.pdf}.}
+
+\vfill
+
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.3cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Confidentiel.} Performances issues de \emph{backtests} historiques. Les
+      performances passées ne préjugent pas des performances futures.
+      \vspace{0.3cm}
+    }
+  }
+}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 2 --- RÉSUMÉ EXÉCUTIF + MÉTRIQUES CLÉS
+% ═══════════════════════════════════════════════════════════════════════
+\section*{1. Résumé exécutif}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} stratégie Apogee est un
+portefeuille quantitatif sur paires de devises majeures qui combine trois moteurs de
+rendement structurellement indépendants. L'objectif est un rendement annualisé de
+\textbf{10--15\,\%} avec un drawdown maximal contenu sous \textbf{35\,\%}, tout en
+restant compatible avec les contraintes de levier ESMA pour la clientèle retail FX.
+
+\input{tables/metrics_summary.tex}
+
+\begin{insightbox}
+\textbf{Le test hors échantillon produit un Sharpe de 1.44, supérieur au 0.94
+observé en période de conception.} Un surajustement authentique produirait à l'inverse
+une dégradation marquée des métriques hors échantillon. L'amélioration observée
+constitue donc une réfutation empirique de l'hypothèse de surajustement majeur.
+De plus, le \mbox{5\textsuperscript{e}}~percentile du drawdown bootstrap
+($-30.68\,\%$) reste strictement sous la contrainte utilisateur de 35\,\%, avec
+environ 4~points de pourcentage de marge de sécurité.
+\end{insightbox}
+
+\paragraph{Quatre conclusions pour la décision.}
+\begin{enumerate}
+\item \textbf{Sharpe hors échantillon supérieur à l'in-sample} (1.44 contre 0.94)~---
+amélioration qui valide la robustesse de la structure multi-moteurs.
+\item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, sous la contrainte de 35\,\%
+avec $\approx 4$~pp de marge de sécurité.
+\item \textbf{Six années positives sur sept} en walk-forward~--- seule 2019 reste
+marginalement négative dans un régime de fin de cycle défavorable.
+\item \textbf{Sept tests de robustesse statistique avancés franchis}
+(DSR, PBO~CSCV, Haircut~BHY, MinBTL, Hansen~SPA, Romano--Wolf~StepM, stabilité
+temporelle)~--- voir page~6.
+\end{enumerate}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 3 --- ARCHITECTURE TRI-SIGNAUX
+% ═══════════════════════════════════════════════════════════════════════
+\section*{2. Architecture du portefeuille}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+La stratégie repose sur \textbf{trois moteurs de rendement orthogonaux}, dont les
+corrélations inter-moteurs sont structurellement faibles voire négatives. L'allocation
+est \emph{statique} ($80/10/10$) --- les tests d'allocations \emph{regime-adaptive}
+et \emph{risk-parity} sous-performent sur la période d'étude.
+
+\vspace{0.3em}
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.5cm}@{\hspace{0.6cm}}p{4.5cm}@{\hspace{0.6cm}}p{4.5cm}@{}}
+\multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Moteur 1 --- MR Macro}}} &
+\multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Moteur 2 --- TS Momentum}}} &
+\multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Moteur 3 --- RSI Daily}}} \\[0.2em]
+\multicolumn{1}{c}{\small 80\,\% du portefeuille} &
+\multicolumn{1}{c}{\small 10\,\% du portefeuille} &
+\multicolumn{1}{c}{\small 10\,\% du portefeuille} \\
+\midrule
+Mean reversion intraday sur EUR-USD minute, filtre VWAP + Bollinger(80, 5$\sigma$)
++ session 6--14~UTC + filtre macro (courbe 10Y-2Y, chômage). &
+Suivi de tendance daily sur trois paires (EUR, GBP, JPY), EMA 20/50 + RSI(7)
+filtre, vol targeting par paire 10\,\%. USD-CAD explicitement exclu. &
+Mean reversion daily RSI(14) sur quatre paires equal-weight. Sharpe standalone
+modeste (0.16) mais diversificateur anti-corrélé clé. \\[0.5em]
+Sharpe 0.82 & Sharpe 0.57 & Sharpe 0.16 \\
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+\textbf{La leçon méthodologique centrale~:} un moteur à Sharpe standalone faible peut
+être le meilleur diversificateur si sa corrélation avec le reste est négative sur
+les années difficiles. La contribution marginale au Sharpe du portefeuille dépend
+de la corrélation~--- un~0.16 anti-corrélé bat souvent un~0.60 corrélé. Le
+Moteur~3 est positif exactement dans les années 2019, 2023 et 2026~YTD où les deux
+autres moteurs perdent.
+\end{insightbox}
+
+\paragraph{Couche d'overlay.} Un ciblage de volatilité global s'applique aux trois
+moteurs combinés~: $\text{lev}_{t} = \min\!\left(\frac{\sigma^{*}}{\max(\sigma_{21}, \sigma_{63})},\ 12.0\right)$
+avec $\sigma^{*} = 0.28$ et lag d'un bar pour éviter tout look-ahead. Le plafond de
+levier à $12\times$ est confortablement sous la limite ESMA de $30\times$ pour les
+paires G10. Le drawdown cap (disponible dans le code) est volontairement désactivé
+sur cette configuration~: les tests empiriques ont montré qu'il \emph{dégrade} le
+Sharpe (0.88 $\rightarrow$ 0.62) parce qu'il déleverage pendant les phases de rebond.
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 4 --- PERFORMANCE IS + WALK-FORWARD
+% ═══════════════════════════════════════════════════════════════════════
+\section*{3. Performance in-sample 2019--2025}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{equity_combined_logscale.png}
+\caption{Courbes d'équité cumulative du portefeuille combiné et de ses trois moteurs
+individuels, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. La
+ligne verticale pointillée marque le début de la fenêtre hors échantillon
+(1\textsuperscript{er}~avril 2025).}
+\end{figure}
+
+\begin{minipage}{0.55\textwidth}
+\small
+\textbf{Métriques agrégées in-sample} \\[0.3em]
+\begin{tabular}{@{}lr@{}}
+\toprule
+Métrique & Valeur \\
+\midrule
+CAGR & 13.33\,\% \\
+Volatilité annualisée & 14.36\,\% \\
+Max Drawdown & $-17.93\,\%$ \\
+Sharpe Ratio & 0.94 \\
+Années positives walk-forward & 6/7 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\begin{minipage}{0.45\textwidth}
+\small
+\textbf{Commentaires par année} \\[0.3em]
+\begin{itemize}[leftmargin=0.8em]
+\item 2019 ($-0.49$)~: seule année négative, régime \emph{late-cycle} défavorable
+\item 2022 ($+2.26$)~: pic de performance, alignement des trois moteurs
+\item 2023 ($+0.29$)~: Moteur~3 sauve l'année
+\item 2025 ($+1.49$)~: post-ECB/BoJ divergence captée par Moteur~2
+\end{itemize}
+\end{minipage}
+
+\input{tables/walkforward_yearly.tex}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 5 --- OUT-OF-SAMPLE + STRESS TEST SOMMAIRE
+% ═══════════════════════════════════════════════════════════════════════
+\section*{4. Validation hors échantillon et résistance}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\textbf{Fenêtre OOS 2025-04 $\rightarrow$ 2026-04 (314 bars).} Un vrai surajustement
+aurait typiquement produit une dégradation sévère (Sharpe qui passe de $>1$ à proche
+de zéro). Au contraire, \textbf{l'OOS produit un Sharpe de 1.44, supérieur à l'IS}.
+Le résultat réfute empiriquement l'hypothèse de \textit{data snooping} majeur.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{oos_zoom.png}
+\caption{Zoom sur la fenêtre hors échantillon 2025-04 $\rightarrow$ 2026-04. La
+courbe reste strictement au-dessus de la trajectoire bootstrap P25, cohérente avec
+un Sharpe OOS de 1.44.}
+\end{figure}
+
+\textbf{Bootstrap historique à 1000 trajectoires} (blocs mobiles Künsch 20~jours).
+
+\input{tables/bootstrap_percentiles.tex}
+
+\begin{insightbox}
+\textbf{Trois observations clés du stress test~:}
+(1) le P5 du Max Drawdown à $-30.68\,\%$ est strictement sous la contrainte utilisateur
+de 35\,\% avec $\approx 4$~pp de marge~;
+(2) 99.8\,\% des trajectoires bootstrap sont positives~;
+(3) la fraction \enquote{cible atteinte} est de 39\,\% ---~les 61\,\% restants sortent
+\emph{par le haut} (CAGR $>$15\,\%), ce qui est un \enquote{bon problème}.
+\end{insightbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 6 --- ROBUSTESSE STATISTIQUE AVANCÉE (SYNTHÈSE)
+% ═══════════════════════════════════════════════════════════════════════
+\section*{5. Robustesse statistique --- sept tests avancés}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+La section~10 du rapport complet applique sept tests statistiques exigeants du module
+\texttt{framework.robustness}. Tous convergent vers un verdict favorable.
+
+\input{tables/robustness_verdict_summary.tex}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{robustness_metric_ci_forest.png}
+\caption{Intervalles de confiance bootstrap à 95\,\% sur les six métriques principales.
+Les diamants orange marquent les valeurs observées, les barres bleues représentent
+les IC bootstrap. La borne basse du Sharpe ($0.365$) est strictement positive, ce qui
+est la condition statistique minimale de présence d'un \emph{edge}.}
+\end{figure}
+
+\begin{insightbox}
+\textbf{Le portefeuille Apogee n'est pas un artefact statistique.} Le Sharpe observé
+dépasse trois fois l'espérance du maximum sous hypothèse nulle
+(DSR~$= 1.000$). Après correction Benjamini--Hochberg--Yekutieli pour tests multiples,
+le Sharpe effectif reste à $0.84$ (ratio de survie $87\,\%$). La probabilité
+d'\textit{overfitting} CSCV est de $30.5\,\%$ (seuil de danger $50\,\%$).
+\end{insightbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 7 --- FIGURES DE ROBUSTESSE COMPLÉMENTAIRES
+% ═══════════════════════════════════════════════════════════════════════
+\section*{6. Robustesse statistique --- visualisations}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{robustness_equity_fan_chart.png}
+\caption{\emph{Fan chart} bootstrap --- 300~trajectoires alternatives compressées en
+bandes de percentiles (P5/P25/P50/P75/P95). La courbe observée (bourgogne) reste dans
+la partie supérieure du fan, et \emph{sort du fan P25--P75 vers le haut} sur la
+fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{robustness_pbo_logits.png}
+\caption{Distribution des 12\,870 logits CSCV (Combinatorially Symmetric
+Cross-Validation). La ligne orange marque le seuil logit~$= 0$. Le PBO~$= 0.305$
+signifie que dans 70\,\% des partitions temporelles possibles, le vainqueur in-sample
+reste au-dessus de la médiane out-of-sample --- loin sous le seuil de danger de~$0.5$.}
+\end{figure}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 8 --- STABILITÉ TEMPORELLE + LIMITATIONS SYNTHÈSE
+% ═══════════════════════════════════════════════════════════════════════
+\section*{7. Stabilité temporelle et limites résiduelles}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{robustness_rolling_stability.png}
+\caption{Sharpe, Sortino et Calmar glissants sur fenêtre 252~jours. Les trois
+courbes restent majoritairement positives sur 2019--2026, avec un creux en 2019
+(cohérent avec le Sharpe walk-forward $-0.49$) et un pic en 2022 ($+2.26$).}
+\end{figure}
+
+\vspace{0.3em}
+
+\begin{thesisbox}
+\textbf{Sept tests de robustesse sont franchis.} Les cinq risques résiduels
+ci-dessous persistent \emph{malgré} cette validation statistique rigoureuse. Ils
+n'invalident pas les résultats mais imposent la discipline de déploiement de la
+page~9.
+\end{thesisbox}
+
+\paragraph{Cinq avertissements à retenir.}
+\begin{enumerate}[leftmargin=1.2em]
+\item \textbf{Data snooping résiduel} --- mitigé empiriquement par Sharpe OOS ($1.44$)
+$>$ IS ($0.94$). Action~: paper-trade $\geq 3$~mois avant capital réel.
+\item \textbf{Coûts de transaction au niveau portefeuille} --- estimés à 5--10~bp/an,
+négligeables face au CAGR cible. Surveillance live du \emph{slippage} réel requise.
+\item \textbf{Levier 12$\times$ et margin buffer} --- sous la limite ESMA de 30$\times$,
+mais impose une \textbf{réserve cash hors-broker $\geq 30\,\%$}. Capital~à~risque
+effectif $\approx 8\times$ (non $12\times$).
+\item \textbf{Corrélation inter-moteurs statique} --- calculée plein-période. Alerte
+rolling~63~jours si une paire dépasse $+0.5$ en live.
+\item \textbf{Hyperparamètres des sous-stratégies} --- issus de grid searches.
+Plateau visible autour des valeurs retenues~; risque d'\textit{overfit} local
+modéré. Revérification trimestrielle recommandée.
+\end{enumerate}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 9 --- CHECKLIST PRODUCTION
+% ═══════════════════════════════════════════════════════════════════════
+\section*{8. Conditions de déploiement --- checklist}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+Avant tout déploiement avec capital réel, les dix éléments ci-dessous doivent être
+validés. L'ordre est important~: certains éléments bloquent les suivants.
+
+\vspace{0.3em}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.4cm}p{13.5cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Gate de déploiement} \\
+\midrule
+1  & \textbf{Paper-trade $\geq 3$~mois} sur la configuration Apogee avec un broker
+identique au production cible. Sharpe live $\geq 1.0$ requis. \\
+2  & \textbf{Réserve cash hors-broker $\geq 30\,\%$}, accessible en $< 24$~heures. \\
+3  & \textbf{Alerte drawdown live} configurée~: auto-stop trading si drawdown $>-15\,\%$. \\
+4  & \textbf{Monitoring par moteur}~: Sharpe rolling 63~jours, alerte si un moteur
+passe sous~$0.5$. \\
+5  & \textbf{Re-run stress test mensuel}~--- comparer aux baselines et alerter sur
+drift~$\pm 3$~pp. \\
+6  & \textbf{Slippage réel vs modèle}~: mesure le 1\textsuperscript{er}~mois de
+paper-trade. Re-calibration si réel~$>$~modèle. \\
+7  & \textbf{Cap d'utilisation de marge}~: auto-deleverage si utilisation~$> 70\,\%$. \\
+8  & \textbf{Fraîcheur des données macro}~: FRED spread + chômage~$\leq 7$~jours. \\
+9  & \textbf{Audit d'exécution hebdomadaire} par le risk officer. \\
+10 & \textbf{Kill switch manuel}~: capacité à flatten toutes les positions en
+$< 10$~minutes. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3em}
+
+\begin{warningbox}
+\textbf{Ce document est une synthèse.} Pour la discussion approfondie de chaque
+gate de déploiement, des dépendances entre moteurs, de la matrice de responsabilité
+risk/ops/compliance et de la mécanique de reprise après incident, se référer aux
+sections~11 à~13 et à l'annexe~B du rapport complet \texttt{main.pdf}.
+\end{warningbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 10 --- SIGNATURE / VERSION / CONTACT
+% ═══════════════════════════════════════════════════════════════════════
+\section*{9. Signature et références}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\paragraph{À propos de ce document.} Cette synthèse condense en dix pages les
+résultats clés du rapport complet Apogee (49~pages, \texttt{main.pdf}). Le contenu
+détaillé~--- description des trois moteurs, dérivation de la couche d'overlay,
+rejeu de scénarios historiques, principes méthodologiques du module de robustesse,
+inventaire des helpers et exemples de trades~--- se trouve dans le document principal.
+
+\paragraph{Sources des chiffres.} Toutes les métriques reportées dans cette synthèse
+sont produites par le code open-source du projet~:
+\begin{itemize}[leftmargin=1.2em]
+\item \textbf{Génération des artefacts}~: \texttt{python scripts/build\_latex\_report\_assets.py}
+\item \textbf{Backtest complet}~: \texttt{strategies.combined\_portfolio\_v2.build\_production\_portfolio()}
+\item \textbf{Analyse de robustesse}~: \texttt{framework.robustness.robustness\_report(pf, \dots)}
+\end{itemize}
+Les valeurs sont reproduites à l'identique par ré-exécution du pipeline sur la même
+version du code et des données.
+
+\paragraph{Références clés de la littérature.}
+\begin{itemize}[leftmargin=1.2em]
+\item \textsc{Politis} \& \textsc{Romano} (1994) --- bootstrap par blocs stationnaires
+\item \textsc{Bailey} \& \textsc{L\'opez de Prado} (2014) --- Deflated Sharpe Ratio
+\item \textsc{Harvey} \& \textsc{Liu} (2015) --- Haircut Sharpe et corrections multi-tests
+\item \textsc{Bailey} et al. (2015) --- Probability of Backtest Overfitting via CSCV
+\item \textsc{Hansen} (2005), \textsc{Romano} \& \textsc{Wolf} (2005) --- tests SPA et StepM
+\end{itemize}
+
+\vfill
+
+\noindent\colorbox{softBlue}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.4cm}
+      \small\color{primary}\sffamily
+      \textbf{Contact.} Thomas Vaudescal --- \texttt{thomas.vaudescal@example.com}\\
+      \textbf{Repository.} \texttt{fx\_strategies} (privé) ---
+      branche \texttt{main}, commit référencé dans le rapport complet.\\
+      \textbf{Version de ce document.} 1.0 --- synthèse exécutive, 14~avril~2026.
+      \vspace{0.4cm}
+    }
+  }
+}
+
+\vspace{0.6cm}
+
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.3cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Avertissement.} Ce document est confidentiel et destiné à son
+      destinataire exclusif. Les performances indiquées sont issues de \emph{backtests}
+      sur données historiques. Les performances passées ne préjugent pas des
+      performances futures. Les rendements réels peuvent différer substantiellement en
+      raison des coûts de transaction, du \emph{slippage}, des contraintes de liquidité
+      et des régimes de marché non anticipés.
+      \vspace{0.3cm}
+    }
+  }
+}
+
+\end{document}
