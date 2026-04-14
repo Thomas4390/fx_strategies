@@ -34,13 +34,15 @@ _SRC = _PROJECT_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-OUTPUT_ROOT = _PROJECT_ROOT / "reports" / "phase18_latex"
+OUTPUT_ROOT = _PROJECT_ROOT / "reports" / "latex_report"
 FIG_DIR = OUTPUT_ROOT / "figures"
 TBL_DIR = OUTPUT_ROOT / "tables"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 TBL_DIR.mkdir(parents=True, exist_ok=True)
 
-STRESS_JSON = _PROJECT_ROOT / "results" / "phase18" / "stress_test_report.json"
+STRESS_JSON = (
+    _PROJECT_ROOT / "results" / "production_report" / "stress_test_report.json"
+)
 OOS_SPLIT = pd.Timestamp("2025-04-01")
 
 # ────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,56 @@
+\section{Cadre méthodologique}
+\label{sec:methodology}
+
+\subsection{Moteur de backtest}
+
+L'ensemble des calculs repose sur un moteur de backtest vectorisé de qualité institutionnelle, écrit en Python et compilé à l'exécution par Numba pour garantir une vitesse compatible avec les \emph{grid searches} à l'échelle de la minute (environ trois millions de barres par paire). Trois caractéristiques techniques sont importantes à souligner~:
+\begin{itemize}
+\item \textbf{Portefeuilles natifs multi-symboles} avec partage de cash et groupement. Plusieurs paires peuvent partager un même pool de trésorerie, de sorte que le levier calculé reflète l'exposition agrégée du portefeuille et non la somme naïve des positions individuelles.
+\item \textbf{Gestion mémoire par chunks} avec \emph{flush} explicite entre les blocs de simulation. Ce point, critique sur les grilles à plusieurs dizaines de milliers de combinaisons, permet d'éviter les saturations RAM et garantit que les résultats ne dépendent pas de l'ordre d'exécution.
+\item \textbf{Exécution simulée réaliste}~: slippage chargé à 15~points de base sur les stratégies intraday et 10~points de base sur les stratégies journalières, fees de 5~points de base par trade. Ces hypothèses sont conservatrices pour un broker retail moderne.
+\end{itemize}
+
+\subsection{Sources de données}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lll}
+\toprule
+\textbf{Source} & \textbf{Fréquence} & \textbf{Usage} \\
+\midrule
+EUR-USD, GBP-USD, USD-JPY, USD-CAD & minute & Moteur~1 (close et VWAP intraday) \\
+Idem, resamplées & journalière & Moteurs~2 et~3 (signaux EMA et RSI) \\
+Spread 10Y--2Y des bons du Trésor US & journalière & Filtre macro du Moteur~1 \\
+Taux de chômage US & mensuelle & Filtre macro du Moteur~1 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Les séries FX minute sont strictement intersectées entre les paires (pas de \emph{forward-fill} entre deux paires) et toute perte de plus de 5\,\% de l'intersection déclenche un \emph{error} explicite~--- cela garantit l'absence de biais silencieux dû à un \emph{gap} sur une paire unique.
+
+\subsection{Découpage in-sample et hors échantillon}
+
+\begin{itemize}
+\item \textbf{In-sample}~: du 1\textsuperscript{er}~avril 2019 au 1\textsuperscript{er}~avril 2025. Période utilisée pour le design de la stratégie, la sélection des paires, l'allocation et le tuning des hyperparamètres. Nombre de barres journalières~: 2260 (environ 6~ans).
+\item \textbf{Hors échantillon (OOS)}~: du 1\textsuperscript{er}~avril 2025 au 1\textsuperscript{er}~avril 2026. Période réservée à la validation, jamais utilisée pendant le design. Nombre de barres~: 314 (environ 14\,\% de l'in-sample).
+\end{itemize}
+
+\begin{warningbox}
+\textbf{Point de transparence sur le caractère de l'OOS~:} la fenêtre hors échantillon est un découpage \emph{ex-post}, effectué lorsque les données 2025-04 et postérieures sont devenues disponibles. Il ne s'agit donc pas d'un véritable \emph{holdout} pré-engagé avant le design. Malgré cette limite, le résultat reste significatif parce que le Sharpe OOS est strictement supérieur à l'in-sample ($1.44$ contre $0.94$)~--- un surajustement authentique produirait systématiquement une dégradation hors période de conception, pas une amélioration.
+\end{warningbox}
+
+\subsection{Contrôle anti look-ahead}
+
+Une discipline anti look-ahead est appliquée systématiquement à trois niveaux~:
+
+\begin{enumerate}
+\item \textbf{Au niveau de chaque signal individuel}~: chaque indicateur (EMA, RSI, Bollinger Bands) est lagué d'un bar par rapport à sa consommation, de sorte que le signal à l'instant $t$ n'utilise que l'information strictement disponible avant $t$.
+\item \textbf{Au niveau du filtre macro}~: le taux de chômage, publié le premier vendredi du mois suivant, est propagé dans le temps en respectant sa date de publication réelle. Le spread de courbe des taux est quotidien et ne nécessite pas de lag supplémentaire.
+\item \textbf{Au niveau du ciblage de volatilité}~: le levier appliqué à l'instant $t$ utilise $\max(\mathrm{vol}_{21}, \mathrm{vol}_{63})$ calculée sur les returns strictement antérieurs à $t$.
+\end{enumerate}
+
+Cette discipline est validée par une suite de tests automatisés qui vérifient, pour chaque signal, que décaler les returns futurs d'un jour ne modifie pas les trades du backtest~--- un test standard de non-contamination.
+
+\subsection{Robustesse numérique}
+
+La reproductibilité binaire du backtest a été vérifiée par un test de \emph{canary} qui compare la sortie actuelle du pipeline à un hash de référence généré sur une configuration fixée. Toute modification du moteur qui altère les résultats numériquement est détectée immédiatement.

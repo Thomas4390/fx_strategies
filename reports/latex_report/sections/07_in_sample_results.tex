@@ -1,0 +1,72 @@
+\section{Performance historique in-sample (2019--2025)}
+\label{sec:in_sample}
+
+\subsection{Métriques agrégées}
+
+\input{tables/sleeve_standalone.tex}
+
+\begin{itemize}
+\item \textbf{CAGR}~: $13.33\,\%$
+\item \textbf{Volatilité annualisée}~: $14.36\,\%$
+\item \textbf{Max Drawdown}~: $-17.93\,\%$
+\item \textbf{Sharpe Ratio}~: $0.94$
+\item \textbf{Nombre de barres journalières}~: 2260
+\end{itemize}
+
+\subsection{Validation par fenêtres annuelles (walk-forward)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{walkforward_sharpe.png}
+\caption{Sharpe annuel du portefeuille combiné sur la période historique. Six années sur sept sont positives, seule 2019 reste marginalement négative.}
+\end{figure}
+
+\input{tables/walkforward_yearly.tex}
+
+\begin{itemize}
+\item \textbf{2019 ($-0.49$)}~: seule année négative persistante. Le Moteur~1 enregistre 44~trades (le volume maximum de la série) mais un Sharpe de $-0.64$. 2019 était une année de fin de cycle avec courbe des taux compressée autour de zéro~--- le filtre macro laissait passer les entrées, mais la \emph{mean reversion} intraday ne fonctionnait pas dans le régime \emph{range-bound} avec \emph{breakouts} brusques.
+\item \textbf{2020 ($+0.56$)}~: le choc Covid a causé une chute rapide mais les stratégies à volatilité ciblée ont bien géré. Le Moteur~1 n'exécute que 3~trades (le filtre macro bloque la majorité du temps), mais le rendement standalone de $+0.69\,\%$ est propre.
+\item \textbf{2022 ($+2.26$)}~: pic de performance annuelle. Le Moteur~1 atteint un Sharpe de 2.23, le Moteur~2 capte le cycle de hausses de la Fed et la parité EUR-USD. C'est l'année où les trois composantes s'alignent.
+\item \textbf{2023 ($+0.29$)}~: année charnière, où l'ajout du Moteur~3 bascule le portefeuille du négatif (configuration sans RSI) au positif. Le Moteur~3 produit un Sharpe de $+0.92$ qui comble exactement le trou laissé par les faiblesses du Moteur~1 ($-0.28$) et du Moteur~2 ($+0.55$ modeste).
+\item \textbf{2025 ($+1.49$)}~: meilleure année de la seconde moitié de période, grâce au Moteur~2 qui capte les divergences post-BCE et post-BoJ (EUR-USD à $+1.88$ Sharpe standalone en 2025).
+\end{itemize}
+
+\subsection{Heatmap des rendements mensuels}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{monthly_heatmap.png}
+\caption{Rendements mensuels du portefeuille combiné. Les mois verts dominent la distribution~; les mois rouges restent généralement contenus à quelques points de pourcentage.}
+\end{figure}
+
+\subsection{Courbe \emph{underwater} du drawdown}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{drawdown_underwater.png}
+\caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal de $-17.93\,\%$ est atteint en 2019, avec des drawdowns de second ordre en 2020 et début 2023. Les récupérations sont généralement rapides, à l'exception de 2019.}
+\end{figure}
+
+\subsection{Sharpe glissant sur 63 jours}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{rolling_sharpe_63d.png}
+\caption{Sharpe Ratio calculé sur une fenêtre glissante de 63~jours (environ un trimestre). La ligne pointillée orange représente le seuil de 1.0. Le Sharpe reste majoritairement positif, avec des pics au-dessus de 2.5 en 2022 et 2024 et de brefs passages sous zéro en 2019 et début 2023.}
+\end{figure}
+
+\subsection{Corrélations glissantes entre moteurs}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{rolling_correlation_63d.png}
+\caption{Corrélation glissante à 63~jours entre paires de moteurs. La corrélation Moteur~2 $\times$ Moteur~3 (verte) reste majoritairement négative, confirmant la stabilité du levier de diversification identifié sur la moyenne pleine période.}
+\end{figure}
+
+\subsection{Contribution mensuelle par moteur}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_monthly_contribution.png}
+\caption{Contribution mensuelle pondérée (80 / 10 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
+\end{figure}

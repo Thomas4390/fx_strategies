@@ -17,7 +17,6 @@ Run:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -34,7 +33,7 @@ for p in (_SRC, _SCRIPTS):
         sys.path.insert(0, str(p))
 
 
-OUTPUT_ROOT = _PROJECT_ROOT / "results" / "phase18"
+OUTPUT_ROOT = _PROJECT_ROOT / "results" / "production_report"
 OOS_SPLIT_DATE = "2025-04-01"
 
 
@@ -69,13 +68,13 @@ def generate_sleeve_tearsheets(
         )
 
 
-def generate_combined_tearsheet(phase18_result: dict[str, Any]) -> None:
+def generate_combined_tearsheet(production_result: dict[str, Any]) -> None:
     from framework.pipeline_utils import analyze_portfolio
 
     combined_dir = OUTPUT_ROOT / "combined"
     combined_dir.mkdir(parents=True, exist_ok=True)
 
-    pf = phase18_result["pf_combined"]
+    pf = production_result["pf_combined"]
     print("\n→ Tearsheet for Phase 18 combined portfolio")
     analyze_portfolio(
         pf,
@@ -94,7 +93,7 @@ def generate_combined_tearsheet(phase18_result: dict[str, Any]) -> None:
 
 def figure_equity_comparison(
     strat_rets: dict[str, pd.Series],
-    phase18_result: dict[str, Any],
+    production_result: dict[str, Any],
 ) -> go.Figure:
     """Log-scale equity base 100 for the 3 sleeves and the combined."""
     fig = go.Figure()
@@ -118,7 +117,7 @@ def figure_equity_comparison(
             )
         )
 
-    combined = phase18_result["portfolio_returns"]
+    combined = production_result["portfolio_returns"]
     cum_combined = (1.0 + combined.fillna(0.0)).cumprod() * 100.0
     fig.add_trace(
         go.Scatter(
@@ -177,8 +176,8 @@ def figure_rolling_correlation(
 
 
 def figure_bootstrap_scatter(
-    strat_rets_phase18: dict[str, pd.Series],
-    phase18_result: dict[str, Any],
+    production_strat_rets: dict[str, pd.Series],
+    production_result: dict[str, Any],
     n_runs: int = 500,
     block_size: int = 20,
 ) -> tuple[go.Figure, dict[str, float]]:
@@ -191,7 +190,7 @@ def figure_bootstrap_scatter(
         build_combined_portfolio_v2,
     )
 
-    df = pd.DataFrame(strat_rets_phase18).dropna()
+    df = pd.DataFrame(production_strat_rets).dropna()
     n_bars = len(df)
     rng = np.random.default_rng(20260413)
 
@@ -226,8 +225,8 @@ def figure_bootstrap_scatter(
     dd_arr = np.array(dds)
 
     # Real Phase 18 point
-    real_cagr = phase18_result["annual_return"]
-    real_dd = phase18_result["max_drawdown"]
+    real_cagr = production_result["annual_return"]
+    real_dd = production_result["max_drawdown"]
 
     fig = go.Figure()
     fig.add_trace(
@@ -288,12 +287,12 @@ def figure_bootstrap_scatter(
     return fig, summary
 
 
-def figure_per_sleeve_monthly(phase18_result: dict[str, Any]) -> go.Figure:
+def figure_per_sleeve_monthly(production_result: dict[str, Any]) -> go.Figure:
     """Stacked monthly contribution of each sleeve to the combined."""
-    common = phase18_result["component_returns"]
-    weights_ts = phase18_result["weights_ts"]
-    leverage_ts = phase18_result.get("leverage_ts")
-    dd_scale_ts = phase18_result.get("dd_scale_ts")
+    common = production_result["component_returns"]
+    weights_ts = production_result["weights_ts"]
+    leverage_ts = production_result.get("leverage_ts")
+    dd_scale_ts = production_result.get("dd_scale_ts")
     if leverage_ts is None:
         leverage_ts = pd.Series(1.0, index=common.index)
     if dd_scale_ts is None:
@@ -328,8 +327,8 @@ def figure_per_sleeve_monthly(phase18_result: dict[str, Any]) -> go.Figure:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def dump_is_oos_summary(phase18_result: dict[str, Any]) -> dict[str, Any]:
-    port = phase18_result["portfolio_returns"]
+def dump_is_oos_summary(production_result: dict[str, Any]) -> dict[str, Any]:
+    port = production_result["portfolio_returns"]
     split = pd.Timestamp(OOS_SPLIT_DATE)
     is_rets = port.loc[: split - pd.Timedelta(days=1)]
     oos_rets = port.loc[split:]
@@ -356,13 +355,13 @@ def dump_is_oos_summary(phase18_result: dict[str, Any]) -> dict[str, Any]:
         "split_date": OOS_SPLIT_DATE,
         "in_sample": metrics(is_rets),
         "out_of_sample": metrics(oos_rets),
-        "wf_sharpes": phase18_result.get("wf_sharpes", []),
-        "wf_pos_years": phase18_result.get("wf_pos_years", 0),
-        "wf_avg_sharpe": phase18_result.get("wf_avg_sharpe", float("nan")),
+        "wf_sharpes": production_result.get("wf_sharpes", []),
+        "wf_pos_years": production_result.get("wf_pos_years", 0),
+        "wf_avg_sharpe": production_result.get("wf_avg_sharpe", float("nan")),
     }
 
 
-def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
+def run_stress_test(production_strat_rets: dict[str, pd.Series]) -> dict[str, Any]:
     """Re-run the full stress test suite on the Phase 18 config."""
     import stress_test_combined
 
@@ -386,11 +385,13 @@ def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
         }
         print("\n→ Running full stress test suite (this is slow)...")
         boot = stress_test_combined.run_block_bootstrap(
-            strat_rets_phase18, n_runs=1000, block_size=20, seed=20260413
+            production_strat_rets, n_runs=1000, block_size=20, seed=20260413
         )
-        scenarios = stress_test_combined.run_scenario_replay(strat_rets_phase18)
-        is_oos = stress_test_combined.run_is_oos_split(strat_rets_phase18)
-        sensitivity = stress_test_combined.run_parameter_sensitivity(strat_rets_phase18)
+        scenarios = stress_test_combined.run_scenario_replay(production_strat_rets)
+        is_oos = stress_test_combined.run_is_oos_split(production_strat_rets)
+        sensitivity = stress_test_combined.run_parameter_sensitivity(
+            production_strat_rets
+        )
     finally:
         stress_test_combined.RECOMMENDED_CONFIG = prev_config
 
@@ -438,35 +439,35 @@ def main() -> None:
 
     print("\n[1/6] Loading strategy daily returns...")
     strat_rets = get_strategy_daily_returns()
-    strat_rets_phase18 = {k: strat_rets[k] for k in PRODUCTION_WEIGHTS}
+    production_strat_rets = {k: strat_rets[k] for k in PRODUCTION_WEIGHTS}
 
     print("\n[2/6] Building Phase 18 combined portfolio...")
-    phase18_result = build_production_portfolio(strat_rets_phase18)
+    production_result = build_production_portfolio(production_strat_rets)
 
     print(
-        f"  IS metrics  : CAGR={phase18_result['annual_return'] * 100:.2f}% "
-        f"MaxDD={phase18_result['max_drawdown'] * 100:.2f}% "
-        f"Sharpe={phase18_result['sharpe']:.3f} "
-        f"Pos years={phase18_result['wf_pos_years']}/7"
+        f"  IS metrics  : CAGR={production_result['annual_return'] * 100:.2f}% "
+        f"MaxDD={production_result['max_drawdown'] * 100:.2f}% "
+        f"Sharpe={production_result['sharpe']:.3f} "
+        f"Pos years={production_result['wf_pos_years']}/7"
     )
 
     print("\n[3/6] Generating per-sleeve tearsheets...")
-    generate_sleeve_tearsheets(strat_rets_phase18)
+    generate_sleeve_tearsheets(production_strat_rets)
 
     print("\n[4/6] Generating combined tearsheet...")
-    generate_combined_tearsheet(phase18_result)
+    generate_combined_tearsheet(production_result)
 
     print("\n[5/6] Generating custom figures...")
-    fig_equity = figure_equity_comparison(strat_rets_phase18, phase18_result)
+    fig_equity = figure_equity_comparison(production_strat_rets, production_result)
     fig_equity.write_html(str(figures_dir / "equity_comparison.html"))
     print("  ✓ equity_comparison.html")
 
-    fig_corr = figure_rolling_correlation(strat_rets_phase18)
+    fig_corr = figure_rolling_correlation(production_strat_rets)
     fig_corr.write_html(str(figures_dir / "rolling_correlation.html"))
     print("  ✓ rolling_correlation.html")
 
     fig_scatter, scatter_summary = figure_bootstrap_scatter(
-        strat_rets_phase18, phase18_result, n_runs=500
+        production_strat_rets, production_result, n_runs=500
     )
     fig_scatter.write_html(str(figures_dir / "bootstrap_scatter.html"))
     print(
@@ -475,14 +476,14 @@ def main() -> None:
         f"P5 DD {scatter_summary['dd_p05'] * 100:.2f}%)"
     )
 
-    fig_stack = figure_per_sleeve_monthly(phase18_result)
+    fig_stack = figure_per_sleeve_monthly(production_result)
     fig_stack.write_html(str(figures_dir / "per_sleeve_monthly.html"))
     print("  ✓ per_sleeve_monthly.html")
 
     print("\n[6/6] Running full stress test suite...")
-    stress_report = run_stress_test(strat_rets_phase18)
+    stress_report = run_stress_test(production_strat_rets)
     stress_report["bootstrap_scatter_summary"] = scatter_summary
-    stress_report["is_oos_summary"] = dump_is_oos_summary(phase18_result)
+    stress_report["is_oos_summary"] = dump_is_oos_summary(production_result)
 
     json_path = OUTPUT_ROOT / "stress_test_report.json"
     with open(json_path, "w") as fh:

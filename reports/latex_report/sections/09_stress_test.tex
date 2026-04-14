@@ -1,0 +1,40 @@
+\section{Tests de résistance --- bootstrap à 1000~trajectoires}
+\label{sec:stress_test}
+
+\subsection{Méthodologie}
+
+\begin{itemize}
+\item \textbf{Méthode}~: bootstrap par blocs mobiles selon Künsch (1989), avec des blocs de 20~jours, soit environ un mois civil.
+\item \textbf{Objectif}~: préserver les autocorrélations intra-mois tout en cassant les corrélations cross-mois. Le ré-échantillonnage produit des trajectoires alternatives qui respectent la structure locale des rendements mais décorrèlent la séquence macroéconomique.
+\item \textbf{Nombre de ré-échantillons}~: 1000.
+\item \textbf{Seed}~: fixée, reproductible.
+\end{itemize}
+
+\subsection{Résultats}
+
+\input{tables/bootstrap_percentiles.tex}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{bootstrap_scatter.png}
+\caption{Nuage de points bootstrap CAGR~$\times$~Max Drawdown. Chaque point coloré est une trajectoire ré-échantillonnée. Les étoiles marquent les réalisations in-sample (bleu marine) et hors échantillon (orange). Les lignes pointillées horizontales délimitent la bande cible $[10\,\%, 15\,\%]$ de CAGR. La ligne pointillée verticale rouge marque la contrainte utilisateur de drawdown à $-35\,\%$.}
+\end{figure}
+
+\subsection{Interprétations critiques}
+
+\begin{insightbox}
+\textbf{Trois observations fondamentales~:}
+\begin{enumerate}
+\item \textbf{Le 5\textsuperscript{e} percentile du Max Drawdown est à $-30.68\,\%$, strictement sous la contrainte utilisateur de 35\,\%}, avec environ 4~points de pourcentage de marge. Cet objectif n'avait jamais été atteint par les configurations antérieures testées au cours de la recherche préparatoire.
+\item \textbf{99.8\,\% des trajectoires bootstrap sont positives} (CAGR strictement supérieur à zéro). L'\emph{edge} est extrêmement robuste à la fenêtre temporelle spécifique de l'historique utilisée pour le design.
+\item \textbf{Fraction \enquote{cible atteinte}~: 39.0\,\%}~: seulement 39\,\% des trajectoires tombent exactement dans la fenêtre $[10\,\%, 15\,\%]$ CAGR avec drawdown inférieur à 35\,\%. Les 61\,\% restants sortent majoritairement vers le haut (CAGR supérieur à 15\,\%)~--- c'est un \enquote{bon problème}~: en cas de volatilité favorable, la stratégie sur-performe la cible.
+\end{enumerate}
+\end{insightbox}
+
+\subsection{Stabilité face aux hyperparamètres de ciblage de volatilité}
+
+Le même rapport de stress conduit une analyse de sensibilité sur le couple (volatilité cible, levier maximal). Le tableau reproduit en section~\ref{sec:overlay} montre un plateau de Sharpe autour de 0.96--0.97 sur l'ensemble de la grille~--- la performance n'est pas un pic isolé mais une \emph{région plate}, ce qui indique une robustesse structurelle du choix retenu.
+
+\begin{warningbox}
+\textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage par blocs mobiles préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique 2019--2025 contient déjà. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, nous présentons à la section suivante un rejeu explicite de scénarios historiques sélectionnés. Un stress test plus ambitieux sur données pré-2019 pourrait être conduit à la demande du client, sous réserve de disponibilité des données minute FX correspondantes.
+\end{warningbox}

@@ -1,0 +1,43 @@
+\section{Rejeu de scénarios historiques}
+\label{sec:scenarios}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} rejeu de scénarios complète le bootstrap en testant la stratégie sur des fenêtres historiques réelles et identifiables~: crises, régimes de hausse de taux, années de rallye. Contrairement au bootstrap qui produit des séquences synthétiques, le rejeu de scénarios préserve la séquence macroéconomique originale et permet de vérifier le comportement de la stratégie dans des contextes précisément nommés.
+
+\input{tables/scenarios.tex}
+
+\subsection{Lecture détaillée des six scénarios}
+
+\begin{itemize}
+\item \textbf{2019 année complète ($-7.88\,\%$ CAGR, $-17.44\,\%$ MaxDD)}~: année structurelle la plus difficile de la série. Aucun moteur ne gagne. Le Moteur~1 à $-0.64$, le Moteur~2 à $-0.41$, le Moteur~3 à $+0.95$ mais à 10\,\% de poids il ne compense pas les 90\,\% négatifs. 2019 correspond à un régime de fin de cycle avec courbe des taux compressée~--- défavorable simultanément à la \emph{mean reversion} intraday et au suivi de tendance journalier.
+
+\item \textbf{2020 Q1 Covid ($-20.1\,\%$ CAGR annualisé, $-7.06\,\%$ MaxDD)}~: sur la fenêtre isolée de deux mois, le choc Covid provoque une perte. Mais sur l'année complète 2020 ($+4.80\,\%$ CAGR), la récupération est quasi-totale. \textbf{La stratégie absorbe le choc sans catastrophe}~: le drawdown maximal reste largement sous les $-35\,\%$ qui déclencheraient la contrainte utilisateur.
+
+\item \textbf{2020 année complète ($+4.80\,\%$ CAGR, Sharpe $+0.59$)}~: récupération normale après le Q1. Le Moteur~1 ne trade quasiment pas (filtre macro actif) mais le Moteur~3 prend le relais sur les \emph{overshoots} post-Covid.
+
+\item \textbf{2022 Q3 crise GBP ($+35.65\,\%$ CAGR annualisé, Sharpe $+1.39$)} $\star$~: l'une des meilleures fenêtres de l'historique. La crise GBP (mini-budget Truss, effondrement de la livre) est \emph{exploitée} très fortement par le Moteur~2 (signal de tendance sur les mouvements EUR-GBP) et par le Moteur~1 (volatilité intraday élevée). Le drawdown reste limité à $-7.09\,\%$ malgré la volatilité macroéconomique extrême.
+
+\item \textbf{2023 année de hausses ($-0.33\,\%$ CAGR, Sharpe $+0.06$)}~: l'année neutre. Le Moteur~1 est bloqué par la courbe des taux inversée~; le Moteur~2 à trois paires compense juste assez pour rester proche de zéro. Contenu.
+
+\item \textbf{2024 année complète ($+18.15\,\%$ CAGR, Sharpe $+1.54$)} $\star$~: année la plus forte. Tous les moteurs sont alignés (rotation vers les marchés émergents, faiblesse JPY, pause de la Fed). Drawdown maximum de seulement $-6.77\,\%$.
+\end{itemize}
+
+\subsection{Observations transversales}
+
+\begin{insightbox}
+\textbf{Résistance validée dans les régimes de stress~:}
+\begin{itemize}
+\item Covid 2020, crise GBP 2022, 2024~--- les régimes de stress sont soit gagnants, soit contenus.
+\item 2019 reste la vraie faiblesse structurelle. Aucun des trois moteurs n'est adapté aux régimes de fin de cycle \emph{range-bound} avec breakouts.
+\item 2023 reste marginalement négatif mais contenu~--- la fenêtre scenario ne capture pas tout l'effet de la diversification par rebalancement au niveau combiné, qui atteint finalement un Sharpe annuel de $+0.29$ en walk-forward.
+\end{itemize}
+\end{insightbox}
+
+\begin{warningbox}
+\textbf{Biais de sélection des scénarios.} La liste ci-dessus inclut délibérément à la fois de bonnes et de mauvaises années, mais elle n'épuise pas tous les régimes possibles. Les crises non testées incluent~:
+\begin{itemize}
+\item Crise \emph{subprime} 2007--2008 (absence de données minute FX de qualité pour cette période).
+\item Choc pétrolier 1979--1980 (structurellement différent, non comparable au régime actuel).
+\item Sortie brutale d'un \emph{peg} monétaire (par exemple le CHF de janvier 2015)~--- extension envisageable à la demande.
+\end{itemize}
+Le bootstrap par blocs mobiles agit comme compensation partielle à cette limite.
+\end{warningbox}

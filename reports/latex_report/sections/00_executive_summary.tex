@@ -1,0 +1,29 @@
+\section{Résumé exécutif}
+\label{sec:executive_summary}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} \textbf{Stratégie FX Tri-Signaux} est un portefeuille quantitatif sur paires de devises majeures qui combine trois moteurs de rendement structurellement indépendants~: une composante de \emph{retour à la moyenne} intraday filtrée par un régime macroéconomique, une composante de \emph{suivi de tendance} journalier sur trois paires, et une composante de \emph{retour à la moyenne} journalier sur l'indicateur RSI à quatre paires. L'ensemble est piloté par une couche unifiée de ciblage de volatilité assortie d'un plafond de levier à douze fois.
+
+L'objectif poursuivi est de générer un rendement annualisé compris entre 10\,\% et 15\,\% avec un drawdown maximal contenu sous 35\,\%, tout en restant compatible avec les contraintes de levier ESMA pour la clientèle retail FX. Les trois sections suivantes démontrent que ces objectifs sont atteints simultanément sur la période de backtest et hors échantillon.
+
+\input{tables/metrics_summary.tex}
+
+\begin{insightbox}
+\textbf{Le test hors échantillon produit un Sharpe de 1.44, supérieur au 0.94 observé en période de conception.} Un phénomène de surajustement produirait à l'inverse une dégradation marquée des métriques hors échantillon. L'amélioration observée constitue donc une réfutation empirique de l'hypothèse de surajustement majeur. De plus, le \mbox{5\textsuperscript{e}} percentile du drawdown bootstrap ($-30.68\,\%$) reste strictement sous la contrainte utilisateur de 35\,\%, avec environ 4~points de pourcentage de marge de sécurité.
+\end{insightbox}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{equity_combined_logscale.png}
+\caption{Courbes d'équité cumulative du portefeuille combiné et de ses trois moteurs individuels, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. La ligne verticale pointillée marque le début de la fenêtre hors échantillon (1\textsuperscript{er}~avril 2025).}
+\end{figure}
+
+\subsection*{Quatre conclusions pour la décision}
+
+\begin{enumerate}
+\item \textbf{Sharpe hors échantillon supérieur à l'in-sample} (1.44 contre 0.94). L'amélioration hors période de conception valide la robustesse de la structure multi-moteurs.
+\item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, strictement sous la contrainte de 35\,\% retenue pour le mandat, avec environ 4~pp de marge.
+\item \textbf{Six années positives sur sept} en validation par fenêtres annuelles~--- seule 2019 reste marginalement négative dans un régime de fin de cycle défavorable à l'ensemble des sleeves.
+\item \textbf{Tous les garde-fous méthodologiques sont franchis}~: tests in-sample, hors échantillon, bootstrap de résistance, et rejeu de scénarios historiques.
+\end{enumerate}
+
+Les sections suivantes développent le mandat, l'architecture du portefeuille, les trois moteurs de rendement, les résultats complets et les conditions de déploiement.

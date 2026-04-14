@@ -1,0 +1,73 @@
+\xpginauxfiletrue 
+\selectlanguage *{french}
+\contentsline {section}{\numberline {1}Résumé exécutif}{1}{section.1}%
+\contentsline {section}{\numberline {2}Mandat d'investissement et philosophie}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Mandat}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Problème adressé}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Architecture du portefeuille}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Pourquoi trois moteurs et pas deux ou quatre~?}{4}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Cadre méthodologique}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Moteur de backtest}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Sources de données}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{5}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{5}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Robustesse numérique}{6}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Intuition économique}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Performance historique}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{8}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Moteur 2 --- Momentum Journalier Multi-Paires (10\,\%)}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Intuition économique}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Mécanique du signal}{9}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Justification du choix des trois paires}{9}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Performance historique}{10}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Épisodes représentatifs}{10}{subsection.5.5}%
+\contentsline {section}{\numberline {6}Moteur 3 --- Mean Reversion Journalière par RSI (10\,\%)}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Intuition économique}{11}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Mécanique du signal}{11}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Le paradoxe du Sharpe standalone}{12}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Performance historique}{13}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Épisodes représentatifs}{13}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Architecture de pondération et gestion du risque}{14}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Allocation statique 80 / 10 / 10}{14}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Couche de ciblage de volatilité}{14}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Protection drawdown --- disponible mais désactivée}{15}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Performance historique in-sample (2019--2025)}{16}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Métriques agrégées}{16}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Validation par fenêtres annuelles (walk-forward)}{16}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Heatmap des rendements mensuels}{18}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Courbe \emph {underwater} du drawdown}{18}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Sharpe glissant sur 63 jours}{19}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}Corrélations glissantes entre moteurs}{19}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}Contribution mensuelle par moteur}{20}{subsection.8.7}%
+\contentsline {section}{\numberline {9}Validation hors échantillon (2025-04 à 2026-04)}{20}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Comparaison directe}{20}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Zoom sur la fenêtre de validation}{21}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Décomposition de la performance OOS par moteur}{21}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Caveat méthodologique sur le caractère OOS}{22}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap à 1000~trajectoires}{22}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Méthodologie}{22}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Résultats}{22}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Interprétations critiques}{23}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{23}{subsection.10.4}%
+\contentsline {section}{\numberline {11}Rejeu de scénarios historiques}{24}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Lecture détaillée des six scénarios}{24}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Observations transversales}{25}{subsection.11.2}%
+\contentsline {section}{\numberline {12}Analyse des risques et limites méthodologiques}{25}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Avertissement 1 --- Data snooping résiduel}{26}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{26}{subsection.12.2}%
+\contentsline {subsection}{\numberline {12.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{26}{subsection.12.3}%
+\contentsline {subsection}{\numberline {12.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{27}{subsection.12.4}%
+\contentsline {subsection}{\numberline {12.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{27}{subsection.12.5}%
+\contentsline {subsection}{\numberline {12.6}Tableau récapitulatif des risques}{27}{subsection.12.6}%
+\contentsline {section}{\numberline {13}Conditions de déploiement}{27}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Décisionnaires et responsabilités}{28}{subsection.13.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{29}{appendix.A}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un signal}{31}{appendix.B}%
+\contentsline {subsection}{\numberline {B.1}Moteur 1 --- signal intraday}{31}{subsection.B.1}%
+\contentsline {subsection}{\numberline {B.2}Moteur 2 --- signal journalier de tendance}{32}{subsection.B.2}%
+\contentsline {subsection}{\numberline {B.3}Moteur 3 --- signal journalier de retour à la moyenne}{32}{subsection.B.3}%
+\contentsline {subsection}{\numberline {B.4}Composition finale}{32}{subsection.B.4}%
+\xpginauxfilefalse 
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

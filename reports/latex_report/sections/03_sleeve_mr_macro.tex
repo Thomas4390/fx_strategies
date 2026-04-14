@@ -1,0 +1,71 @@
+\section{Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}
+\label{sec:mr_macro}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} premier moteur est la composante dominante du portefeuille~: il reçoit 80\,\% de l'allocation statique. Ce poids prépondérant est justifié par le fait qu'il possède simultanément le Sharpe le plus élevé (environ 0.82 full-period) et la volatilité intrinsèque la plus basse (environ 1.3\,\% annualisée) parmi les trois moteurs. Les deux autres composantes jouent un rôle de diversificateurs à 10\,\% chacune, et leur valeur apparaît surtout dans les années où ce premier moteur est dormant.
+
+\subsection{Intuition économique}
+
+\begin{thesisbox}
+\textbf{La \emph{mean reversion} intraday fonctionne dans les régimes de liquidité normale et de transmission monétaire saine.} Lorsque la courbe des taux s'inverse ou que le taux de chômage commence à remonter, les micro-structures qui rendent la \emph{mean reversion} profitable disparaissent~: les flux deviennent unidirectionnels en raison de la \emph{fuite vers la qualité}, les spreads s'élargissent, et toute prise de position à contre-courant devient coûteuse. Le filtre macro bloque précisément la stratégie dans ces régimes.
+\end{thesisbox}
+
+Techniquement, la stratégie exploite deux asymétries micro-structurelles bien documentées dans la littérature académique sur le marché FX~:
+
+\begin{enumerate}
+\item La tendance des prix intraday à revenir vers le \textbf{VWAP} (\emph{Volume-Weighted Average Price}) au cours de la session de chevauchement Londres~+~New York, période durant laquelle les teneurs de marché rebalancent leurs inventaires.
+\item La \textbf{surréaction de court terme} aux annonces~: les déviations supérieures à cinq écarts-types autour du VWAP capturent typiquement une réaction excessive à une publication économique ou à un flux institutionnel concentré.
+\end{enumerate}
+
+\subsection{Mécanique du signal}
+
+\begin{enumerate}
+\item \textbf{VWAP ancré à la journée}~: le calcul est réinitialisé à 00h00 UTC chaque jour, et reprend de façon cumulative.
+\item \textbf{Bandes de Bollinger} à 80 périodes et 5 écarts-types, calculées sur la déviation prix moins VWAP. Les bandes ainsi obtenues définissent des seuils dynamiques de retour à la moyenne.
+\item \textbf{Filtre session}~: uniquement entre 6h et 14h~UTC, correspondant au chevauchement Londres et New~York où la liquidité atteint son maximum.
+\item \textbf{Filtre macro à deux étages}~:
+  \begin{itemize}
+  \item Spread de courbe des taux 10~ans moins 2~ans inférieur à 0.5~(proxy de stress cyclique)~;
+  \item Taux de chômage dont la variation sur trois mois n'est pas haussière (proxy d'absence de fin de cycle d'expansion).
+  \end{itemize}
+\item \textbf{Règles d'entrée}~: position longue si le prix touche la bande inférieure, position courte si le prix touche la bande supérieure, sous réserve que les filtres session et macro soient tous deux passants.
+\item \textbf{Règles de sortie}~: stop-loss à $-0.5\,\%$, take-profit à $+0.6\,\%$, arrêt forcé à 21h~UTC, durée maximale de détention six heures.
+\end{enumerate}
+
+\subsection{Performance historique}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_mr_macro_equity.png}
+\caption{Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Performance annuelle du Moteur~1 pris isolément. L'année 2021 ne produit aucun trade parce que le spread 10Y--2Y est resté supérieur à 0.5 toute l'année post-Covid, déclenchant le filtre macro.}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Année} & \textbf{Trades} & \textbf{CAGR} & \textbf{Sharpe} & \textbf{Max DD} \\
+\midrule
+2019 & 44 & $-0.82$\,\% & $-0.64$ & $-1.71$\,\% \\
+2020 & 3 & $+0.69$\,\% & $+1.19$ & $-0.02$\,\% \\
+2021 & \textbf{0} & $0.00$\,\% & $0.00$ & $0.00$\,\% \\
+2022 & 30 & $+5.21$\,\% & \textbf{$+2.23$} & $-0.67$\,\% \\
+2023 & 19 & $-0.38$\,\% & $-0.28$ & $-1.22$\,\% \\
+2024 & 19 & $+2.31$\,\% & \textbf{$+2.08$} & $-0.34$\,\% \\
+2025 & 11 & $+0.85$\,\% & $+0.72$ & $-0.71$\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warningbox}
+\textbf{Le filtre macro peut réduire la stratégie au silence complet.} En 2021, aucun trade n'a été déclenché parce que la courbe des taux restait exceptionnellement raide après le choc Covid. Ce comportement est voulu~: les tests de sensibilité ont montré que relâcher le seuil à 0.7 ou plus détruit le Sharpe de l'année 2025 (passage de $+0.72$ à $-0.38$). Le \emph{silence sélectif} est une propriété désirable du filtre, pas un bug.
+\end{warningbox}
+
+\subsection{Exemples de trades réels}
+
+\input{tables/trade_examples_mr_macro.tex}
+
+\begin{examplebox}
+\textbf{Anatomie d'un trade gagnant~:} le trade long du 12~février 2025 à 08h31~UTC est entré lorsque le \emph{close} EUR-USD a touché la bande inférieure calculée sur la déviation au VWAP. La session étant ouverte (8h~UTC supérieur à 6h) et le spread 10Y--2Y à $0.32$ (sous le seuil 0.5), les deux filtres étaient passants. Le retour du prix vers le VWAP a déclenché la sortie par take-profit à 11h59~UTC, pour une durée totale de 3~heures~30 et un rendement de $+0.57\,\%$, soit un P\&L de 6\,236~USD sur un capital nominal d'un million.
+\end{examplebox}

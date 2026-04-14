@@ -1,0 +1,60 @@
+\section{Mandat d'investissement et philosophie}
+\label{sec:mandate}
+
+\subsection{Mandat}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{4.2cm}p{10cm}}
+\toprule
+\textbf{Univers d'investissement} & Paires de devises majeures~: EUR-USD, GBP-USD, USD-JPY, USD-CAD. Pas d'exposition aux devises émergentes, aux \emph{crosses} exotiques ni aux dérivés structurés. \\
+\textbf{Objectif de rendement} & CAGR cible entre \textbf{10\,\%} et \textbf{15\,\%} annualisés. \\
+\textbf{Contrainte de risque} & Max Drawdown $\le 35\,\%$ à l'horizon du mandat (mesuré sur trajectoire bootstrap, 5\textsuperscript{e} percentile). \\
+\textbf{Horizon} & Multi-annuel (minimum 3~ans recommandé pour réalisation statistique des métriques). \\
+\textbf{Cadre réglementaire} & Compatible avec les règles ESMA retail FX (levier maximal autorisé~: 30$\times$ pour majors G10). Levier appliqué par la stratégie~: cap dur à 12$\times$. \\
+\textbf{Réserve de capital} & Minimum 30\,\% de cash hors-broker, accessible en moins de 24~heures, pour absorber les \emph{tails} au-delà du P5 bootstrap. \\
+\textbf{Rebalancement} & Quotidien, sans adaptation de régime. Pas de réallocation discrétionnaire. \\
+\textbf{Liquidité} & Positions entièrement liquidables sous 24~heures (paires FX majeures à plusieurs milliards de volume quotidien). \\
+\textbf{Statut actuel} & Prêt pour déploiement contrôlé en paper-trade. Go-live conditionné à la validation de la check-list de production (section~\ref{sec:production}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Problème adressé}
+
+Le marché des changes est simultanément l'un des plus liquides et l'un des plus difficiles à battre systématiquement. Chaque signal pris isolément est dominé par un bruit important, et les \emph{edges} individuels tendent à s'éroder rapidement lorsqu'ils sont répliqués par d'autres acteurs. La réponse classique à ce problème~--- empiler plusieurs signaux indépendants pour réduire la variance du portefeuille agrégé~--- n'est efficace qu'à une condition stricte~: les signaux doivent être \textbf{vraiment orthogonaux} les uns aux autres. Or, la plupart des stratégies FX publiées sont en réalité fortement corrélées parce qu'elles exploitent la même source d'alpha sous-jacente (\emph{carry}, tendance EMA, \emph{mean reversion} RSI).
+
+\begin{thesisbox}
+L'ambition de la Stratégie FX Tri-Signaux est d'assembler trois moteurs de rendement qui capturent des \textbf{sources d'alpha structurellement différentes}, de sorte que leur combinaison réduise le drawdown sans sacrifier le rendement espéré. L'architecture est délibérément \emph{risk-first}~: le but premier est la qualité du profil de risque, pas la maximisation absolue du Sharpe individuel de chaque moteur.
+\end{thesisbox}
+
+\subsection{Architecture du portefeuille}
+
+\begin{figure}[H]
+\centering
+\small
+\begin{tabular}{ccc}
+\colorbox{softBlue}{\parbox{4.5cm}{\centering\color{primary}\sffamily\textbf{Moteur 1\\Mean Reversion Intraday}\\[0.2em]\footnotesize 80\,\% de l'allocation\\Retour au VWAP filtré macro\\EUR-USD, minute}} &
+\colorbox{softYellow}{\parbox{4.5cm}{\centering\color{accent}\sffamily\textbf{Moteur 2\\Momentum Journalier}\\[0.2em]\footnotesize 10\,\% de l'allocation\\EMA 20/50 + confirmation RSI\\3~paires (EUR, GBP, JPY)}} &
+\colorbox{softGreen}{\parbox{4.5cm}{\centering\color{rsiGreen}\sffamily\textbf{Moteur 3\\RSI Journalier}\\[0.2em]\footnotesize 10\,\% de l'allocation\\Mean reversion sur RSI(14)\\4~paires equal-weight}} \\[1.2em]
+\multicolumn{3}{c}{$\Downarrow$} \\[0.3em]
+\multicolumn{3}{c}{\colorbox{lightGrey}{\parbox{12cm}{\centering\color{primary}\sffamily\textbf{Allocation statique 80 / 10 / 10}\\[0.1em]\footnotesize Pondérations fixes, pas de réallocation discrétionnaire}}} \\[0.6em]
+\multicolumn{3}{c}{$\Downarrow$} \\[0.3em]
+\multicolumn{3}{c}{\colorbox{lightGrey}{\parbox{12cm}{\centering\color{primary}\sffamily\textbf{Couche de ciblage de volatilité}\\[0.1em]\footnotesize Vol cible 0.28, levier maximal 12$\times$, estimateur pessimiste anti look-ahead}}} \\[0.6em]
+\multicolumn{3}{c}{$\Downarrow$} \\[0.3em]
+\multicolumn{3}{c}{\colorbox{primary}{\parbox{12cm}{\centering\color{white}\sffamily\textbf{Équité finale du portefeuille}}}} \\
+\end{tabular}
+\caption{Architecture à trois moteurs orthogonaux de la Stratégie FX Tri-Signaux. Allocation statique, puis couche de ciblage de volatilité, puis pipeline d'équité finale.}
+\end{figure}
+
+\subsection{Pourquoi trois moteurs et pas deux ou quatre~?}
+
+\begin{itemize}
+\item \textbf{Deux moteurs ne suffisent pas}~: les analyses d'attribution montrent qu'une combinaison à deux moteurs (Mean Reversion Intraday + Momentum Journalier) laisse les années 2019 et 2023 en territoire négatif.
+\item \textbf{Quatre moteurs introduisent du bruit}~: l'ajout d'un signal \emph{cross-section momentum} a été évalué et retiré après avoir constaté une corrélation supérieure à 0.3 avec le Momentum Journalier, sans apport au Sharpe combiné.
+\item \textbf{Trois est le nombre minimal qui couvre les trois régimes dominants du marché FX}~: régimes \emph{intraday range-bound} (capturé par le Moteur~1), régimes \emph{trending daily} (capturé par le Moteur~2), régimes \emph{mean-reverting daily} (capturé par le Moteur~3).
+\end{itemize}
+
+\begin{insightbox}
+\textbf{La leçon principale de la recherche préparatoire~:} un moteur avec un Sharpe standalone modeste peut être le meilleur diversificateur si sa corrélation avec le reste du portefeuille est négative pendant les années difficiles. Ce qui compte n'est pas le Sharpe individuel mais la \textbf{contribution marginale au Sharpe du portefeuille}, qui dépend de la corrélation. Un signal à Sharpe 0.16 anti-corrélé bat souvent un signal à Sharpe 0.60 corrélé.
+\end{insightbox}

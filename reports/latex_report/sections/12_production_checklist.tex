@@ -1,0 +1,48 @@
+\section{Conditions de déploiement}
+\label{sec:production}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{A}{v}ant tout déploiement avec capital réel, chaque élément ci-dessous doit être validé. L'ordre est important~: certains éléments bloquent les suivants. Cette check-list constitue la stratégie de risque opérationnelle du mandat.
+
+\begin{enumerate}[label=\color{primary}\textbf{\arabic*.}]
+\item \textbf{Paper-trade d'au moins trois mois} sur la configuration présentée, avec un broker identique à la cible de production. \textbf{Critère de passage}~: Sharpe live supérieur ou égal à 1.0 sur la fenêtre paper.
+
+\item \textbf{Réserve de marge d'au moins 30\,\%} en cash hors-broker, accessible en moins de 24~heures. Cette réserve absorbe les \emph{tails} au-delà du 5\textsuperscript{e} percentile bootstrap.
+
+\item \textbf{Alerte automatique de drawdown live}~: arrêt automatique du trading si le drawdown depuis le \emph{high water mark} dépasse 15\,\%. Le seuil à 15\,\% est choisi pour déclencher l'alerte \emph{avant} d'atteindre la bande P5 du bootstrap ($-30.68\,\%$), en laissant une marge de décision manuelle.
+
+\item \textbf{Monitoring par moteur}~: calcul du Sharpe glissant sur 63~jours pour chaque moteur individuel, avec alerte si un moteur passe sous 0.5. Cela permet de détecter une dégradation structurelle avant que le portefeuille combiné n'en souffre visiblement.
+
+\item \textbf{Re-run mensuel des tests de stress}~: régénération complète des trajectoires bootstrap et comparaison aux baselines du présent rapport, chaque premier du mois. Alerte si le CAGR bootstrap moyen dérive de plus de 3~points de pourcentage.
+
+\item \textbf{Validation du slippage réel}~: pendant le premier mois de paper-trade, mesurer l'execution spread réel sur le Moteur~1 (hypothèse du backtest~: 15~pb) et sur les Moteurs~2 et~3 (hypothèse~: 10~pb). Si le slippage réel dépasse l'hypothèse, recalibrer la baseline de performance.
+
+\item \textbf{Plafond d'utilisation de la marge}~: configurer le compte broker pour déclencher un déleverage automatique si l'utilisation de marge dépasse 70\,\% du compte.
+
+\item \textbf{Freshness des données macro}~: vérifier que le spread de courbe des taux 10Y-2Y et le taux de chômage sont mis à jour automatiquement depuis une source officielle (FRED ou équivalent). Alerte si l'une des séries n'est pas rafraîchie depuis plus de 7~jours.
+
+\item \textbf{Audit hebdomadaire des logs d'exécution}~: entry et exit time, prix, fees, slippage. Permet de détecter les dérapages d'exécution (brokers qui rejettent les petits ordres ou appliquent du \emph{requote} silencieux).
+
+\item \textbf{Procédure de \emph{disaster recovery}}~: capacité à liquider l'ensemble des positions en moins de 10~minutes via une \emph{kill switch} manuelle. Cette procédure doit être testée en paper-trade au moins une fois avant le go-live.
+\end{enumerate}
+
+\subsection{Décisionnaires et responsabilités}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lll}
+\toprule
+\textbf{Action} & \textbf{Responsable} & \textbf{Fréquence} \\
+\midrule
+Re-run stress test & Opérateur quantitatif & Mensuelle \\
+Monitoring drawdown live & Risque & Quotidienne \\
+Audit logs d'exécution & Operations & Hebdomadaire \\
+Refresh données macro & Pipeline automatisé & Horaire \\
+Revalidation des hyperparamètres & Recherche & Semestrielle \\
+Test de \emph{kill switch} & Operations & Trimestrielle \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+\textbf{La règle cardinale~:} aucun élément de cette check-list ne doit être ignoré, même \enquote{temporairement}. Les incidents en production sont presque toujours la conséquence d'un élément \enquote{sauté pour aller plus vite}. La discipline de cette check-list \emph{est} la stratégie de risque. Elle constitue la condition contractuelle implicite du déploiement de la stratégie avec capital réel.
+\end{insightbox}

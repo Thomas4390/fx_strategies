@@ -82,7 +82,7 @@ def plot_weights_stacked_area(
         title=title,
         height=height,
         yaxis=dict(title="Weight", tickformat=".0%"),
-        hovermode="x unified",
+        hovermode="closest",
         legend=dict(orientation="h", y=-0.15),
     )
     _apply_title_layout(fig, title)
@@ -122,7 +122,7 @@ def plot_weights_rolling_mean(
         title=title,
         height=height,
         yaxis=dict(title="Weight", tickformat=".0%"),
-        hovermode="x unified",
+        hovermode="closest",
     )
     _apply_title_layout(fig, title)
     return fig
@@ -209,7 +209,7 @@ def plot_strategy_contribution(
         title=title,
         height=height,
         yaxis=dict(title="Cumulative return contribution", tickformat=".1%"),
-        hovermode="x unified",
+        hovermode="closest",
         legend=dict(orientation="h", y=-0.15),
     )
     _apply_title_layout(fig, title)
@@ -281,7 +281,7 @@ def plot_rolling_correlation_pairs(
         title=title,
         height=height,
         yaxis=dict(title="Rolling correlation", range=[-1, 1]),
-        hovermode="x unified",
+        hovermode="closest",
     )
     _apply_title_layout(fig, title)
     return fig
@@ -347,7 +347,7 @@ def plot_leverage_and_vol(
 
     fig.update_yaxes(title="Leverage", row=1, col=1)
     fig.update_yaxes(title="Annualized vol", tickformat=".0%", row=2, col=1)
-    fig.update_layout(title=title, height=height, hovermode="x unified", showlegend=False)
+    fig.update_layout(title=title, height=height, hovermode="closest", showlegend=False)
     _apply_title_layout(fig, title)
     return fig
 
@@ -424,7 +424,7 @@ def plot_dd_cap_activity(
 
     fig.update_yaxes(title="Equity", row=1, col=1)
     fig.update_yaxes(title="DD cap scale", range=[0, 1.1], row=2, col=1)
-    fig.update_layout(title=title, height=height, hovermode="x unified")
+    fig.update_layout(title=title, height=height, hovermode="closest")
     _apply_title_layout(fig, title)
     return fig
 
@@ -496,7 +496,7 @@ def plot_regime_overlay(
         title=title,
         height=height,
         shapes=shapes,
-        hovermode="x unified",
+        hovermode="closest",
         yaxis=dict(title="Equity"),
     )
     _apply_title_layout(fig, title)
@@ -545,7 +545,7 @@ def plot_turnover(
         title=title,
         height=height,
         yaxis=dict(title="Turnover (one-way)", tickformat=".1%"),
-        hovermode="x unified",
+        hovermode="closest",
     )
     _apply_title_layout(fig, title)
     return fig

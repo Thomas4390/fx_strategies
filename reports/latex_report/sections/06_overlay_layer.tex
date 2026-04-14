@@ -1,0 +1,78 @@
+\section{Architecture de pondération et gestion du risque}
+\label{sec:overlay}
+
+\subsection{Allocation statique 80 / 10 / 10}
+
+L'allocation du portefeuille est \textbf{statique et non discrétionnaire}~:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lr}
+\toprule
+\textbf{Moteur} & \textbf{Poids cible} \\
+\midrule
+Moteur 1 --- Mean Reversion Intraday Filtré & 80\,\% \\
+Moteur 2 --- Momentum Journalier Multi-Paires & 10\,\% \\
+Moteur 3 --- Mean Reversion Journalière par RSI & 10\,\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Pas d'adaptation de régime, pas de risk-parity dynamique.} Ce choix, contre-intuitif à première vue, est le résultat de plusieurs tests comparatifs conduits pendant la recherche~:
+
+\begin{itemize}
+\item Une allocation dite \emph{regime-adaptive}, fondée sur une matrice de priors indexée par régime de volatilité et de tendance, a été testée et \emph{sous-performe} une allocation par risk-parity simple (Sharpe 0.51 contre 0.64). La raison~: les régimes ne sont pas suffisamment différenciés sur la fenêtre historique disponible pour que la commutation de poids apporte un gain net.
+\item Une allocation par risk-parity (inverse-vol) concentre mécaniquement les poids sur le Moteur~1 dont la volatilité intrinsèque est très basse, sans bénéfice marginal puisque sa volatilité n'est pas le facteur limitant de sa contribution.
+\item Les poids statiques offrent l'avantage supplémentaire d'un \textbf{turnover quasi-nul} au niveau portefeuille~: les frais de rebalancement inter-moteurs sont estimés à 5--10~points de base par an, négligeables face au rendement cible de 13\,\% CAGR.
+\end{itemize}
+
+\subsection{Couche de ciblage de volatilité}
+
+Le ciblage de volatilité est appliqué globalement sur le portefeuille combiné. À chaque instant $t$, le levier est calculé selon~:
+
+\[
+\mathrm{lev}_t \;=\; \min\!\left( \frac{v^{*}}{\max\!\bigl(\sigma^{21}_{t-1},\, \sigma^{63}_{t-1}\bigr)_{\text{clip}\,\ge\,0.02}},\; L_{\max} \right)
+\]
+
+avec $v^{*} = 0.28$ la volatilité cible, $L_{\max} = 12$ le plafond de levier, et $\sigma^{21}$ et $\sigma^{63}$ les volatilités réalisées annualisées sur 21 et 63 jours glissants respectivement.
+
+\textbf{Quatre points de conception méritent explication~:}
+
+\begin{enumerate}
+\item \textbf{Estimateur pessimiste $\max(\sigma^{21}, \sigma^{63})$}~: prendre le maximum entre une fenêtre courte (réactive aux chocs) et une fenêtre longue (stable) protège contre la sur-leverage en période de calme apparent. Pendant les transitions de régime, la volatilité courte monte avant la longue, et l'estimateur capture immédiatement le nouveau régime.
+\item \textbf{Lag d'un bar anti look-ahead}~: le levier à l'instant $t$ utilise les volatilités calculées strictement avant $t$~--- aucune information future ne contamine le calcul.
+\item \textbf{Plancher de volatilité à 0.02}~: empêche un levier infini pendant les périodes ultra-calmes (phase pré-crise typique), où la volatilité réalisée peut s'effondrer sous 1\,\% annualisé.
+\item \textbf{Plafond dur à 12$\times$}~: à volatilité cible 0.28 et volatilité unlevered réelle d'environ 1.3\,\%, le calcul produirait un levier d'environ 21$\times$ sans plafond. Le cap à 12$\times$ se déclenche donc en permanence. Ce comportement est voulu~: le plafond agit comme une soupape de sécurité pré-événement qui limite l'exposition maximale même en période de calme prolongé.
+\end{enumerate}
+
+\begin{insightbox}
+\textbf{Sensibilité aux paramètres du ciblage de volatilité~:} les tests conduits sur la grille $\{0.15, 0.18, 0.20, 0.22, 0.25, 0.28\} \times \{10, 15, 20\}$ montrent un plateau de Sharpe autour de 0.97 sur l'ensemble de la grille (voir tableau~\ref{tab:sensitivity}). Le choix $(0.28, 12)$ n'est pas un pic isolé~: il appartient à une \emph{région plate}, ce qui garantit la robustesse de la performance face à un léger décalage de calibration.
+\end{insightbox}
+
+\input{tables/sensitivity.tex}
+
+\subsection{Protection drawdown --- disponible mais désactivée}
+
+Le moteur de backtest dispose également d'un mécanisme de \emph{drawdown cap} qui déleverage progressivement le portefeuille à mesure que le drawdown s'approfondit, selon une table pré-calibrée~:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lr}
+\toprule
+\textbf{Drawdown courant} & \textbf{Échelle de levier appliquée} \\
+\midrule
+0--10\,\% & 1.00$\times$ (inchangé) \\
+10--20\,\% & taper linéaire 1.00 $\rightarrow$ 0.60 \\
+20--30\,\% & taper 0.60 $\rightarrow$ 0.35 \\
+30--35\,\% & taper 0.35 $\rightarrow$ 0.15 (plancher) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le drawdown est calculé sur l'équité pré-cap et lagué d'un bar pour éviter toute circularité.
+
+\begin{warningbox}
+\textbf{Pourquoi ce dispositif est-il désactivé dans la configuration retenue~?} Les tests empiriques ont mesuré que sur ce portefeuille spécifique, le drawdown cap \emph{dégrade} le Sharpe (passage de 0.88 à 0.62) au lieu de le protéger. La raison est structurelle~: les drawdowns du portefeuille combiné sont peu profonds mais lents à récupérer. Le cap déleverage pendant la phase de rebond, privant le portefeuille du retour à la moyenne qui aurait restauré l'équité. C'est un cas où la règle classique de tactical asset allocation ne s'applique pas~--- le cap reste disponible dans le moteur, mais désactivé pour cette stratégie.
+\end{warningbox}
+
+Le dispositif reste utile en assurance si la stratégie est ultérieurement étendue avec un moteur plus volatile, ou si l'horizon d'investissement devient plus long avec des crises \emph{tail} plus fréquentes.

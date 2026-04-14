@@ -325,6 +325,7 @@ def pipeline(
     n_sub: int = 5,
     leverage: float = 2.0,
     fees: float = 0.00035,
+    slippage: float = 0.0001,
     init_cash: float = 1_000_000.0,
 ) -> tuple[vbt.Portfolio, CompositeAlphaIndicator]:
     """Investigation path — Composite FX Alpha daily rebalance.
@@ -341,7 +342,11 @@ def pipeline(
     else:
         close_any = data
     close_daily = close_any.vbt.resample_apply("1D", "last").dropna()
-    returns_daily = np.log(close_daily / close_daily.shift(1)).fillna(0.0)
+    # Use simple returns (not log) so the proxy_equity recurrence inside
+    # compute_composite_nb ( proxy_equity[i] = proxy_equity[i-1] * (1 + r) )
+    # is numerically consistent. The ewma_vol kernel is scale-invariant so
+    # this change is harmless for the vol_scale branch.
+    returns_daily = close_daily.pct_change().fillna(0.0)
 
     (
         momentum,
@@ -388,6 +393,7 @@ def pipeline(
         init_cash=init_cash,
         leverage=leverage,
         fees=fees,
+        slippage=slippage,
         freq="1D",
     )
 
@@ -431,6 +437,7 @@ def pipeline_nb(
     n_sub: int = 5,
     leverage: float = 2.0,
     fees: float = 0.00035,
+    slippage: float = 0.0001,
     init_cash: float = 1_000_000.0,
     ann_factor: float = COMPOSITE_ANN_FACTOR,
     cutoff: float = 0.05,
@@ -457,6 +464,7 @@ def pipeline_nb(
         n_sub=n_sub,
         leverage=leverage,
         fees=fees,
+        slippage=slippage,
         init_cash=init_cash,
     )
     returns = pf.returns.values
@@ -517,6 +525,7 @@ def create_cv_pipeline(
         n_sub=5,
         leverage=2.0,
         fees=0.00035,
+        slippage=0.0001,
         init_cash=1_000_000.0,
         ann_factor=COMPOSITE_ANN_FACTOR,
         cutoff=0.05,
@@ -559,6 +568,7 @@ def create_cv_pipeline(
         n_sub: int = defaults["n_sub"],
         leverage: float = defaults["leverage"],
         fees: float = defaults["fees"],
+        slippage: float = defaults["slippage"],
         init_cash: float = defaults["init_cash"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
@@ -584,6 +594,7 @@ def create_cv_pipeline(
             n_sub=n_sub,
             leverage=leverage,
             fees=fees,
+            slippage=slippage,
             init_cash=init_cash,
         )
         returns = pf.returns.values

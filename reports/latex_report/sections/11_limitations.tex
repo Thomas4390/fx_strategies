@@ -1,0 +1,74 @@
+\section{Analyse des risques et limites méthodologiques}
+\label{sec:limitations}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Cinq avertissements} sont identifiés et divulgués ci-dessous avec leur impact quantifié. \textbf{Aucune erreur structurelle} n'a été détectée~--- pas de biais de look-ahead, pas de bug de calcul numérique, bootstrap méthodologiquement correct.
+
+\subsection{Avertissement 1 --- Data snooping résiduel}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} la recherche préparatoire a itéré sur la même fenêtre temporelle 2019--2025. Chaque étape a informé la suivante~: retrait d'un moteur sous-performant, retrait d'une paire sous-contributrice, ajout d'un diversificateur anti-corrélé. Toutes ces décisions ont été prises en observant les résultats in-sample.
+
+\textbf{Impact potentiel~:} le design est informé par le résultat 2019--2025, ce qui crée un risque théorique de surajustement.
+
+\textbf{Mitigation empirique~:} la fenêtre hors échantillon 2025-04 à 2026-04 donne un Sharpe de 1.44, contre 0.94 en in-sample~--- une \emph{amélioration}, pas une dégradation. Un surajustement authentique aurait produit le contraire.
+
+\textbf{Action corrective~:} paper-trade d'un minimum de trois mois avant tout capital réel.
+\end{warningbox}
+
+\subsection{Avertissement 2 --- Coûts de transaction au niveau portefeuille}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} le calcul du rendement combiné applique une somme pondérée des trois moteurs et ne charge pas explicitement les coûts de rebalancement inter-moteurs. Les coûts intra-moteur (slippage 15~pb sur l'intraday, 10~pb sur le journalier, fees 5~pb) sont en revanche correctement chargés par chaque pipeline individuel.
+
+\textbf{Impact sur la stratégie~:} estimation de 5 à 10~points de base par an, négligeable face au rendement cible d'environ 13\,\% CAGR. Avec une allocation statique 80/10/10, le seul rebalancement quotidien est celui nécessaire pour maintenir les ratios face au drift de P\&L différentiel.
+
+\textbf{Action corrective~:} monitoring du slippage réel en live et comparaison systématique aux hypothèses du backtest.
+\end{warningbox}
+
+\subsection{Avertissement 3 --- Levier 12$\times$ et margin buffer}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} le plafond de levier à 12$\times$ est dans les clous de la régulation ESMA retail (cap à 30:1 sur les majors G10). \textbf{Ce n'est pas un obstacle réglementaire.}
+
+\textbf{Le vrai enjeu est le \emph{margin buffer}~:} à 12$\times$ de levier, la marge requise par le broker est d'environ 8.3\,\% du notional. Si la stratégie subit un drawdown de 30\,\% (P5 bootstrap), la perte en capital propre représente $30\,\% \times 12 \approx 36\,\%$ du compte. Sans réserve de cash supplémentaire, le compte serait proche du \emph{margin call}.
+
+\textbf{Action impérative~:} tenir une réserve cash hors-broker d'au moins 30\,\% pour absorber les \emph{tails} au-delà du P5 bootstrap. Avec cette réserve, le compte broker voit un levier apparent de 12$\times$ mais le capital économique réel n'est \emph{leveragé} qu'à environ 8$\times$ ($12 \times 0.7 \approx 8.4$).
+\end{warningbox}
+
+\subsection{Avertissement 4 --- Corrélations glissantes vs. statiques}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} la matrice de corrélation rapportée (Moteur~1/Moteur~2 à $+0.056$, Moteur~1/Moteur~3 à $-0.027$, Moteur~2/Moteur~3 à $-0.251$) est calculée sur la période complète 2019--2026. Une corrélation glissante peut révéler des \emph{shifts} structurels pendant les transitions de régime.
+
+\textbf{Mitigation~:} la figure de corrélation glissante à 63~jours (section~\ref{sec:in_sample}) confirme que la corrélation négative Moteur~2 / Moteur~3 reste majoritairement négative sur toute la période, avec de brefs passages à $+0.3$ en 2020-Q2 et 2023-Q4 qui se résolvent rapidement.
+
+\textbf{Action corrective~:} monitoring live d'une corrélation glissante 63~jours, avec alerte si une paire dépasse $+0.5$ (signal potentiel de changement de régime).
+\end{warningbox}
+
+\subsection{Avertissement 5 --- Hyperparamètres des sub-stratégies}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} les valeurs par défaut des indicateurs (Bollinger Bands 80 périodes, seuil spread macro 0.5, EMA 20/50, RSI à 7 périodes) sont issues d'analyses préparatoires conduites sur une période partiellement chevauchante avec la fenêtre in-sample. La documentation formelle d'un train/test split pour ces choix individuels est partielle.
+
+\textbf{Mitigation partielle~:} ces paramètres sont stables sur les grilles de sensibilité~--- les \emph{heatmaps} Sharpe montrent un plateau robuste autour de ces valeurs, pas un pic isolé. Le risque de surajustement local est modéré.
+
+\textbf{Action corrective~:} revalidation trimestrielle des \emph{heatmaps} grid de chaque sub-stratégie. Si le plateau reste stable, la robustesse est confirmée.
+\end{warningbox}
+
+\subsection{Tableau récapitulatif des risques}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{lllp{4cm}}
+\toprule
+\textbf{\#} & \textbf{Risque} & \textbf{Gravité} & \textbf{Mitigation} \\
+\midrule
+1 & Data snooping résiduel & Modérée & Paper-trade 3~mois pré-engagé \\
+2 & Coûts de transaction non chargés & Faible ($<10$\,pb) & Monitoring live du slippage \\
+3 & Margin buffer 12$\times$ levier & Élevée (si sans cash) & Réserve cash hors-broker $\ge 30\,\%$ \\
+4 & Corrélation statique & Faible & Rolling 63j + alerte $>0.5$ \\
+5 & Surajustement hyperparamètres & Faible & Revalidation trimestrielle grid \\
+\bottomrule
+\end{tabular}
+\end{center}

@@ -75,17 +75,31 @@ def make_fullscreen(fig: go.Figure) -> go.Figure:
     Drops fixed width/height, enables autosize, and tightens margins so
     the chart stretches to the full window when embedded in the
     fullscreen HTML shell.
+
+    The legend is anchored to the bottom of the viewport so it never
+    collides with the title bar above the plot area, and the hover mode
+    is set to ``closest`` so hovering a curve shows only that curve's
+    label rather than every trace at the same x-coordinate.
     """
     fig.update_layout(
         autosize=True,
-        margin={"l": 60, "r": 40, "t": 110, "b": 50},
+        margin={"l": 60, "r": 40, "t": 110, "b": 110},
         legend={
             "orientation": "h",
-            "yanchor": "bottom",
-            "y": 1.015,
+            "yanchor": "top",
+            "y": -0.12,
             "xanchor": "center",
             "x": 0.5,
+            "bgcolor": "rgba(255,255,255,0.85)",
+            "bordercolor": "rgba(120,120,120,0.3)",
+            "borderwidth": 1,
         },
+        hovermode="closest",
+        hoverlabel=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            bordercolor="rgba(80,80,80,0.6)",
+            font=dict(size=12),
+        ),
     )
     # Clear any fixed pixel dimensions so CSS 100vh/100vw wins.
     fig.layout.height = None

@@ -1,0 +1,72 @@
+\section{Moteur 2 --- Momentum Journalier Multi-Paires (10\,\%)}
+\label{sec:ts_momentum}
+
+\subsection{Intuition économique}
+
+\begin{thesisbox}
+\textbf{Les divergences de politique monétaire entre grandes banques centrales créent des tendances FX durables.} Lorsque la BCE et la Fed divergent~--- l'une en cycle de hausse, l'autre en pause ou en baisse~--- le différentiel de taux d'intérêt attendu se traduit par un mouvement directionnel du taux de change. Ce mouvement est lent, déployé sur plusieurs semaines, et capturable par un signal de tendance simple fondé sur un croisement de moyennes mobiles exponentielles, combiné à une confirmation par l'indicateur RSI.
+\end{thesisbox}
+
+Trois mécanismes économiques bien documentés sous-tendent ce signal~:
+
+\begin{itemize}
+\item \textbf{Forward guidance asymétrique}~: lorsqu'une banque centrale télégraphie un cycle de hausse prolongé, le marché prend plusieurs semaines à intégrer l'ensemble de la trajectoire anticipée, créant une tendance lente et exploitable.
+\item \textbf{Carry roll-down}~: le différentiel de taux courts induit un flux d'investissement directionnel (\emph{carry trade}) qui renforce la tendance initiée par le signal de taux.
+\item \textbf{Rebalancement des réserves}~: les banques centrales de pays émergents rebalancent leurs réserves de change en fonction du niveau relatif de USD, EUR et JPY, créant des flux acheteurs ou vendeurs prévisibles à fréquence mensuelle.
+\end{itemize}
+
+\subsection{Mécanique du signal}
+
+\begin{enumerate}
+\item \textbf{Moyennes mobiles exponentielles EMA 20 et EMA 50} sur le close journalier de chaque paire.
+\item \textbf{Indicateur RSI à 7~périodes} comme filtre de confirmation~:
+  \begin{itemize}
+  \item Long si $\mathrm{EMA}_{\mathrm{fast}} > \mathrm{EMA}_{\mathrm{slow}}$ \emph{et} $\mathrm{RSI} < 60$~;
+  \item Short si $\mathrm{EMA}_{\mathrm{fast}} < \mathrm{EMA}_{\mathrm{slow}}$ \emph{et} $\mathrm{RSI} > 40$.
+  \end{itemize}
+\item \textbf{Anti look-ahead strict}~: le signal à l'instant $t$ utilise les moyennes et le RSI calculés sur les clôtures jusqu'à $t-1$ inclus.
+\item \textbf{Ciblage de volatilité par paire} à 10\,\% annualisé, avec un plafond de levier individuel à 5$\times$.
+\item \textbf{Portefeuille du moteur}~: moyenne \emph{equal-weight} des trois paires retenues (EUR-USD, GBP-USD, USD-JPY).
+\end{enumerate}
+
+\subsection{Justification du choix des trois paires}
+
+La décomposition de la performance pair par pair sur la période 2019--2026 révèle que USD-CAD est le pire contributeur six années sur huit, avec des pertes importantes y compris lors des meilleures années des autres paires~:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Année} & \textbf{EUR-USD} & \textbf{GBP-USD} & \textbf{USD-JPY} & \textbf{USD-CAD} \\
+\midrule
+2019 & $-3.36$\,\% & $+3.22$\,\% & $+1.67$\,\% & \textcolor{combinedBurgundy}{$-8.94$\,\%} \\
+2022 & $+12.17$\,\% & $+12.90$\,\% & $+2.58$\,\% & \textcolor{combinedBurgundy}{$-7.32$\,\%} \\
+2023 & $-2.57$\,\% & $+12.52$\,\% & $+6.20$\,\% & \textcolor{combinedBurgundy}{$-5.72$\,\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Retirer USD-CAD du Moteur~2 augmente son Sharpe de 0.44 à 0.57, soit un gain relatif de 30\,\%}, sans dégrader le drawdown maximal qui reste autour de $-12\,\%$. L'explication retenue~: le signal EMA 20/50 + RSI(7) est mal adapté à la microstructure de USD-CAD, qui est fortement \emph{range-bound} autour du prix du pétrole WTI et présente peu de tendances exploitables. Un indicateur de tendance simple n'y trouve pas de signal net.
+
+\subsection{Performance historique}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_ts_momentum_3p_equity.png}
+\caption{Équité et drawdown du Moteur~2 (trois paires EUR-USD, GBP-USD, USD-JPY) pris isolément sur 2019--2026.}
+\end{figure}
+
+\begin{itemize}
+\item \textbf{Rendement total full-period}~: $+35.70\,\%$
+\item \textbf{Sharpe standalone}~: $0.57$
+\item \textbf{Max Drawdown}~: $-11.76\,\%$
+\item \textbf{Sharpe sur la fenêtre hors échantillon}~: $1.26$ \emph{(moteur principal de la performance hors échantillon)}
+\end{itemize}
+
+\subsection{Épisodes représentatifs}
+
+\input{tables/trade_examples_ts_momentum.tex}
+
+\begin{insightbox}
+\textbf{Le Moteur~2 est le contributeur principal de la performance hors échantillon.} Sur la fenêtre de validation 2025-04 à 2026-04, ce moteur produit un Sharpe de 1.26, bien au-dessus de son Sharpe full-period de 0.57. Cela suggère que les régimes récents sont particulièrement favorables aux tendances FX structurelles~--- ce qui confirme l'intérêt de maintenir un moteur de suivi de tendance dans le portefeuille, même lorsque son Sharpe standalone in-sample paraît modeste.
+\end{insightbox}

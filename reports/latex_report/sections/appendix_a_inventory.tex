@@ -1,0 +1,64 @@
+\section{Annexe A --- Glossaire des termes techniques}
+\label{app:glossary}
+
+Ce glossaire regroupe les termes techniques utilisés dans le rapport, à destination d'un lecteur qui n'est pas nécessairement familier de la recherche quantitative sur le marché des changes.
+
+\subsection*{Mécanique du signal}
+
+\begin{description}[style=nextline, leftmargin=0.5cm, itemsep=0.4em]
+\item[\textbf{Mean reversion} (retour à la moyenne)] Stratégie qui mise sur le retour d'un prix vers une valeur de référence après un écart jugé excessif. Sur le marché FX, la valeur de référence peut être un VWAP intraday ou un niveau neutre d'un oscillateur comme le RSI.
+
+\item[\textbf{Momentum} (suivi de tendance)] Stratégie qui mise sur la persistance d'une direction de prix~: achat quand le prix monte au-dessus d'une moyenne mobile, vente à la baisse en cas inverse. Exploitation économique des tendances créées par les divergences de politique monétaire et les flux de capitaux.
+
+\item[\textbf{VWAP} (Volume-Weighted Average Price)] Prix moyen pondéré par le volume sur une période donnée. Sur le marché FX, le volume est typiquement estimé ou forfaitaire et le VWAP se rapproche d'une moyenne temporelle pondérée. Utilisé comme référence de \enquote{prix juste} à laquelle le prix tend à revenir pendant les sessions de forte liquidité.
+
+\item[\textbf{Bollinger Bands} (bandes de Bollinger)] Indicateur technique qui entoure un prix (ou sa déviation par rapport à un VWAP) d'une bande supérieure et inférieure calculées à partir de l'écart-type glissant sur une fenêtre. Un toucher de bande est interprété comme un signal de retour à la moyenne.
+
+\item[\textbf{EMA} (Exponential Moving Average)] Moyenne mobile exponentielle qui pondère plus fortement les observations récentes. Un croisement d'une EMA courte au-dessus d'une EMA longue est un signal classique de tendance haussière, et inversement.
+
+\item[\textbf{RSI} (Relative Strength Index)] Oscillateur borné entre 0 et 100 qui mesure la force relative des mouvements récents à la hausse vs. à la baisse. Les seuils classiques sont 30 (sur-vente) et 70 (sur-achat), utilisés comme signaux de retour à la moyenne.
+\end{description}
+
+\subsection*{Gestion du portefeuille}
+
+\begin{description}[style=nextline, leftmargin=0.5cm, itemsep=0.4em]
+\item[\textbf{Moteur} (ou sleeve)] Sous-stratégie autonome qui produit son propre flux de rendements, combinée avec d'autres moteurs au sein d'un portefeuille agrégé.
+
+\item[\textbf{Vol targeting} (ciblage de volatilité)] Technique qui ajuste dynamiquement le levier appliqué à une stratégie de sorte que la volatilité réalisée du portefeuille reste proche d'une cible annualisée pré-définie. En période de marché calme, le levier augmente~; en période volatile, il diminue automatiquement.
+
+\item[\textbf{Drawdown}] Perte maximale depuis un sommet d'équité, exprimée en pourcentage. Le \emph{Max Drawdown} est la pire perte de la trajectoire complète. C'est la métrique de risque la plus importante pour un investisseur exposé au capital propre.
+
+\item[\textbf{Sharpe Ratio}] Rapport entre le rendement excédentaire annualisé et la volatilité annualisée. Un Sharpe supérieur à 1.0 est généralement considéré comme un bon \emph{edge}~; un Sharpe supérieur à 1.5 est exceptionnel en régime réel.
+
+\item[\textbf{CAGR} (Compound Annual Growth Rate)] Taux de croissance annualisé composé, équivalent à la performance annuelle constante qui aurait produit le rendement total observé sur la période.
+
+\item[\textbf{Allocation statique}] Pondération fixe des moteurs au sein du portefeuille, par opposition à une allocation dynamique qui réagirait aux régimes de marché.
+\end{description}
+
+\subsection*{Validation et stress testing}
+
+\begin{description}[style=nextline, leftmargin=0.5cm, itemsep=0.4em]
+\item[\textbf{In-sample}] Période de données utilisée pour la conception de la stratégie et le tuning de ses paramètres.
+
+\item[\textbf{Out-of-sample} (hors échantillon)] Période de données \emph{non utilisée} pour la conception, servant à vérifier que la stratégie n'est pas simplement ajustée au bruit historique. Idéalement, cette période est réservée avant tout design.
+
+\item[\textbf{Walk-forward}] Validation par fenêtres consécutives dans le temps, par exemple année par année. Permet de vérifier que la performance n'est pas concentrée sur une seule fenêtre exceptionnelle.
+
+\item[\textbf{Bootstrap par blocs mobiles}] Technique de ré-échantillonnage statistique qui préserve les autocorrélations locales (intra-mois) tout en cassant la séquence macroéconomique globale. Produit des trajectoires alternatives pour estimer les percentiles de risque.
+
+\item[\textbf{Look-ahead bias}] Erreur méthodologique classique où le backtest utilise de l'information future à l'instant où il prend une décision. Un \emph{edge} qui dépend d'un look-ahead bias est illusoire et disparaît en production.
+
+\item[\textbf{Scenario replay}] Rejeu de la stratégie sur une fenêtre historique nommée (crise Covid, crise GBP 2022, etc.) pour évaluer son comportement dans un régime identifiable.
+\end{description}
+
+\subsection*{Exécution}
+
+\begin{description}[style=nextline, leftmargin=0.5cm, itemsep=0.4em]
+\item[\textbf{Slippage}] Différence entre le prix théorique utilisé par le backtest et le prix réellement obtenu à l'exécution. Typiquement dû au déplacement du prix pendant la latence d'ordre ou à la largeur du spread bid-ask.
+
+\item[\textbf{Margin call}] Appel de marge du broker lorsque la valeur nette du compte passe sous le seuil requis pour maintenir les positions ouvertes. Déclenche une liquidation forcée si la réserve n'est pas complétée.
+
+\item[\textbf{Paper-trade}] Exécution de la stratégie en environnement réel (données live, latence réelle) mais sans capital réel~--- utilisé pour valider l'exécution opérationnelle avant le go-live.
+
+\item[\textbf{Kill switch}] Dispositif de liquidation d'urgence permettant de fermer toutes les positions en cas de panne, d'incident, ou de comportement anormal du système.
+\end{description}

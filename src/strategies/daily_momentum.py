@@ -87,12 +87,24 @@ def backtest_xs_momentum(
     w_long: int = 63,
     target_vol: float = 0.10,
 ) -> pd.Series:
-    """XS momentum as raw daily returns Series (used by combined_portfolio)."""
-    weights = compute_xs_momentum_weights(closes, w_short, w_long)
-    daily_rets = closes.vbt.pct_change()
-    port_ret = (weights * daily_rets).sum(axis=1).dropna()
+    """XS momentum as raw daily returns Series (used by combined_portfolio).
 
-    vol_21 = port_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
+    Must stay numerically aligned with :func:`pipeline_xs` — both are the
+    investigation/grid-search and combined-portfolio entry points for the
+    XS momentum sleeve, and silently diverging ``NaN`` handling between
+    them means the Sharpe reported by ``run_grid_xs`` does not correspond
+    to the daily returns fed into :func:`build_combined_portfolio`. See
+    audit finding H-1.
+    """
+    weights = compute_xs_momentum_weights(closes, w_short, w_long)
+    # NaN-handling mirrors pipeline_xs: pct_change().fillna(0) BEFORE the
+    # weighted sum so the proxy port return has the same index as the
+    # weights (no .dropna() truncation that would misalign the later
+    # rolling-vol / leverage calculation).
+    daily_rets = closes.vbt.pct_change().fillna(0.0)
+    port_ret = (weights * daily_rets).sum(axis=1)
+
+    vol_21 = port_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
     lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1)
     return port_ret * lev.fillna(1.0)
 
@@ -122,7 +134,7 @@ def backtest_ts_momentum_rsi(
     signal = signal.shift(1)
 
     daily_ret = close_daily.vbt.pct_change()
-    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
+    vol_21 = daily_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
     lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1)
     return (signal * daily_ret * lev.fillna(1.0)).dropna()
 
@@ -152,27 +164,6 @@ def backtest_ts_momentum_portfolio(
     # skipna=True so missing data for one pair does not bias the mean
     # toward zero (H3 fix).
     return pd.concat(pair_rets, axis=1).mean(axis=1, skipna=True)
-
-
-def backtest_rsi_mr(
-    close_daily: pd.Series,
-    rsi_period: int = 14,
-    oversold: int = 25,
-    overbought: int = 75,
-    target_vol: float = 0.10,
-) -> pd.Series:
-    """RSI mean reversion raw returns — kept for combined_portfolio imports."""
-    rsi = vbt.RSI.run(close_daily, window=rsi_period).rsi
-
-    signal = pd.Series(0.0, index=close_daily.index)
-    signal[rsi < oversold] = 1.0
-    signal[rsi > overbought] = -1.0
-    signal = signal.shift(1)
-
-    daily_ret = close_daily.vbt.pct_change()
-    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
-    lev = (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1)
-    return (signal * daily_ret * lev.fillna(1.0)).dropna()
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -223,7 +214,7 @@ def pipeline_xs(
 
     daily_rets = closes.vbt.pct_change().fillna(0)
     proxy_port_ret = (weights * daily_rets).sum(axis=1)
-    vol_21 = proxy_port_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
+    vol_21 = proxy_port_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
     lev_mult = (
         (target_vol / vol_21.clip(lower=0.01)).clip(upper=5.0).shift(1).fillna(1.0)
     )
@@ -454,7 +445,7 @@ def pipeline_ts(
     short_exits = ~short_ok & prev_short_ok
 
     daily_ret = close_daily.vbt.pct_change()
-    vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
+    vol_21 = daily_ret.vbt.rolling_std(21, minp=21, ddof=1) * np.sqrt(252)
     dyn_lev = (
         (target_vol / vol_21.clip(lower=0.01)).clip(upper=3.0).shift(1).fillna(1.0)
     )
@@ -529,15 +520,6 @@ def run_grid_ts(
     metric_type: int = SHARPE_RATIO,
     **kwargs: Any,
 ) -> pd.Series:
-    def _param(v):
-        if isinstance(v, (list, tuple, np.ndarray)):
-            return vbt.Param(
-                list(v), condition="fast_ema < slow_ema" if False else None
-            )
-        return v
-
-    # Note: condition support requires all params to share the same level.
-    # Kept simple for Phase 4 — run all combos then filter post-hoc if needed.
     def _plain(v):
         if isinstance(v, (list, tuple, np.ndarray)):
             return vbt.Param(list(v))

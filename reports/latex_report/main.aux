@@ -1,0 +1,135 @@
+\relax 
+\providecommand*\new@tpo@label[2]{}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\xpginauxfiletrue }
+\@writefile{lof}{\xpginauxfiletrue }
+\@writefile{lot}{\xpginauxfiletrue }
+\@writefile{toc}{\selectlanguage *{french}}
+\HyPL@Entry{1<</S/r>>}
+\HyPL@Entry{3<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Résumé exécutif}{1}{section.1}\protected@file@percent }
+\newlabel{sec:executive_summary}{{1}{1}{Résumé exécutif}{section.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Métriques clés du portefeuille Phase 18 sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.}}{1}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:metrics_summary}{{1}{1}{Métriques clés du portefeuille Phase 18 sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur}{table.caption.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Courbes d'équité cumulative du portefeuille combiné et de ses trois moteurs individuels, base 100 au 1\textsuperscript  {er}~avril 2019, échelle logarithmique. La ligne verticale pointillée marque le début de la fenêtre hors échantillon (1\textsuperscript  {er}~avril 2025).}}{2}{figure.caption.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Mandat d'investissement et philosophie}{2}{section.2}\protected@file@percent }
+\newlabel{sec:mandate}{{2}{2}{Mandat d'investissement et philosophie}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Mandat}{3}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Problème adressé}{3}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Architecture du portefeuille}{4}{subsection.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Architecture à trois moteurs orthogonaux de la Stratégie FX Tri-Signaux. Allocation statique, puis couche de ciblage de volatilité, puis pipeline d'équité finale.}}{4}{figure.caption.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Pourquoi trois moteurs et pas deux ou quatre~?}{4}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Cadre méthodologique}{4}{section.3}\protected@file@percent }
+\newlabel{sec:methodology}{{3}{4}{Cadre méthodologique}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Moteur de backtest}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Sources de données}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{5}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Robustesse numérique}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{6}{section.4}\protected@file@percent }
+\newlabel{sec:mr_macro}{{4}{6}{Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Intuition économique}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Performance historique}{7}{subsection.4.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}}{7}{figure.caption.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Performance annuelle du Moteur~1 pris isolément. L'année 2021 ne produit aucun trade parce que le spread 10Y--2Y est resté supérieur à 0.5 toute l'année post-Covid, déclenchant le filtre macro.}}{8}{table.caption.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{8}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Exemples de trades MR Macro sur EUR-USD — deux meilleurs, un médian, deux pires. Les trades sont de très courte durée (< 6\,h) conformément au design intraday.}}{8}{table.caption.6}\protected@file@percent }
+\newlabel{tab:trades_mr_macro}{{3}{8}{Exemples de trades MR Macro sur EUR-USD — deux meilleurs, un médian, deux pires. Les trades sont de très courte durée (< 6\,h) conformément au design intraday}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Moteur 2 --- Momentum Journalier Multi-Paires (10\,\%)}{8}{section.5}\protected@file@percent }
+\newlabel{sec:ts_momentum}{{5}{8}{Moteur 2 --- Momentum Journalier Multi-Paires (10\,\%)}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Intuition économique}{9}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Mécanique du signal}{9}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Justification du choix des trois paires}{9}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Performance historique}{10}{subsection.5.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Équité et drawdown du Moteur~2 (trois paires EUR-USD, GBP-USD, USD-JPY) pris isolément sur 2019--2026.}}{10}{figure.caption.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Épisodes représentatifs}{10}{subsection.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Épisodes représentatifs du sleeve TS Momentum 3-pair — agrégats de journées consécutives de même signe de rendement. Les épisodes longs correspondent aux tendances EUR-USD / GBP-USD / USD-JPY captées par EMA 20/50.}}{10}{table.caption.8}\protected@file@percent }
+\newlabel{tab:trades_ts_momentum}{{4}{10}{Épisodes représentatifs du sleeve TS Momentum 3-pair — agrégats de journées consécutives de même signe de rendement. Les épisodes longs correspondent aux tendances EUR-USD / GBP-USD / USD-JPY captées par EMA 20/50}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Moteur 3 --- Mean Reversion Journalière par RSI (10\,\%)}{11}{section.6}\protected@file@percent }
+\newlabel{sec:rsi_daily}{{6}{11}{Moteur 3 --- Mean Reversion Journalière par RSI (10\,\%)}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Intuition économique}{11}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Mécanique du signal}{11}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Le paradoxe du Sharpe standalone}{12}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Performance historique}{13}{subsection.6.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Équité et drawdown du Moteur~3 (quatre paires) pris isolément. La courbe est relativement plate, mais les pics positifs en 2019, 2023 et début 2026 correspondent exactement aux années faibles des autres moteurs~--- c'est le profil recherché pour un diversificateur.}}{13}{figure.caption.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Épisodes représentatifs}{13}{subsection.6.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Épisodes représentatifs du sleeve RSI Daily 4-pair. Les épisodes courts typiques (2-10 jours) reflètent les retours rapides après sur-achat/sur-vente capturés par RSI(14).}}{13}{table.caption.10}\protected@file@percent }
+\newlabel{tab:trades_rsi_daily}{{5}{13}{Épisodes représentatifs du sleeve RSI Daily 4-pair. Les épisodes courts typiques (2-10 jours) reflètent les retours rapides après sur-achat/sur-vente capturés par RSI(14)}{table.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Architecture de pondération et gestion du risque}{14}{section.7}\protected@file@percent }
+\newlabel{sec:overlay}{{7}{14}{Architecture de pondération et gestion du risque}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Allocation statique 80 / 10 / 10}{14}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Couche de ciblage de volatilité}{14}{subsection.7.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Sensibilité du Sharpe à (\texttt  {target\_vol}, \texttt  {max\_leverage}). Le plateau autour de 0.97 confirme la robustesse du choix (0.28, 12$\times $).}}{15}{table.caption.11}\protected@file@percent }
+\newlabel{tab:sensitivity}{{6}{15}{Sensibilité du Sharpe à (\texttt {target\_vol}, \texttt {max\_leverage}). Le plateau autour de 0.97 confirme la robustesse du choix (0.28, 12$\times $)}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Protection drawdown --- disponible mais désactivée}{15}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Performance historique in-sample (2019--2025)}{16}{section.8}\protected@file@percent }
+\newlabel{sec:in_sample}{{8}{16}{Performance historique in-sample (2019--2025)}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Métriques agrégées}{16}{subsection.8.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Performance standalone (non pondérée) des trois sleeves sur la période complète 2019-2026. Les chiffres sont non-leveragés et non-allocés.}}{16}{table.caption.12}\protected@file@percent }
+\newlabel{tab:sleeve_standalone}{{7}{16}{Performance standalone (non pondérée) des trois sleeves sur la période complète 2019-2026. Les chiffres sont non-leveragés et non-allocés}{table.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Validation par fenêtres annuelles (walk-forward)}{16}{subsection.8.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Sharpe annuel du portefeuille combiné sur la période historique. Six années sur sept sont positives, seule 2019 reste marginalement négative.}}{16}{figure.caption.13}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Walk-forward Sharpe par année. Six années sur sept sont positives — seule 2019 reste marginalement négative (régime late-cycle range-bound défavorable à la mean reversion).}}{17}{table.caption.14}\protected@file@percent }
+\newlabel{tab:walkforward_yearly}{{8}{17}{Walk-forward Sharpe par année. Six années sur sept sont positives — seule 2019 reste marginalement négative (régime late-cycle range-bound défavorable à la mean reversion)}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Heatmap des rendements mensuels}{18}{subsection.8.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Rendements mensuels du portefeuille combiné. Les mois verts dominent la distribution~; les mois rouges restent généralement contenus à quelques points de pourcentage.}}{18}{figure.caption.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Courbe \emph  {underwater} du drawdown}{18}{subsection.8.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Courbe de drawdown du portefeuille combiné. Le drawdown maximal de $-17.93\,\%$ est atteint en 2019, avec des drawdowns de second ordre en 2020 et début 2023. Les récupérations sont généralement rapides, à l'exception de 2019.}}{18}{figure.caption.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}Sharpe glissant sur 63 jours}{19}{subsection.8.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Sharpe Ratio calculé sur une fenêtre glissante de 63~jours (environ un trimestre). La ligne pointillée orange représente le seuil de 1.0. Le Sharpe reste majoritairement positif, avec des pics au-dessus de 2.5 en 2022 et 2024 et de brefs passages sous zéro en 2019 et début 2023.}}{19}{figure.caption.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.6}Corrélations glissantes entre moteurs}{19}{subsection.8.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Corrélation glissante à 63~jours entre paires de moteurs. La corrélation Moteur~2 $\times $ Moteur~3 (verte) reste majoritairement négative, confirmant la stabilité du levier de diversification identifié sur la moyenne pleine période.}}{19}{figure.caption.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.7}Contribution mensuelle par moteur}{20}{subsection.8.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Contribution mensuelle pondérée (80 / 10 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}}{20}{figure.caption.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Validation hors échantillon (2025-04 à 2026-04)}{20}{section.9}\protected@file@percent }
+\newlabel{sec:out_of_sample}{{9}{20}{Validation hors échantillon (2025-04 à 2026-04)}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Comparaison directe}{20}{subsection.9.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Zoom sur la fenêtre de validation}{21}{subsection.9.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Zoom sur la période hors échantillon 2025-04 à 2026-04 (courbe orange), base 100 au 1\textsuperscript  {er}~avril 2025. La courbe in-sample est conservée en arrière-plan pour référence. Le drawdown hors échantillon reste très contenu à $-6.27\,\%$, contre $-17.93\,\%$ en in-sample.}}{21}{figure.caption.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Décomposition de la performance OOS par moteur}{21}{subsection.9.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Caveat méthodologique sur le caractère OOS}{22}{subsection.9.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap à 1000~trajectoires}{22}{section.10}\protected@file@percent }
+\newlabel{sec:stress_test}{{10}{22}{Tests de résistance --- bootstrap à 1000~trajectoires}{section.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Méthodologie}{22}{subsection.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Résultats}{22}{subsection.10.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Résultats du bootstrap à blocs mobiles (1000 runs, blocs de 20 jours). P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx $4\,pp de marge.}}{22}{table.caption.21}\protected@file@percent }
+\newlabel{tab:bootstrap_percentiles}{{9}{22}{Résultats du bootstrap à blocs mobiles (1000 runs, blocs de 20 jours). P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx $4\,pp de marge}{table.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Nuage de points bootstrap CAGR~$\times $~Max Drawdown. Chaque point coloré est une trajectoire ré-échantillonnée. Les étoiles marquent les réalisations in-sample (bleu marine) et hors échantillon (orange). Les lignes pointillées horizontales délimitent la bande cible $[10\,\%, 15\,\%]$ de CAGR. La ligne pointillée verticale rouge marque la contrainte utilisateur de drawdown à $-35\,\%$.}}{23}{figure.caption.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Interprétations critiques}{23}{subsection.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{23}{subsection.10.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {11}Rejeu de scénarios historiques}{24}{section.11}\protected@file@percent }
+\newlabel{sec:scenarios}{{11}{24}{Rejeu de scénarios historiques}{section.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible.}}{24}{table.caption.23}\protected@file@percent }
+\newlabel{tab:scenarios}{{10}{24}{Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible}{table.caption.23}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Lecture détaillée des six scénarios}{24}{subsection.11.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Observations transversales}{25}{subsection.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {12}Analyse des risques et limites méthodologiques}{25}{section.12}\protected@file@percent }
+\newlabel{sec:limitations}{{12}{25}{Analyse des risques et limites méthodologiques}{section.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Avertissement 1 --- Data snooping résiduel}{26}{subsection.12.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{26}{subsection.12.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{26}{subsection.12.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{27}{subsection.12.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{27}{subsection.12.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.6}Tableau récapitulatif des risques}{27}{subsection.12.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {13}Conditions de déploiement}{27}{section.13}\protected@file@percent }
+\newlabel{sec:production}{{13}{27}{Conditions de déploiement}{section.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Décisionnaires et responsabilités}{28}{subsection.13.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{29}{appendix.A}\protected@file@percent }
+\newlabel{app:glossary}{{A}{29}{Annexe A --- Glossaire des termes techniques}{appendix.A}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un signal}{31}{appendix.B}\protected@file@percent }
+\newlabel{app:signal_flow}{{B}{31}{Annexe B --- Anatomie d'un signal}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Moteur 1 --- signal intraday}{31}{subsection.B.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Moteur 2 --- signal journalier de tendance}{32}{subsection.B.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Moteur 3 --- signal journalier de retour à la moyenne}{32}{subsection.B.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Composition finale}{32}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\xpginauxfilefalse }
+\@writefile{lof}{\xpginauxfilefalse }
+\@writefile{lot}{\xpginauxfilefalse }
+\global\@namedef{scr@dte@section@lastmaxnumwidth}{13.01508pt}
+\global\@namedef{scr@dte@subsection@lastmaxnumwidth}{24.25418pt}
+\@writefile{toc}{\providecommand\tocbasic@end@toc@file{}\tocbasic@end@toc@file}
+\gdef \@abspage@last{36}

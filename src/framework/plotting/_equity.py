@@ -558,6 +558,6 @@ def plot_multi_strategy_equity(
     fig.update_layout(
         title=title, height=height,
         yaxis_title="Normalized Value" if normalize else "Portfolio Value",
-        hovermode="x unified",
+        hovermode="closest",
     )
     return fig

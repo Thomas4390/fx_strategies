@@ -15,10 +15,12 @@
 ]
 \setsansfont{Inter}[
   Scale=MatchLowercase,
-  UprightFont={* Regular},
-  BoldFont={* Bold},
-  ItalicFont={* Italic},
-  BoldItalicFont={* BoldItalic}
+  Extension=.otf,
+  Path=/usr/share/fonts/opentype/inter/,
+  UprightFont=Inter-Regular,
+  BoldFont=Inter-Bold,
+  ItalicFont=Inter-Italic,
+  BoldItalicFont=Inter-BoldItalic
 ]
 \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
 
@@ -50,6 +52,8 @@
 \definecolor{softGreen}{HTML}{E3F2E6}
 
 % ── Core packages ─────────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{float}
@@ -105,10 +109,10 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Phase 18 — Stratégie combinée FX}}
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Stratégie FX Tri-Signaux}}
 \fancyhead[R]{\footnotesize\color{slateGrey}\textsf{\leftmark}}
 \fancyfoot[C]{\footnotesize\color{slateGrey}\thepage}
-\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Document de recherche — 2026}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Rapport d'investissement --- Avril 2026}}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.0pt}
 \renewcommand{\headrule}{\color{primary}\hrule width\headwidth height\headrulewidth}
@@ -216,10 +220,10 @@
   pdfborder={0 0 0},
   bookmarks=true,
   bookmarksnumbered=true,
-  pdftitle={Phase 18 — Rapport de stratégie FX combinée},
+  pdftitle={Stratégie FX Tri-Signaux --- Rapport d'investissement},
   pdfauthor={Thomas Vaudescal},
-  pdfsubject={Stratégie quantitative FX à trois sleeves orthogonaux},
-  pdfkeywords={FX, mean reversion, momentum, RSI, vol targeting, backtest}
+  pdfsubject={Stratégie quantitative FX diversifiée à trois moteurs de rendement},
+  pdfkeywords={FX, mean reversion, momentum, portfolio, risk management}
 ]{hyperref}
 
 % ── Custom commands ──────────────────────────────────────────────
