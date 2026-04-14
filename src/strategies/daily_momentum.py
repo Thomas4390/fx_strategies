@@ -19,7 +19,6 @@ Research findings (walk-forward 2019-2025):
 
 from __future__ import annotations
 
-import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -35,12 +34,6 @@ from framework.pipeline_utils import (
     make_execute_kwargs,
 )
 from utils import load_fx_data
-
-warnings.filterwarnings(
-    "ignore",
-    message=r"Downcasting object dtype arrays on .fillna",
-    category=FutureWarning,
-)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 FX_PAIRS = ["EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD"]
@@ -453,10 +446,12 @@ def pipeline_ts(
     long_ok = trend_long & (rsi < rsi_high)
     short_ok = trend_short & (rsi > rsi_low)
 
-    entries = long_ok & ~long_ok.shift(1).fillna(False)
-    exits = ~long_ok & long_ok.shift(1).fillna(False)
-    short_entries = short_ok & ~short_ok.shift(1).fillna(False)
-    short_exits = ~short_ok & short_ok.shift(1).fillna(False)
+    prev_long_ok = long_ok.shift(1, fill_value=False)
+    prev_short_ok = short_ok.shift(1, fill_value=False)
+    entries = long_ok & ~prev_long_ok
+    exits = ~long_ok & prev_long_ok
+    short_entries = short_ok & ~prev_short_ok
+    short_exits = ~short_ok & prev_short_ok
 
     daily_ret = close_daily.vbt.pct_change()
     vol_21 = daily_ret.vbt.rolling_std(21, minp=10, ddof=1) * np.sqrt(252)
