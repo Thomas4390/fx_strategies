@@ -1,4 +1,4 @@
-\section{Tests de résistance --- bootstrap à 1000~trajectoires}
+\section{Tests de résistance --- bootstrap historique à 1000~trajectoires}
 \label{sec:stress_test}
 
 \subsection{Méthodologie}
@@ -38,3 +38,6 @@ Le même rapport de stress conduit une analyse de sensibilité sur le couple (vo
 \begin{warningbox}
 \textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage par blocs mobiles préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique 2019--2025 contient déjà. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, nous présentons à la section suivante un rejeu explicite de scénarios historiques sélectionnés. Un stress test plus ambitieux sur données pré-2019 pourrait être conduit à la demande du client, sous réserve de disponibilité des données minute FX correspondantes.
 \end{warningbox}
+
+\paragraph{Lien avec la section suivante.}
+Le bootstrap historique présenté ici utilise la méthode Künsch~(1989) à blocs fixes avec 1000~ré-échantillons. La section~\ref{sec:advanced_robustness} applique une suite de tests plus exigeante au même portefeuille~: \emph{block bootstrap} stationnaire Politis--Romano~(1994) avec 3000~ré-échantillons, intervalles de confiance sur les 14~métriques standard, tests de correction d'\textit{overfitting} (\textit{Deflated Sharpe Ratio}, \textit{Haircut Sharpe}, \textit{Probability of Backtest Overfitting}) et tests de supériorité prédictive (Hansen SPA, Romano--Wolf StepM). Les deux sections sont complémentaires~: la section~\ref{sec:stress_test} quantifie la variance de performance sous ré-échantillonnage simple, la section~\ref{sec:advanced_robustness} corrige pour les biais de sélection et de tests multiples.

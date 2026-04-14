@@ -1,0 +1,228 @@
+\section{Principes méthodologiques du \textit{robustness report}}
+\label{app:robustness_methodology}
+
+Cet appendice détaille les principes mathématiques et les références académiques des tests statistiques appliqués en section~\ref{sec:advanced_robustness}. Les formules ci-dessous sont implémentées dans les modules \texttt{framework.robustness} et \texttt{framework.statistical\_testing} du projet.
+
+\subsection{Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}
+\label{app:robustness_problem}
+
+Un rapport de \emph{backtest} standard reporte typiquement trois statistiques ponctuelles~: Sharpe, CAGR, Max~Drawdown. Ces estimateurs souffrent de trois biais qui menacent la validité de l'inférence.
+
+\paragraph{Biais d'échantillon (\textsc{Lo} 2002).} Sur une série iid de $T$~observations, l'écart-type de l'estimateur du Sharpe vaut approximativement~:
+\begin{equation}
+\sigma(\widehat{\mathrm{SR}}) \approx \sqrt{\frac{1 + 0.5\,\widehat{\mathrm{SR}}^{2}}{T}}
+\label{eq:lo_sharpe_std}
+\end{equation}
+Sur 7~ans de données journalières ($T \approx 1764$), un Sharpe réel nul peut produire un Sharpe observé de $\pm 0.25$ par pure chance. Le bruit d'estimation est loin d'être négligeable.
+
+\paragraph{Biais de sélection (\textsc{Bailey--L\'opez~de~Prado} 2014).} Lorsqu'on teste $N$~configurations et qu'on rapporte le meilleur résultat, l'espérance du maximum sous hypothèse nulle est approximativement~:
+\begin{equation}
+\mathbb{E}\left[\max_{i \leq N} \mathrm{SR}_{i}\right] \approx \sqrt{2 \ln N}
+\label{eq:extreme_value_max_sharpe}
+\end{equation}
+pour des Sharpes iid $\mathcal{N}(0, 1)$. Tester 1000~configurations sur une stratégie sans \emph{edge} produit mécaniquement un Sharpe top de $\approx 3.72$.
+
+\paragraph{Dépendance temporelle.} Les rendements financiers ne sont pas iid~: les périodes de volatilité élevée s'enchaînent (effets ARCH), les \emph{mean reversions} opèrent à des échelles variables, les régimes de marché durent des semaines ou des mois. Ignorer cette dépendance sous-estime la variance des estimateurs et surestime la significativité des tests paramétriques.
+
+\subsection{Block bootstrap stationnaire (\textsc{Politis--Romano} 1994)}
+\label{app:politis_romano}
+
+\begin{quote}\small
+\textsc{Politis}, D.N., \textsc{Romano}, J.P. (1994). \emph{The Stationary Bootstrap}. Journal of the American Statistical Association, 89(428), pp.~1303--1313.
+\end{quote}
+
+\paragraph{Principe.} Pour estimer la distribution d'échantillonnage d'une statistique sur une série $\{r_{1}, r_{2}, \ldots, r_{T}\}$, on construit un ré-échantillon en concaténant des \emph{blocs} d'observations consécutives. La longueur de chaque bloc est tirée selon une loi géométrique de moyenne~$L$ (paramètre \texttt{block\_len\_mean~=~20} dans le rapport Apogee)~; le point de départ est choisi uniformément.
+
+\paragraph{Pourquoi une longueur géométrique?} Contrairement au bootstrap par blocs fixes de Künsch~(1989), la longueur géométrique rend la série ré-échantillonnée \emph{stationnaire}~: chaque point bootstrap a la même distribution marginale. On préserve ainsi les propriétés du second ordre (autocorrélation, volatility clustering) jusqu'à l'échelle~$L$ sans introduire de non-stationnarité artificielle aux bords des blocs.
+
+\paragraph{Algorithme.}
+\begin{equation}
+i_{k+1} = \begin{cases}
+\sim \text{Uniforme}(\{1, \ldots, T\}) & \text{avec probabilité } p = 1/L \\
+(i_{k} + 1) \bmod T & \text{sinon}
+\end{cases}
+\label{eq:stationary_bootstrap_recurrence}
+\end{equation}
+avec $i_{1}$ tiré uniformément. Les indices $\{i_{1}, \ldots, i_{T}\}$ permettent de construire le ré-échantillon $\{r_{i_{1}}, \ldots, r_{i_{T}}\}$ sur lequel on calcule la statistique d'intérêt. Le processus est répété $n_{\text{boot}}$~fois (3000 dans notre cas) et les quantiles empiriques de la distribution donnent les intervalles de confiance.
+
+\paragraph{Choix de $L$.} \textsc{Hall}, \textsc{Horowitz} et \textsc{Jing} (1995) recommandent $L \propto T^{1/3}$. Pour $T = 1764$~barres journalières, cette règle donne $L \approx 12$. Notre choix de $L = 20$ est légèrement conservateur, ce qui donne des intervalles de confiance légèrement plus larges et donc plus prudents.
+
+\subsection{Probabilistic Sharpe Ratio (\textsc{Bailey--L\'opez~de~Prado} 2012)}
+\label{app:psr}
+
+\begin{quote}\small
+\textsc{Bailey}, D.H., \textsc{L\'opez de Prado}, M. (2012). \emph{The Sharpe Ratio Efficient Frontier}. Journal of Risk, 15(2), pp.~3--44.
+\end{quote}
+
+Le PSR répond à la question~: \emph{quelle est la probabilité que le vrai Sharpe soit supérieur à un benchmark $\mathrm{SR}^{*}$ ?}, en tenant compte explicitement de la \textbf{non-normalité} de la distribution des rendements (skewness $\gamma_{3}$ et kurtosis $\gamma_{4}$).
+
+\begin{equation}
+\mathrm{PSR}(\mathrm{SR}^{*}) = \Phi\!\left(
+\frac{(\widehat{\mathrm{SR}} - \mathrm{SR}^{*})\,\sqrt{T - 1}}
+{\sqrt{1 - \gamma_{3}\,\widehat{\mathrm{SR}} + \frac{\gamma_{4} - 1}{4}\,\widehat{\mathrm{SR}}^{2}}}
+\right)
+\label{eq:psr}
+\end{equation}
+
+où $\Phi$ est la fonction de répartition normale standard. La formule généralise le test de Jobson--Korkie~(1981) en incorporant les moments d'ordre~3 et~4. Le PSR est le \emph{premier} filtre de significativité pour une stratégie sans sélection multiple~: si PSR$(0) < 0.95$, la stratégie n'a pas d'\emph{edge} distinguable du bruit.
+
+\subsection{Deflated Sharpe Ratio (\textsc{Bailey--L\'opez~de~Prado} 2014)}
+\label{app:dsr}
+
+\begin{quote}\small
+\textsc{Bailey}, D.H., \textsc{L\'opez de Prado}, M. (2014). \emph{The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting and Non-Normality}. Journal of Portfolio Management, 40(5), pp.~94--107.
+\end{quote}
+
+Le DSR est un PSR dont le \emph{benchmark} est l'\textbf{espérance du maximum Sharpe sous hypothèse nulle}, calculée explicitement à partir du nombre d'essais $N$ et de la variance du vecteur de Sharpes testés. L'approximation vient de la théorie des valeurs extrêmes (expansion de Fisher--Tippett)~:
+
+\begin{equation}
+\mathbb{E}\!\left[\max_{i \leq N} \mathrm{SR}_{i}\right]
+\approx \sqrt{\mathrm{Var}[\widehat{\mathrm{SR}}]} \,\Big[
+(1 - \gamma)\,\Phi^{-1}\!\left(1 - \tfrac{1}{N}\right)
++ \gamma\,\Phi^{-1}\!\left(1 - \tfrac{1}{N\,e}\right)
+\Big]
+\label{eq:expected_max_sharpe}
+\end{equation}
+
+où $\gamma = 0.5772\ldots$ est la constante d'Euler--Mascheroni et $\Phi^{-1}$ est l'inverse de la distribution normale. Le DSR est ensuite le PSR calculé avec ce seuil comme \emph{benchmark}~:
+\begin{equation}
+\mathrm{DSR} = \mathrm{PSR}\!\left(\mathrm{SR}^{*} = \mathbb{E}[\max \mathrm{SR}\mid N]\right)
+\label{eq:dsr}
+\end{equation}
+
+\paragraph{Exemple numérique Apogee.} $N = 5$~essais (quatre composantes candidates + un combined), $\mathrm{Var}[\widehat{\mathrm{SR}}] \approx 0.089$, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 5] = 0.296$. Le Sharpe observé $\widehat{\mathrm{SR}} = 0.966$ dépasse ce seuil d'un facteur $3.26$, d'où DSR~$= 1.000$.
+
+\subsection{Haircut Sharpe Ratio (\textsc{Harvey--Liu} 2015)}
+\label{app:haircut}
+
+\begin{quote}\small
+\textsc{Harvey}, C.R., \textsc{Liu}, Y. (2015). \emph{Backtesting}. Journal of Portfolio Management, 42(1), pp.~13--28.
+\end{quote}
+
+Le \emph{Haircut Sharpe} convertit le Sharpe en t-statistic, corrige la p-value pour tests multiples, puis reconvertit en Sharpe~«~\textit{haircut}~» via l'inverse. Le \emph{pipeline} en cinq étapes est~:
+
+\begin{enumerate}
+\item Calcul du t-stat~: $t_{\text{obs}} = \widehat{\mathrm{SR}} \, \sqrt{T - 1}$
+\item Calcul de la p-value brute via la fonction de survie de Student-t~:
+      $p_{\text{raw}} = P(T > t_{\text{obs}})$
+\item Correction pour tests multiples~: $p_{\text{adj}} = \mathrm{correction}(p_{\text{raw}}, N)$
+\item Inversion~: $t_{\text{adj}} = t^{-1}(1 - p_{\text{adj}})$
+\item Reconversion en Sharpe~: $\mathrm{SR}_{\text{haircut}} = t_{\text{adj}} / \sqrt{T - 1}$
+\end{enumerate}
+
+Trois schémas de correction sont disponibles~:
+
+\begin{itemize}
+\item \textbf{Bonferroni}~: $p_{\text{adj}} = \min(p_{\text{raw}} \cdot N,\ 1)$. Le plus simple, le plus conservateur. Hypothèse~: tests strictement indépendants.
+\item \textbf{Holm}~: séquentiel, moins conservateur que Bonferroni. Pour le top-1, coïncide avec Bonferroni.
+\item \textbf{BHY (Benjamini--Hochberg--Yekutieli)}~: contrôle le \emph{False Discovery Rate} au lieu du FWER. \textbf{Par défaut dans notre module}. Plus permissif que Bonferroni sous corrélation arbitraire des tests. Formule pour le top-1~:
+\begin{equation}
+p_{\text{adj}}^{\text{BHY}} = p_{\text{raw}} \cdot N \cdot c(N)
+\qquad\text{avec}\qquad
+c(N) = \sum_{i=1}^{N} \frac{1}{i}
+\label{eq:bhy_correction}
+\end{equation}
+où $c(N)$ est le $N$-ème nombre harmonique.
+\end{itemize}
+
+\paragraph{Ratio de survie.} La quantité utile pour l'investisseur est~:
+\begin{equation}
+\mathrm{Haircut\ Ratio} = \frac{\mathrm{SR}_{\text{haircut}}}{\widehat{\mathrm{SR}}}
+\label{eq:haircut_ratio}
+\end{equation}
+qui représente la fraction de l'\emph{edge} qui survit à la correction. Un ratio supérieur à $80\,\%$ est un bon signe~--- l'\emph{edge} est grand relativement à la variance d'estimation et les corrections multi-test ont peu d'emprise. Pour le portefeuille Apogee, le ratio BHY est $86.94\,\%$.
+
+\subsection{Minimum Backtest Length (\textsc{Bailey et al.} 2014)}
+\label{app:minbtl}
+
+\begin{quote}\small
+\textsc{Bailey}, D.H., \textsc{Borwein}, J.M., \textsc{L\'opez de Prado}, M., \textsc{Zhu}, Q.J. (2014). \emph{Pseudo-Mathematics and Financial Charlatanism: The Effects of Backtest Overfitting on Out-of-Sample Performance}. Notices of the American Mathematical Society, 61(5), pp.~458--471.
+\end{quote}
+
+Le MinBTL répond à la question~: \emph{combien d'années de données sont nécessaires pour qu'un Sharpe cible soit statistiquement distinguable du fruit de $N$~essais multiples ?}
+
+\begin{equation}
+\mathrm{MinBTL}(\mathrm{SR},\, N) \approx \frac{2 \ln N}{\mathrm{SR}^{2}}
+\qquad\text{(en années)}
+\label{eq:minbtl}
+\end{equation}
+
+\paragraph{Exemples numériques.}
+\begin{itemize}
+\item SR cible $= 1.0$, $N = 100$~essais~: MinBTL $= 9.2$~ans.
+\item SR cible $= 1.0$, $N = 1000$~essais~: MinBTL $= 13.8$~ans.
+\item SR cible $= 2.0$, $N = 1000$~essais~: MinBTL $= 3.5$~ans.
+\end{itemize}
+
+\paragraph{Utilisation comme \emph{power calculation} a priori.} Avant de lancer un \emph{grid search} massif, le MinBTL répond à~: \emph{mon historique est-il assez long pour que le grid search produise un résultat statistiquement défendable ?}. Si on veut tester 1000~configurations et qu'on a 5~ans de données, le seul Sharpe qu'on peut espérer «~prouver~» est supérieur à $\sqrt{2 \ln 1000 / 5} \approx 1.66$. Tout ce qu'on trouvera en-dessous de ce seuil est susceptible d'être du bruit.
+
+Pour le portefeuille Apogee, le MinBTL affiché est $3.45$~ans pour $\mathrm{SR} = 0.97$ avec $N = 5$~essais. On dispose de 7~ans, soit le double du minimum statistique requis.
+
+\subsection{Probability of Backtest Overfitting via CSCV (\textsc{Bailey et al.} 2015)}
+\label{app:pbo_cscv}
+
+\begin{quote}\small
+\textsc{Bailey}, D.H., \textsc{Borwein}, J.M., \textsc{L\'opez de Prado}, M., \textsc{Zhu}, Q.J. (2015). \emph{The Probability of Backtest Overfitting}. Journal of Computational Finance, 20(4), pp.~39--69.
+\end{quote}
+
+Le PBO est la probabilité que le \textbf{vainqueur in-sample} termine \textbf{sous la médiane out-of-sample}. Un PBO supérieur à $0.5$ indique un \emph{overfit} manifeste~; inférieur à $0.5$ indique une stratégie robuste.
+
+\paragraph{Algorithme CSCV (Combinatorially Symmetric Cross-Validation).}
+En entrée~: une matrice $M \in \mathbb{R}^{T \times n_{\text{configs}}}$ des rendements par configuration par barre.
+\begin{enumerate}
+\item \textbf{Partition~}: découper les $T$~lignes en $S$~blocs contigus de taille $T/S$ (avec $S = 16$ par défaut).
+\item \textbf{Énumération combinatoire~}: énumérer les $\binom{S}{S/2}$~manières de choisir $S/2$~blocs pour l'in-sample et $S/2$~blocs pour l'out-of-sample. Pour $S = 16$, cela donne $\binom{16}{8} = 12\,870$~partitions.
+\item \textbf{Pour chaque partition}~:
+    \begin{enumerate}
+    \item Calculer le Sharpe IS de chaque configuration sur les $S/2$~blocs in-sample.
+    \item Identifier $n^{*} = \arg\max(\text{Sharpe IS})$, le vainqueur in-sample.
+    \item Calculer le rang OOS de $n^{*}$ sur les $S/2$~blocs out-of-sample.
+    \item Convertir le rang en logit~: $\text{logit} = \ln(w/(1-w))$ avec $w = \text{rang}/(N+1)$.
+    \end{enumerate}
+\item \textbf{Agrégation~}: $\mathrm{PBO} = $ fraction de partitions où $\text{logit} < 0$.
+\end{enumerate}
+
+\paragraph{Pourquoi «~symétrique~»?} Par construction, chaque bloc apparaît exactement $\binom{S - 1}{S/2 - 1}$~fois en IS et autant en OOS~--- ce qui élimine le biais de découpage.
+
+\paragraph{Interprétation du logit.}
+\begin{itemize}
+\item $\text{logit} \gg 0$ : le vainqueur IS est au sommet du classement OOS (excellent signe).
+\item $\text{logit} \approx 0$ : le vainqueur IS est à la médiane OOS (\emph{overfitting} partiel).
+\item $\text{logit} < 0$ : le vainqueur IS tombe sous la médiane OOS (\emph{overfitting} manifeste).
+\end{itemize}
+
+Pour Apogee, PBO~$= 0.305$. Sur les 12\,870~partitions, 30.5\,\% voient le vainqueur IS tomber sous la médiane OOS. C'est sous le seuil critique de $0.5$, signalant un régime sain.
+
+\paragraph{Limite.} Le CSCV suppose que les configurations sont échantillonnées du même «~univers~». Si on a $N = 2$~configurations très différentes, le PBO est peu informatif. Il devient significatif à partir de $N \geq 10$.
+
+\subsection{Hansen SPA (2005) et Romano--Wolf StepM (2005)}
+\label{app:spa_stepm}
+
+\begin{quote}\small
+\textsc{White}, H. (2000). \emph{A Reality Check for Data Snooping}. Econometrica, 68(5), pp.~1097--1126.\\
+\textsc{Hansen}, P.R. (2005). \emph{A Test for Superior Predictive Ability}. Journal of Business \& Economic Statistics, 23(4), pp.~365--380.\\
+\textsc{Romano}, J.P., \textsc{Wolf}, M. (2005). \emph{Stepwise Multiple Testing as Formalized Data Snooping}. Econometrica, 73(4), pp.~1237--1282.
+\end{quote}
+
+Tous trois répondent à la question~: \emph{est-ce qu'au moins une stratégie d'un univers de $N$~candidats bat significativement un benchmark après correction complète du data snooping ?}
+
+\paragraph{Hansen SPA (Superior Predictive Ability).} Variante raffinée du \emph{Reality Check} de White. Le RC souffre d'être trop conservateur quand le \emph{sweep} contient des stratégies manifestement mauvaises (elles tirent la distribution nulle vers le bas). Hansen introduit un \emph{re-centering} qui exclut ces stratégies du calcul de la distribution sous $H_{0}$. Trois p-values sont retournées (\emph{lower}, \emph{consistent}, \emph{upper}) correspondant à trois estimateurs différents~--- la version \emph{consistent} est celle utilisée en pratique.
+
+\paragraph{Romano--Wolf StepM.} Approche \emph{stepwise} qui rend non pas une p-value unique mais un \textbf{ensemble} de stratégies qui dominent le \emph{benchmark} avec FWER (Family-Wise Error Rate) contrôlé à $\alpha$. Préférable à SPA quand on veut identifier \emph{lesquelles} des $N$~stratégies sont significatives, pas seulement s'il en existe au moins une.
+
+\paragraph{Implémentation.} Wrappers autour de \texttt{arch.bootstrap.SPA} et \texttt{arch.bootstrap.StepM} (paquet \texttt{arch} de Kevin~Sheppard, licence NCSA). Voir \texttt{framework.statistical\_testing.reality\_check\_via\_arch} et \texttt{stepm\_romano\_wolf}.
+
+\subsection{Stratégie de combinaison --- quelle hiérarchie de tests ?}
+\label{app:hierarchy}
+
+Les sept tests implémentés dans \texttt{framework.robustness} ne sont pas tous appliqués au même stade du \emph{workflow}. Voici la hiérarchie recommandée~:
+
+\paragraph{Stade~1 --- Backtest unique, zéro \emph{data snooping}.} Bootstrap CI sur les 14~métriques, PSR vs~0, \emph{equity fan chart} visuel. \textit{Verdict~: la stratégie a-t-elle un \emph{edge} observable~?}
+
+\paragraph{Stade~2 --- Après \emph{grid search} / optimisation de paramètres.} DSR (avec $N$ réel des \emph{trials}), \emph{Haircut Sharpe} (BHY recommandé), MinBTL (\emph{power calculation}), PBO via CSCV. \textit{Verdict~: l'\emph{edge} survit-il à la correction multi-test~?}
+
+\paragraph{Stade~3 --- Sélection finale parmi $N$~candidats.} Hansen SPA, Romano--Wolf StepM, CPCV (\emph{Combinatorial Purged CV}, L\'opez de Prado 2018 ch.~12 --- à intégrer dans une itération future). \textit{Verdict~: la meilleure bat-elle un benchmark après correction globale~?}
+
+\paragraph{Stade~4 --- Validation opérationnelle.} Monte Carlo sur les \emph{trades} (\emph{sequence risk}), walk-forward multi-horizon, \emph{paper trading} $\geq 3$~mois, \emph{stress test} scénarios (2008 GFC, 2020 Covid, 2022 UK gilts, \ldots). \textit{Verdict~: la stratégie tient-elle en conditions réelles~?}
+
+\paragraph{Application au portefeuille Apogee.} Les stades~1, 2 et 3 sont documentés dans la section~\ref{sec:advanced_robustness} avec un \emph{caveat} sur l'interprétation SPA vs DSR. Le stade~4 est couvert par la section~\ref{sec:stress_test} (bootstrap historique), la section~\ref{sec:scenarios} (rejeu de scénarios historiques) et la section~\ref{sec:production} (checklist \emph{paper-trade} et déploiement). Une stratégie qui franchit les quatre stades avant capital réel est statistiquement défendable~--- le portefeuille Apogee en fait partie.

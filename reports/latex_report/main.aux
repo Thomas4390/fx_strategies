@@ -8,7 +8,7 @@
 \@writefile{lot}{\xpginauxfiletrue }
 \@writefile{toc}{\selectlanguage *{french}}
 \HyPL@Entry{1<</S/r>>}
-\HyPL@Entry{3<</S/D>>}
+\HyPL@Entry{4<</S/D>>}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Résumé exécutif}{1}{section.1}\protected@file@percent }
 \newlabel{sec:executive_summary}{{1}{1}{Résumé exécutif}{section.1}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Métriques clés du portefeuille Phase 18 sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.}}{1}{table.caption.1}\protected@file@percent }
@@ -29,10 +29,11 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{5}{subsection.3.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{5}{subsection.3.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Robustesse numérique}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Module d'analyse de robustesse statistique}{6}{subsection.3.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{6}{section.4}\protected@file@percent }
 \newlabel{sec:mr_macro}{{4}{6}{Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Intuition économique}{6}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{7}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Performance historique}{7}{subsection.4.3}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}}{7}{figure.caption.4}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Performance annuelle du Moteur~1 pris isolément. L'année 2021 ne produit aucun trade parce que le spread 10Y--2Y est resté supérieur à 0.5 toute l'année post-Covid, déclenchant le filtre macro.}}{8}{table.caption.5}\protected@file@percent }
@@ -92,8 +93,8 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Zoom sur la période hors échantillon 2025-04 à 2026-04 (courbe orange), base 100 au 1\textsuperscript  {er}~avril 2025. La courbe in-sample est conservée en arrière-plan pour référence. Le drawdown hors échantillon reste très contenu à $-6.27\,\%$, contre $-17.93\,\%$ en in-sample.}}{21}{figure.caption.20}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Décomposition de la performance OOS par moteur}{21}{subsection.9.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Caveat méthodologique sur le caractère OOS}{22}{subsection.9.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap à 1000~trajectoires}{22}{section.10}\protected@file@percent }
-\newlabel{sec:stress_test}{{10}{22}{Tests de résistance --- bootstrap à 1000~trajectoires}{section.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap historique à 1000~trajectoires}{22}{section.10}\protected@file@percent }
+\newlabel{sec:stress_test}{{10}{22}{Tests de résistance --- bootstrap historique à 1000~trajectoires}{section.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Méthodologie}{22}{subsection.10.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Résultats}{22}{subsection.10.2}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Résultats du bootstrap à blocs mobiles (1000 runs, blocs de 20 jours). P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx $4\,pp de marge.}}{22}{table.caption.21}\protected@file@percent }
@@ -101,35 +102,112 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Nuage de points bootstrap CAGR~$\times $~Max Drawdown. Chaque point coloré est une trajectoire ré-échantillonnée. Les étoiles marquent les réalisations in-sample (bleu marine) et hors échantillon (orange). Les lignes pointillées horizontales délimitent la bande cible $[10\,\%, 15\,\%]$ de CAGR. La ligne pointillée verticale rouge marque la contrainte utilisateur de drawdown à $-35\,\%$.}}{23}{figure.caption.22}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Interprétations critiques}{23}{subsection.10.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{23}{subsection.10.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {11}Rejeu de scénarios historiques}{24}{section.11}\protected@file@percent }
-\newlabel{sec:scenarios}{{11}{24}{Rejeu de scénarios historiques}{section.11}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible.}}{24}{table.caption.23}\protected@file@percent }
-\newlabel{tab:scenarios}{{10}{24}{Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible}{table.caption.23}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Lecture détaillée des six scénarios}{24}{subsection.11.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Observations transversales}{25}{subsection.11.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {12}Analyse des risques et limites méthodologiques}{25}{section.12}\protected@file@percent }
-\newlabel{sec:limitations}{{12}{25}{Analyse des risques et limites méthodologiques}{section.12}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Avertissement 1 --- Data snooping résiduel}{26}{subsection.12.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{26}{subsection.12.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{26}{subsection.12.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{27}{subsection.12.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{27}{subsection.12.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.6}Tableau récapitulatif des risques}{27}{subsection.12.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {13}Conditions de déploiement}{27}{section.13}\protected@file@percent }
-\newlabel{sec:production}{{13}{27}{Conditions de déploiement}{section.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Décisionnaires et responsabilités}{28}{subsection.13.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{29}{appendix.A}\protected@file@percent }
-\newlabel{app:glossary}{{A}{29}{Annexe A --- Glossaire des termes techniques}{appendix.A}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un signal}{31}{appendix.B}\protected@file@percent }
-\newlabel{app:signal_flow}{{B}{31}{Annexe B --- Anatomie d'un signal}{appendix.B}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Moteur 1 --- signal intraday}{31}{subsection.B.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Moteur 2 --- signal journalier de tendance}{32}{subsection.B.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Moteur 3 --- signal journalier de retour à la moyenne}{32}{subsection.B.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Composition finale}{32}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Lien avec la section suivante.}{24}{paragraph*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {11}Robustesse statistique avancée}{24}{section.11}\protected@file@percent }
+\newlabel{sec:advanced_robustness}{{11}{24}{Robustesse statistique avancée}{section.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Pourquoi un Sharpe ponctuel ne suffit pas}{24}{subsection.11.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Intervalles de confiance bootstrap sur les 14 métriques}{25}{subsection.11.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Intervalles de confiance bootstrap à 95\,\% sur les 14 métriques standard. Block bootstrap stationnaire Politis--Romano (1994), $n_{\text  {boot}} = 3000$, longueur de bloc moyenne = 20~jours, \texttt  {seed=20260414}. Les métriques marquées en gras sont celles commentées dans le texte.}}{25}{table.caption.24}\protected@file@percent }
+\newlabel{tab:robustness_bootstrap_ci}{{10}{25}{Intervalles de confiance bootstrap à 95\,\% sur les 14 métriques standard. Block bootstrap stationnaire Politis--Romano (1994), $n_{\text {boot}} = 3000$, longueur de bloc moyenne = 20~jours, \texttt {seed=20260414}. Les métriques marquées en gras sont celles commentées dans le texte}{table.caption.24}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Graphique \emph  {forest plot} des six métriques principales. Le diamant orange marque la valeur observée sur la période complète, la barre bleue représente l'intervalle de confiance bootstrap à 95\,\%. L'essentiel~: la borne basse du Sharpe ($0.365$) est strictement positive, ce qui est la condition statistique minimale pour qu'une stratégie soit considérée comme ayant un \emph  {edge} non-nul avec un niveau de confiance de 95\,\%.}}{26}{figure.caption.25}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Distribution complète des 3000~Sharpe ratios bootstrap. La ligne orange matérialise la valeur observée ($0.966$), les deux lignes vertes pointillées matérialisent les bornes 2.5~\% et 97.5~\% ($[0.365,\ 1.546]$). La distribution est légèrement asymétrique à droite, cohérente avec les queues épaisses des rendements FX.}}{26}{figure.caption.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Deux zones de vigilance identifiées.}{27}{paragraph*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}\emph  {Equity fan chart} --- 300 trajectoires bootstrap alternatives}{27}{subsection.11.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces \emph  {Fan chart} bootstrap --- 300~trajectoires alternatives compressées en bandes de percentiles. La courbe observée (bourgogne) reste dans la partie supérieure du fan à partir de 2023, cohérente avec la période qui a informé le design. Sur la fenêtre hors échantillon 2025-04$+$, la courbe observée \emph  {sort du fan P25--P75 vers le haut}~: le Sharpe OOS de $1.44$ dépasse la médiane bootstrap, confirmant que la stratégie n'est pas un artefact de l'échantillon d'entraînement.}}{27}{figure.caption.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.4}Tests d'\emph  {overfitting}}{28}{subsection.11.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Tests de correction d'\textit  {overfitting}. Tous les tests convergent vers un verdict favorable sur le portefeuille combiné. Références~: Bailey \& L\'opez~de~Prado~(2012, 2014, 2015), Harvey \& Liu~(2015).}}{28}{table.caption.29}\protected@file@percent }
+\newlabel{tab:robustness_overfitting}{{11}{28}{Tests de correction d'\textit {overfitting}. Tous les tests convergent vers un verdict favorable sur le portefeuille combiné. Références~: Bailey \& L\'opez~de~Prado~(2012, 2014, 2015), Harvey \& Liu~(2015)}{table.caption.29}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Distribution des 12\,870~logits CSCV. La ligne verticale orange matérialise le seuil logit~$= 0$ (au-dessus~: le vainqueur IS est au-dessus de la médiane OOS~; en-dessous~: overfitting manifeste). Le PBO de $0.305$ signifie que 30.5\,\% de la masse de la distribution est à gauche du seuil.}}{29}{figure.caption.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.5}Tests de supériorité prédictive --- Hansen SPA et Romano--Wolf StepM}{29}{subsection.11.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Tests de supériorité prédictive avec correction de \textit  {data snooping} sur les composantes individuelles. Hansen SPA~(2005) renvoie une p-value globale~; Romano--Wolf StepM~(2005) contrôle le FWER en renvoyant l'ensemble des stratégies dominantes.}}{29}{table.caption.31}\protected@file@percent }
+\newlabel{tab:robustness_arch_tests}{{12}{29}{Tests de supériorité prédictive avec correction de \textit {data snooping} sur les composantes individuelles. Hansen SPA~(2005) renvoie une p-value globale~; Romano--Wolf StepM~(2005) contrôle le FWER en renvoyant l'ensemble des stratégies dominantes}{table.caption.31}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces P-values du test de Hansen SPA (2005) sur les cinq composantes. Les trois bornes (basse, cohérente, haute) correspondent à trois estimateurs différents du \textit  {re-centering} de Hansen, la borne cohérente étant celle recommandée en pratique. La ligne pointillée orange matérialise le seuil $\alpha = 0.05$.}}{30}{figure.caption.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.6}Stabilité temporelle multi-métrique}{30}{subsection.11.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces Stabilité temporelle des trois métriques de risque ajusté. Les trois courbes restent majoritairement positives sur 2019--2026, avec un creux visible en 2019 (cohérent avec le Sharpe walk-forward $-0.49$ documenté section~\ref {sec:in_sample}) et un pic en 2022 (cohérent avec le Sharpe walk-forward $+2.26$). La ligne pointillée verticale marque le début de la fenêtre hors échantillon.}}{31}{figure.caption.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.7}Verdict consolidé}{31}{subsection.11.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Verdict consolidé sur les tests de robustesse statistique. Six tests passent sans réserve~; un test (P95 du Max Drawdown bootstrap) est proche de la limite utilisateur avec environ 2~pp de marge, déjà mitigé par la réserve cash 30\,\% recommandée en section~\ref {sec:limitations}.}}{31}{table.caption.34}\protected@file@percent }
+\newlabel{tab:robustness_verdict_summary}{{13}{31}{Verdict consolidé sur les tests de robustesse statistique. Six tests passent sans réserve~; un test (P95 du Max Drawdown bootstrap) est proche de la limite utilisateur avec environ 2~pp de marge, déjà mitigé par la réserve cash 30\,\% recommandée en section~\ref {sec:limitations}}{table.caption.34}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {12}Rejeu de scénarios historiques}{32}{section.12}\protected@file@percent }
+\newlabel{sec:scenarios}{{12}{32}{Rejeu de scénarios historiques}{section.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible.}}{32}{table.caption.35}\protected@file@percent }
+\newlabel{tab:scenarios}{{14}{32}{Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible}{table.caption.35}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Lecture détaillée des six scénarios}{32}{subsection.12.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Observations transversales}{33}{subsection.12.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {13}Analyse des risques et limites méthodologiques}{33}{section.13}\protected@file@percent }
+\newlabel{sec:limitations}{{13}{33}{Analyse des risques et limites méthodologiques}{section.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Avertissement 1 --- Data snooping résiduel}{34}{subsection.13.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{34}{subsection.13.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{34}{subsection.13.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{35}{subsection.13.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{35}{subsection.13.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.6}Tableau récapitulatif des risques}{35}{subsection.13.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {14}Conditions de déploiement}{35}{section.14}\protected@file@percent }
+\newlabel{sec:production}{{14}{35}{Conditions de déploiement}{section.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Décisionnaires et responsabilités}{36}{subsection.14.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{37}{appendix.A}\protected@file@percent }
+\newlabel{app:glossary}{{A}{37}{Annexe A --- Glossaire des termes techniques}{appendix.A}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un signal}{39}{appendix.B}\protected@file@percent }
+\newlabel{app:signal_flow}{{B}{39}{Annexe B --- Anatomie d'un signal}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Moteur 1 --- signal intraday}{39}{subsection.B.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Moteur 2 --- signal journalier de tendance}{40}{subsection.B.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Moteur 3 --- signal journalier de retour à la moyenne}{40}{subsection.B.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Composition finale}{40}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Principes méthodologiques du \textit  {robustness report}}{41}{appendix.C}\protected@file@percent }
+\newlabel{app:robustness_methodology}{{C}{41}{Principes méthodologiques du \textit {robustness report}}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{41}{subsection.C.1}\protected@file@percent }
+\newlabel{app:robustness_problem}{{C.1}{41}{Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{subsection.C.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Biais d'échantillon (\textsc  {Lo} 2002).}{41}{paragraph*.36}\protected@file@percent }
+\newlabel{eq:lo_sharpe_std}{{1}{41}{Biais d'échantillon (\textsc {Lo} 2002)}{equation.C.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Biais de sélection (\textsc  {Bailey--L\'opez~de~Prado} 2014).}{41}{paragraph*.37}\protected@file@percent }
+\newlabel{eq:extreme_value_max_sharpe}{{2}{41}{Biais de sélection (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.C.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dépendance temporelle.}{41}{paragraph*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Block bootstrap stationnaire (\textsc  {Politis--Romano} 1994)}{41}{subsection.C.2}\protected@file@percent }
+\newlabel{app:politis_romano}{{C.2}{41}{Block bootstrap stationnaire (\textsc {Politis--Romano} 1994)}{subsection.C.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Principe.}{41}{paragraph*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi une longueur géométrique?}{42}{paragraph*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Algorithme.}{42}{paragraph*.41}\protected@file@percent }
+\newlabel{eq:stationary_bootstrap_recurrence}{{3}{42}{Algorithme}{equation.C.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Choix de $L$.}{42}{paragraph*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Probabilistic Sharpe Ratio (\textsc  {Bailey--L\'opez~de~Prado} 2012)}{42}{subsection.C.3}\protected@file@percent }
+\newlabel{app:psr}{{C.3}{42}{Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{subsection.C.3}{}}
+\newlabel{eq:psr}{{4}{42}{Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{equation.C.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}Deflated Sharpe Ratio (\textsc  {Bailey--L\'opez~de~Prado} 2014)}{42}{subsection.C.4}\protected@file@percent }
+\newlabel{app:dsr}{{C.4}{42}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{subsection.C.4}{}}
+\newlabel{eq:expected_max_sharpe}{{5}{42}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.C.5}{}}
+\newlabel{eq:dsr}{{6}{43}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.C.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exemple numérique Apogee.}{43}{paragraph*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Haircut Sharpe Ratio (\textsc  {Harvey--Liu} 2015)}{43}{subsection.C.5}\protected@file@percent }
+\newlabel{app:haircut}{{C.5}{43}{Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{subsection.C.5}{}}
+\newlabel{eq:bhy_correction}{{7}{43}{Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{equation.C.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Ratio de survie.}{43}{paragraph*.44}\protected@file@percent }
+\newlabel{eq:haircut_ratio}{{8}{43}{Ratio de survie}{equation.C.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.6}Minimum Backtest Length (\textsc  {Bailey et al.} 2014)}{43}{subsection.C.6}\protected@file@percent }
+\newlabel{app:minbtl}{{C.6}{43}{Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{subsection.C.6}{}}
+\newlabel{eq:minbtl}{{9}{43}{Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{equation.C.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exemples numériques.}{44}{paragraph*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Utilisation comme \emph  {power calculation} a priori.}{44}{paragraph*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.7}Probability of Backtest Overfitting via CSCV (\textsc  {Bailey et al.} 2015)}{44}{subsection.C.7}\protected@file@percent }
+\newlabel{app:pbo_cscv}{{C.7}{44}{Probability of Backtest Overfitting via CSCV (\textsc {Bailey et al.} 2015)}{subsection.C.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Algorithme CSCV (Combinatorially Symmetric Cross-Validation).}{44}{paragraph*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi «~symétrique~»?}{44}{paragraph*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Interprétation du logit.}{44}{paragraph*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limite.}{44}{paragraph*.50}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.8}Hansen SPA (2005) et Romano--Wolf StepM (2005)}{45}{subsection.C.8}\protected@file@percent }
+\newlabel{app:spa_stepm}{{C.8}{45}{Hansen SPA (2005) et Romano--Wolf StepM (2005)}{subsection.C.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Hansen SPA (Superior Predictive Ability).}{45}{paragraph*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Romano--Wolf StepM.}{45}{paragraph*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Implémentation.}{45}{paragraph*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.9}Stratégie de combinaison --- quelle hiérarchie de tests ?}{45}{subsection.C.9}\protected@file@percent }
+\newlabel{app:hierarchy}{{C.9}{45}{Stratégie de combinaison --- quelle hiérarchie de tests ?}{subsection.C.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Stade~1 --- Backtest unique, zéro \emph  {data snooping}.}{45}{paragraph*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~2 --- Après \emph  {grid search} / optimisation de paramètres.}{45}{paragraph*.55}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~3 --- Sélection finale parmi $N$~candidats.}{45}{paragraph*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~4 --- Validation opérationnelle.}{45}{paragraph*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Application au portefeuille Apogee.}{45}{paragraph*.58}\protected@file@percent }
 \@writefile{toc}{\xpginauxfilefalse }
 \@writefile{lof}{\xpginauxfilefalse }
 \@writefile{lot}{\xpginauxfilefalse }
-\global\@namedef{scr@dte@section@lastmaxnumwidth}{13.01508pt}
+\global\@namedef{scr@dte@section@lastmaxnumwidth}{13.03195pt}
 \global\@namedef{scr@dte@subsection@lastmaxnumwidth}{24.25418pt}
 \@writefile{toc}{\providecommand\tocbasic@end@toc@file{}\tocbasic@end@toc@file}
-\gdef \@abspage@last{36}
+\gdef \@abspage@last{49}

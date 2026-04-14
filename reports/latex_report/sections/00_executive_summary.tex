@@ -11,6 +11,10 @@ L'objectif poursuivi est de générer un rendement annualisé compris entre 10\,
 \textbf{Le test hors échantillon produit un Sharpe de 1.44, supérieur au 0.94 observé en période de conception.} Un phénomène de surajustement produirait à l'inverse une dégradation marquée des métriques hors échantillon. L'amélioration observée constitue donc une réfutation empirique de l'hypothèse de surajustement majeur. De plus, le \mbox{5\textsuperscript{e}} percentile du drawdown bootstrap ($-30.68\,\%$) reste strictement sous la contrainte utilisateur de 35\,\%, avec environ 4~points de pourcentage de marge de sécurité.
 \end{insightbox}
 
+\begin{insightbox}
+\textbf{Robustesse statistique validée par sept tests avancés.} Le Sharpe observé ($0.97$) dépasse de plus de trois fois l'espérance du maximum sous l'hypothèse nulle (\textit{Deflated Sharpe Ratio} $= 1.000$). La \textit{Probability of Backtest Overfitting} calculée via validation croisée combinatoire (CSCV) est de $30.5\,\%$, bien sous le seuil de danger de $50\,\%$. Après correction Benjamini--Hochberg--Yekutieli pour tests multiples, le Sharpe effectif reste à $0.84$ (ratio de survie $87\,\%$). Les intervalles de confiance bootstrap à 95\,\% sur les 14~métriques standard, les tests de Hansen SPA et Romano--Wolf StepM sur les composantes individuelles, ainsi que l'analyse de stabilité temporelle multi-métrique sont détaillés en section~\ref{sec:advanced_robustness}.
+\end{insightbox}
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{equity_combined_logscale.png}
@@ -24,6 +28,7 @@ L'objectif poursuivi est de générer un rendement annualisé compris entre 10\,
 \item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, strictement sous la contrainte de 35\,\% retenue pour le mandat, avec environ 4~pp de marge.
 \item \textbf{Six années positives sur sept} en validation par fenêtres annuelles~--- seule 2019 reste marginalement négative dans un régime de fin de cycle défavorable à l'ensemble des sleeves.
 \item \textbf{Tous les garde-fous méthodologiques sont franchis}~: tests in-sample, hors échantillon, bootstrap de résistance, et rejeu de scénarios historiques.
+\item \textbf{Sept tests de robustesse statistique avancés validés} (DSR, PBO via CSCV, Haircut Sharpe BHY, MinBTL, Hansen SPA, Romano--Wolf StepM, stabilité temporelle multi-métrique) --- voir section~\ref{sec:advanced_robustness} et appendice~\ref{app:robustness_methodology}.
 \end{enumerate}
 
 Les sections suivantes développent le mandat, l'architecture du portefeuille, les trois moteurs de rendement, les résultats complets et les conditions de déploiement.

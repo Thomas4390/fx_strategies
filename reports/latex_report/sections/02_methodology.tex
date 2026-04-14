@@ -54,3 +54,7 @@ Cette discipline est validée par une suite de tests automatisés qui vérifient
 \subsection{Robustesse numérique}
 
 La reproductibilité binaire du backtest a été vérifiée par un test de \emph{canary} qui compare la sortie actuelle du pipeline à un hash de référence généré sur une configuration fixée. Toute modification du moteur qui altère les résultats numériquement est détectée immédiatement.
+
+\subsection{Module d'analyse de robustesse statistique}
+
+L'ensemble des tests statistiques avancés --- \emph{block bootstrap} stationnaire de Politis--Romano, \textit{Deflated Sharpe Ratio} de Bailey--L\'opez~de~Prado, \textit{Haircut Sharpe} de Harvey--Liu, \textit{Probability of Backtest Overfitting} via CSCV, test de Hansen SPA et test de Romano--Wolf StepM --- est implémenté dans le module \texttt{framework.robustness} du projet et exposé via un simple drapeau \texttt{robustness=True} de la fonction \texttt{analyze\_portfolio}. L'appendice~\ref{app:robustness_methodology} détaille les principes mathématiques de chaque test, ses références académiques originales, et son positionnement dans la hiérarchie recommandée des validations. La section~\ref{sec:advanced_robustness} présente les résultats numériques appliqués au portefeuille final.

@@ -1,0 +1,25 @@
+\begin{table}[H]
+\centering
+\caption{Intervalles de confiance bootstrap à 95\,\% sur les 14 métriques standard. Block bootstrap stationnaire Politis--Romano (1994), $n_{\text{boot}} = 3000$, longueur de bloc moyenne = 20~jours, \texttt{seed=20260414}. Les métriques marquées en gras sont celles commentées dans le texte.}
+\label{tab:robustness_bootstrap_ci}
+\begin{tabular}{lrrrr}
+\toprule
+Métrique & Observée & Moy. bootstrap & CI 2.5\,\% & CI 97.5\,\% \\
+\midrule
+Total Return & 2.5156 & 2.8818 & 0.4947 & 7.8079 \\
+\textbf{Sharpe Ratio} & 0.9659 & 0.9611 & 0.3653 & 1.5455 \\
+Calmar Ratio & 0.7303 & 0.7717 & 0.1499 & 1.8223 \\
+Sortino Ratio & 1.5889 & 1.6224 & 0.5416 & 2.9431 \\
+Omega Ratio & 1.3092 & 1.3130 & 1.1020 & 1.5630 \\
+Rendement annualisé & 0.1310 & 0.1317 & 0.0401 & 0.2374 \\
+\textbf{Max Drawdown} & 0.1793 & 0.1934 & 0.1144 & 0.3258 \\
+Profit Factor & 1.3092 & 1.3130 & 1.1020 & 1.5630 \\
+VaR 5\% & 0.0071 & 0.0071 & 0.0062 & 0.0079 \\
+Tail Ratio & 1.1393 & 1.1613 & 0.9977 & 1.4037 \\
+Volatilité ann. & -0.1371 & -0.1369 & -0.1566 & -0.1179 \\
+Information Ratio & 0.0608 & 0.0605 & 0.0230 & 0.0974 \\
+Downside Risk & -0.0834 & -0.0831 & -0.0977 & -0.0682 \\
+CVaR 5\% & 0.0166 & 0.0166 & 0.0134 & 0.0201 \\
+\bottomrule
+\end{tabular}
+\end{table}

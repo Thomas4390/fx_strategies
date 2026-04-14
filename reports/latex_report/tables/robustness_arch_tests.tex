@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{Tests de supériorité prédictive avec correction de \textit{data snooping} sur les composantes individuelles. Hansen SPA~(2005) renvoie une p-value globale~; Romano--Wolf StepM~(2005) contrôle le FWER en renvoyant l'ensemble des stratégies dominantes.}
+\label{tab:robustness_arch_tests}
+\begin{tabular}{lr}
+\toprule
+Test & Résultat \\
+\midrule
+Hansen SPA --- p-value bas & 0.6810 \\
+Hansen SPA --- p-value cohérent & 0.9900 \\
+Hansen SPA --- p-value haut & 0.9970 \\
+Romano--Wolf StepM ($\alpha = 0.05$) & 0/5 composantes \\
+\bottomrule
+\end{tabular}
+\end{table}

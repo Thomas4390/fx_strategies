@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\caption{Verdict consolidé sur les tests de robustesse statistique. Six tests passent sans réserve~; un test (P95 du Max Drawdown bootstrap) est proche de la limite utilisateur avec environ 2~pp de marge, déjà mitigé par la réserve cash 30\,\% recommandée en section~\ref{sec:limitations}.}
+\label{tab:robustness_verdict_summary}
+\begin{tabular}{llrl}
+\toprule
+Test & Seuil & Résultat & Verdict \\
+\midrule
+Bootstrap CI 95\,\% Sharpe & Borne basse $> 0$ & $[0.365,\ 1.546]$ & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+PSR vs 0 & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+DSR ($N = 5$) & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Haircut ratio BHY & $> 50\,\%$ & 72.24\,\% & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+MinBTL & $<$ longueur observée & 2.38~ans $<$ 7~ans & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+PBO CSCV & $< 0.5$ & 0.305 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Bootstrap P95 MaxDD & $<$ cap 35\,\% & 32.58\,\% & \textcolor{tsOrange}{\textbf{MARGE FINE}} \\
+\bottomrule
+\end{tabular}
+\end{table}

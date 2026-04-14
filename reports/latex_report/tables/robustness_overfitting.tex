@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\caption{Tests de correction d'\textit{overfitting}. Tous les tests convergent vers un verdict favorable sur le portefeuille combiné. Références~: Bailey \& L\'opez~de~Prado~(2012, 2014, 2015), Harvey \& Liu~(2015).}
+\label{tab:robustness_overfitting}
+\begin{tabular}{lrl}
+\toprule
+Test & Valeur & Interprétation \\
+\midrule
+PSR vs 0 & 1.0000 & $P(\text{Sharpe vrai} > 0)$ élevé --- présence d'edge \\
+DSR ($N = 5$ trials) & 1.0000 & Seuil $E[\max\mathrm{SR}] = 0.296$ \\
+Haircut Sharpe (BHY) & 0.840 & Ratio survivant = 72.24\,\% \\
+MinBTL (années) & 2.38 & Pour Sharpe cible 1.16 \\
+PBO CSCV ($n_{\text{bins}} = 16$) & 0.305 & Seuil de danger $= 0.5$ \textit{ (SAIN)} \\
+\bottomrule
+\end{tabular}
+\end{table}

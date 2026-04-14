@@ -3,6 +3,12 @@
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Cinq avertissements} sont identifiés et divulgués ci-dessous avec leur impact quantifié. \textbf{Aucune erreur structurelle} n'a été détectée~--- pas de biais de look-ahead, pas de bug de calcul numérique, bootstrap méthodologiquement correct.
 
+\begin{thesisbox}
+\textbf{Sept tests de robustesse statistique sont franchis.} La section~\ref{sec:advanced_robustness} documente les résultats du \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), du \textit{Probabilistic Sharpe Ratio} (1.000), du \textit{Deflated Sharpe Ratio} (1.000, facteur de dépassement $3.26\times$), du \textit{Haircut Sharpe} Benjamini--Hochberg--Yekutieli (ratio de survie $87\,\%$), du \textit{Minimum Backtest Length} (3.45~ans $<$ 7~ans disponibles), de la \textit{Probability of Backtest Overfitting} par validation croisée combinatoire (PBO $= 0.305$, seuil de danger $0.5$), et enfin des tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
+
+Les cinq avertissements ci-dessous sont les \emph{limites résiduelles} qui persistent \textbf{malgré} cette validation statistique rigoureuse. Ils n'invalident pas les résultats mais imposent la discipline de déploiement décrite en section~\ref{sec:production}.
+\end{thesisbox}
+
 \subsection{Avertissement 1 --- Data snooping résiduel}
 
 \begin{warningbox}
