@@ -323,10 +323,10 @@ def pipeline(
     dd_hard: float = 0.20,
     dd_recovery: float = 0.10,
     n_sub: int = 5,
-    leverage: float = 2.0,
-    fees: float = 0.00035,
-    slippage: float = 0.0001,
-    init_cash: float = 1_000_000.0,
+    leverage: float | None = 2.0,
+    fees: float | None = 0.00035,
+    slippage: float | None = None,
+    init_cash: float | None = None,
 ) -> tuple[vbt.Portfolio, CompositeAlphaIndicator]:
     """Investigation path — Composite FX Alpha daily rebalance.
 
@@ -435,10 +435,10 @@ def pipeline_nb(
     mom_w_high: float = 0.50,
     dd_recovery: float = 0.10,
     n_sub: int = 5,
-    leverage: float = 2.0,
-    fees: float = 0.00035,
-    slippage: float = 0.0001,
-    init_cash: float = 1_000_000.0,
+    leverage: float | None = 2.0,
+    fees: float | None = 0.00035,
+    slippage: float | None = None,
+    init_cash: float | None = None,
     ann_factor: float = COMPOSITE_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -525,8 +525,8 @@ def create_cv_pipeline(
         n_sub=5,
         leverage=2.0,
         fees=0.00035,
-        slippage=0.0001,
-        init_cash=1_000_000.0,
+        slippage=None,
+        init_cash=None,
         ann_factor=COMPOSITE_ANN_FACTOR,
         cutoff=0.05,
         metric_type=metric_type,
@@ -630,12 +630,14 @@ if __name__ == "__main__":
         plot_grid_volume,
     )
     from framework.plotting import print_cv_results, print_grid_results
+    from framework.project_config import PROJECT_CONFIG, data_path, results_dir
     from utils import load_fx_data
 
-    DATA_PATH = "data/EUR-USD_minute.parquet"
-    OUTPUT_DIR = "results/composite_fx_alpha"
-    SHOW_CHARTS = True
-    N_FOLDS = 8
+    PAIR = PROJECT_CONFIG["default_pair"]
+    DATA_PATH = str(data_path(PAIR))
+    OUTPUT_DIR = str(results_dir("composite_fx_alpha"))
+    SHOW_CHARTS = PROJECT_CONFIG["show_charts"]
+    N_FOLDS = 8  # composite-specific: minimum train folds = 3 → smaller grid OK
 
     SINGLE_PARAMS: dict[str, Any] = dict(target_vol=0.10, leverage=2.0)
     GRID_PARAMS: dict[str, list] = dict(

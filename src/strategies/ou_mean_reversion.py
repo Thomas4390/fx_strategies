@@ -29,6 +29,7 @@ from framework.pipeline_utils import (
     compute_metric_nb,
     make_execute_kwargs,
 )
+from framework.project_config import PROJECT_CONFIG
 from utils import compute_daily_rolling_volatility_nb, compute_leverage_nb
 
 
@@ -97,8 +98,9 @@ def pipeline(
     sigma_target: float = 0.10,
     max_leverage: float = 3.0,
     leverage_mult: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.00015,
+    init_cash: float | None = None,
+    slippage: float | None = PROJECT_CONFIG["slippage_intraday"],
+    fees: float | None = None,
 ) -> tuple[vbt.Portfolio, OUMRIndicator]:
     """Investigation path — bit-equivalent to the legacy ``backtest_ou_mr``.
 
@@ -148,6 +150,7 @@ def pipeline(
         slippage=slippage,
         init_cash=init_cash,
         leverage=leverage_arr,
+        fees=fees,
         freq="1min",
     )
     indicator = OUMRIndicator(
@@ -183,8 +186,9 @@ def pipeline_nb(
     session_end: int = 14,
     dt_stop: str = "21:00",
     td_stop: str = "6h",
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.00015,
+    init_cash: float | None = None,
+    slippage: float | None = PROJECT_CONFIG["slippage_intraday"],
+    fees: float | None = None,
     ann_factor: float = FX_MINUTE_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -206,6 +210,7 @@ def pipeline_nb(
         leverage_mult=leverage_mult,
         init_cash=init_cash,
         slippage=slippage,
+        fees=fees,
     )
     returns = pf.returns.values
     if returns.ndim > 1:
@@ -262,8 +267,9 @@ def create_cv_pipeline(
         session_end=14,
         dt_stop="21:00",
         td_stop="6h",
-        init_cash=1_000_000.0,
-        slippage=0.00015,
+        init_cash=None,
+        slippage=PROJECT_CONFIG["slippage_intraday"],
+        fees=None,
         ann_factor=FX_MINUTE_ANN_FACTOR,
         cutoff=0.05,
         metric_type=metric_type,
@@ -299,8 +305,9 @@ def create_cv_pipeline(
         session_end: int = defaults["session_end"],
         dt_stop: str = defaults["dt_stop"],
         td_stop: str = defaults["td_stop"],
-        init_cash: float = defaults["init_cash"],
-        slippage: float = defaults["slippage"],
+        init_cash: float | None = defaults["init_cash"],
+        slippage: float | None = defaults["slippage"],
+        fees: float | None = defaults["fees"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
@@ -321,6 +328,7 @@ def create_cv_pipeline(
             leverage_mult=leverage_mult,
             init_cash=init_cash,
             slippage=slippage,
+            fees=fees,
         )
         returns = pf.returns.values
         if returns.ndim > 1:
@@ -355,12 +363,14 @@ if __name__ == "__main__":
         plot_grid_volume,
     )
     from framework.plotting import print_cv_results, print_grid_results
+    from framework.project_config import data_path, results_dir
     from utils import load_fx_data
 
-    DATA_PATH = "data/EUR-USD_minute.parquet"
-    OUTPUT_DIR = "results/ou_mr"
-    SHOW_CHARTS = True
-    N_FOLDS = 15
+    PAIR = PROJECT_CONFIG["default_pair"]
+    DATA_PATH = str(data_path(PAIR))
+    OUTPUT_DIR = str(results_dir("ou_mr"))
+    SHOW_CHARTS = PROJECT_CONFIG["show_charts"]
+    N_FOLDS = 15  # ou_mr-specific: finer-grained walk-forward
 
     SINGLE_PARAMS: dict[str, Any] = dict(
         bb_window=80,

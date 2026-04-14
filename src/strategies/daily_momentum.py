@@ -34,10 +34,11 @@ from framework.pipeline_utils import (
     compute_metric_nb,
     make_execute_kwargs,
 )
+from framework.project_config import PROJECT_CONFIG, data_path
 from utils import load_fx_data
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-FX_PAIRS = ["EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD"]
+FX_PAIRS = list(PROJECT_CONFIG["fx_pairs"])
 
 # Daily strategies → annualization factor = 252
 DAILY_ANN_FACTOR: float = 252.0
@@ -54,7 +55,7 @@ def load_daily_closes(pairs: list[str] | None = None) -> pd.DataFrame:
         pairs = FX_PAIRS
     closes = {}
     for pair in pairs:
-        _, data = load_fx_data(f"data/{pair}_minute.parquet")
+        _, data = load_fx_data(str(data_path(pair)))
         closes[pair] = data.close.vbt.resample_apply("1D", "last").dropna()
     return pd.DataFrame(closes).dropna()
 
@@ -202,10 +203,10 @@ def pipeline_xs(
     w_short: int = 21,
     w_long: int = 63,
     target_vol: float = 0.10,
-    leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
-    fees: float = 0.00005,
+    leverage: float | None = None,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = 0.00005,
 ) -> tuple[vbt.Portfolio, XSMomentumIndicator]:
     """Investigation path — bit-equivalent to the legacy backtest_xs_momentum_pf.
 
@@ -248,10 +249,10 @@ def pipeline_xs_nb(
     w_short: int,
     w_long: int,
     target_vol: float = 0.10,
-    leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
-    fees: float = 0.00005,
+    leverage: float | None = None,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = 0.00005,
     ann_factor: float = DAILY_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -311,9 +312,9 @@ def create_cv_pipeline_xs(
     splitter_kwargs = pipeline_defaults.pop("splitter_kwargs", {})
     defaults = dict(
         target_vol=0.10,
-        leverage=1.0,
-        init_cash=1_000_000.0,
-        slippage=0.0001,
+        leverage=None,
+        init_cash=None,
+        slippage=None,
         fees=0.00005,
         ann_factor=DAILY_ANN_FACTOR,
         cutoff=0.05,
@@ -341,10 +342,10 @@ def create_cv_pipeline_xs(
         w_short: int,
         w_long: int,
         target_vol: float = defaults["target_vol"],
-        leverage: float = defaults["leverage"],
-        init_cash: float = defaults["init_cash"],
-        slippage: float = defaults["slippage"],
-        fees: float = defaults["fees"],
+        leverage: float | None = defaults["leverage"],
+        init_cash: float | None = defaults["init_cash"],
+        slippage: float | None = defaults["slippage"],
+        fees: float | None = defaults["fees"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
@@ -422,8 +423,9 @@ def pipeline_ts(
     rsi_high: int = 60,
     target_vol: float = 0.10,
     leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = None,
 ) -> tuple[vbt.Portfolio, TSMomentumIndicator]:
     """Investigation path — bit-equivalent to legacy backtest_ts_momentum_pf."""
     ema_f = close_daily.vbt.ewm_mean(span=fast_ema, minp=fast_ema, adjust=True)
@@ -457,6 +459,7 @@ def pipeline_ts(
         leverage=dyn_lev_arr,
         init_cash=init_cash,
         slippage=slippage,
+        fees=fees,
         freq="1D",
     )
     indicator = TSMomentumIndicator(
@@ -483,8 +486,9 @@ def pipeline_ts_nb(
     rsi_high: int = 60,
     target_vol: float = 0.10,
     leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = None,
     ann_factor: float = DAILY_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -501,6 +505,7 @@ def pipeline_ts_nb(
         leverage=leverage,
         init_cash=init_cash,
         slippage=slippage,
+        fees=fees,
     )
     returns = pf.returns.values
     if returns.ndim > 1:
@@ -544,8 +549,9 @@ def create_cv_pipeline_ts(
         rsi_high=60,
         target_vol=0.10,
         leverage=1.0,
-        init_cash=1_000_000.0,
-        slippage=0.0001,
+        init_cash=None,
+        slippage=None,
+        fees=None,
         ann_factor=DAILY_ANN_FACTOR,
         cutoff=0.05,
         metric_type=metric_type,
@@ -576,8 +582,9 @@ def create_cv_pipeline_ts(
         rsi_high: int = defaults["rsi_high"],
         target_vol: float = defaults["target_vol"],
         leverage: float = defaults["leverage"],
-        init_cash: float = defaults["init_cash"],
-        slippage: float = defaults["slippage"],
+        init_cash: float | None = defaults["init_cash"],
+        slippage: float | None = defaults["slippage"],
+        fees: float | None = defaults["fees"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
@@ -593,6 +600,7 @@ def create_cv_pipeline_ts(
             leverage=leverage,
             init_cash=init_cash,
             slippage=slippage,
+            fees=fees,
         )
         returns = pf.returns.values
         if returns.ndim > 1:
@@ -627,16 +635,17 @@ if __name__ == "__main__":
         plot_grid_volume,
     )
     from framework.plotting import print_cv_results, print_grid_results
+    from framework.project_config import results_dir
 
     # ─────────────────────────────────────────────────────────────────
     # CONFIGURATION
     # ─────────────────────────────────────────────────────────────────
-    TS_PAIR = "GBP-USD"
-    XS_OUTPUT_DIR = "results/daily_xs"
-    TS_OUTPUT_DIR = f"results/daily_ts_{TS_PAIR.lower()}"
-    SHOW_CHARTS = True
-    N_FOLDS = 8
-    LEVERAGE = 1.0
+    TS_PAIR = "GBP-USD"  # strategy-specific: TS momentum best pair per 2021-2025 study
+    XS_OUTPUT_DIR = str(results_dir("daily_xs"))
+    TS_OUTPUT_DIR = str(results_dir("daily_ts", TS_PAIR))
+    SHOW_CHARTS = PROJECT_CONFIG["show_charts"]
+    N_FOLDS = 8  # daily_momentum-specific
+    LEVERAGE = 1.0  # retained for explicit documentation of the single-run choice
 
     XS_GRID_PARAMS: dict[str, list] = dict(
         w_short=[10, 21, 42],

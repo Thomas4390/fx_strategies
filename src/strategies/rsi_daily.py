@@ -86,9 +86,10 @@ def pipeline(
     oversold: float = 25.0,
     overbought: float = 75.0,
     exit_mid: float = 50.0,
-    leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
+    leverage: float | None = None,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = None,
 ) -> tuple[vbt.Portfolio, RSIDailyIndicator]:
     """Investigation path — bit-equivalent to the legacy ``backtest_rsi_daily``.
 
@@ -124,6 +125,7 @@ def pipeline(
         init_cash=init_cash,
         leverage=leverage,
         slippage=slippage,
+        fees=fees,
         freq="1D",
     )
 
@@ -152,9 +154,10 @@ def pipeline_nb(
     oversold: float,
     overbought: float,
     exit_mid: float = 50.0,
-    leverage: float = 1.0,
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.0001,
+    leverage: float | None = None,
+    init_cash: float | None = None,
+    slippage: float | None = None,
+    fees: float | None = None,
     ann_factor: float = RSI_DAILY_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -169,6 +172,7 @@ def pipeline_nb(
         leverage=leverage,
         init_cash=init_cash,
         slippage=slippage,
+        fees=fees,
     )
     returns = pf.returns.values
     if returns.ndim > 1:
@@ -217,9 +221,10 @@ def create_cv_pipeline(
 
     defaults = dict(
         exit_mid=50.0,
-        leverage=1.0,
-        init_cash=1_000_000.0,
-        slippage=0.0001,
+        leverage=None,
+        init_cash=None,
+        slippage=None,
+        fees=None,
         ann_factor=RSI_DAILY_ANN_FACTOR,
         cutoff=0.05,
         metric_type=metric_type,
@@ -247,9 +252,10 @@ def create_cv_pipeline(
         oversold: float,
         overbought: float,
         exit_mid: float = defaults["exit_mid"],
-        leverage: float = defaults["leverage"],
-        init_cash: float = defaults["init_cash"],
-        slippage: float = defaults["slippage"],
+        leverage: float | None = defaults["leverage"],
+        init_cash: float | None = defaults["init_cash"],
+        slippage: float | None = defaults["slippage"],
+        fees: float | None = defaults["fees"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
@@ -263,6 +269,7 @@ def create_cv_pipeline(
             leverage=leverage,
             init_cash=init_cash,
             slippage=slippage,
+            fees=fees,
         )
         returns = pf.returns.values
         if returns.ndim > 1:
@@ -297,22 +304,22 @@ if __name__ == "__main__":
         plot_grid_volume,
     )
     from framework.plotting import print_cv_results, print_grid_results
+    from framework.project_config import PROJECT_CONFIG, data_path, results_dir
     from utils import load_fx_data
 
     # ─────────────────────────────────────────────────────────────────
     # CONFIGURATION
     # ─────────────────────────────────────────────────────────────────
-    PAIR = "EUR-USD"  # EUR-USD | GBP-USD | USD-JPY | USD-CAD
-    DATA_PATH = f"data/{PAIR}_minute.parquet"
-    OUTPUT_DIR = f"results/rsi_daily_{PAIR.lower()}"
-    SHOW_CHARTS = True
-    N_FOLDS = 10
+    PAIR = PROJECT_CONFIG["default_pair"]
+    DATA_PATH = str(data_path(PAIR))
+    OUTPUT_DIR = str(results_dir("rsi_daily", PAIR))
+    SHOW_CHARTS = PROJECT_CONFIG["show_charts"]
+    N_FOLDS = PROJECT_CONFIG["cv_folds"]
 
     SINGLE_PARAMS: dict[str, Any] = dict(
         rsi_period=14,
         oversold=25.0,
         overbought=75.0,
-        leverage=1.0,
     )
     GRID_PARAMS: dict[str, list] = dict(
         rsi_period=[7, 10, 14, 21],

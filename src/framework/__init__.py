@@ -12,4 +12,10 @@ Use:
         analyze_portfolio,
         plot_cv_heatmap,
     )
+
+Importing this package also applies ``vbt.yml`` (project root) to
+``vbt.settings`` via ``framework.project_config`` so that every
+``Portfolio.from_signals`` call picks up the centralized defaults.
 """
+
+from framework import project_config as project_config  # noqa: F401

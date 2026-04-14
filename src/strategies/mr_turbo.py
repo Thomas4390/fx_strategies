@@ -49,6 +49,7 @@ from framework.pipeline_utils import (
     compute_metric_nb,
     make_execute_kwargs,
 )
+from framework.project_config import PROJECT_CONFIG
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -156,9 +157,10 @@ def pipeline(
     session_end: int = 14,
     dt_stop: str = "21:00",
     td_stop: str = "6h",
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.00015,
-    leverage: float = 1.0,
+    init_cash: float | None = None,
+    slippage: float | None = PROJECT_CONFIG["slippage_intraday"],
+    leverage: float | None = None,
+    fees: float | None = None,
 ) -> tuple[vbt.Portfolio, MRTurboIndicator]:
     """Investigation path — bit-equivalent to the legacy backtest_mr_turbo.
 
@@ -199,6 +201,7 @@ def pipeline(
         slippage=slippage,
         init_cash=init_cash,
         leverage=leverage,
+        fees=fees,
         freq="1min",
     )
 
@@ -230,9 +233,10 @@ def pipeline_nb(
     session_end: int = 14,
     dt_stop: str = "21:00",
     td_stop: str = "6h",
-    init_cash: float = 1_000_000.0,
-    slippage: float = 0.00015,
-    leverage: float = 1.0,
+    init_cash: float | None = None,
+    slippage: float | None = PROJECT_CONFIG["slippage_intraday"],
+    leverage: float | None = None,
+    fees: float | None = None,
     ann_factor: float = FX_MINUTE_ANN_FACTOR,
     cutoff: float = 0.05,
     metric_type: int = SHARPE_RATIO,
@@ -262,6 +266,7 @@ def pipeline_nb(
         init_cash=init_cash,
         slippage=slippage,
         leverage=leverage,
+        fees=fees,
     )
     returns = pf.returns.values
     if returns.ndim > 1:
@@ -327,9 +332,10 @@ def create_cv_pipeline(
         session_end=14,
         dt_stop="21:00",
         td_stop="6h",
-        init_cash=1_000_000.0,
-        slippage=0.00015,
-        leverage=1.0,
+        init_cash=None,
+        slippage=PROJECT_CONFIG["slippage_intraday"],
+        leverage=None,
+        fees=None,
         ann_factor=FX_MINUTE_ANN_FACTOR,
         cutoff=0.05,
         metric_type=metric_type,
@@ -361,9 +367,10 @@ def create_cv_pipeline(
         session_end: int = defaults["session_end"],
         dt_stop: str = defaults["dt_stop"],
         td_stop: str = defaults["td_stop"],
-        init_cash: float = defaults["init_cash"],
-        slippage: float = defaults["slippage"],
-        leverage: float = defaults["leverage"],
+        init_cash: float | None = defaults["init_cash"],
+        slippage: float | None = defaults["slippage"],
+        leverage: float | None = defaults["leverage"],
+        fees: float | None = defaults["fees"],
         ann_factor: float = defaults["ann_factor"],
         cutoff: float = defaults["cutoff"],
         metric_type: int = defaults["metric_type"],
@@ -381,6 +388,7 @@ def create_cv_pipeline(
             init_cash=init_cash,
             slippage=slippage,
             leverage=leverage,
+            fees=fees,
         )
         returns = pf.returns.values
         if returns.ndim > 1:
@@ -431,15 +439,17 @@ if __name__ == "__main__":
         plot_grid_volume,
     )
     from framework.plotting import print_cv_results, print_grid_results
+    from framework.project_config import data_path, results_dir
     from utils import load_fx_data
 
     # ─────────────────────────────────────────────────────────────────
     # CONFIGURATION — edit these defaults to change the run behaviour
     # ─────────────────────────────────────────────────────────────────
-    DATA_PATH = "data/EUR-USD_minute.parquet"
-    OUTPUT_DIR = "results/mr_turbo"
-    SHOW_CHARTS = True
-    N_FOLDS = 15
+    PAIR = PROJECT_CONFIG["default_pair"]
+    DATA_PATH = str(data_path(PAIR))
+    OUTPUT_DIR = str(results_dir("mr_turbo"))
+    SHOW_CHARTS = PROJECT_CONFIG["show_charts"]
+    N_FOLDS = 15  # mr_turbo-specific: finer-grained walk-forward
 
     # Single-run parameters
     SINGLE_PARAMS: dict[str, Any] = dict(
@@ -447,7 +457,6 @@ if __name__ == "__main__":
         bb_alpha=5.0,
         sl_stop=0.005,
         tp_stop=0.006,
-        leverage=1.0,
     )
     # Grid-search sweep
     GRID_PARAMS: dict[str, list] = dict(
