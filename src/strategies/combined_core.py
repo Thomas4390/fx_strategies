@@ -1,8 +1,9 @@
 """Native vbt-pro multi-strategy aggregation layer.
 
-Replaces the pandas weighted-sum + synthetic ``from_holding`` workaround in
-``combined_portfolio{,_v2}.py`` with a single ``vbt.Portfolio.from_optimizer``
-call driven by a ``PortfolioOptimizer`` built from filled allocations.
+Replaces the pandas weighted-sum + synthetic ``from_holding`` workaround used
+by the sibling portfolio builders (``combined_portfolio.py`` and the levered
+variant) with a single ``vbt.Portfolio.from_optimizer`` call driven by a
+``PortfolioOptimizer`` built from filled allocations.
 
 Numerical equivalence with the legacy pattern
 ---------------------------------------------
@@ -41,14 +42,14 @@ import pandas as pd
 import vectorbtpro as vbt
 
 
-_SYNTHETIC_BASE_PRICE: float = 1000.0
-_DEFAULT_INIT_CASH: float = 1_000_000.0
-_DEFAULT_LEVERAGE_CAP: float = 20.0
+SYNTHETIC_BASE_PRICE: float = 1000.0
+DEFAULT_INIT_CASH: float = 1_000_000.0
+DEFAULT_LEVERAGE_CAP: float = 20.0
 
 
 def returns_to_synthetic_prices(
     strategy_returns: dict[str, pd.Series] | pd.DataFrame,
-    base_price: float = _SYNTHETIC_BASE_PRICE,
+    base_price: float = SYNTHETIC_BASE_PRICE,
 ) -> pd.DataFrame:
     """Convert a dict of daily-return Series to a synthetic multi-asset price frame.
 
@@ -71,8 +72,8 @@ def returns_to_synthetic_prices(
 def build_native_combined(
     strategy_returns: dict[str, pd.Series] | pd.DataFrame,
     allocations: pd.DataFrame,
-    init_cash: float = _DEFAULT_INIT_CASH,
-    leverage_cap: float = _DEFAULT_LEVERAGE_CAP,
+    init_cash: float = DEFAULT_INIT_CASH,
+    leverage_cap: float = DEFAULT_LEVERAGE_CAP,
     freq: str = "1D",
 ) -> tuple[vbt.Portfolio, pd.DataFrame, pd.DataFrame]:
     """Build a native combined ``vbt.Portfolio`` from per-strategy returns and allocations.
@@ -188,9 +189,9 @@ def sharpe_for_window(
     window = combined.loc[start:end]
     if len(window) < min_bars:
         return 0.0
-    price = (1.0 + window.fillna(0.0)).cumprod() * _SYNTHETIC_BASE_PRICE
+    price = (1.0 + window.fillna(0.0)).cumprod() * SYNTHETIC_BASE_PRICE
     pf_window = vbt.Portfolio.from_holding(
-        close=price, init_cash=_DEFAULT_INIT_CASH, freq="1D"
+        close=price, init_cash=DEFAULT_INIT_CASH, freq="1D"
     )
     sr = float(pf_window.sharpe_ratio)
     return 0.0 if np.isnan(sr) else sr
@@ -207,9 +208,9 @@ def window_metrics(
     window = combined.loc[start:end]
     if len(window) < min_bars:
         return {"sharpe": 0.0, "total_return": 0.0, "max_drawdown": 0.0}
-    price = (1.0 + window.fillna(0.0)).cumprod() * _SYNTHETIC_BASE_PRICE
+    price = (1.0 + window.fillna(0.0)).cumprod() * SYNTHETIC_BASE_PRICE
     pf_window = vbt.Portfolio.from_holding(
-        close=price, init_cash=_DEFAULT_INIT_CASH, freq="1D"
+        close=price, init_cash=DEFAULT_INIT_CASH, freq="1D"
     )
     sr = float(pf_window.sharpe_ratio)
     tr = float(pf_window.total_return)
