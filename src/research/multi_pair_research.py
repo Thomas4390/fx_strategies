@@ -133,7 +133,7 @@ def _print_subheader(title: str) -> None:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def phase1_baseline(
+def run_per_pair_baseline_classification(
     pair_data: dict[str, tuple[pd.DataFrame, vbt.Data]],
 ) -> tuple[list[str], list[str], dict[str, pd.DataFrame]]:
     """Run per-pair baseline: MR Turbo + MR Macro per year.
@@ -270,7 +270,7 @@ def _run_mr_sweep_single(
     )
 
 
-def phase2_mr_sweep(
+def run_mr_responsive_pair_sweep(
     pair_data: dict[str, tuple[pd.DataFrame, vbt.Data]],
     mr_pairs: list[str],
 ) -> dict[str, dict[str, Any]]:
@@ -530,7 +530,7 @@ def _run_macd(
     return {"pf": pf, "macd": macd}
 
 
-def phase3_alternatives(
+def run_non_mr_alternative_strategies(
     pair_data: dict[str, tuple[pd.DataFrame, vbt.Data]],
     non_mr_pairs: list[str],
 ) -> dict[str, dict[str, Any]]:
@@ -755,7 +755,7 @@ def _get_best_backtest_fn(
         return ("MACD", run_macd)
 
 
-def phase4_portfolio(
+def run_multi_pair_portfolio_construction(
     pair_data: dict[str, tuple[pd.DataFrame, vbt.Data]],
     mr_pairs: list[str],
     mr_results: dict[str, dict[str, Any]],
@@ -1122,22 +1122,22 @@ def main() -> None:
 
     # Phase 1
     t_p1 = time.time()
-    mr_pairs, non_mr_pairs, baseline_results = phase1_baseline(pair_data)
+    mr_pairs, non_mr_pairs, baseline_results = run_per_pair_baseline_classification(pair_data)
     print(f"\n  Phase 1 completed in {time.time() - t_p1:.1f}s")
 
     # Phase 2
     t_p2 = time.time()
-    mr_results = phase2_mr_sweep(pair_data, mr_pairs)
+    mr_results = run_mr_responsive_pair_sweep(pair_data, mr_pairs)
     print(f"\n  Phase 2 completed in {time.time() - t_p2:.1f}s")
 
     # Phase 3
     t_p3 = time.time()
-    alt_results = phase3_alternatives(pair_data, non_mr_pairs)
+    alt_results = run_non_mr_alternative_strategies(pair_data, non_mr_pairs)
     print(f"\n  Phase 3 completed in {time.time() - t_p3:.1f}s")
 
     # Phase 4
     t_p4 = time.time()
-    year_df, portfolio_returns = phase4_portfolio(
+    year_df, portfolio_returns = run_multi_pair_portfolio_construction(
         pair_data, mr_pairs, mr_results, alt_results
     )
     print(f"\n  Phase 4 completed in {time.time() - t_p4:.1f}s")

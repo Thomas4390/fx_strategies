@@ -330,7 +330,7 @@ def compute_dynamic_filter(
     return (spread_ok & unemp_ok).fillna(False)
 
 
-def phase1a_dynamic_thresholds(
+def analyze_dynamic_macro_thresholds(
     data: vbt.Data,
     macro_daily: pd.DataFrame,
 ) -> list[dict[str, Any]]:
@@ -418,7 +418,7 @@ def compute_composite_score(
     return score
 
 
-def phase1b_composite_score(
+def analyze_composite_macro_score(
     data: vbt.Data,
     macro_daily: pd.DataFrame,
 ) -> list[dict[str, Any]]:
@@ -488,7 +488,7 @@ def phase1b_composite_score(
 # ===================================================================
 
 
-def phase1c_lead_lag(
+def analyze_macro_lead_lag(
     data: vbt.Data,
     macro_daily: pd.DataFrame,
 ) -> list[dict[str, Any]]:
@@ -555,7 +555,7 @@ def phase1c_lead_lag(
 # ===================================================================
 
 
-def phase1d_regime_clustering(
+def analyze_regime_kmeans_clustering(
     data: vbt.Data,
     macro_daily: pd.DataFrame,
 ) -> list[dict[str, Any]]:
@@ -661,7 +661,7 @@ def phase1d_regime_clustering(
 # ===================================================================
 
 
-def phase1e_individual_variables(
+def analyze_individual_macro_variables(
     data: vbt.Data,
     macro_daily: pd.DataFrame,
 ) -> list[dict[str, Any]]:
@@ -740,11 +740,11 @@ def main() -> None:
 
     t_start = time.time()
 
-    all_results["1e_individual"] = phase1e_individual_variables(data, macro_daily)
-    all_results["1a_dynamic"] = phase1a_dynamic_thresholds(data, macro_daily)
-    all_results["1b_composite"] = phase1b_composite_score(data, macro_daily)
-    all_results["1c_lead_lag"] = phase1c_lead_lag(data, macro_daily)
-    all_results["1d_clustering"] = phase1d_regime_clustering(data, macro_daily)
+    all_results["1e_individual"] = analyze_individual_macro_variables(data, macro_daily)
+    all_results["1a_dynamic"] = analyze_dynamic_macro_thresholds(data, macro_daily)
+    all_results["1b_composite"] = analyze_composite_macro_score(data, macro_daily)
+    all_results["1c_lead_lag"] = analyze_macro_lead_lag(data, macro_daily)
+    all_results["1d_clustering"] = analyze_regime_kmeans_clustering(data, macro_daily)
 
     # SUMMARY
     _print_header("PHASE 1 SUMMARY -- Best Configuration per Experiment")

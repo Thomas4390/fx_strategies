@@ -155,7 +155,7 @@ def backtest_xs_momentum(
     }
 
 
-def phase_s1() -> list[dict]:
+def run_xs_momentum_sweep() -> list[dict]:
     """S1: Cross-sectional momentum sweep."""
     _h("S1: Cross-Sectional Momentum (Daily)")
     closes = load_daily_closes()
@@ -245,7 +245,7 @@ def backtest_ts_momentum_pair(
     }
 
 
-def phase_s3() -> list[dict]:
+def run_ts_momentum_per_pair() -> list[dict]:
     """S3: Time-series momentum per pair."""
     _h("S3: Time-Series Momentum (Per Pair)")
     closes = load_daily_closes()
@@ -300,7 +300,7 @@ def phase_s3() -> list[dict]:
 # S3B: TIME-SERIES MOMENTUM PORTFOLIO (all pairs combined)
 # ===================================================================
 
-def phase_s3b() -> list[dict]:
+def run_ts_momentum_equal_weight() -> list[dict]:
     """S3B: Time-series momentum — equal weight portfolio of all pairs."""
     _h("S3B: TS Momentum Portfolio (4 pairs EW)")
     closes = load_daily_closes()
@@ -355,7 +355,7 @@ def phase_s3b() -> list[dict]:
 # S2: CARRY TRADE PROXY
 # ===================================================================
 
-def phase_s2() -> list[dict]:
+def run_carry_proxy_sweep() -> list[dict]:
     """S2: Carry trade proxy using yield spread."""
     _h("S2: Carry Trade Proxy (Yield Spread)")
 
@@ -472,7 +472,7 @@ def phase_s2() -> list[dict]:
 # S4: COMPOSITE (momentum + carry combined)
 # ===================================================================
 
-def phase_s4(
+def run_momentum_carry_composite(
     best_mom_params: dict | None = None,
     best_carry_label: str | None = None,
 ) -> list[dict]:
@@ -565,11 +565,11 @@ def main() -> None:
 
     t_start = time.time()
 
-    r_s1 = phase_s1()
-    r_s3 = phase_s3()
-    r_s3b = phase_s3b()
-    r_s2 = phase_s2()
-    r_s4 = phase_s4()
+    r_s1 = run_xs_momentum_sweep()
+    r_s3 = run_ts_momentum_per_pair()
+    r_s3b = run_ts_momentum_equal_weight()
+    r_s2 = run_carry_proxy_sweep()
+    r_s4 = run_momentum_carry_composite()
 
     # Summary
     _h("OVERALL SUMMARY")

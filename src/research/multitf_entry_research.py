@@ -178,7 +178,7 @@ def walk_forward_multitf(
 # =================================================================
 
 
-def phase2a_multitf_bb(
+def run_multitf_bb_entry_test(
     data: vbt.Data,
     macro_filter: pd.Series,
 ) -> list[dict[str, Any]]:
@@ -293,7 +293,7 @@ def backtest_mr_htf_confirmation(
     )
 
 
-def phase2b_htf_confirmation(
+def run_htf_rsi_confirmation_test(
     data: vbt.Data,
     macro_filter: pd.Series,
 ) -> list[dict[str, Any]]:
@@ -364,7 +364,7 @@ def phase2b_htf_confirmation(
 # =================================================================
 
 
-def phase3a_day_of_week(
+def run_day_of_week_analysis(
     data: vbt.Data,
     macro_filter: pd.Series,
 ) -> list[dict[str, Any]]:
@@ -464,7 +464,7 @@ def phase3a_day_of_week(
 # =================================================================
 
 
-def phase3b_vwap_anchor(
+def run_vwap_anchor_test(
     data: vbt.Data,
     macro_filter: pd.Series,
 ) -> list[dict[str, Any]]:
@@ -571,7 +571,7 @@ def phase3b_vwap_anchor(
 # =================================================================
 
 
-def phase3c_velocity_filter(
+def run_velocity_filter_test(
     data: vbt.Data,
     macro_filter: pd.Series,
 ) -> list[dict[str, Any]]:
@@ -686,11 +686,11 @@ def main() -> None:
 
     t_start = time.time()
 
-    phase2a_multitf_bb(data, macro_filter)
-    phase2b_htf_confirmation(data, macro_filter)
-    phase3a_day_of_week(data, macro_filter)
-    phase3b_vwap_anchor(data, macro_filter)
-    phase3c_velocity_filter(data, macro_filter)
+    run_multitf_bb_entry_test(data, macro_filter)
+    run_htf_rsi_confirmation_test(data, macro_filter)
+    run_day_of_week_analysis(data, macro_filter)
+    run_vwap_anchor_test(data, macro_filter)
+    run_velocity_filter_test(data, macro_filter)
 
     elapsed = time.time() - t_start
     print(f"\nTotal Phase 2+3 time: {elapsed / 60:.1f} minutes")

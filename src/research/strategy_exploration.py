@@ -153,7 +153,7 @@ def backtest_multitf_safe(
     )
 
 
-def phase_a1(data: vbt.Data) -> list[dict]:
+def explore_multitf_bollinger_bands(data: vbt.Data) -> list[dict]:
     """A1: Multi-TF BB with safe lag."""
     _h("A1: Multi-TF BB (safe, .shift(1))")
     results = []
@@ -239,7 +239,7 @@ def backtest_keltner(
     )
 
 
-def phase_a2(data: vbt.Data) -> list[dict]:
+def explore_keltner_channel_sweep(data: vbt.Data) -> list[dict]:
     """A2: Keltner Channel sweep."""
     _h("A2: Keltner Channel on VWAP Deviation")
     results = []
@@ -320,7 +320,7 @@ def backtest_hurst_filtered(
     )
 
 
-def phase_a3(data: vbt.Data) -> list[dict]:
+def explore_hurst_regime_filter(data: vbt.Data) -> list[dict]:
     """A3: Hurst exponent regime filter."""
     _h("A3: Hurst Exponent Regime Filter")
     results = []
@@ -391,7 +391,7 @@ def backtest_ema_cross(
     )
 
 
-def phase_c1(data: vbt.Data) -> list[dict]:
+def explore_ema_crossover_daily(data: vbt.Data) -> list[dict]:
     """C1: EMA crossover daily."""
     _h("C1: EMA Crossover Daily + Intraday VWAP")
     results = []
@@ -460,7 +460,7 @@ def backtest_supertrend(
     )
 
 
-def phase_c2(data: vbt.Data) -> list[dict]:
+def explore_supertrend_daily_sweep(data: vbt.Data) -> list[dict]:
     """C2: SuperTrend daily sweep."""
     _h("C2: SuperTrend Daily")
     results = []
@@ -536,7 +536,7 @@ def backtest_adx_breakout(
     )
 
 
-def phase_c3(data: vbt.Data) -> list[dict]:
+def explore_adx_breakout_sweep(data: vbt.Data) -> list[dict]:
     """C3: ADX Breakout sweep."""
     _h("C3: ADX Breakout")
     results = []
@@ -559,7 +559,7 @@ def phase_c3(data: vbt.Data) -> list[dict]:
 # B2: CROSS-SECTIONAL MOMENTUM
 # ===================================================================
 
-def phase_b2_cross_momentum() -> list[dict]:
+def explore_cross_sectional_momentum_4pair() -> list[dict]:
     """B2: Cross-sectional momentum across 4 pairs."""
     _h("B2: Cross-Sectional Momentum (4 pairs)")
     results = []
@@ -653,17 +653,17 @@ def main() -> None:
     all_results: dict[str, list[dict]] = {}
 
     # Phase A: Mean Reversion Variants
-    all_results["A1_multitf"] = phase_a1(data)
-    all_results["A2_keltner"] = phase_a2(data)
-    all_results["A3_hurst"] = phase_a3(data)
+    all_results["A1_multitf"] = explore_multitf_bollinger_bands(data)
+    all_results["A2_keltner"] = explore_keltner_channel_sweep(data)
+    all_results["A3_hurst"] = explore_hurst_regime_filter(data)
 
     # Phase C: Trend Following
-    all_results["C1_ema_cross"] = phase_c1(data)
-    all_results["C2_supertrend"] = phase_c2(data)
-    all_results["C3_adx"] = phase_c3(data)
+    all_results["C1_ema_cross"] = explore_ema_crossover_daily(data)
+    all_results["C2_supertrend"] = explore_supertrend_daily_sweep(data)
+    all_results["C3_adx"] = explore_adx_breakout_sweep(data)
 
     # Phase B: Cross-Sectional
-    all_results["B2_xsmom"] = phase_b2_cross_momentum()
+    all_results["B2_xsmom"] = explore_cross_sectional_momentum_4pair()
 
     # Multi-pair test of baseline
     _h("MULTI-PAIR: Baseline MR + macro (4 pairs)")
