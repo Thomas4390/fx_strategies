@@ -1,17 +1,17 @@
-"""Generate all Phase 18 report artifacts into results/phase18/.
+"""Generate all production report artifacts into results/production_report/.
 
 Produces:
-  results/phase18/sleeves/<name>/<name>_*.html   (tearsheet per sleeve)
-  results/phase18/combined/Phase18_Combined_*.html  (tearsheet combined)
-  results/phase18/figures/equity_comparison.html     (log-scale equity)
-  results/phase18/figures/rolling_correlation.html   (63d rolling corr)
-  results/phase18/figures/bootstrap_scatter.html     (CAGR × MaxDD cloud)
-  results/phase18/figures/per_sleeve_monthly.html    (stacked contribution)
-  results/phase18/stress_test_report.json            (bootstrap / scenarios)
-  results/phase18/summary.txt                        (IS/OOS metrics dump)
+  results/production_report/sleeves/<name>/*.html   (tearsheet per sleeve)
+  results/production_report/combined/*.html         (tearsheet combined)
+  results/production_report/figures/equity_comparison.html
+  results/production_report/figures/rolling_correlation.html
+  results/production_report/figures/bootstrap_scatter.html
+  results/production_report/figures/per_sleeve_monthly.html
+  results/production_report/stress_test_report.json
+  results/production_report/summary.txt
 
 Run:
-    python scripts/generate_phase18_report_artifacts.py
+    python scripts/generate_report_artifacts.py
 """
 
 from __future__ import annotations

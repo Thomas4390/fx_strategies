@@ -158,7 +158,7 @@ def _dsr_row(
     }
 
 
-def _pbo_phase20a(
+def _pbo_weight_sweep(
     metrics: dict[str, Any],
     sleeves: dict[str, pd.Series],
 ) -> dict[str, Any] | None:
@@ -416,7 +416,7 @@ def main() -> None:
     if p20a_path.exists():
         print("\nRunning CSCV PBO on Phase 20A CORE configs…")
         p20a_metrics = _load_metrics(p20a_path)
-        pbo_res = _pbo_phase20a(p20a_metrics, sleeves)
+        pbo_res = _pbo_weight_sweep(p20a_metrics, sleeves)
         if pbo_res is not None:
             print(
                 f"  PBO = {pbo_res['pbo']:.3f} "

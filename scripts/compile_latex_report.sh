@@ -2,11 +2,11 @@
 # Compile the Phase 18 LaTeX report with xelatex (two passes for ToC/refs).
 set -euo pipefail
 
-REPORT_DIR="$(cd "$(dirname "$0")/.." && pwd)/reports/phase18_latex"
+REPORT_DIR="$(cd "$(dirname "$0")/.." && pwd)/reports/latex_report"
 cd "$REPORT_DIR"
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "  Phase 18 LaTeX Compilation"
+echo "  LaTeX report compilation"
 echo "═══════════════════════════════════════════════════════════════"
 echo "Working dir: $REPORT_DIR"
 echo ""

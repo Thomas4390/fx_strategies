@@ -77,7 +77,7 @@ def main() -> None:
             ),
         ),
         (
-            "phase18_mr80",
+            "production_mr80",
             dict(
                 allocation="custom",
                 custom_weights={

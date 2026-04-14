@@ -1,11 +1,11 @@
-"""Build figures, tables and trade examples for the Phase 18 LaTeX report.
+"""Build figures, tables and trade examples for the LaTeX production report.
 
 Run:
-    python scripts/build_phase18_latex_assets.py
+    python scripts/build_latex_report_assets.py
 
 Outputs:
-    reports/phase18_latex/figures/*.png   (300 DPI matplotlib figures)
-    reports/phase18_latex/tables/*.tex    (booktabs snippets for \\input{})
+    reports/latex_report/figures/*.png   (300 DPI matplotlib figures)
+    reports/latex_report/tables/*.tex    (booktabs snippets for \\input{})
 
 The script is read-only on the rest of the codebase — it calls
 ``build_production_portfolio`` once, then the three underlying backtests
