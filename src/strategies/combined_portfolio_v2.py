@@ -28,7 +28,7 @@ Equivalence with v1
 When called with ``allocation="risk_parity"``, ``target_vol=None`` and
 ``dd_cap_enabled=False`` this module produces **bit-identical** returns
 and ``pf.stats()`` vs :func:`combined_portfolio.build_combined_portfolio`.
-This is guarded by ``tests/test_combined_v2_equivalence.py``.
+This is guarded by ``tests/test_combined_portfolio_v2.py``.
 """
 
 from __future__ import annotations
@@ -562,7 +562,7 @@ def build_combined_portfolio_v2(
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# CLI
+# BENCHMARK HELPERS
 # ═══════════════════════════════════════════════════════════════════════
 
 
@@ -570,139 +570,156 @@ def _format_pct(x: float) -> str:
     return f"{x * 100:>7.2f}%"
 
 
-def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
-    """Run v1 and v2 back-to-back and print a comparison table."""
-    import os
-
+def _collect_v1_baselines(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Run the three v1 allocations as reference baselines."""
     from strategies.combined_portfolio import build_combined_portfolio
 
-    os.makedirs(output_dir, exist_ok=True)
-
-    print("=" * 72)
-    print("  Combined Portfolio v2 — Benchmark vs v1")
-    print("=" * 72)
-
-    strat_rets = get_strategy_daily_returns()
-
-    results: dict[str, Any] = {}
-
-    # v1 baselines
+    out: dict[str, dict[str, Any]] = {}
     for alloc in ("risk_parity", "equal", "mr_heavy"):
-        res = build_combined_portfolio(strat_rets, allocation=alloc)
-        results[f"v1/{alloc}"] = res
+        out[f"v1/{alloc}"] = build_combined_portfolio(strat_rets, allocation=alloc)
+    return out
 
-    # v2 risk_parity no-leverage → must match v1 risk_parity
-    results["v2_nolev/risk_parity"] = build_combined_portfolio_v2(
-        strat_rets, allocation="risk_parity", target_vol=None, dd_cap_enabled=False
-    )
 
-    # v2 regime_adaptive no leverage (pure regime allocation effect)
-    results["v2_nolev/regime_adaptive"] = build_combined_portfolio_v2(
-        strat_rets,
-        allocation="regime_adaptive",
-        target_vol=None,
-        dd_cap_enabled=False,
-    )
+def _collect_v2_no_leverage(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Run v2 with leverage disabled — two variants for the equivalence check."""
+    return {
+        # Must match v1 risk_parity bit-for-bit.
+        "v2_nolev/risk_parity": build_combined_portfolio_v2(
+            strat_rets,
+            allocation="risk_parity",
+            target_vol=None,
+            dd_cap_enabled=False,
+        ),
+        # Pure regime-allocation effect (no leverage layer).
+        "v2_nolev/regime_adaptive": build_combined_portfolio_v2(
+            strat_rets,
+            allocation="regime_adaptive",
+            target_vol=None,
+            dd_cap_enabled=False,
+        ),
+    }
 
-    # v2 conservative configs (safe default — max_leverage=3)
+
+def _collect_v2_regime_sweep(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Conservative regime-adaptive configs with DD cap ON (max_leverage=3)."""
+    out: dict[str, dict[str, Any]] = {}
     for target_vol in (0.08, 0.10, 0.12, 0.14):
         key = f"v2_regime/target_vol={target_vol:.2f}_ml=3_DDcap=ON"
-        results[key] = build_combined_portfolio_v2(
+        out[key] = build_combined_portfolio_v2(
             strat_rets,
             allocation="regime_adaptive",
             target_vol=target_vol,
             max_leverage=3.0,
             dd_cap_enabled=True,
         )
+    return out
 
-    # v2 aggressive configs tuned for the CAGR 10-15% target. These rely
-    # on DD cap OFF because on this combined the soft-cap actually hurts
-    # the Sharpe (Phase 14 finding) — the DD cap de-leverages drawdowns
-    # that would have recovered. DO NOT run these in production without
-    # a broker-level margin check: 12-15x notional on a daily-rebalanced
-    # combined requires ~7-10% margin available at all times.
-    mr_heavy_weights = {
-        "MR_Macro": 0.80,
-        "XS_Momentum": 0.10,
-        "TS_Momentum_RSI": 0.10,
-    }
+
+# Aggressive configs rely on DD cap OFF because on this combined the
+# soft-cap actually hurts the Sharpe (Phase 14 finding) — it de-leverages
+# drawdowns that would have recovered. DO NOT run these in production
+# without a broker-level margin check: 12-15x notional on a daily-rebalanced
+# combined requires ~7-10% margin available at all times.
+_MR_HEAVY_WEIGHTS: dict[str, float] = {
+    "MR_Macro": 0.80,
+    "XS_Momentum": 0.10,
+    "TS_Momentum_RSI": 0.10,
+}
+_MR_TS_WEIGHTS: dict[str, float] = {  # Phase 16
+    "MR_Macro": 0.90,
+    "TS_Momentum_RSI": 0.10,
+}
+_MR_TS3P_WEIGHTS: dict[str, float] = {  # Phase 17
+    "MR_Macro": 0.90,
+    "TS_Momentum_3p": 0.10,
+}
+
+
+def _collect_v2_mr_heavy_sweep(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Aggressive MR80/XS10/TS10 configs — Phase 14 aggressive target."""
+    out: dict[str, dict[str, Any]] = {}
     for target_vol in (0.20, 0.22, 0.25, 0.28):
         key = f"v2_MR80/tv={target_vol:.2f}_ml=10_DDcap=OFF"
-        results[key] = build_combined_portfolio_v2(
+        out[key] = build_combined_portfolio_v2(
             strat_rets,
             allocation="custom",
-            custom_weights=mr_heavy_weights,
+            custom_weights=_MR_HEAVY_WEIGHTS,
             target_vol=target_vol,
             max_leverage=10.0,
             dd_cap_enabled=False,
         )
+    return out
 
-    # Phase 16: dropping XS Momentum from the combined improves every
-    # metric — the 2019 losses were concentrated there, and the
-    # remaining MR Macro + TS Momentum mix has a cleaner Sharpe profile.
-    mr_ts_weights = {
-        "MR_Macro": 0.90,
-        "TS_Momentum_RSI": 0.10,
-    }
-    # Drop XS from the strat_rets dict so the MR/TS-only path uses
-    # a correctly indexed common DataFrame.
-    strat_rets_no_xs = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_RSI")}
+
+def _collect_v2_phase16_sweep(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Phase 16 — drop XS Momentum, keep MR Macro + TS Momentum RSI."""
+    filtered = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_RSI")}
+    out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
         key = f"v2_MR90_TS10/tv={target_vol:.2f}_ml={max_lev}_DDcap=OFF"
-        results[key] = build_combined_portfolio_v2(
-            strat_rets_no_xs,
+        out[key] = build_combined_portfolio_v2(
+            filtered,
             allocation="custom",
-            custom_weights=mr_ts_weights,
+            custom_weights=_MR_TS_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
         )
+    return out
 
-    # Phase 17: drop USD-CAD from TS Momentum. Per-year decomposition
-    # showed USD-CAD as the worst pair (-8.94% 2019, -7.32% 2022,
-    # -5.72% 2023). With TS_Momentum_3p the combined flips 2023 to
-    # positive and recovers 6/7 walk-forward positive years.
-    mr_ts3p_weights = {
-        "MR_Macro": 0.90,
-        "TS_Momentum_3p": 0.10,
-    }
-    strat_rets_p17 = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p")}
+
+def _collect_v2_phase17_sweep(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Phase 17 — drop USD-CAD from TS Momentum (worst pair 2019/2022/2023)."""
+    filtered = {k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p")}
+    out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 15)]:
         key = f"v2_MR90_TS3p10/tv={target_vol:.2f}_ml={max_lev}_DDcap=OFF"
-        results[key] = build_combined_portfolio_v2(
-            strat_rets_p17,
+        out[key] = build_combined_portfolio_v2(
+            filtered,
             allocation="custom",
-            custom_weights=mr_ts3p_weights,
+            custom_weights=_MR_TS3P_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
         )
+    return out
 
-    # Phase 18: add RSI Daily 4-pair as third sleeve. Correlation with
-    # MR Macro is -0.027 (fully orthogonal) and with TS Momentum 3p is
-    # -0.251 (slightly anti-correlated — exactly the diversifier profile
-    # we want). Per-year it's positive in 2019 (+0.95) and 2023 (+0.92)
-    # when the other two sleeves lose.
-    mr_ts_rsi_weights = {
-        "MR_Macro": 0.80,
-        "TS_Momentum_3p": 0.10,
-        "RSI_Daily_4p": 0.10,
-    }
-    strat_rets_p18 = {
+
+def _collect_v2_phase18_sweep(
+    strat_rets: dict[str, pd.Series],
+) -> dict[str, dict[str, Any]]:
+    """Phase 18 — add RSI Daily 4-pair as third orthogonal sleeve."""
+    filtered = {
         k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
     }
+    out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 14)]:
         key = f"v2_MR80_TS3p10_RSI10/tv={target_vol:.2f}_ml={max_lev}_DDcap=OFF"
-        results[key] = build_combined_portfolio_v2(
-            strat_rets_p18,
+        out[key] = build_combined_portfolio_v2(
+            filtered,
             allocation="custom",
-            custom_weights=mr_ts_rsi_weights,
+            custom_weights=PHASE18_WEIGHTS,
             target_vol=target_vol,
             max_leverage=float(max_lev),
             dd_cap_enabled=False,
         )
+    return out
 
-    # Summary table
+
+def _print_summary_table(results: dict[str, dict[str, Any]]) -> None:
+    """Print the CAGR/Vol/MaxDD/Sharpe table. ★ marks in-target configs."""
     headers = (
         f"{'Config':<45} "
         f"{'CAGR':>9} "
@@ -717,7 +734,6 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
     for key, res in results.items():
         cagr = res["annual_return"]
         dd = res["max_drawdown"]
-        # Mark configs that hit the 10-15% CAGR / < 35% DD target.
         in_target = (0.10 <= cagr <= 0.15) and (abs(dd) < 0.35)
         mark = "★" if in_target else " "
         print(
@@ -730,7 +746,9 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
             f"{res['wf_pos_years']}/7"
         )
 
-    # Highlight the currently recommended config for the target.
+
+def _print_recommended_notes() -> None:
+    """Static notes about the Phase 18 recommended configuration."""
     print("\nTarget: CAGR ∈ [10%, 15%] AND Max DD < 35% (rows marked with ★)")
     print(
         "Recommended (Phase 18 — add RSI Daily 4-pair as third sleeve): "
@@ -752,7 +770,40 @@ def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
         "a textbook diversifier."
     )
 
+
+def run_v2_benchmark(output_dir: str = "results/combined_v2") -> dict[str, Any]:
+    """Run v1 and v2 back-to-back and print a comparison table.
+
+    Thin orchestrator that composes the per-phase sweep helpers and
+    prints the summary. See :func:`_collect_v2_phase18_sweep` for the
+    currently recommended production config.
+    """
+    import os
+
+    os.makedirs(output_dir, exist_ok=True)
+    print("=" * 72)
+    print("  Combined Portfolio v2 — Benchmark vs v1")
+    print("=" * 72)
+
+    strat_rets = get_strategy_daily_returns()
+
+    results: dict[str, Any] = {}
+    results.update(_collect_v1_baselines(strat_rets))
+    results.update(_collect_v2_no_leverage(strat_rets))
+    results.update(_collect_v2_regime_sweep(strat_rets))
+    results.update(_collect_v2_mr_heavy_sweep(strat_rets))
+    results.update(_collect_v2_phase16_sweep(strat_rets))
+    results.update(_collect_v2_phase17_sweep(strat_rets))
+    results.update(_collect_v2_phase18_sweep(strat_rets))
+
+    _print_summary_table(results)
+    _print_recommended_notes()
     return results
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CLI — SINGLE RUN (Phase 18 recommended) + full BENCHMARK
+# ═══════════════════════════════════════════════════════════════════════
 
 
 if __name__ == "__main__":
@@ -763,8 +814,45 @@ if __name__ == "__main__":
     if str(_SRC) not in sys.path:
         sys.path.insert(0, str(_SRC))
 
+    from framework.pipeline_utils import (
+        METRIC_LABELS,
+        SHARPE_RATIO,
+        analyze_portfolio,
+        apply_vbt_plot_defaults,
+    )
     from utils import apply_vbt_settings
 
+    # ─────────────────────────────────────────────────────────────────
+    # CONFIGURATION
+    # ─────────────────────────────────────────────────────────────────
+    OUTPUT_DIR = "results/combined_v2"
+    SHOW_CHARTS = True
+    RUN_BENCHMARK = True  # set False to only run the SINGLE mode
+    _METRIC_NAME = METRIC_LABELS[SHARPE_RATIO]
+
+    def _header(label: str) -> None:
+        bar = "█" * 78
+        print(f"\n{bar}")
+        print(f"██  {label.ljust(72)}  ██")
+        print(f"{bar}\n")
+
     apply_vbt_settings()
+    apply_vbt_plot_defaults()
     vbt.settings.returns.year_freq = pd.Timedelta(days=252)
-    run_v2_benchmark()
+
+    # 1) SINGLE RUN — Phase 18 recommended production config
+    _header("COMBINED PORTFOLIO v2  ·  PHASE 18 SINGLE RUN")
+    res_p18 = build_phase18_portfolio()
+    analyze_portfolio(
+        res_p18["pf_combined"],
+        name="Combined v2 — Phase 18 (MR80 / TS3p10 / RSI10)",
+        output_dir=OUTPUT_DIR,
+        show_charts=SHOW_CHARTS,
+    )
+
+    # 2) BENCHMARK — full v1/v2 sweep across every published phase config
+    if RUN_BENCHMARK:
+        _header("COMBINED PORTFOLIO v2  ·  BENCHMARK")
+        run_v2_benchmark(output_dir=OUTPUT_DIR)
+
+    print("\nAll modes done.")
