@@ -308,7 +308,7 @@ _PHASE_MARKER_BEGIN = "<!-- BEGIN PHASE 12 -->"
 _PHASE_MARKER_END = "<!-- END PHASE 12 -->"
 
 
-def render_phase_12(
+def render_pair_param_sweep_section(
     full_df: pd.DataFrame,
     best_rows: list[dict],
     pairs: list[str],
@@ -582,7 +582,7 @@ def main() -> int:
           f"({len(best_df)} rows)")
 
     if not args.no_doc:
-        content = render_phase_12(full_df, best_rows, pairs, strat_keys)
+        content = render_pair_param_sweep_section(full_df, best_rows, pairs, strat_keys)
         update_research_doc(content, _RESEARCH_DOC)
         print(f"✔ Research journal updated: "
               f"{_RESEARCH_DOC.relative_to(_PROJECT_ROOT)}")

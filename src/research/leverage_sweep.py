@@ -272,7 +272,7 @@ _PHASE_MARKER_BEGIN = "<!-- BEGIN PHASE 11 -->"
 _PHASE_MARKER_END = "<!-- END PHASE 11 -->"
 
 
-def _render_phase_11(results: dict[str, pd.DataFrame]) -> str:
+def _render_leverage_sweep_section(results: dict[str, pd.DataFrame]) -> str:
     """Render the full Phase 11 section with tables and selection commentary."""
     parts: list[str] = []
     parts.append(_PHASE_MARKER_BEGIN)
@@ -472,7 +472,7 @@ def main() -> int:
         print(f"  → wrote {csv_path.relative_to(_PROJECT_ROOT)}")
 
     if not args.no_doc:
-        phase_block = _render_phase_11(results)
+        phase_block = _render_leverage_sweep_section(results)
         update_research_doc(phase_block, _RESEARCH_DOC)
         print(
             f"\n✔ Research journal updated: "
