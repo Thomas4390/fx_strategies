@@ -54,25 +54,28 @@ from framework.statistical_testing import (  # noqa: E402
 )
 
 
-_PHASE_REPORTS: list[tuple[str, str, str]] = [
+_SWEEP_REPORTS: list[tuple[str, str, str]] = [
     # (display_name, metrics_path, top_config_id)
+    # Historical paths are preserved — these are pre-refactor result
+    # directories kept for the retrospective DSR audit. Future runs
+    # should point at the new naming scheme under ``results/``.
     (
-        "Phase 19 (refined leverage)",
+        "leverage grid",
         "results/phase19_2026-04-13/metrics.json",
         "P19c-tv25-ml14-dd_OFF",
     ),
     (
-        "Phase 20A (weight sweep)",
+        "weight grid",
         "results/phase20a_2026-04-13/metrics.json",
         "P20a-w75-10-15",
     ),
     (
-        "Phase 20B (4th sleeve)",
+        "fourth sleeve",
         "results/phase20b_2026-04-13/metrics.json",
         "BL-P20Atop",
-    ),  # top is the P20A baseline; no true P20B winner
+    ),  # top is the weight-sweep baseline; no true fourth-sleeve winner
     (
-        "Phase 20C (DD cap sweep)",
+        "dd cap schedule",
         "results/phase20c_2026-04-13/metrics.json",
         "P20c-soft-w75-10-15-k20-f35",
     ),
@@ -126,7 +129,7 @@ def _sharpe_vector_from_metrics(metrics: dict[str, Any]) -> np.ndarray:
 
 
 def _dsr_row(
-    phase_name: str,
+    sweep_name: str,
     metrics: dict[str, Any],
     top_id: str,
     sleeves: dict[str, pd.Series],
@@ -142,7 +145,7 @@ def _dsr_row(
     )
 
     return {
-        "phase": phase_name,
+        "sweep": sweep_name,
         "top_id": top_id,
         "n_trials": int(sharpe_vec.size),
         "sharpe_full": float(top_cfg["sharpe"]),
@@ -235,7 +238,7 @@ def _build_markdown(
     )
     for r in rows:
         lines.append(
-            f"| {r['phase']} "
+            f"| {r['sweep']} "
             f"| `{r['top_id']}` "
             f"| {r['n_trials']} "
             f"| {r['sharpe_full']:.3f} "
@@ -334,9 +337,9 @@ def _build_markdown(
             best = max(rows, key=lambda r: r["dsr"])
             worst = min(rows, key=lambda r: r["dsr"])
             lines.append(
-                f"- Highest DSR : **{best['phase']}** — `{best['top_id']}` "
+                f"- Highest DSR : **{best['sweep']}** — `{best['top_id']}` "
                 f"at DSR = {best['dsr']:.3f}.\n"
-                f"- Lowest DSR : **{worst['phase']}** — `{worst['top_id']}` "
+                f"- Lowest DSR : **{worst['sweep']}** — `{worst['top_id']}` "
                 f"at DSR = {worst['dsr']:.3f}.\n"
             )
 
@@ -389,14 +392,14 @@ def main() -> None:
     print()
 
     rows: list[dict[str, Any]] = []
-    for phase_name, rel_path, top_id in _PHASE_REPORTS:
+    for sweep_name, rel_path, top_id in _SWEEP_REPORTS:
         abs_path = _PROJECT_ROOT / rel_path
         if not abs_path.exists():
-            print(f"  [skip] {phase_name} — missing {rel_path}")
+            print(f"  [skip] {sweep_name} — missing {rel_path}")
             continue
-        print(f"Processing {phase_name} ({rel_path})…")
+        print(f"Processing {sweep_name} ({rel_path})…")
         metrics = _load_metrics(abs_path)
-        row = _dsr_row(phase_name, metrics, top_id, sleeves)
+        row = _dsr_row(sweep_name, metrics, top_id, sleeves)
         rows.append(row)
         print(
             f"  top={row['top_id']:<30} "

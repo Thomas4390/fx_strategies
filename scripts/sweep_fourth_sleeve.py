@@ -1,12 +1,13 @@
-"""Phase 20B — 4th-sleeve addition sweep.
+"""Fourth-sleeve evaluation sweep.
 
-Follow-up to ``scripts/sweep_phase20a_weights.py``. Phase 20A confirmed
-that on the 3-sleeve trio (MR_Macro / TS_Momentum_3p / RSI_Daily_4p)
-the Sharpe plateau is essentially flat between 0.96 and 0.97 regardless
-of the weight split — the alpha is dominated by MR_Macro and adding
-more weight to either diversifier only moves the Sharpe by a few
-basis points. Phase 20B asks the next question: **does adding a fourth
-orthogonal sleeve push the Sharpe above 0.97?**
+Follow-up to ``scripts/sweep_weight_grid.py``. The weight sweep confirmed
+that on the 3-sleeve production trio (MR_Macro / TS_Momentum_3p /
+RSI_Daily_4p) the walk-forward Sharpe plateau is essentially flat
+between 0.96 and 0.97 regardless of the weight split — the alpha is
+dominated by MR_Macro and adding more weight to either diversifier
+only moves the Sharpe by a few basis points. This sweep asks the next
+question: **does adding a fourth orthogonal sleeve push the Sharpe
+above 0.97 ?**
 
 Candidate 4th sleeves
 ---------------------
@@ -16,7 +17,7 @@ Candidate 4th sleeves
 - **OU Mean Reversion** (``strategies.ou_mean_reversion.pipeline``) —
   intraday VWAP mean reversion with vol-targeted dynamic leverage.
   Defaults are ``bb_window=80, sigma_target=0.10, max_leverage=3``.
-- **XS Momentum** (existing sleeve) — revalidates the Phase 16 decision
+- **XS Momentum** (existing sleeve) — revalidates the earlier decision
   to drop it. Added at small weights.
 
 Grid (~50 configs)
@@ -30,21 +31,20 @@ Grid (~50 configs)
 
 **Block XS_REVISIT** (12 configs):
   Add XS_Momentum at weight ∈ {0.05, 0.10} with 6 base splits.
-  Revalidates Phase 16 (``drop XS``) against the Phase 19 plateau.
 
 **Block BASELINE** (3 configs):
-  P18 prod, P19 plateau, P20A top-1.
+  production prod, leverage plateau, weight-sweep top-1.
 
 Grand total: 15 + 15 + 12 + 3 = **45 configs**
 
-All configs fixed at ``tv=0.25 ml=14 DDoff`` (the Phase 19 plateau
+All configs fixed at ``tv=0.25 ml=14 DDoff`` (the leverage plateau
 sweet spot). Native parallel execution via ``native_parallel_sweep``.
 
 Usage
 -----
-    python scripts/sweep_phase20b_fourth_sleeve.py
-    python scripts/sweep_phase20b_fourth_sleeve.py --smoke
-    python scripts/sweep_phase20b_fourth_sleeve.py --no-bootstrap
+    python scripts/sweep_fourth_sleeve.py
+    python scripts/sweep_fourth_sleeve.py --smoke
+    python scripts/sweep_fourth_sleeve.py --no-bootstrap
 """
 
 from __future__ import annotations
@@ -122,13 +122,13 @@ def compute_ou_mr_returns() -> pd.Series:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Base 3-sleeve splits (tested in Phase 20A). Each tuple is
-# (MR, TS_Momentum_3p, RSI_Daily_4p) for the base trio. Phase 20B
-# rescales these by (1 - w_extra) and adds the 4th sleeve at w_extra.
+# Base 3-sleeve splits. Each tuple is (MR, TS_Momentum_3p, RSI_Daily_4p)
+# for the base trio. The grid rescales these by (1 - w_extra) and adds
+# the 4th sleeve at w_extra.
 _BASE_SPLITS_3: list[tuple[float, float, float]] = [
-    (0.80, 0.10, 0.10),  # P18 canonical
-    (0.75, 0.10, 0.15),  # P20A top-1
-    (0.80, 0.08, 0.12),  # P20A top-2
+    (0.80, 0.10, 0.10),  # canonical production
+    (0.75, 0.10, 0.15),  # weight-sweep top-1
+    (0.80, 0.08, 0.12),  # weight-sweep top-2
     (0.75, 0.15, 0.10),  # TS-heavy
     (0.70, 0.12, 0.18),  # RSI-heavy light-MR
 ]
@@ -168,7 +168,7 @@ def _make_weights_4(
     return weights
 
 
-def build_phase20b_grid() -> list[SweepConfig]:
+def build_fourth_sleeve_grid() -> list[SweepConfig]:
     cfgs: list[SweepConfig] = []
 
     # ─── Block COMPOSITE ────────────────────────────────────────────
@@ -178,7 +178,7 @@ def build_phase20b_grid() -> list[SweepConfig]:
             tag = _weight_tag_4(mr, ts, rsi, w_extra, "C")
             cfgs.append(
                 SweepConfig(
-                    id=f"P20b-c{tag}",
+                    id=f"SLV-c{tag}",
                     block="COMPOSITE",
                     name=(
                         f"+Composite {int(w_extra * 100)}% "
@@ -206,7 +206,7 @@ def build_phase20b_grid() -> list[SweepConfig]:
             tag = _weight_tag_4(mr, ts, rsi, w_extra, "O")
             cfgs.append(
                 SweepConfig(
-                    id=f"P20b-o{tag}",
+                    id=f"SLV-o{tag}",
                     block="OU_MR",
                     name=(
                         f"+OU_MR {int(w_extra * 100)}% "
@@ -242,7 +242,7 @@ def build_phase20b_grid() -> list[SweepConfig]:
             tag = _weight_tag_4(mr, ts, rsi, w_extra, "X")
             cfgs.append(
                 SweepConfig(
-                    id=f"P20b-x{tag}",
+                    id=f"SLV-x{tag}",
                     block="XS_REVISIT",
                     name=(
                         f"+XS_Momentum {int(w_extra * 100)}% "
@@ -266,9 +266,9 @@ def build_phase20b_grid() -> list[SweepConfig]:
     # ─── Block BASELINE — 3 configs ─────────────────────────────────
     cfgs += [
         SweepConfig(
-            id="BL-P18prod",
+            id="BL-prod",
             block="BASELINE",
-            name="Phase 18 prod (MR80/TS10/RSI10 tv=0.28 ml=12 DDoff)",
+            name="production (MR80/TS10/RSI10 tv=0.28 ml=12 DDoff)",
             sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
             allocation="custom",
             target_vol=0.28,
@@ -281,9 +281,9 @@ def build_phase20b_grid() -> list[SweepConfig]:
             },
         ),
         SweepConfig(
-            id="BL-P19plateau",
+            id="BL-plateau",
             block="BASELINE",
-            name="Phase 19 plateau (MR80/TS10/RSI10 tv=0.25 ml=14 DDoff)",
+            name="leverage plateau (MR80/TS10/RSI10 tv=0.25 ml=14 DDoff)",
             sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
             allocation="custom",
             target_vol=_PLATEAU_TV,
@@ -296,9 +296,9 @@ def build_phase20b_grid() -> list[SweepConfig]:
             },
         ),
         SweepConfig(
-            id="BL-P20Atop",
+            id="BL-weight-top",
             block="BASELINE",
-            name="Phase 20A top-1 (MR75/TS10/RSI15 tv=0.25 ml=14 DDoff)",
+            name="weight-sweep top-1 (MR75/TS10/RSI15 tv=0.25 ml=14 DDoff)",
             sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
             allocation="custom",
             target_vol=_PLATEAU_TV,
@@ -326,7 +326,7 @@ def _fmt_pct(x: float, width: int = 8) -> str:
     return f"{x * 100:>{width - 1}.2f}%"
 
 
-def build_phase20b_markdown(
+def build_fourth_sleeve_markdown(
     rows: list[dict[str, Any]],
     bootstrap_by_id: dict[str, dict[str, float]],
     report_date: str,
@@ -334,31 +334,30 @@ def build_phase20b_markdown(
 ) -> str:
     sorted_rows = sorted(rows, key=lambda r: r["wf_avg_sharpe"], reverse=True)
     top10 = sorted_rows[:10]
-    p19_row = next((r for r in rows if r["id"] == "BL-P19plateau"), None)
-    p20a_row = next((r for r in rows if r["id"] == "BL-P20Atop"), None)
+    plateau_row = next((r for r in rows if r["id"] == "BL-plateau"), None)
+    weight_top_row = next((r for r in rows if r["id"] == "BL-weight-top"), None)
 
     lines: list[str] = []
-    lines.append(f"# Phase 20B — 4th-sleeve sweep ({report_date})\n")
+    lines.append(f"# Fourth-sleeve evaluation sweep ({report_date})\n")
     lines.append(
-        "Suite directe du sweep Phase 20A "
-        "(`docs/research/phase20a_2026-04-13_weight_sweep.md`) qui avait "
-        "montré que la recombinaison des poids entre les 3 sleeves P18 ne "
-        "déplace le Sharpe WF que de quelques bps au-dessus du plateau "
-        "Phase 19 (0.966). Phase 20B teste si l'ajout d'un 4ᵉ sleeve "
-        "orthogonal — Composite FX Alpha, OU Mean Reversion ou un retour "
-        "de XS Momentum — parvient à pousser le Sharpe au-delà de 0.97.\n"
+        "Follow-up to the weight sweep which showed that recombining the "
+        "3-sleeve production trio weights only moves the WF Sharpe by a "
+        "few basis points above the leverage plateau (0.966). This sweep "
+        "tests whether adding a fourth orthogonal sleeve — Composite FX "
+        "Alpha, OU Mean Reversion, or a restored XS Momentum — can push "
+        "the Sharpe above 0.97.\n"
     )
     lines.append(
-        "Paramètres fixes : `tv=0.25 / ml=14 / DDoff` (Phase 19 plateau "
-        "sweet-spot). Chaque config prend un base split du trio P18 et "
-        "réalloue une fraction ∈ {5%, 10%, 15%} au sleeve extra.\n"
+        "Fixed parameters : `tv=0.25 / ml=14 / DDoff` (leverage plateau "
+        "sweet-spot). Each config takes a base trio split and reallocates "
+        "a fraction ∈ {5%, 10%, 15%} to the extra sleeve.\n"
     )
 
-    # ── Corrélations à l'ensemble de base ──────────────────────────
+    # ── Correlations vs the base trio ──────────────────────────────
     if correlations:
-        lines.append("## Corrélations des sleeves extra vs trio P18\n")
+        lines.append("## Extra sleeve correlations vs the production trio\n")
         lines.append(
-            "| Sleeve extra | Corr avec MR_Macro | Corr avec TS_3p | Corr avec RSI_4p |"
+            "| Extra sleeve | Corr with MR_Macro | Corr with TS_3p | Corr with RSI_4p |"
         )
         lines.append(
             "|-------------|-------------------:|----------------:|-----------------:|"
@@ -372,23 +371,23 @@ def build_phase20b_markdown(
                 )
         lines.append("")
 
-    if p19_row:
+    if plateau_row:
         lines.append(
-            f"Baseline Phase 19 plateau : **{p19_row['id']}** — Sharpe WF "
-            f"{p19_row['wf_avg_sharpe']:.3f}, CAGR "
-            f"{p19_row['annual_return'] * 100:.2f}%, "
-            f"MaxDD {p19_row['max_drawdown'] * 100:.2f}%.\n"
+            f"Leverage plateau baseline : **{plateau_row['id']}** — Sharpe WF "
+            f"{plateau_row['wf_avg_sharpe']:.3f}, CAGR "
+            f"{plateau_row['annual_return'] * 100:.2f}%, "
+            f"MaxDD {plateau_row['max_drawdown'] * 100:.2f}%.\n"
         )
-    if p20a_row:
+    if weight_top_row:
         lines.append(
-            f"Baseline Phase 20A top-1 : **{p20a_row['id']}** — Sharpe WF "
-            f"{p20a_row['wf_avg_sharpe']:.3f}, CAGR "
-            f"{p20a_row['annual_return'] * 100:.2f}%, "
-            f"MaxDD {p20a_row['max_drawdown'] * 100:.2f}%.\n"
+            f"Weight-sweep top-1 baseline : **{weight_top_row['id']}** — Sharpe WF "
+            f"{weight_top_row['wf_avg_sharpe']:.3f}, CAGR "
+            f"{weight_top_row['annual_return'] * 100:.2f}%, "
+            f"MaxDD {weight_top_row['max_drawdown'] * 100:.2f}%.\n"
         )
 
     # ── Top-10 ─────────────────────────────────────────────────────
-    lines.append("## Top 10 par Walk-Forward Sharpe\n")
+    lines.append("## Top 10 by Walk-Forward Sharpe\n")
     lines.append("| Rank | ID | Config | Sharpe WF | CAGR | Vol | MaxDD | WF pos | ★ |")
     lines.append(
         "|------|----|--------|-----------|------|-----|-------|--------|----|"
@@ -406,9 +405,9 @@ def build_phase20b_markdown(
     lines.append("\n★ = CAGR ∈ [10%, 15%] AND MaxDD < 35%.\n")
 
     # ── Per-block best ─────────────────────────────────────────────
-    lines.append("## Meilleure config par bloc\n")
-    lines.append("| Bloc | ID | Config | Sharpe WF | CAGR | MaxDD |")
-    lines.append("|------|----|--------|-----------|------|-------|")
+    lines.append("## Best config per block\n")
+    lines.append("| Block | ID | Config | Sharpe WF | CAGR | MaxDD |")
+    lines.append("|-------|----|--------|-----------|------|-------|")
     for block in ("COMPOSITE", "OU_MR", "XS_REVISIT", "BASELINE"):
         block_rows = [r for r in sorted_rows if r["block"] == block]
         if not block_rows:
@@ -448,40 +447,40 @@ def build_phase20b_markdown(
     # ── Narrative ──────────────────────────────────────────────────
     lines.append("## Conclusion\n")
     if not sorted_rows:
-        lines.append("Aucun résultat collecté.\n")
+        lines.append("No results collected.\n")
     else:
         top = sorted_rows[0]
-        plateau_sharpe = p19_row["wf_avg_sharpe"] if p19_row else 0.966
-        p20a_sharpe = p20a_row["wf_avg_sharpe"] if p20a_row else 0.972
+        plateau_sharpe = plateau_row["wf_avg_sharpe"] if plateau_row else 0.966
+        weight_top_sharpe = weight_top_row["wf_avg_sharpe"] if weight_top_row else 0.972
         gap_plateau = top["wf_avg_sharpe"] - plateau_sharpe
-        gap_p20a = top["wf_avg_sharpe"] - p20a_sharpe
+        gap_weight_top = top["wf_avg_sharpe"] - weight_top_sharpe
         sign_p = "+" if gap_plateau >= 0 else ""
-        sign_a = "+" if gap_p20a >= 0 else ""
+        sign_a = "+" if gap_weight_top >= 0 else ""
         lines.append(
-            f"Meilleur point du sweep : **`{top['id']}`** — {top['name']}.  \n"
+            f"Best point in the sweep : **`{top['id']}`** — {top['name']}.  \n"
             f"Sharpe WF = **{top['wf_avg_sharpe']:.3f}** "
-            f"(vs plateau P19 = {plateau_sharpe:.3f}, "
+            f"(vs leverage plateau = {plateau_sharpe:.3f}, "
             f"Δ = {sign_p}{gap_plateau:.3f} ; "
-            f"vs P20A top = {p20a_sharpe:.3f}, "
-            f"Δ = {sign_a}{gap_p20a:.3f})."
+            f"vs weight-sweep top = {weight_top_sharpe:.3f}, "
+            f"Δ = {sign_a}{gap_weight_top:.3f})."
         )
-        if gap_p20a > 0.005:
+        if gap_weight_top > 0.005:
             lines.append(
-                "\nL'ajout d'un 4ᵉ sleeve **améliore** matériellement le Sharpe "
-                "au-delà de ce que la recombinaison des poids Phase 20A avait "
-                "permis. À valider sur le bootstrap avant promotion."
+                "\nAdding a fourth sleeve **materially improves** the Sharpe "
+                "beyond what weight recombination could achieve. Validate "
+                "on bootstrap before promoting."
             )
-        elif abs(gap_p20a) <= 0.005:
+        elif abs(gap_weight_top) <= 0.005:
             lines.append(
-                "\nL'ajout d'un 4ᵉ sleeve **ne dépasse pas** le top Phase 20A "
-                "de façon significative. Le trio P18 + layer de leverage P19 "
-                "reste la configuration recommandée."
+                "\nAdding a fourth sleeve **does not exceed** the weight-sweep "
+                "top meaningfully. The 3-sleeve production trio + leverage "
+                "layer remains the recommended configuration."
             )
         else:
             lines.append(
-                "\nAucun 4ᵉ sleeve testé ne dépasse le top Phase 20A ; "
-                "l'ajout d'un sleeve non-orthogonal dégrade le ratio en "
-                "diluant l'alpha de MR_Macro."
+                "\nNo fourth sleeve tested exceeds the weight-sweep top ; "
+                "adding a non-orthogonal sleeve degrades the ratio by "
+                "diluting the MR_Macro alpha."
             )
     lines.append("")
     return "\n".join(lines)
@@ -513,49 +512,46 @@ def main() -> None:
 
     report_date = date.today().isoformat()
     if args.smoke:
-        output_root = Path("/tmp") / f"phase20b_smoke_{report_date}"
-        md_path = output_root / "phase20b.md"
+        output_root = Path("/tmp") / f"fourth_sleeve_smoke_{report_date}"
+        md_path = output_root / "fourth_sleeve.md"
     else:
-        output_root = _PROJECT_ROOT / "results" / f"phase20b_{report_date}"
+        output_root = _PROJECT_ROOT / "results" / f"fourth_sleeve_{report_date}"
         md_path = (
-            _PROJECT_ROOT
-            / "docs"
-            / "research"
-            / f"phase20b_{report_date}_fourth_sleeve.md"
+            _PROJECT_ROOT / "docs" / "research" / f"fourth_sleeve_{report_date}.md"
         )
     output_root.mkdir(parents=True, exist_ok=True)
     md_path.parent.mkdir(parents=True, exist_ok=True)
 
     print("=" * 72)
-    print("  Phase 20B — 4th-sleeve sweep")
+    print("  Fourth-sleeve evaluation sweep")
     print("=" * 72)
     print(f"Report date : {report_date}")
     print(f"Output root : {output_root}")
     print(f"Markdown    : {md_path}")
     print()
 
-    print("Loading base 3 sleeves (P18 trio)…")
+    print("Loading base 3 sleeves (production trio)…")
     sleeves = get_strategy_daily_returns()
     base_keys = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p", "XS_Momentum")
-    sleeves_p20b: dict[str, pd.Series] = {k: sleeves[k] for k in base_keys}
+    sleeves_all: dict[str, pd.Series] = {k: sleeves[k] for k in base_keys}
 
     print("Loading extra sleeves…")
-    sleeves_p20b["Composite_FX_Alpha"] = compute_composite_fx_alpha_returns()
-    sleeves_p20b["OU_MR"] = compute_ou_mr_returns()
+    sleeves_all["Composite_FX_Alpha"] = compute_composite_fx_alpha_returns()
+    sleeves_all["OU_MR"] = compute_ou_mr_returns()
 
-    print(f"  Loaded {len(sleeves_p20b)} sleeves: {sorted(sleeves_p20b)}")
+    print(f"  Loaded {len(sleeves_all)} sleeves: {sorted(sleeves_all)}")
 
-    # ── Compute correlations of extra sleeves vs the P18 trio ──────
+    # ── Compute correlations of extra sleeves vs the production trio
     common_idx = None
-    for s in sleeves_p20b.values():
+    for s in sleeves_all.values():
         idx = s.dropna().index
         common_idx = idx if common_idx is None else common_idx.intersection(idx)
     correlations: dict[str, Any] = {}
     for extra in ("Composite_FX_Alpha", "OU_MR", "XS_Momentum"):
         corr_row: dict[str, float] = {}
         for base in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"):
-            a = sleeves_p20b[extra].loc[common_idx]
-            b = sleeves_p20b[base].loc[common_idx]
+            a = sleeves_all[extra].loc[common_idx]
+            b = sleeves_all[base].loc[common_idx]
             corr_row[base] = float(a.corr(b))
         correlations[extra] = corr_row
         print(
@@ -566,19 +562,19 @@ def main() -> None:
         )
     print()
 
-    grid = build_phase20b_grid()
+    grid = build_fourth_sleeve_grid()
     if args.smoke:
         smoke_ids = {
-            "P20b-c80-10-10-C10",
-            "P20b-o80-10-10-O10",
-            "P20b-x80-10-10-X10",
-            "BL-P20Atop",
+            "SLV-c80-10-10-C10",
+            "SLV-o80-10-10-O10",
+            "SLV-x80-10-10-X10",
+            "BL-weight-top",
         }
         grid = [c for c in grid if c.id in smoke_ids]
     print(f"Running {len(grid)} configurations via native parallel sweep…")
 
     t0 = time.perf_counter()
-    pf_all, metrics = native_parallel_sweep(grid, sleeves_p20b)
+    pf_all, metrics = native_parallel_sweep(grid, sleeves_all)
     elapsed = time.perf_counter() - t0
     print(
         f"  Native sweep completed in {elapsed:.1f}s "
@@ -607,7 +603,7 @@ def main() -> None:
             cfg = next(c for c in grid if c.id == row["id"])
             t0 = time.perf_counter()
             try:
-                stats = bootstrap_config(cfg, sleeves_p20b, n_runs=args.bootstrap_runs)
+                stats = bootstrap_config(cfg, sleeves_all, n_runs=args.bootstrap_runs)
                 bootstrap_by_id[row["id"]] = stats
                 el = time.perf_counter() - t0
                 print(
@@ -625,7 +621,7 @@ def main() -> None:
     json_data = {
         "report_date": report_date,
         "n_configs": len(rows),
-        "sleeves_loaded": sorted(sleeves_p20b),
+        "sleeves_loaded": sorted(sleeves_all),
         "correlations": correlations,
         "configs": [sanitize_result_for_json(r) for r in sorted_rows],
         "bootstrap_top5": bootstrap_by_id,
@@ -634,14 +630,14 @@ def main() -> None:
     print(f"\nJSON exported → {json_path}")
 
     # ── Export markdown ────────────────────────────────────────────
-    md = build_phase20b_markdown(rows, bootstrap_by_id, report_date, correlations)
+    md = build_fourth_sleeve_markdown(rows, bootstrap_by_id, report_date, correlations)
     md_path.write_text(md)
     print(f"Markdown exported → {md_path}")
 
     # ── Top-N artifacts ────────────────────────────────────────────
     if not args.smoke:
         print("\nGenerating top-N artifacts (tearsheets + mix plots)…")
-        generate_top_n_artifacts(sorted_rows, grid, sleeves_p20b, output_root)
+        generate_top_n_artifacts(sorted_rows, grid, sleeves_all, output_root)
 
     # ── Final summary ──────────────────────────────────────────────
     print("\n" + "=" * 72)
@@ -653,12 +649,14 @@ def main() -> None:
             f"CAGR={r['annual_return'] * 100:>+6.2f}%  "
             f"MaxDD={r['max_drawdown'] * 100:>+6.2f}%"
         )
-    p20a_top = next((r for r in rows if r["id"] == "BL-P20Atop"), None)
-    if p20a_top:
-        rank = next(i for i, r in enumerate(sorted_rows, 1) if r["id"] == "BL-P20Atop")
+    weight_top = next((r for r in rows if r["id"] == "BL-weight-top"), None)
+    if weight_top:
+        rank = next(
+            i for i, r in enumerate(sorted_rows, 1) if r["id"] == "BL-weight-top"
+        )
         print(
-            f"\n  Phase 20A top-1 baseline: rank #{rank}, "
-            f"sharpe={p20a_top['wf_avg_sharpe']:+.3f}"
+            f"\n  Weight-sweep top-1 baseline: rank #{rank}, "
+            f"sharpe={weight_top['wf_avg_sharpe']:+.3f}"
         )
 
 

@@ -1,15 +1,15 @@
-"""Phase 20A — Dense weight sweep around the Phase 18/19 trio.
+"""Weight sweep — dense factorial grid on the production trio.
 
-Follow-up to ``scripts/sweep_phase19.py``. Phase 19 pinned the weights to
-``MR80 / TS3p10 / RSI10`` and only swept the leverage layer; it reached a
-Sharpe plateau at 0.966 across any ``(target_vol >= 0.22, max_leverage
->= 14, DDoff)`` point. Phase 20A asks the complementary question: does a
-*different* weight mix break out of that plateau when fed through the
-same leverage layer?
+Follow-up to ``scripts/sweep_leverage_grid.py``. The leverage sweep
+pinned the weights to ``MR80 / TS3p10 / RSI10`` and only swept the
+leverage layer; it reached a Sharpe plateau at 0.966 across any
+``(target_vol >= 0.22, max_leverage >= 14, DDoff)`` point. This sweep
+asks the complementary question : does a *different* weight mix break
+out of that plateau when fed through the same leverage layer ?
 
 Grid (~60 configs)
 ------------------
-**Core weight grid** (tv=0.25 ml=14 DDoff — the Phase 19 plateau sweet
+**Core weight grid** (tv=0.25 ml=14 DDoff — the leverage plateau sweet
 spot):
   - ``mr_weight`` ∈ {0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90} (8)
   - ``rsi_fraction`` ∈ {0.25, 0.40, 0.50, 0.60, 0.75} — the share of the
@@ -21,24 +21,24 @@ spot):
 two adjacent plateau points ``tv=0.22 ml=14`` and ``tv=0.28 ml=14``):
   - 5 weight mixes × 2 (tv, ml) pairs × 1 DDoff = **10 configs**
 
-**Light-MR contrarian** (drop MR below 0.55 — stress-test the "MR alpha
-is the only alpha" assumption from Phase 13):
+**Light-MR contrarian** (drop MR below 0.55 — stress-test the
+"MR alpha is the only alpha" assumption):
   - ``mr_weight`` ∈ {0.40, 0.50}, ``rsi_fraction`` ∈ {0.40, 0.50, 0.60}
   - (tv=0.25, ml=14, DDoff)
   - Total: **6 configs**
 
-**Baselines** (exact P18 prod + the Phase 19 plateau top point):
-  - ``BL-P18prod`` — MR80/TS10/RSI10 tv=0.28 ml=12 DDoff
-  - ``BL-P19plateau`` — MR80/TS10/RSI10 tv=0.25 ml=14 DDoff
+**Baselines** (production prod + leverage plateau top point):
+  - ``BL-prod`` — MR80/TS10/RSI10 tv=0.28 ml=12 DDoff
+  - ``BL-plateau`` — MR80/TS10/RSI10 tv=0.25 ml=14 DDoff
   - Total: **2 configs**
 
 Grand total: 40 + 10 + 6 + 2 = **58 configs**
 
 Usage
 -----
-    python scripts/sweep_phase20a_weights.py             # full run
-    python scripts/sweep_phase20a_weights.py --smoke     # 4 configs
-    python scripts/sweep_phase20a_weights.py --no-bootstrap
+    python scripts/sweep_weight_grid.py             # full run
+    python scripts/sweep_weight_grid.py --smoke     # 4 configs
+    python scripts/sweep_weight_grid.py --no-bootstrap
 """
 
 from __future__ import annotations
@@ -73,14 +73,18 @@ from sweep_combinations import (  # noqa: E402
 )
 
 
-_P18_SLEEVES: tuple[str, ...] = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
-_P18_WEIGHTS: dict[str, float] = {
+_BASELINE_SLEEVES: tuple[str, ...] = (
+    "MR_Macro",
+    "TS_Momentum_3p",
+    "RSI_Daily_4p",
+)
+_BASELINE_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
     "RSI_Daily_4p": 0.10,
 }
 
-# Phase 19 plateau sweet-spot: tv=0.25, ml=14, DDoff.
+# Leverage plateau sweet-spot: tv=0.25, ml=14, DDoff.
 _PLATEAU_TV: float = 0.25
 _PLATEAU_ML: float = 14.0
 _PLATEAU_DD: bool = False
@@ -116,8 +120,8 @@ def _weight_tag(mr: float, rsi_fraction: float) -> str:
     return f"{mr_pct:02d}-{ts_pct:02d}-{rsi_pct:02d}"
 
 
-def build_phase20a_grid() -> list[SweepConfig]:
-    """Return the full Phase 20A sweep grid (~58 configurations)."""
+def build_weight_grid() -> list[SweepConfig]:
+    """Return the full weight sweep grid (~58 configurations)."""
     cfgs: list[SweepConfig] = []
 
     # ─── Block CORE — tv=0.25 ml=14 DDoff, dense weight grid (40) ──
@@ -129,10 +133,10 @@ def build_phase20a_grid() -> list[SweepConfig]:
             tag = _weight_tag(mr, rsi_f)
             cfgs.append(
                 SweepConfig(
-                    id=f"P20a-w{tag}",
+                    id=f"WGT-w{tag}",
                     block="CORE",
                     name=f"weights={tag} / tv=0.25 ml=14 DDoff",
-                    sleeves=_P18_SLEEVES,
+                    sleeves=_BASELINE_SLEEVES,
                     allocation="custom",
                     target_vol=_PLATEAU_TV,
                     max_leverage=_PLATEAU_ML,
@@ -147,7 +151,7 @@ def build_phase20a_grid() -> list[SweepConfig]:
     # but not extreme, reasonable RSI share) across 2 alternate
     # (tv, ml) points. This gives 10 robustness checks for free.
     ROBUST_MIXES = [
-        (0.80, 0.50),  # 80/10/10 (P18 canonical)
+        (0.80, 0.50),  # 80/10/10 (canonical production)
         (0.75, 0.50),  # 75/12.5/12.5
         (0.70, 0.50),  # 70/15/15
         (0.80, 0.40),  # 80/12/8 (slightly TS-heavy)
@@ -164,10 +168,10 @@ def build_phase20a_grid() -> list[SweepConfig]:
             tv_t = f"{int(tv * 100):02d}"
             cfgs.append(
                 SweepConfig(
-                    id=f"P20a-r{tag}-tv{tv_t}",
+                    id=f"WGTR-{tag}-tv{tv_t}",
                     block="ROBUST",
                     name=f"weights={tag} / tv={tv:.2f} ml={int(ml)} DDoff",
-                    sleeves=_P18_SLEEVES,
+                    sleeves=_BASELINE_SLEEVES,
                     allocation="custom",
                     target_vol=tv,
                     max_leverage=ml,
@@ -185,10 +189,10 @@ def build_phase20a_grid() -> list[SweepConfig]:
             tag = _weight_tag(mr, rsi_f)
             cfgs.append(
                 SweepConfig(
-                    id=f"P20a-l{tag}",
+                    id=f"WGTL-{tag}",
                     block="LIGHT_MR",
                     name=f"weights={tag} (light-MR) / tv=0.25 ml=14 DDoff",
-                    sleeves=_P18_SLEEVES,
+                    sleeves=_BASELINE_SLEEVES,
                     allocation="custom",
                     target_vol=_PLATEAU_TV,
                     max_leverage=_PLATEAU_ML,
@@ -200,26 +204,26 @@ def build_phase20a_grid() -> list[SweepConfig]:
     # ─── Block BASELINE — reference configs (2) ─────────────────────
     cfgs += [
         SweepConfig(
-            id="BL-P18prod",
+            id="BL-prod",
             block="BASELINE",
-            name="Phase 18 prod (MR80/TS10/RSI10 tv=0.28 ml=12 DDoff)",
-            sleeves=_P18_SLEEVES,
+            name="production (MR80/TS10/RSI10 tv=0.28 ml=12 DDoff)",
+            sleeves=_BASELINE_SLEEVES,
             allocation="custom",
             target_vol=0.28,
             max_leverage=12.0,
             dd_cap_enabled=False,
-            custom_weights=dict(_P18_WEIGHTS),
+            custom_weights=dict(_BASELINE_WEIGHTS),
         ),
         SweepConfig(
-            id="BL-P19plateau",
+            id="BL-plateau",
             block="BASELINE",
-            name="Phase 19 plateau (MR80/TS10/RSI10 tv=0.25 ml=14 DDoff)",
-            sleeves=_P18_SLEEVES,
+            name="leverage plateau (MR80/TS10/RSI10 tv=0.25 ml=14 DDoff)",
+            sleeves=_BASELINE_SLEEVES,
             allocation="custom",
             target_vol=_PLATEAU_TV,
             max_leverage=_PLATEAU_ML,
             dd_cap_enabled=_PLATEAU_DD,
-            custom_weights=dict(_P18_WEIGHTS),
+            custom_weights=dict(_BASELINE_WEIGHTS),
         ),
     ]
 
@@ -237,48 +241,47 @@ def _fmt_pct(x: float, width: int = 8) -> str:
     return f"{x * 100:>{width - 1}.2f}%"
 
 
-def build_phase20a_markdown(
+def build_weight_markdown(
     rows: list[dict[str, Any]],
     bootstrap_by_id: dict[str, dict[str, float]],
     report_date: str,
 ) -> str:
     sorted_rows = sorted(rows, key=lambda r: r["wf_avg_sharpe"], reverse=True)
     top10 = sorted_rows[:10]
-    p18_row = next((r for r in rows if r["id"] == "BL-P18prod"), None)
-    p19_row = next((r for r in rows if r["id"] == "BL-P19plateau"), None)
+    prod_row = next((r for r in rows if r["id"] == "BL-prod"), None)
+    plateau_row = next((r for r in rows if r["id"] == "BL-plateau"), None)
 
     lines: list[str] = []
-    lines.append(f"# Phase 20A — Weight sweep ({report_date})\n")
+    lines.append(f"# Weight sweep — dense factorial ({report_date})\n")
     lines.append(
-        "Suite directe du sweep Phase 19 "
-        "(`docs/research/phase19_2026-04-13_refined_leverage.md`) qui avait "
-        "établi un plateau Sharpe à 0.966 sur toute la région "
-        "`(target_vol ≥ 0.22, max_leverage ≥ 14, DDoff)` avec les poids Phase 18 "
-        "figés à 80/10/10. Phase 20A pose la question complémentaire : est-ce "
-        "qu'une autre répartition des poids entre MR_Macro, TS_Momentum_3p et "
-        "RSI_Daily_4p permet de sortir de ce plateau ?\n"
+        "Follow-up to the leverage sweep which established a Sharpe plateau "
+        "at 0.966 across the region `(target_vol ≥ 0.22, max_leverage ≥ 14, "
+        "DDoff)` with production weights fixed at 80/10/10. This sweep asks "
+        "the complementary question : does a different weight allocation "
+        "across MR_Macro, TS_Momentum_3p and RSI_Daily_4p break out of that "
+        "plateau ?\n"
     )
     lines.append(
-        "Paramètres fixes du bloc CORE : `tv=0.25 / ml=14 / DDoff` (le point "
-        "le plus conservateur du plateau Phase 19). Grille : 8 valeurs de "
-        "`mr_weight` × 5 valeurs de `rsi_fraction` (part du budget "
-        "diversifieur allouée à RSI vs TS) = 40 configs CORE, plus 10 configs "
-        "ROBUST pour vérifier la stabilité à `tv ∈ {0.22, 0.28}` et 6 configs "
-        "LIGHT_MR contrariennes avec `mr_weight ∈ {0.40, 0.50}`.\n"
+        "Fixed parameters for the CORE block : `tv=0.25 / ml=14 / DDoff` "
+        "(the most conservative point on the plateau). Grid : 8 values of "
+        "`mr_weight` × 5 values of `rsi_fraction` (share of the diversifier "
+        "budget allocated to RSI vs TS) = 40 CORE configs, plus 10 ROBUST "
+        "configs to check stability at `tv ∈ {0.22, 0.28}` and 6 contrarian "
+        "LIGHT_MR configs with `mr_weight ∈ {0.40, 0.50}`.\n"
     )
-    if p19_row:
+    if plateau_row:
         lines.append(
-            f"Baseline Phase 19 plateau : **{p19_row['id']}** — Sharpe WF "
-            f"{p19_row['wf_avg_sharpe']:.3f}, CAGR "
-            f"{p19_row['annual_return'] * 100:.2f}%, "
-            f"MaxDD {p19_row['max_drawdown'] * 100:.2f}%.\n"
+            f"Leverage plateau baseline : **{plateau_row['id']}** — Sharpe WF "
+            f"{plateau_row['wf_avg_sharpe']:.3f}, CAGR "
+            f"{plateau_row['annual_return'] * 100:.2f}%, "
+            f"MaxDD {plateau_row['max_drawdown'] * 100:.2f}%.\n"
         )
-    if p18_row:
+    if prod_row:
         lines.append(
-            f"Baseline Phase 18 prod : **{p18_row['id']}** — Sharpe WF "
-            f"{p18_row['wf_avg_sharpe']:.3f}, CAGR "
-            f"{p18_row['annual_return'] * 100:.2f}%, "
-            f"MaxDD {p18_row['max_drawdown'] * 100:.2f}%.\n"
+            f"Production baseline : **{prod_row['id']}** — Sharpe WF "
+            f"{prod_row['wf_avg_sharpe']:.3f}, CAGR "
+            f"{prod_row['annual_return'] * 100:.2f}%, "
+            f"MaxDD {prod_row['max_drawdown'] * 100:.2f}%.\n"
         )
 
     # ── Top-10 ──────────────────────────────────────────────────────
@@ -300,9 +303,9 @@ def build_phase20a_markdown(
     lines.append("\n★ = CAGR ∈ [10%, 15%] AND MaxDD < 35%.\n")
 
     # ── Per-block best ─────────────────────────────────────────────
-    lines.append("## Meilleure config par bloc\n")
-    lines.append("| Bloc | ID | Config | Sharpe WF | CAGR | MaxDD |")
-    lines.append("|------|----|--------|-----------|------|-------|")
+    lines.append("## Best config per block\n")
+    lines.append("| Block | ID | Config | Sharpe WF | CAGR | MaxDD |")
+    lines.append("|-------|----|--------|-----------|------|-------|")
     for block in ("CORE", "ROBUST", "LIGHT_MR", "BASELINE"):
         block_rows = [r for r in sorted_rows if r["block"] == block]
         if not block_rows:
@@ -330,7 +333,7 @@ def build_phase20a_markdown(
         cells: list[str] = [f"{mr:.2f}"]
         for rsi_f in rsi_vals:
             tag = _weight_tag(mr, rsi_f)
-            cid = f"P20a-w{tag}"
+            cid = f"WGT-w{tag}"
             row = core_by_id.get(cid)
             if row is None:
                 cells.append("—")
@@ -365,38 +368,36 @@ def build_phase20a_markdown(
     # ── Narrative / conclusion ─────────────────────────────────────
     lines.append("## Conclusion\n")
     if not sorted_rows:
-        lines.append("Aucun résultat collecté.\n")
+        lines.append("No results collected.\n")
     else:
         top = sorted_rows[0]
-        plateau_sharpe = p19_row["wf_avg_sharpe"] if p19_row else 0.966
+        plateau_sharpe = plateau_row["wf_avg_sharpe"] if plateau_row else 0.966
         gap = top["wf_avg_sharpe"] - plateau_sharpe
         sign = "+" if gap >= 0 else ""
         lines.append(
-            f"Meilleur point du sweep : **`{top['id']}`** — {top['name']}.  \n"
+            f"Best point in the sweep : **`{top['id']}`** — {top['name']}.  \n"
             f"Sharpe WF = **{top['wf_avg_sharpe']:.3f}** "
-            f"(vs plateau Phase 19 = {plateau_sharpe:.3f}, "
+            f"(vs leverage plateau = {plateau_sharpe:.3f}, "
             f"Δ = {sign}{gap:.3f})."
         )
         if abs(gap) < 0.005:
             lines.append(
-                "\nLe plateau Phase 19 **résiste** au changement de poids : "
-                "aucune recombinaison des poids MR/TS/RSI ne fait bouger "
-                "le Sharpe WF de plus de 5 millipoints. Le plateau est donc "
-                "défini conjointement par (i) la composition des sleeves et "
-                "(ii) la layer de leverage — pas par la répartition des "
-                "poids elle-même."
+                "\nThe leverage plateau **resists** weight recombination : "
+                "no mix of MR/TS/RSI weights moves the WF Sharpe by more "
+                "than 5 basis points. The plateau is therefore defined "
+                "jointly by (i) the sleeve composition and (ii) the "
+                "leverage layer — not by the weight split itself."
             )
         elif gap > 0:
             lines.append(
-                "\nUn nouveau point **domine** le plateau Phase 19 — à "
-                "valider sur le bootstrap et sur les points ROBUST avant "
-                "de le promouvoir comme recommandation Phase 20."
+                "\nA new point **dominates** the leverage plateau — validate "
+                "against bootstrap and ROBUST points before promoting it "
+                "as the next production recommendation."
             )
         else:
             lines.append(
-                "\nAucune configuration de poids ne dépasse le plateau "
-                "Phase 19 ; le 80/10/10 reste la meilleure répartition "
-                "parmi celles testées."
+                "\nNo weight configuration exceeds the leverage plateau ; "
+                "80/10/10 remains the best allocation among those tested."
             )
     lines.append("")
     return "\n".join(lines)
@@ -428,21 +429,16 @@ def main() -> None:
 
     report_date = date.today().isoformat()
     if args.smoke:
-        output_root = Path("/tmp") / f"phase20a_smoke_{report_date}"
-        md_path = output_root / "phase20a.md"
+        output_root = Path("/tmp") / f"weight_grid_smoke_{report_date}"
+        md_path = output_root / "weight_grid.md"
     else:
-        output_root = _PROJECT_ROOT / "results" / f"phase20a_{report_date}"
-        md_path = (
-            _PROJECT_ROOT
-            / "docs"
-            / "research"
-            / f"phase20a_{report_date}_weight_sweep.md"
-        )
+        output_root = _PROJECT_ROOT / "results" / f"weight_grid_{report_date}"
+        md_path = _PROJECT_ROOT / "docs" / "research" / f"weight_grid_{report_date}.md"
     output_root.mkdir(parents=True, exist_ok=True)
     md_path.parent.mkdir(parents=True, exist_ok=True)
 
     print("=" * 72)
-    print("  Phase 20A — Weight sweep")
+    print("  Weight sweep — dense factorial")
     print("=" * 72)
     print(f"Report date : {report_date}")
     print(f"Output root : {output_root}")
@@ -451,23 +447,23 @@ def main() -> None:
 
     print("Loading sleeves…")
     sleeves = get_strategy_daily_returns()
-    sleeves_p20 = {k: sleeves[k] for k in _P18_SLEEVES}
-    print(f"  Loaded {len(sleeves_p20)} sleeves: {sorted(sleeves_p20)}")
+    sleeves_trio = {k: sleeves[k] for k in _BASELINE_SLEEVES}
+    print(f"  Loaded {len(sleeves_trio)} sleeves: {sorted(sleeves_trio)}")
     print()
 
-    grid = build_phase20a_grid()
+    grid = build_weight_grid()
     if args.smoke:
         smoke_ids = {
-            "P20a-w80-10-10",
-            "P20a-w70-15-15",
-            "BL-P18prod",
-            "BL-P19plateau",
+            "WGT-w80-10-10",
+            "WGT-w70-15-15",
+            "BL-prod",
+            "BL-plateau",
         }
         grid = [c for c in grid if c.id in smoke_ids]
     print(f"Running {len(grid)} configurations via native parallel sweep…")
 
     t0 = time.perf_counter()
-    pf_all, metrics = native_parallel_sweep(grid, sleeves_p20)
+    pf_all, metrics = native_parallel_sweep(grid, sleeves_trio)
     elapsed = time.perf_counter() - t0
     print(
         f"  Native sweep completed in {elapsed:.1f}s "
@@ -496,7 +492,7 @@ def main() -> None:
             cfg = next(c for c in grid if c.id == row["id"])
             t0 = time.perf_counter()
             try:
-                stats = bootstrap_config(cfg, sleeves_p20, n_runs=args.bootstrap_runs)
+                stats = bootstrap_config(cfg, sleeves_trio, n_runs=args.bootstrap_runs)
                 bootstrap_by_id[row["id"]] = stats
                 el = time.perf_counter() - t0
                 print(
@@ -514,7 +510,7 @@ def main() -> None:
     json_data = {
         "report_date": report_date,
         "n_configs": len(rows),
-        "sleeves_loaded": sorted(sleeves_p20),
+        "sleeves_loaded": sorted(sleeves_trio),
         "configs": [sanitize_result_for_json(r) for r in sorted_rows],
         "bootstrap_top5": bootstrap_by_id,
     }
@@ -522,14 +518,14 @@ def main() -> None:
     print(f"\nJSON exported → {json_path}")
 
     # ── Export markdown ────────────────────────────────────────────
-    md = build_phase20a_markdown(rows, bootstrap_by_id, report_date)
+    md = build_weight_markdown(rows, bootstrap_by_id, report_date)
     md_path.write_text(md)
     print(f"Markdown exported → {md_path}")
 
     # ── Top-N artifacts ────────────────────────────────────────────
     if not args.smoke:
         print("\nGenerating top-N artifacts (tearsheets + mix plots)…")
-        generate_top_n_artifacts(sorted_rows, grid, sleeves_p20, output_root)
+        generate_top_n_artifacts(sorted_rows, grid, sleeves_trio, output_root)
 
     # ── Final summary ──────────────────────────────────────────────
     print("\n" + "=" * 72)
@@ -541,14 +537,12 @@ def main() -> None:
             f"CAGR={r['annual_return'] * 100:>+6.2f}%  "
             f"MaxDD={r['max_drawdown'] * 100:>+6.2f}%"
         )
-    p19_plateau_row = next((r for r in rows if r["id"] == "BL-P19plateau"), None)
-    if p19_plateau_row:
-        rank = next(
-            i for i, r in enumerate(sorted_rows, 1) if r["id"] == "BL-P19plateau"
-        )
+    plateau_rank_row = next((r for r in rows if r["id"] == "BL-plateau"), None)
+    if plateau_rank_row:
+        rank = next(i for i, r in enumerate(sorted_rows, 1) if r["id"] == "BL-plateau")
         print(
-            f"\n  Phase 19 plateau baseline: rank #{rank}, "
-            f"sharpe={p19_plateau_row['wf_avg_sharpe']:+.3f}"
+            f"\n  Leverage plateau baseline: rank #{rank}, "
+            f"sharpe={plateau_rank_row['wf_avg_sharpe']:+.3f}"
         )
 
 

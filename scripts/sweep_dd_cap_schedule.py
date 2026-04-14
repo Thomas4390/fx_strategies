@@ -1,19 +1,19 @@
-"""Phase 20C — Graduated DD-cap schedule sweep.
+"""Drawdown cap schedule sweep — graduated soft caps.
 
-Follow-up to Phase 20A / 20B. Phase 19 showed that the binary DD cap
-(ON with the historical Phase 13 schedule vs OFF entirely) has a
-clear winner: OFF dominates the Sharpe plateau at 0.966 because the
-ON schedule de-leverages recoveries that would have come back. Phase
-20C asks: is there a **softer** DD schedule that keeps most of the
-upside (Sharpe ≥ 0.96) while improving the tail risk (better P5
-MaxDD on bootstrap)?
+Follow-up to the weight and fourth-sleeve sweeps. The leverage sweep
+established that the binary DD cap (ON with the original hard schedule
+vs OFF entirely) has a clear winner : OFF dominates the Sharpe plateau
+at 0.966 because the hard schedule de-leverages recoveries that would
+have come back. This sweep asks : is there a **softer** DD schedule
+that keeps most of the upside (Sharpe ≥ 0.96) while improving the tail
+risk (better P5 MaxDD on bootstrap) ?
 
 Methodology
 -----------
-Uses the Phase 19 plateau sweet-spot ``tv=0.25 ml=14`` as the fixed
+Uses the leverage plateau sweet-spot ``tv=0.25 ml=14`` as the fixed
 leverage layer and sweeps 8 alternate DD schedules alongside the two
-baselines (``OFF`` and ``ON-Phase13``). Each alternate schedule is
-parameterized by two knobs:
+baselines (``OFF`` and ``ON-default``). Each alternate schedule is
+parameterized by two knobs :
 
 - **``dd_knee``** — the DD level at which de-leveraging starts
   (below this, scale = 1.0). Tested at {0.10, 0.15, 0.20}.
@@ -22,7 +22,7 @@ parameterized by two knobs:
 
 The schedule is linear between ``(dd_knee, 1.0)`` and ``(0.35, dd_floor)``
 then clipped to ``dd_floor`` beyond 35% DD. A ``knee=0.10, floor=0.15``
-approximates the Phase 13 hard schedule; a ``knee=0.20, floor=0.85``
+approximates the original hard schedule ; a ``knee=0.20, floor=0.85``
 is a very soft cap that barely touches the leverage.
 
 Grid (~34 configs)
@@ -34,18 +34,18 @@ Grid (~34 configs)
 
 **Block KNEE_DEEP** (6 configs):
   Very deep knees for comparison: ``dd_knee`` ∈ {0.05, 0.25} × 3 floors.
-  Single weight config (P18 canonical).
+  Single weight config (canonical 80/10/10).
 
 **Block BASELINE** (4 configs):
-  OFF / ON-Phase13 at each of the 2 weight mixes.
+  OFF / ON-default at each of the 2 weight mixes.
 
 Grand total: 24 + 6 + 4 = **34 configs**
 
 Usage
 -----
-    python scripts/sweep_phase20c_dd_cap.py
-    python scripts/sweep_phase20c_dd_cap.py --smoke
-    python scripts/sweep_phase20c_dd_cap.py --no-bootstrap
+    python scripts/sweep_dd_cap_schedule.py
+    python scripts/sweep_dd_cap_schedule.py --smoke
+    python scripts/sweep_dd_cap_schedule.py --no-bootstrap
 """
 
 from __future__ import annotations
@@ -80,16 +80,20 @@ from sweep_combinations import (  # noqa: E402
 )
 
 
-_P18_SLEEVES: tuple[str, ...] = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
+_BASELINE_SLEEVES: tuple[str, ...] = (
+    "MR_Macro",
+    "TS_Momentum_3p",
+    "RSI_Daily_4p",
+)
 _PLATEAU_TV: float = 0.25
 _PLATEAU_ML: float = 14.0
 
-_P18_WEIGHTS: dict[str, float] = {
+_CANONICAL_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
     "RSI_Daily_4p": 0.10,
 }
-_P20A_TOP_WEIGHTS: dict[str, float] = {
+_WEIGHT_TOP_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.75,
     "TS_Momentum_3p": 0.10,
     "RSI_Daily_4p": 0.15,
@@ -116,24 +120,20 @@ def _schedule_tag(knee: float, floor: float) -> str:
     return f"k{int(round(knee * 100)):02d}-f{int(round(floor * 100)):02d}"
 
 
-def _weights_tag(w: dict[str, float]) -> str:
-    return f"{int(round(w['MR_Macro'] * 100)):02d}-{int(round(w['TS_Momentum_3p'] * 100)):02d}-{int(round(w['RSI_Daily_4p'] * 100)):02d}"
-
-
 # ═══════════════════════════════════════════════════════════════════════
 # Grid builder
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def build_phase20c_grid() -> list[SweepConfig]:
+def build_dd_cap_grid() -> list[SweepConfig]:
     cfgs: list[SweepConfig] = []
 
     # ─── Block SOFT_CAP — 3 knees × 4 floors × 2 weight mixes ───────
     KNEES = [0.10, 0.15, 0.20]
     FLOORS = [0.35, 0.50, 0.70, 0.85]
     WEIGHT_MIXES = [
-        ("w80-10-10", _P18_WEIGHTS),
-        ("w75-10-15", _P20A_TOP_WEIGHTS),
+        ("w80-10-10", _CANONICAL_WEIGHTS),
+        ("w75-10-15", _WEIGHT_TOP_WEIGHTS),
     ]
     for weight_tag, w in WEIGHT_MIXES:
         for knee in KNEES:
@@ -142,13 +142,13 @@ def build_phase20c_grid() -> list[SweepConfig]:
                 sched_tag = _schedule_tag(knee, floor)
                 cfgs.append(
                     SweepConfig(
-                        id=f"P20c-soft-{weight_tag}-{sched_tag}",
+                        id=f"DDC-soft-{weight_tag}-{sched_tag}",
                         block="SOFT_CAP",
                         name=(
                             f"{weight_tag} / tv=0.25 ml=14 / "
                             f"DDsoft(knee={knee:.2f}, floor={floor:.2f})"
                         ),
-                        sleeves=_P18_SLEEVES,
+                        sleeves=_BASELINE_SLEEVES,
                         allocation="custom",
                         target_vol=_PLATEAU_TV,
                         max_leverage=_PLATEAU_ML,
@@ -159,7 +159,7 @@ def build_phase20c_grid() -> list[SweepConfig]:
                     )
                 )
 
-    # ─── Block KNEE_DEEP — extreme knees, P18 weights only ──────────
+    # ─── Block KNEE_DEEP — extreme knees, canonical weights only ────
     EXTRA_KNEES = [0.05, 0.25]
     EXTRA_FLOORS = [0.35, 0.50, 0.70]
     for knee in EXTRA_KNEES:
@@ -168,31 +168,31 @@ def build_phase20c_grid() -> list[SweepConfig]:
             sched_tag = _schedule_tag(knee, floor)
             cfgs.append(
                 SweepConfig(
-                    id=f"P20c-deep-w80-10-10-{sched_tag}",
+                    id=f"DDC-deep-w80-10-10-{sched_tag}",
                     block="KNEE_DEEP",
                     name=(
                         f"w80-10-10 / tv=0.25 ml=14 / "
                         f"DDsoft(knee={knee:.2f}, floor={floor:.2f})"
                     ),
-                    sleeves=_P18_SLEEVES,
+                    sleeves=_BASELINE_SLEEVES,
                     allocation="custom",
                     target_vol=_PLATEAU_TV,
                     max_leverage=_PLATEAU_ML,
                     dd_cap_enabled=True,
-                    custom_weights=dict(_P18_WEIGHTS),
+                    custom_weights=dict(_CANONICAL_WEIGHTS),
                     dd_breakpoints=bps,
                     dd_scales=scl,
                 )
             )
 
-    # ─── Block BASELINE — OFF + ON-Phase13 at each weight mix ───────
+    # ─── Block BASELINE — OFF + ON-default at each weight mix ───────
     for weight_tag, w in WEIGHT_MIXES:
         cfgs.append(
             SweepConfig(
                 id=f"BL-DDoff-{weight_tag}",
                 block="BASELINE",
                 name=f"{weight_tag} / tv=0.25 ml=14 / DDoff",
-                sleeves=_P18_SLEEVES,
+                sleeves=_BASELINE_SLEEVES,
                 allocation="custom",
                 target_vol=_PLATEAU_TV,
                 max_leverage=_PLATEAU_ML,
@@ -204,15 +204,15 @@ def build_phase20c_grid() -> list[SweepConfig]:
             SweepConfig(
                 id=f"BL-DDon-{weight_tag}",
                 block="BASELINE",
-                name=f"{weight_tag} / tv=0.25 ml=14 / DDon (Phase13 schedule)",
-                sleeves=_P18_SLEEVES,
+                name=f"{weight_tag} / tv=0.25 ml=14 / DDon (default schedule)",
+                sleeves=_BASELINE_SLEEVES,
                 allocation="custom",
                 target_vol=_PLATEAU_TV,
                 max_leverage=_PLATEAU_ML,
                 dd_cap_enabled=True,
                 custom_weights=dict(w),
                 # dd_breakpoints / dd_scales = None → use module defaults
-                # (the historical Phase 13 hard schedule).
+                # (the original hard de-leveraging schedule).
             )
         )
 
@@ -230,7 +230,7 @@ def _fmt_pct(x: float, width: int = 8) -> str:
     return f"{x * 100:>{width - 1}.2f}%"
 
 
-def build_phase20c_markdown(
+def build_dd_cap_markdown(
     rows: list[dict[str, Any]],
     bootstrap_by_id: dict[str, dict[str, float]],
     report_date: str,
@@ -242,27 +242,27 @@ def build_phase20c_markdown(
     on_80 = next((r for r in rows if r["id"] == "BL-DDon-w80-10-10"), None)
 
     lines: list[str] = []
-    lines.append(f"# Phase 20C — Graduated DD-cap sweep ({report_date})\n")
+    lines.append(f"# Drawdown cap schedule sweep ({report_date})\n")
     lines.append(
-        "Suite directe des sweeps Phase 20A/B. Phase 19 avait constaté que "
-        "le DD cap binaire (ON/OFF avec l'échelle Phase 13 "
-        "`{0.10→1.0, 0.20→0.60, 0.30→0.35, 0.35→0.15}`) perdait systématiquement "
-        "contre le mode `DDoff` sur le trio P18 à `tv=0.25 ml=14`, car le cap "
-        "de-leverage les drawdowns qui allaient se redresser. Phase 20C teste "
-        "des échelles **plus douces** paramétrées par deux knobs :\n"
+        "Follow-up to the weight and fourth-sleeve sweeps. The binary DD "
+        "cap (ON with the original hard schedule "
+        "`{0.10→1.0, 0.20→0.60, 0.30→0.35, 0.35→0.15}` vs OFF entirely) "
+        "showed that `DDoff` systematically beats the default-ON schedule "
+        "at `tv=0.25 ml=14` because the cap de-leverages drawdowns that "
+        "recover. This sweep tests **softer** schedules parameterized by "
+        "two knobs :\n"
     )
     lines.append(
-        "- `dd_knee` — le seuil DD auquel le de-leveraging commence (avant ce "
-        "seuil, scale = 1.0). Testé dans {0.10, 0.15, 0.20} + extremes "
-        "{0.05, 0.25}.\n"
-        "- `dd_floor` — le multiplicateur atteint à DD = 35% (clippé au-delà). "
-        "Testé dans {0.35, 0.50, 0.70, 0.85}.\n"
+        "- `dd_knee` — the DD level at which de-leveraging starts (scale "
+        "= 1.0 below). Tested in {0.10, 0.15, 0.20} + extremes {0.05, 0.25}.\n"
+        "- `dd_floor` — the scale reached at DD = 35% (clipped beyond). "
+        "Tested in {0.35, 0.50, 0.70, 0.85}.\n"
     )
     lines.append(
-        "Un schedule `knee=0.10, floor=0.15` approxime l'historique Phase 13 "
-        "(hard-cap). Un `knee=0.20, floor=0.85` est un cap quasi-inactif. "
-        "Paramètres fixes : `tv=0.25 ml=14` sur le trio P18. Deux mixes de "
-        "poids sont testés : le canonique 80/10/10 et le P20A top 75/10/15.\n"
+        "A schedule `knee=0.10, floor=0.15` approximates the original hard "
+        "cap ; `knee=0.20, floor=0.85` is nearly inactive. Fixed parameters "
+        ": `tv=0.25 ml=14` on the production trio. Two weight mixes tested "
+        ": the canonical 80/10/10 and the weight-sweep top 75/10/15.\n"
     )
 
     if off_80:
@@ -281,7 +281,7 @@ def build_phase20c_markdown(
         )
     if on_80:
         lines.append(
-            f"Baseline `DDon-Phase13` (80-10-10) : Sharpe WF "
+            f"Baseline `DDon-default` (80-10-10) : Sharpe WF "
             f"{on_80['wf_avg_sharpe']:.3f}, CAGR "
             f"{on_80['annual_return'] * 100:.2f}%, "
             f"MaxDD {on_80['max_drawdown'] * 100:.2f}%.\n"
@@ -309,9 +309,11 @@ def build_phase20c_markdown(
     soft_by_id = {r["id"]: r for r in rows if r["block"] == "SOFT_CAP"}
     for weight_tag, mix_name in [
         ("w80-10-10", "80-10-10 (canonical)"),
-        ("w75-10-15", "75-10-15 (P20A top)"),
+        ("w75-10-15", "75-10-15 (weight-sweep top)"),
     ]:
-        lines.append(f"## SOFT_CAP — Sharpe WF par (knee, floor) — poids {mix_name}\n")
+        lines.append(
+            f"## SOFT_CAP — Sharpe WF par (knee, floor) — weights {mix_name}\n"
+        )
         knees = [0.10, 0.15, 0.20]
         floors = [0.35, 0.50, 0.70, 0.85]
         hdr = "| knee \\ floor | " + " | ".join(f"{f:.2f}" for f in floors) + " |"
@@ -322,7 +324,7 @@ def build_phase20c_markdown(
             cells: list[str] = [f"{k:.2f}"]
             for f in floors:
                 sched_tag = _schedule_tag(k, f)
-                cid = f"P20c-soft-{weight_tag}-{sched_tag}"
+                cid = f"DDC-soft-{weight_tag}-{sched_tag}"
                 r = soft_by_id.get(cid)
                 if r is None:
                     cells.append("—")
@@ -332,9 +334,9 @@ def build_phase20c_markdown(
         lines.append("")
 
     # ── Per-block best ─────────────────────────────────────────────
-    lines.append("## Meilleure config par bloc\n")
-    lines.append("| Bloc | ID | Config | Sharpe WF | CAGR | MaxDD |")
-    lines.append("|------|----|--------|-----------|------|-------|")
+    lines.append("## Best config per block\n")
+    lines.append("| Block | ID | Config | Sharpe WF | CAGR | MaxDD |")
+    lines.append("|-------|----|--------|-----------|------|-------|")
     for block in ("SOFT_CAP", "KNEE_DEEP", "BASELINE"):
         block_rows = [r for r in sorted_rows if r["block"] == block]
         if not block_rows:
@@ -374,38 +376,36 @@ def build_phase20c_markdown(
     # ── Narrative ──────────────────────────────────────────────────
     lines.append("## Conclusion\n")
     if not sorted_rows:
-        lines.append("Aucun résultat collecté.\n")
+        lines.append("No results collected.\n")
     else:
         top = sorted_rows[0]
         off_sharpe = off_80["wf_avg_sharpe"] if off_80 else 0.966
         gap_off = top["wf_avg_sharpe"] - off_sharpe
         sign = "+" if gap_off >= 0 else ""
         lines.append(
-            f"Meilleur point du sweep : **`{top['id']}`** — {top['name']}.  \n"
+            f"Best point in the sweep : **`{top['id']}`** — {top['name']}.  \n"
             f"Sharpe WF = **{top['wf_avg_sharpe']:.3f}** "
             f"(vs DDoff baseline 80-10-10 = {off_sharpe:.3f}, "
             f"Δ = {sign}{gap_off:.3f})."
         )
         if gap_off > 0.005:
             lines.append(
-                "\nUn schedule DD cap gradué **améliore** le Sharpe par "
-                "rapport au mode DDoff pur. Le cap doux préserve le recovery "
-                "sur les drawdowns modérés tout en coupant la queue des "
-                "scénarios extrêmes."
+                "\nA graduated DD cap schedule **improves** the Sharpe over "
+                "pure DDoff mode. The soft cap preserves recoveries on "
+                "moderate drawdowns while trimming the tail of extreme "
+                "scenarios."
             )
         elif abs(gap_off) <= 0.005:
             lines.append(
-                "\nLe mode DDoff reste **équivalent** au meilleur schedule "
-                "gradué : sur l'historique in-sample, le cap n'a pas assez "
-                "d'occasions de déclencher pour faire la différence. "
-                "L'impact se lira principalement dans les queues bootstrap — "
-                "cf. la table P5 MaxDD ci-dessus."
+                "\n`DDoff` remains **equivalent** to the best graduated "
+                "schedule : in-sample, the cap does not fire often enough "
+                "to make a difference. The real impact shows up in the "
+                "bootstrap tails — see the P5 MaxDD table above."
             )
         else:
             lines.append(
-                "\nAucun schedule gradué ne dépasse le mode DDoff sur le "
-                "Sharpe WF. Le cap reste à désactiver en production — "
-                "confirmant les conclusions Phase 19."
+                "\nNo graduated schedule exceeds `DDoff` on the WF Sharpe. "
+                "The cap remains disabled in production."
             )
     lines.append("")
     return "\n".join(lines)
@@ -437,21 +437,18 @@ def main() -> None:
 
     report_date = date.today().isoformat()
     if args.smoke:
-        output_root = Path("/tmp") / f"phase20c_smoke_{report_date}"
-        md_path = output_root / "phase20c.md"
+        output_root = Path("/tmp") / f"dd_cap_schedule_smoke_{report_date}"
+        md_path = output_root / "dd_cap_schedule.md"
     else:
-        output_root = _PROJECT_ROOT / "results" / f"phase20c_{report_date}"
+        output_root = _PROJECT_ROOT / "results" / f"dd_cap_schedule_{report_date}"
         md_path = (
-            _PROJECT_ROOT
-            / "docs"
-            / "research"
-            / f"phase20c_{report_date}_dd_cap_sweep.md"
+            _PROJECT_ROOT / "docs" / "research" / f"dd_cap_schedule_{report_date}.md"
         )
     output_root.mkdir(parents=True, exist_ok=True)
     md_path.parent.mkdir(parents=True, exist_ok=True)
 
     print("=" * 72)
-    print("  Phase 20C — Graduated DD-cap sweep")
+    print("  Drawdown cap schedule sweep")
     print("=" * 72)
     print(f"Report date : {report_date}")
     print(f"Output root : {output_root}")
@@ -460,23 +457,23 @@ def main() -> None:
 
     print("Loading sleeves…")
     sleeves = get_strategy_daily_returns()
-    sleeves_p20c = {k: sleeves[k] for k in _P18_SLEEVES}
-    print(f"  Loaded {len(sleeves_p20c)} sleeves: {sorted(sleeves_p20c)}")
+    sleeves_trio = {k: sleeves[k] for k in _BASELINE_SLEEVES}
+    print(f"  Loaded {len(sleeves_trio)} sleeves: {sorted(sleeves_trio)}")
     print()
 
-    grid = build_phase20c_grid()
+    grid = build_dd_cap_grid()
     if args.smoke:
         smoke_ids = {
-            "P20c-soft-w80-10-10-k15-f50",
+            "DDC-soft-w80-10-10-k15-f50",
             "BL-DDoff-w80-10-10",
             "BL-DDon-w80-10-10",
-            "P20c-soft-w75-10-15-k20-f70",
+            "DDC-soft-w75-10-15-k20-f70",
         }
         grid = [c for c in grid if c.id in smoke_ids]
     print(f"Running {len(grid)} configurations via native parallel sweep…")
 
     t0 = time.perf_counter()
-    pf_all, metrics = native_parallel_sweep(grid, sleeves_p20c)
+    pf_all, metrics = native_parallel_sweep(grid, sleeves_trio)
     elapsed = time.perf_counter() - t0
     print(
         f"  Native sweep completed in {elapsed:.1f}s "
@@ -505,7 +502,7 @@ def main() -> None:
             cfg = next(c for c in grid if c.id == row["id"])
             t0 = time.perf_counter()
             try:
-                stats = bootstrap_config(cfg, sleeves_p20c, n_runs=args.bootstrap_runs)
+                stats = bootstrap_config(cfg, sleeves_trio, n_runs=args.bootstrap_runs)
                 bootstrap_by_id[row["id"]] = stats
                 el = time.perf_counter() - t0
                 print(
@@ -523,7 +520,7 @@ def main() -> None:
     json_data = {
         "report_date": report_date,
         "n_configs": len(rows),
-        "sleeves_loaded": sorted(sleeves_p20c),
+        "sleeves_loaded": sorted(sleeves_trio),
         "configs": [sanitize_result_for_json(r) for r in sorted_rows],
         "bootstrap_top5": bootstrap_by_id,
     }
@@ -531,14 +528,14 @@ def main() -> None:
     print(f"\nJSON exported → {json_path}")
 
     # ── Export markdown ────────────────────────────────────────────
-    md = build_phase20c_markdown(rows, bootstrap_by_id, report_date)
+    md = build_dd_cap_markdown(rows, bootstrap_by_id, report_date)
     md_path.write_text(md)
     print(f"Markdown exported → {md_path}")
 
     # ── Top-N artifacts ────────────────────────────────────────────
     if not args.smoke:
         print("\nGenerating top-N artifacts (tearsheets + mix plots)…")
-        generate_top_n_artifacts(sorted_rows, grid, sleeves_p20c, output_root)
+        generate_top_n_artifacts(sorted_rows, grid, sleeves_trio, output_root)
 
     # ── Final summary ──────────────────────────────────────────────
     print("\n" + "=" * 72)
