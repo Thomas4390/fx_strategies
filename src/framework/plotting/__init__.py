@@ -63,6 +63,16 @@ from ._reports import (
     print_extended_stats,
     print_grid_results,
 )
+from ._robustness import (
+    plot_bootstrap_distribution,
+    plot_cpcv_distribution,
+    plot_equity_fan_chart,
+    plot_mdd_distribution,
+    plot_metric_ci_forest,
+    plot_pbo_logits,
+    plot_rolling_metric_stability,
+    plot_spa_pvalues,
+)
 from ._portfolio_mix import (
     generate_portfolio_mix_plots,
     plot_dd_cap_activity,
@@ -137,4 +147,12 @@ __all__ = [
     "plot_regime_overlay",
     "plot_turnover",
     "generate_portfolio_mix_plots",
+    "plot_bootstrap_distribution",
+    "plot_metric_ci_forest",
+    "plot_equity_fan_chart",
+    "plot_mdd_distribution",
+    "plot_pbo_logits",
+    "plot_spa_pvalues",
+    "plot_rolling_metric_stability",
+    "plot_cpcv_distribution",
 ]

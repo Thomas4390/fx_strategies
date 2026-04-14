@@ -10,6 +10,8 @@ dependencies = [
     "numba",
     "plotly",
     "pandas-stubs~=2.3.3",
+    "scipy>=1.11",
+    "arch>=6.0",
 ]
 
 [project.optional-dependencies]

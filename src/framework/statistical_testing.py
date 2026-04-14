@@ -39,13 +39,13 @@ References
 
 from __future__ import annotations
 
-from math import sqrt
+from math import log, sqrt
 from typing import Any
 
 import numpy as np
 import pandas as pd
 import vectorbtpro  # noqa: F401 — registers the `.vbt` pandas accessor
-from scipy.stats import norm
+from scipy.stats import norm, t as student_t
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -362,10 +362,326 @@ def dsr_for_sweep_top(
     )
 
 
+# ═══════════════════════════════════════════════════════════════════════
+# Haircut Sharpe Ratio — Harvey & Liu (2015)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _bonferroni_adjusted_pvalue(p_raw: float, n_trials: int) -> float:
+    """Bonferroni correction : multiply p by ``n_trials``, capped at 1."""
+    return float(min(p_raw * n_trials, 1.0))
+
+
+def _holm_adjusted_pvalue(p_raw: float, n_trials: int) -> float:
+    """Holm-Bonferroni worst-case correction for the *top-1* strategy.
+
+    For the single observed strategy (treated as the most significant
+    of the ``n_trials`` trials), the Holm-adjusted p-value collapses
+    to the standard Bonferroni bound ``p_raw * n_trials``. We expose
+    it as a distinct code path so callers can still request it
+    explicitly.
+    """
+    return _bonferroni_adjusted_pvalue(p_raw, n_trials)
+
+
+def _bhy_adjusted_pvalue(p_raw: float, n_trials: int) -> float:
+    """Benjamini-Hochberg-Yekutieli adjusted p-value (conservative form).
+
+    For the top-1 strategy the BHY bound reduces to
+    ``p_raw * n_trials * c(n_trials)`` where
+    ``c(N) = sum_{i=1..N} 1/i`` is the harmonic number. This is the
+    dependent-tests variant — strictly more conservative than plain
+    BH but valid under arbitrary correlation (Benjamini & Yekutieli
+    2001).
+    """
+    c_n = float(np.sum(1.0 / np.arange(1, n_trials + 1)))
+    return float(min(p_raw * n_trials * c_n, 1.0))
+
+
+def haircut_sharpe_ratio(
+    sharpe_obs: float,
+    n_trials: int,
+    sample_length: int,
+    *,
+    correction: str = "BHY",
+    ann_factor: float = 252.0,
+) -> dict[str, Any]:
+    """Compute the multiple-testing haircut on an observed Sharpe ratio.
+
+    Implements Harvey & Liu (2015) "Backtesting" §III : an observed
+    Sharpe is converted to a t-statistic, the t-statistic is turned
+    into a raw p-value, that p-value is adjusted for ``n_trials``
+    multiple tests via one of three schemes, and the adjusted p-value
+    is converted back to a haircut Sharpe.
+
+    Parameters
+    ----------
+    sharpe_obs
+        Observed (annualized) Sharpe ratio of the selected strategy.
+    n_trials
+        Number of independent strategies tested during selection.
+    sample_length
+        Number of annualized observations (e.g. years × ``ann_factor``
+        divided by ``ann_factor`` if input is already annual). Rule of
+        thumb for minute FX : pass the number of daily returns in the
+        test window — the formula is scale-invariant as long as
+        ``sharpe_obs`` and ``sample_length`` are expressed consistently.
+    correction
+        ``"Bonferroni"``, ``"Holm"``, or ``"BHY"``. Default ``"BHY"``
+        is recommended by Harvey-Liu as the most sensible for
+        correlated strategy universes.
+    ann_factor
+        Used only to back out the Sharpe from the haircut t-stat;
+        default 252 = daily. Pass 1.0 if the input Sharpe is already
+        "per-period".
+
+    Returns
+    -------
+    dict
+        ``{sharpe_obs, haircut_sharpe, raw_pvalue, adjusted_pvalue,
+        haircut_ratio, correction, n_trials, sample_length}``.
+        ``haircut_ratio`` is ``haircut_sharpe / sharpe_obs`` — the
+        fraction of the observed edge that survives the correction.
+    """
+    if sample_length <= 1:
+        raise ValueError(f"sample_length must be > 1, got {sample_length}")
+    if n_trials < 1:
+        raise ValueError(f"n_trials must be >= 1, got {n_trials}")
+    key = correction.upper()
+    if key not in {"BONFERRONI", "HOLM", "BHY"}:
+        raise ValueError(
+            f"correction must be 'Bonferroni', 'Holm', or 'BHY', got {correction!r}"
+        )
+
+    # Sharpe → t-stat : t = SR * sqrt(T - 1) (Lo 2002 iid form).
+    t_obs = float(sharpe_obs) * sqrt(float(sample_length - 1))
+    # One-sided raw p-value via the survival function for numerical
+    # stability at large t_obs (``1 - cdf`` saturates to 0).
+    p_raw = float(student_t.sf(t_obs, df=sample_length - 1))
+
+    if key == "BONFERRONI":
+        p_adj = _bonferroni_adjusted_pvalue(p_raw, n_trials)
+    elif key == "HOLM":
+        p_adj = _holm_adjusted_pvalue(p_raw, n_trials)
+    else:
+        p_adj = _bhy_adjusted_pvalue(p_raw, n_trials)
+
+    # Back out the haircut t-stat from the adjusted p-value via the
+    # inverse-survival-function, then the haircut Sharpe via the
+    # inverse Sharpe→t mapping. ``isf`` is numerically stable for
+    # very small adjusted p-values.
+    p_adj_eff = min(max(p_adj, 1e-300), 1.0 - 1e-16)
+    t_adj = float(student_t.isf(p_adj_eff, df=sample_length - 1))
+    haircut_sr = t_adj / sqrt(float(sample_length - 1))
+    haircut_ratio = haircut_sr / sharpe_obs if sharpe_obs != 0.0 else float("nan")
+
+    return {
+        "sharpe_obs": float(sharpe_obs),
+        "haircut_sharpe": float(haircut_sr),
+        "raw_pvalue": float(p_raw),
+        "adjusted_pvalue": float(p_adj),
+        "haircut_ratio": float(haircut_ratio),
+        "correction": key.title(),
+        "n_trials": int(n_trials),
+        "sample_length": int(sample_length),
+        "ann_factor": float(ann_factor),
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Minimum Backtest Length — Bailey, Borwein, Lopez de Prado, Zhu (2014)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def minimum_backtest_length(
+    sharpe_target: float,
+    n_trials: int,
+) -> float:
+    """Return the minimum backtest length (in years) needed to avoid
+    spurious Sharpe = ``sharpe_target`` under ``n_trials`` multiple tests.
+
+    Implements the Bailey et al. 2014 approximation
+    ``MinBTL ≈ (2 · ln N) / SR²`` (years, assuming annual Sharpe).
+    Useful as a *power calculation* before running large grid sweeps :
+    if the intended target Sharpe is 1.0 and you are about to try
+    1000 configurations, you need at least ``2·ln(1000) / 1 ≈ 13.8``
+    years of data to keep the false-discovery rate under control.
+
+    Parameters
+    ----------
+    sharpe_target
+        Target annualized Sharpe (must be > 0).
+    n_trials
+        Number of configurations tested.
+
+    Returns
+    -------
+    float
+        Minimum backtest length in years.
+    """
+    if sharpe_target <= 0:
+        raise ValueError(f"sharpe_target must be > 0, got {sharpe_target}")
+    if n_trials < 2:
+        return 0.0
+    return float((2.0 * log(float(n_trials))) / (sharpe_target ** 2))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Multiple-strategy tests via the `arch` package — SPA / StepM
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _require_arch():
+    """Lazy import of ``arch.bootstrap`` with a helpful error message."""
+    try:
+        import arch.bootstrap as ab  # type: ignore
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "The 'arch' package is required for SPA/StepM tests. "
+            "Install with: pip install arch>=6.0"
+        ) from exc
+    return ab
+
+
+def reality_check_via_arch(
+    returns_matrix: pd.DataFrame,
+    benchmark_returns: pd.Series,
+    *,
+    n_boot: int = 1000,
+    block_size: int = 50,
+    seed: int = 42,
+    studentize: bool = False,
+) -> dict[str, Any]:
+    """White Reality Check / Hansen SPA test via ``arch.bootstrap.SPA``.
+
+    Tests H₀ "the best strategy in ``returns_matrix`` does not
+    outperform the benchmark after accounting for data snooping".
+
+    Parameters
+    ----------
+    returns_matrix
+        ``(T, n_strategies)`` DataFrame of per-period returns.
+    benchmark_returns
+        ``(T,)`` benchmark per-period returns, aligned to
+        ``returns_matrix.index``.
+    n_boot
+        Number of stationary bootstrap replicates. ``arch`` uses the
+        Politis-Romano bootstrap internally.
+    block_size
+        Mean block length for the stationary bootstrap.
+    seed
+        Integer seed for reproducibility.
+    studentize
+        Forward to ``SPA(studentize=...)``. ``False`` gives the raw
+        Hansen statistic.
+
+    Returns
+    -------
+    dict
+        ``{pvalue_lower, pvalue_consistent, pvalue_upper, null_stat,
+        best_strategy_idx, best_strategy_label}``. The three p-values
+        correspond to Hansen's lower/consistent/upper bounds on the
+        reality check ; the ``consistent`` one is the usual default.
+    """
+    ab = _require_arch()
+    aligned = returns_matrix.dropna(how="any")
+    bench = benchmark_returns.reindex(aligned.index).ffill().fillna(0.0)
+    spa = ab.SPA(
+        benchmark=bench.to_numpy(dtype=np.float64),
+        models=aligned.to_numpy(dtype=np.float64),
+        block_size=int(block_size),
+        reps=int(n_boot),
+        bootstrap="stationary",
+        studentize=bool(studentize),
+        seed=int(seed),
+    )
+    spa.compute()
+    p_lower, p_consistent, p_upper = spa.pvalues
+    best_idx = int(np.argmax(aligned.mean(axis=0).values - bench.mean()))
+    return {
+        "pvalue_lower": float(p_lower),
+        "pvalue_consistent": float(p_consistent),
+        "pvalue_upper": float(p_upper),
+        "best_strategy_idx": best_idx,
+        "best_strategy_label": str(aligned.columns[best_idx]),
+        "n_strategies": int(aligned.shape[1]),
+        "n_obs": int(aligned.shape[0]),
+        "n_boot": int(n_boot),
+        "block_size": int(block_size),
+    }
+
+
+def stepm_romano_wolf(
+    returns_matrix: pd.DataFrame,
+    benchmark_returns: pd.Series,
+    *,
+    n_boot: int = 1000,
+    block_size: int = 50,
+    seed: int = 42,
+    alpha: float = 0.05,
+    studentize: bool = True,
+) -> dict[str, Any]:
+    """Romano-Wolf StepM test via ``arch.bootstrap.StepM``.
+
+    Returns the *set* of strategies that beat the benchmark with FWER
+    controlled at ``alpha``. Strongly preferred over SPA for
+    strategy-selection workflows because it identifies a set of
+    "winners" rather than returning a single p-value.
+
+    Returns
+    -------
+    dict
+        ``{significant_labels, significant_idx, n_significant, alpha,
+        n_strategies, n_obs}``.
+    """
+    ab = _require_arch()
+    aligned = returns_matrix.dropna(how="any")
+    bench = benchmark_returns.reindex(aligned.index).ffill().fillna(0.0)
+    stepm = ab.StepM(
+        benchmark=bench.to_numpy(dtype=np.float64),
+        models=aligned.to_numpy(dtype=np.float64),
+        size=float(alpha),
+        block_size=int(block_size),
+        reps=int(n_boot),
+        bootstrap="stationary",
+        studentize=bool(studentize),
+        seed=int(seed),
+    )
+    stepm.compute()
+    # StepM.superior_models holds the list of column indices that
+    # were found to dominate the benchmark.
+    sig_idx_raw = list(getattr(stepm, "superior_models", []) or [])
+    sig_idx: list[int] = []
+    sig_labels: list[str] = []
+    for item in sig_idx_raw:
+        try:
+            i = int(item)
+            sig_idx.append(i)
+            sig_labels.append(str(aligned.columns[i]))
+        except (TypeError, ValueError):
+            # arch may return labels (strings) when the input DataFrame
+            # preserved column names — keep them as-is.
+            sig_labels.append(str(item))
+    return {
+        "significant_labels": sig_labels,
+        "significant_idx": sig_idx,
+        "n_significant": len(sig_labels),
+        "alpha": float(alpha),
+        "n_strategies": int(aligned.shape[1]),
+        "n_obs": int(aligned.shape[0]),
+        "n_boot": int(n_boot),
+        "block_size": int(block_size),
+    }
+
+
 __all__ = [
     "probabilistic_sharpe_ratio",
     "expected_max_sharpe",
     "deflated_sharpe_ratio",
     "probability_of_backtest_overfitting",
     "dsr_for_sweep_top",
+    "haircut_sharpe_ratio",
+    "minimum_backtest_length",
+    "reality_check_via_arch",
+    "stepm_romano_wolf",
 ]

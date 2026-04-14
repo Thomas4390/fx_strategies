@@ -528,6 +528,8 @@ def analyze_portfolio(
     save_excel: bool = False,
     indicator: Any | None = None,
     max_plot_points: int = 20_000,
+    robustness: bool = False,
+    robustness_kwargs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Generate stats + equity + drawdowns + trades + tearsheet.
 
@@ -699,7 +701,55 @@ def analyze_portfolio(
         except Exception as e:
             print(f"  [analyze_portfolio] save_excel failed: {e}")
 
-    return {"stats": stats, "figures": figures, "html_path": html_path}
+    robust_report: dict[str, Any] | None = None
+    if robustness:
+        try:
+            from framework.robustness import (
+                build_robustness_figures,
+                print_robustness_report,
+                robustness_report,
+            )
+
+            rk = dict(robustness_kwargs or {})
+            robust_report = robustness_report(pf, **rk)
+            print_robustness_report(robust_report, name=name)
+
+            rk_returns = None
+            try:
+                r = pf.returns
+                rk_returns = r.iloc[:, 0] if isinstance(r, pd.DataFrame) else r
+                if isinstance(rk_returns, pd.Series):
+                    rk_returns = rk_returns.dropna()
+            except Exception:
+                rk_returns = None
+
+            robust_figs = build_robustness_figures(
+                robust_report, name=name, returns=rk_returns
+            )
+            for fig_name, fig in robust_figs.items():
+                figures[f"robustness_{fig_name}"] = fig
+
+            if output_dir is not None:
+                out = Path(output_dir)
+                stem = slugify_for_filename(name)
+                for fig_name, fig in robust_figs.items():
+                    fig_path = out / f"{stem}_robustness_{fig_name}.html"
+                    try:
+                        fig.write_html(str(fig_path))
+                    except Exception as e:
+                        print(
+                            f"  [analyze_portfolio] write robustness fig {fig_name} failed: {e}"
+                        )
+        except Exception as e:
+            print(f"  [analyze_portfolio] robustness section failed: {e}")
+            robust_report = None
+
+    return {
+        "stats": stats,
+        "figures": figures,
+        "html_path": html_path,
+        "robustness": robust_report,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════
