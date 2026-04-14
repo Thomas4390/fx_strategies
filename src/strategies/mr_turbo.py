@@ -489,6 +489,7 @@ if __name__ == "__main__":
         output_dir=OUTPUT_DIR,
         show_charts=SHOW_CHARTS,
         indicator=ind,
+        robustness=True,
     )
 
     # ─────────────────────────────────────────────────────────────────

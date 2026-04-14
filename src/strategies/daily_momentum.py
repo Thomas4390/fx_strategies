@@ -687,6 +687,7 @@ if __name__ == "__main__":
         output_dir=XS_OUTPUT_DIR,
         show_charts=SHOW_CHARTS,
         indicator=ind_xs,
+        robustness=True,
     )
 
     # 2) XS GRID
@@ -818,6 +819,7 @@ if __name__ == "__main__":
         output_dir=TS_OUTPUT_DIR,
         show_charts=SHOW_CHARTS,
         indicator=ind_ts,
+        robustness=True,
     )
 
     # 2) TS GRID

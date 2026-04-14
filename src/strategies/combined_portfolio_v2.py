@@ -876,6 +876,11 @@ if __name__ == "__main__":
         name="Combined Production Portfolio (MR 80% + TS3p 10% + RSI 10%)",
         output_dir=OUTPUT_DIR,
         show_charts=SHOW_CHARTS,
+        robustness=True,
+        # Synthetic portfolio built via ``returns_to_pf`` — bar-level
+        # bootstrap is the correct level of analysis, the trade-level
+        # Monte Carlo produces aberrant results on these constructions.
+        robustness_kwargs=dict(include_mc_trades=False),
     )
 
     # 2) BENCHMARK — full baseline/variant sweep comparison
