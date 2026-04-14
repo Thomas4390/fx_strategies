@@ -2,7 +2,7 @@
 
 The ``combined_portfolio.get_strategy_daily_returns`` helper runs four
 backtests and reloads the full EUR-USD minute history on every call —
-~60-90 seconds per sweep script. Phase 22 replaces each call with a
+~60-90 seconds per sweep script. This module replaces each call with a
 cached lookup :
 
 1. Read ``data/MANIFEST.json`` → ``combined_fingerprint``.
@@ -54,8 +54,9 @@ _CACHE_PARQUET = _CACHE_DIR / "strategy_daily_returns.parquet"
 _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 
 # Bump whenever the default parameters of a sleeve change. Current
-# state : Phase 18 canonical trio + legacy 4-pair TS + XS momentum.
-_SLEEVES_VERSION = "v1-phase18-canonical"
+# state : production trio (MR_Macro + TS_Momentum_3p + RSI_Daily_4p)
+# plus the legacy 4-pair TS and XS momentum kept for back-compat.
+_SLEEVES_VERSION = "v1-canonical"
 
 
 # ═══════════════════════════════════════════════════════════════════════

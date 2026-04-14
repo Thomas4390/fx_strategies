@@ -1,6 +1,6 @@
 """Tests for the Phase 18 one-liner helper in combined_portfolio_v2.
 
-``build_phase18_portfolio`` is a convenience wrapper around
+``build_production_portfolio`` is a convenience wrapper around
 ``build_combined_portfolio_v2`` that pins the recipe to the final
 Phase 18 recommended configuration. These tests verify the wrapper
 is bit-identical to a manual call with the same arguments, so the
@@ -34,9 +34,7 @@ def synthetic_phase18_rets() -> dict[str, pd.Series]:
     n = 2500
     idx = pd.bdate_range("2016-01-04", periods=n, freq="B")
     return {
-        "MR_Macro": pd.Series(
-            rng.normal(0.0004, 0.006, n), index=idx, name="MR_Macro"
-        ),
+        "MR_Macro": pd.Series(rng.normal(0.0004, 0.006, n), index=idx, name="MR_Macro"),
         "TS_Momentum_3p": pd.Series(
             rng.normal(0.0003, 0.009, n), index=idx, name="TS_Momentum_3p"
         ),
@@ -47,22 +45,22 @@ def synthetic_phase18_rets() -> dict[str, pd.Series]:
 
 
 def test_phase18_helper_matches_manual_call(synthetic_phase18_rets):
-    """build_phase18_portfolio must equal a manual build_combined_portfolio_v2 call."""
+    """build_production_portfolio must equal a manual build_combined_portfolio_v2 call."""
     from strategies.combined_portfolio_v2 import (
-        PHASE18_MAX_LEVERAGE,
-        PHASE18_TARGET_VOL,
-        PHASE18_WEIGHTS,
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+        PRODUCTION_WEIGHTS,
         build_combined_portfolio_v2,
-        build_phase18_portfolio,
+        build_production_portfolio,
     )
 
-    res_helper = build_phase18_portfolio(synthetic_phase18_rets)
+    res_helper = build_production_portfolio(synthetic_phase18_rets)
     res_manual = build_combined_portfolio_v2(
         synthetic_phase18_rets,
         allocation="custom",
-        custom_weights=PHASE18_WEIGHTS,
-        target_vol=PHASE18_TARGET_VOL,
-        max_leverage=PHASE18_MAX_LEVERAGE,
+        custom_weights=PRODUCTION_WEIGHTS,
+        target_vol=PRODUCTION_TARGET_VOL,
+        max_leverage=PRODUCTION_MAX_LEVERAGE,
         dd_cap_enabled=False,
     )
 
@@ -81,47 +79,45 @@ def test_phase18_helper_matches_manual_call(synthetic_phase18_rets):
 def test_phase18_helper_uses_canonical_weights(synthetic_phase18_rets):
     """The weights_ts returned by the helper must sum to 1 with the Phase 18 ratios."""
     from strategies.combined_portfolio_v2 import (
-        PHASE18_WEIGHTS,
-        build_phase18_portfolio,
+        PRODUCTION_WEIGHTS,
+        build_production_portfolio,
     )
 
-    res = build_phase18_portfolio(synthetic_phase18_rets)
+    res = build_production_portfolio(synthetic_phase18_rets)
     weights_ts = res["weights_ts"]
 
-    assert list(weights_ts.columns) == list(PHASE18_WEIGHTS.keys())
+    assert list(weights_ts.columns) == list(PRODUCTION_WEIGHTS.keys())
     # Every row sums to 1 (renormalization guard in compute_regime_adaptive_weights
     # is not triggered here because allocation='custom', but the static
     # branch of _compute_weights_ts normalizes too).
-    np.testing.assert_allclose(
-        weights_ts.sum(axis=1).values, 1.0, rtol=1e-12, atol=0
-    )
+    np.testing.assert_allclose(weights_ts.sum(axis=1).values, 1.0, rtol=1e-12, atol=0)
     # And each column's time-series mean matches the Phase 18 target share
     # exactly (static allocation → constant weights).
-    for strat, expected in PHASE18_WEIGHTS.items():
+    for strat, expected in PRODUCTION_WEIGHTS.items():
         assert abs(weights_ts[strat].mean() - expected) < 1e-12
 
 
 def test_phase18_helper_pins_custom_config_params(synthetic_phase18_rets):
     """Helper must record the canonical target_vol / max_leverage / dd_cap=False."""
     from strategies.combined_portfolio_v2 import (
-        PHASE18_MAX_LEVERAGE,
-        PHASE18_TARGET_VOL,
-        build_phase18_portfolio,
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+        build_production_portfolio,
     )
 
-    res = build_phase18_portfolio(synthetic_phase18_rets)
+    res = build_production_portfolio(synthetic_phase18_rets)
     assert res["allocation"] == "custom"
-    assert res["target_vol"] == PHASE18_TARGET_VOL
-    assert res["max_leverage"] == PHASE18_MAX_LEVERAGE
+    assert res["target_vol"] == PRODUCTION_TARGET_VOL
+    assert res["max_leverage"] == PRODUCTION_MAX_LEVERAGE
     assert res["dd_cap_enabled"] is False
 
 
 def test_phase18_helper_accepts_param_overrides(synthetic_phase18_rets):
     """Caller may override target_vol and max_leverage (e.g. for sensitivity sweeps)."""
-    from strategies.combined_portfolio_v2 import build_phase18_portfolio
+    from strategies.combined_portfolio_v2 import build_production_portfolio
 
-    res_default = build_phase18_portfolio(synthetic_phase18_rets)
-    res_override = build_phase18_portfolio(
+    res_default = build_production_portfolio(synthetic_phase18_rets)
+    res_override = build_production_portfolio(
         synthetic_phase18_rets, target_vol=0.20, max_leverage=8.0
     )
 

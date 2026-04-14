@@ -49,12 +49,12 @@ def generate_sleeve_tearsheets(
     """Build a vbt.Portfolio per sleeve and call analyze_portfolio on each."""
     from framework.pipeline_utils import analyze_portfolio
     from strategies.combined_portfolio import returns_to_pf
-    from strategies.combined_portfolio_v2 import PHASE18_WEIGHTS
+    from strategies.combined_portfolio_v2 import PRODUCTION_WEIGHTS
 
     sleeves_dir = OUTPUT_ROOT / "sleeves"
     sleeves_dir.mkdir(parents=True, exist_ok=True)
 
-    for sleeve_name in PHASE18_WEIGHTS:
+    for sleeve_name in PRODUCTION_WEIGHTS:
         rets = strat_rets[sleeve_name]
         pf = returns_to_pf(rets)
         out_dir = sleeves_dir / sleeve_name
@@ -185,9 +185,9 @@ def figure_bootstrap_scatter(
     """Bootstrap 500 paths, scatter CAGR × MaxDD with Phase 18 point overlay."""
     from stress_test_combined import block_bootstrap_indices
     from strategies.combined_portfolio_v2 import (
-        PHASE18_MAX_LEVERAGE,
-        PHASE18_TARGET_VOL,
-        PHASE18_WEIGHTS,
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+        PRODUCTION_WEIGHTS,
         build_combined_portfolio_v2,
     )
 
@@ -209,9 +209,9 @@ def figure_bootstrap_scatter(
             res = build_combined_portfolio_v2(
                 strat_resampled,
                 allocation="custom",
-                custom_weights=PHASE18_WEIGHTS,
-                target_vol=PHASE18_TARGET_VOL,
-                max_leverage=PHASE18_MAX_LEVERAGE,
+                custom_weights=PRODUCTION_WEIGHTS,
+                target_vol=PRODUCTION_TARGET_VOL,
+                max_leverage=PRODUCTION_MAX_LEVERAGE,
                 dd_cap_enabled=False,
             )
         except Exception:
@@ -251,12 +251,18 @@ def figure_bootstrap_scatter(
         )
     )
     fig.add_vline(
-        x=-35.0, line_dash="dash", line_color="red",
+        x=-35.0,
+        line_dash="dash",
+        line_color="red",
         annotation_text="−35% cap",
         annotation_position="top right",
     )
     fig.add_hrect(
-        y0=10.0, y1=15.0, fillcolor="green", opacity=0.1, line_width=0,
+        y0=10.0,
+        y1=15.0,
+        fillcolor="green",
+        opacity=0.1,
+        line_width=0,
         annotation_text="Target CAGR band",
         annotation_position="top left",
     )
@@ -366,16 +372,16 @@ def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
     prev_config = stress_test_combined.RECOMMENDED_CONFIG
     try:
         from strategies.combined_portfolio_v2 import (
-            PHASE18_MAX_LEVERAGE,
-            PHASE18_TARGET_VOL,
-            PHASE18_WEIGHTS,
+            PRODUCTION_MAX_LEVERAGE,
+            PRODUCTION_TARGET_VOL,
+            PRODUCTION_WEIGHTS,
         )
 
         stress_test_combined.RECOMMENDED_CONFIG = {
             "allocation": "custom",
-            "custom_weights": dict(PHASE18_WEIGHTS),
-            "target_vol": PHASE18_TARGET_VOL,
-            "max_leverage": PHASE18_MAX_LEVERAGE,
+            "custom_weights": dict(PRODUCTION_WEIGHTS),
+            "target_vol": PRODUCTION_TARGET_VOL,
+            "max_leverage": PRODUCTION_MAX_LEVERAGE,
             "dd_cap_enabled": False,
         }
         print("\n→ Running full stress test suite (this is slow)...")
@@ -384,9 +390,7 @@ def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
         )
         scenarios = stress_test_combined.run_scenario_replay(strat_rets_phase18)
         is_oos = stress_test_combined.run_is_oos_split(strat_rets_phase18)
-        sensitivity = stress_test_combined.run_parameter_sensitivity(
-            strat_rets_phase18
-        )
+        sensitivity = stress_test_combined.run_parameter_sensitivity(strat_rets_phase18)
     finally:
         stress_test_combined.RECOMMENDED_CONFIG = prev_config
 
@@ -394,7 +398,8 @@ def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
         "config": {
             "allocation": "custom",
             "weights": dict(stress_test_combined.RECOMMENDED_CONFIG["custom_weights"])
-            if False else {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10},
+            if False
+            else {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10},
             "target_vol": 0.28,
             "max_leverage": 12.0,
             "dd_cap_enabled": False,
@@ -414,8 +419,8 @@ def run_stress_test(strat_rets_phase18: dict[str, pd.Series]) -> dict[str, Any]:
 def main() -> None:
     from strategies.combined_portfolio import get_strategy_daily_returns
     from strategies.combined_portfolio_v2 import (
-        PHASE18_WEIGHTS,
-        build_phase18_portfolio,
+        PRODUCTION_WEIGHTS,
+        build_production_portfolio,
     )
     from utils import apply_vbt_settings
     import vectorbtpro as vbt
@@ -433,14 +438,14 @@ def main() -> None:
 
     print("\n[1/6] Loading strategy daily returns...")
     strat_rets = get_strategy_daily_returns()
-    strat_rets_phase18 = {k: strat_rets[k] for k in PHASE18_WEIGHTS}
+    strat_rets_phase18 = {k: strat_rets[k] for k in PRODUCTION_WEIGHTS}
 
     print("\n[2/6] Building Phase 18 combined portfolio...")
-    phase18_result = build_phase18_portfolio(strat_rets_phase18)
+    phase18_result = build_production_portfolio(strat_rets_phase18)
 
     print(
-        f"  IS metrics  : CAGR={phase18_result['annual_return']*100:.2f}% "
-        f"MaxDD={phase18_result['max_drawdown']*100:.2f}% "
+        f"  IS metrics  : CAGR={phase18_result['annual_return'] * 100:.2f}% "
+        f"MaxDD={phase18_result['max_drawdown'] * 100:.2f}% "
         f"Sharpe={phase18_result['sharpe']:.3f} "
         f"Pos years={phase18_result['wf_pos_years']}/7"
     )
@@ -466,8 +471,8 @@ def main() -> None:
     fig_scatter.write_html(str(figures_dir / "bootstrap_scatter.html"))
     print(
         f"  ✓ bootstrap_scatter.html "
-        f"(P5 CAGR {scatter_summary['cagr_p05']*100:.2f}%, "
-        f"P5 DD {scatter_summary['dd_p05']*100:.2f}%)"
+        f"(P5 CAGR {scatter_summary['cagr_p05'] * 100:.2f}%, "
+        f"P5 DD {scatter_summary['dd_p05'] * 100:.2f}%)"
     )
 
     fig_stack = figure_per_sleeve_monthly(phase18_result)
@@ -496,34 +501,34 @@ def main() -> None:
         fh.write("In-sample (2019 → 2025-04):\n")
         _is = is_oos["in_sample"]
         fh.write(
-            f"  CAGR   : {_is.get('cagr', 0)*100:.2f}%\n"
-            f"  Vol    : {_is.get('vol', 0)*100:.2f}%\n"
-            f"  MaxDD  : {_is.get('max_dd', 0)*100:.2f}%\n"
+            f"  CAGR   : {_is.get('cagr', 0) * 100:.2f}%\n"
+            f"  Vol    : {_is.get('vol', 0) * 100:.2f}%\n"
+            f"  MaxDD  : {_is.get('max_dd', 0) * 100:.2f}%\n"
             f"  Sharpe : {_is.get('sharpe', 0):.3f}\n"
             f"  Bars   : {_is.get('n', 0)}\n\n"
         )
         fh.write("Out-of-sample (2025-04 → 2026-04):\n")
         _oos = is_oos["out_of_sample"]
         fh.write(
-            f"  CAGR   : {_oos.get('cagr', 0)*100:.2f}%\n"
-            f"  Vol    : {_oos.get('vol', 0)*100:.2f}%\n"
-            f"  MaxDD  : {_oos.get('max_dd', 0)*100:.2f}%\n"
+            f"  CAGR   : {_oos.get('cagr', 0) * 100:.2f}%\n"
+            f"  Vol    : {_oos.get('vol', 0) * 100:.2f}%\n"
+            f"  MaxDD  : {_oos.get('max_dd', 0) * 100:.2f}%\n"
             f"  Sharpe : {_oos.get('sharpe', 0):.3f}\n"
             f"  Bars   : {_oos.get('n', 0)}\n\n"
         )
         fh.write("Bootstrap 1000 runs, block=20d:\n")
         fh.write(
-            f"  CAGR mean: {boot['cagr_mean']*100:.2f}%  "
-            f"P5 {boot['cagr_p05']*100:.2f}%  "
-            f"P50 {boot['cagr_p50']*100:.2f}%  "
-            f"P95 {boot['cagr_p95']*100:.2f}%\n"
-            f"  MaxDD mean: {boot['max_dd_mean']*100:.2f}%  "
-            f"P5 {boot['max_dd_p05']*100:.2f}%  "
-            f"P50 {boot['max_dd_p50']*100:.2f}%  "
-            f"P95 {boot['max_dd_p95']*100:.2f}%\n"
+            f"  CAGR mean: {boot['cagr_mean'] * 100:.2f}%  "
+            f"P5 {boot['cagr_p05'] * 100:.2f}%  "
+            f"P50 {boot['cagr_p50'] * 100:.2f}%  "
+            f"P95 {boot['cagr_p95'] * 100:.2f}%\n"
+            f"  MaxDD mean: {boot['max_dd_mean'] * 100:.2f}%  "
+            f"P5 {boot['max_dd_p05'] * 100:.2f}%  "
+            f"P50 {boot['max_dd_p50'] * 100:.2f}%  "
+            f"P95 {boot['max_dd_p95'] * 100:.2f}%\n"
             f"  Sharpe mean: {boot['sharpe_mean']:.3f}\n"
-            f"  Positive CAGR fraction: {boot['pos_fraction']*100:.1f}%\n"
-            f"  Target hit: {boot['target_hit_fraction']*100:.1f}%\n\n"
+            f"  Positive CAGR fraction: {boot['pos_fraction'] * 100:.1f}%\n"
+            f"  Target hit: {boot['target_hit_fraction'] * 100:.1f}%\n\n"
         )
         fh.write(
             f"WF per-year Sharpe: {is_oos.get('wf_sharpes', [])}\n"

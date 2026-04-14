@@ -2,10 +2,11 @@
 
 Layers a global vol-targeting + drawdown cap on top of the v1 combined
 portfolio and introduces a ``regime_adaptive`` allocation alongside the
-existing ``risk_parity / equal / mr_heavy`` modes. Designed for the
-CAGR 10-15% / Max DD < 35% objective set in Phase 13 of the research
-plan, where the bottleneck was identified as the absence of global
-leverage in v1 rather than the sub-strategy alphas themselves.
+existing ``risk_parity / equal / mr_heavy`` modes. Target objective :
+CAGR 10-15% / Max DD < 35%. The bottleneck identified in research was
+the absence of a global leverage layer in v1, not the sub-strategy
+alphas themselves — hence the vol-targeting + DD-cap architecture
+added here.
 
 Key pieces
 ----------
@@ -227,11 +228,11 @@ def build_aggressive_portfolio(
 
 
 # Regime weights are **hard-coded priors** derived from the 3-strategy
-# Phase 13 analysis (MR Macro Sharpe 1.07 dominates, XS and TS around
-# 0.70). The matrix tilts further toward MR Macro in high-vol regimes
-# (MR is intraday and thrives on chop) and gives momentum more room in
-# low-vol trending regimes. DO NOT grid-search these values — they are
-# priors, not hyperparameters.
+# sleeve study (MR Macro Sharpe ~1.07 dominates, XS and TS around ~0.70).
+# The matrix tilts further toward MR Macro in high-vol regimes (MR is
+# intraday and thrives on chop) and gives momentum more room in low-vol
+# trending regimes. DO NOT grid-search these values — they are priors,
+# not hyperparameters.
 DEFAULT_REGIME_WEIGHTS_3STRAT: dict[tuple[str, str], dict[str, float]] = {
     ("low", "up"): {"MR_Macro": 0.40, "XS_Momentum": 0.35, "TS_Momentum_RSI": 0.25},
     ("low", "down"): {"MR_Macro": 0.55, "XS_Momentum": 0.25, "TS_Momentum_RSI": 0.20},
@@ -317,9 +318,15 @@ def compute_regime_adaptive_weights(
     trend_score = compute_trend_score(common)
 
     # trend_label: "up" when >= threshold fraction of strats are trending,
-    # "down" otherwise. NaN trend_score (warmup) → "down" by convention.
-    trend_label = pd.Series("down", index=common.index, dtype=object)
+    # "down" otherwise. Warmup rows (NaN trend_score, ~63 bars) stay
+    # unlabeled so they fall through to the equal-weights fallback below.
+    # Previously these were forced to "down", which systematically biased
+    # the first ~2 months toward MR-heavy allocations — a design choice
+    # that leaked hidden MR exposure into IS walk-forward windows starting
+    # at the beginning of the sample. See audit finding H-3.
+    trend_label = pd.Series(np.nan, index=common.index, dtype=object)
     trend_label[trend_score >= trend_threshold] = "up"
+    trend_label[(trend_score < trend_threshold) & trend_score.notna()] = "down"
 
     weights_ts = pd.DataFrame(
         np.nan, index=common.index, columns=common.columns, dtype=float
@@ -332,13 +339,25 @@ def compute_regime_adaptive_weights(
             if strat in weights_ts.columns:
                 weights_ts.loc[mask, strat] = float(w)
 
-    # Rows with any NaN fall back to equal weights — happens only during
-    # warmup or if a regime weights dict omits some strategies.
+    # Two distinct NaN sources must be handled separately:
+    #   1. Rows where EVERY strategy is NaN → true warmup (no regime
+    #      assigned yet). These fall back to equal weights (1/N).
+    #   2. Rows where SOME strategies are NaN → the regime dict omits
+    #      those strategies (e.g. passed ``common`` columns that don't
+    #      appear in ``DEFAULT_REGIME_WEIGHTS_3STRAT``). These must get
+    #      0 weight — blindly filling with ``eq_w`` and renormalizing
+    #      silently distorts the user-supplied regime weights.
+    # Same class of bug as the one fixed in v1's ``_compute_weights_ts``
+    # where risk_parity weights summed to 1.40 on 2018-03-16.
     n_cols = len(common.columns)
     eq_w = 1.0 / n_cols
-    weights_ts = weights_ts.fillna(eq_w)
+    all_nan_mask = weights_ts.isna().all(axis=1)
+    weights_ts = weights_ts.fillna(0.0)
+    if all_nan_mask.any():
+        weights_ts.loc[all_nan_mask, :] = eq_w
 
-    # Renormalize (guard against user-supplied rows summing != 1).
+    # Final safety renormalization (user-supplied regime dicts may not
+    # sum exactly to 1 due to rounding).
     row_sum = weights_ts.sum(axis=1)
     weights_ts = weights_ts.div(row_sum.where(row_sum > 0, 1.0), axis=0)
 
@@ -405,7 +424,8 @@ def compute_dd_cap_scale(
         Override the default de-leveraging schedule. Both must be
         monotonically ordered and the same length. When None (default)
         the module-level ``_DD_BREAKPOINTS`` / ``_DD_LEV_SCALES``
-        schedule is used — the historical Phase 13 schedule.
+        schedule is used — the original hard de-leveraging schedule
+        (full leverage up to 10% DD, floor at 15% above 35% DD).
     """
     bps = np.asarray(breakpoints) if breakpoints is not None else _DD_BREAKPOINTS
     scl = np.asarray(scales) if scales is not None else _DD_LEV_SCALES
@@ -805,33 +825,6 @@ def run_full_benchmark_suite(
 
 # Back-compat alias for the historic public benchmark entry point.
 run_v2_benchmark = run_full_benchmark_suite
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# BACK-COMPAT ALIASES
-# ═══════════════════════════════════════════════════════════════════════
-# These keep the historic PHASE18_*/PHASE19_*/build_phase18/build_phase19
-# names alive so tests, scripts, and LaTeX report pseudocode that import
-# by the old names continue to work unchanged. Remove once all callers
-# (see git grep for PHASE18_WEIGHTS / build_phase19_balanced_portfolio)
-# have migrated to the semantic names.
-
-PHASE18_WEIGHTS = PRODUCTION_WEIGHTS
-PHASE18_TARGET_VOL = PRODUCTION_TARGET_VOL
-PHASE18_MAX_LEVERAGE = PRODUCTION_MAX_LEVERAGE
-build_phase18_portfolio = build_production_portfolio
-
-PHASE19_BALANCED_WEIGHTS = CONSERVATIVE_WEIGHTS
-PHASE19_BALANCED_TARGET_VOL = CONSERVATIVE_TARGET_VOL
-PHASE19_BALANCED_MAX_LEVERAGE = CONSERVATIVE_MAX_LEVERAGE
-PHASE19_BALANCED_DD_CAP_ENABLED = CONSERVATIVE_DD_CAP_ENABLED
-build_phase19_balanced_portfolio = build_conservative_portfolio
-
-PHASE19_AGGRESSIVE_WEIGHTS = AGGRESSIVE_WEIGHTS
-PHASE19_AGGRESSIVE_TARGET_VOL = AGGRESSIVE_TARGET_VOL
-PHASE19_AGGRESSIVE_MAX_LEVERAGE = AGGRESSIVE_MAX_LEVERAGE
-PHASE19_AGGRESSIVE_DD_CAP_ENABLED = AGGRESSIVE_DD_CAP_ENABLED
-build_phase19_aggressive_portfolio = build_aggressive_portfolio
 
 
 # ═══════════════════════════════════════════════════════════════════════

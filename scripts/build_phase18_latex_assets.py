@@ -8,7 +8,7 @@ Outputs:
     reports/phase18_latex/tables/*.tex    (booktabs snippets for \\input{})
 
 The script is read-only on the rest of the codebase — it calls
-``build_phase18_portfolio`` once, then the three underlying backtests
+``build_production_portfolio`` once, then the three underlying backtests
 (MR Macro, RSI Daily, TS Momentum episodes) to extract real trade
 examples, and writes self-contained LaTeX assets that the compilation
 pipeline consumes via ``\\input``.
@@ -143,12 +143,12 @@ def main() -> None:
     print("  Phase 18 LaTeX Assets Builder")
     print("═" * 70)
 
-    print("\n[1/5] Running build_phase18_portfolio() (this takes ~60s)...")
-    from strategies.combined_portfolio_v2 import build_phase18_portfolio
+    print("\n[1/5] Running build_production_portfolio() (this takes ~60s)...")
+    from strategies.combined_portfolio_v2 import build_production_portfolio
     from strategies.combined_portfolio import get_strategy_daily_returns
 
     strat_rets = get_strategy_daily_returns()
-    result = build_phase18_portfolio(strategy_returns=strat_rets)
+    result = build_production_portfolio(strategy_returns=strat_rets)
 
     result["component_returns"]
     port_rets: pd.Series = result["portfolio_returns"]
