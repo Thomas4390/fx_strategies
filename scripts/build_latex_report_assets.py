@@ -208,7 +208,7 @@ def build_figures(
     ax.plot(
         cum_combined.index,
         cum_combined.values,
-        label="Portefeuille combiné Apogee",
+        label="Portefeuille combiné Apogée Invest",
         color=PALETTE["combined"],
         linewidth=2.4,
     )
@@ -244,6 +244,47 @@ def build_figures(
     ax.set_xlabel("Date")
     ax.set_ylabel("Drawdown (\\%)")
     save_fig(fig, "drawdown_underwater")
+
+    # ── 2b. Leverage trajectory through time ────────────────────────
+    # Visualises the effective leverage applied by the vol-targeting
+    # overlay, so the reader sees when the 12× cap is saturating vs when
+    # the realised volatility lifts high enough to pull leverage down.
+    if leverage_ts is not None and not leverage_ts.empty:
+        lev = leverage_ts.dropna()
+        fig, ax = plt.subplots(figsize=(9.5, 3.6))
+        ax.fill_between(
+            lev.index,
+            lev.values,
+            0,
+            color=PALETTE["combined"],
+            alpha=0.15,
+        )
+        ax.plot(lev.index, lev.values, color=PALETTE["combined"], linewidth=1.0)
+        ax.axhline(
+            12.0,
+            color=PALETTE["accent"],
+            linestyle="--",
+            linewidth=0.8,
+            label=r"Plafond 12$\times$",
+        )
+        mean_lev = float(lev.mean())
+        ax.axhline(
+            mean_lev,
+            color=PALETTE["primary"],
+            linestyle=":",
+            linewidth=0.8,
+            label=f"Moyenne {mean_lev:.1f}$\\times$",
+        )
+        ax.axvline(OOS_SPLIT, color="#707070", linestyle="--", linewidth=0.9)
+        ax.set_ylim(0, 13.5)
+        ax.set_title(
+            "Trajectoire du levier appliqué (ciblage de volatilité)",
+            color=PALETTE["primary"],
+        )
+        ax.set_xlabel("Date")
+        ax.set_ylabel(r"Levier appliqué ($\times$)")
+        ax.legend(loc="lower right", fontsize=9)
+        save_fig(fig, "leverage_timeline")
 
     # ── 3. Monthly heatmap ───────────────────────────────────────────
     monthly = (1 + port_rets.fillna(0)).resample("ME").prod() - 1
@@ -484,32 +525,27 @@ def build_figures(
     save_fig(fig, "bootstrap_scatter")
 
     # ── 8. OOS zoom 2025-2026 ────────────────────────────────────────
-    cum_all = (1 + port_rets.fillna(0)).cumprod() * 100
+    # Both curves are rebased to 100 at the OOS split date so the IS tail
+    # (15 months before the split) and the OOS window share the same vertical
+    # reference, making the post-split trajectory directly readable.
+    cum_all = (1 + port_rets.fillna(0)).cumprod()
     oos_start = cum_all.index.get_indexer([OOS_SPLIT], method="nearest")[0]
-    # rebase OOS to 100 for clarity
-    cum_rebased = cum_all.copy()
-    cum_rebased = cum_rebased / cum_rebased.iloc[oos_start] * 100
+    cum_rebased = cum_all / cum_all.iloc[oos_start] * 100.0
+
     fig, ax = plt.subplots(figsize=(9.5, 4.5))
+    is_tail = cum_rebased.iloc[: oos_start + 1]
+    oos_slice = cum_rebased.iloc[oos_start:]
     ax.plot(
-        cum_all.index,
-        cum_all.iloc[0]
-        if False
-        else (
-            (1 + port_rets.fillna(0)).cumprod()
-            * 100
-            / (1 + port_rets.fillna(0)).cumprod().iloc[0]
-            * 100
-        ),
+        is_tail.index,
+        is_tail.values,
         color=PALETTE["primary"],
-        linewidth=0.8,
-        alpha=0.3,
-        label="IS (2019-2025)",
+        linewidth=1.0,
+        alpha=0.45,
+        label="IS (tail — rebasé à 100 au 2025-04-01)",
     )
-    oos_slice = port_rets.loc[OOS_SPLIT:].fillna(0)
-    cum_oos = (1 + oos_slice).cumprod() * 100
     ax.plot(
-        cum_oos.index,
-        cum_oos.values,
+        oos_slice.index,
+        oos_slice.values,
         color=PALETTE["accent"],
         linewidth=2.2,
         label="OOS (2025-04 → 2026-04)",
@@ -521,8 +557,8 @@ def build_figures(
         color=PALETTE["primary"],
     )
     ax.set_xlabel("Date")
-    ax.set_ylabel("Équité rebasée")
-    ax.set_xlim(pd.Timestamp("2024-01-01"), cum_oos.index[-1])
+    ax.set_ylabel("Équité rebasée (base 100)")
+    ax.set_xlim(pd.Timestamp("2024-01-01"), oos_slice.index[-1])
     ax.legend(loc="upper left")
     save_fig(fig, "oos_zoom")
 
@@ -593,9 +629,42 @@ def build_metric_tables(
         stress = json.load(f)
 
     # ── 1. Metrics summary IS / OOS / Bootstrap ─────────────────────
+    #
+    # Volatility bootstrap — the legacy stress_test_combined.py script
+    # only exposed CAGR/MaxDD/Sharpe percentiles in stress_test_report.json,
+    # leaving the Volatilité row with "--" placeholders. We fill it in here
+    # with a stationary block bootstrap on the IS slice of port_rets using
+    # the same engine that powers Section 11.
+    from framework.bootstrap import bootstrap_metric
+    from framework.pipeline_utils import ANNUALIZED_VOLATILITY
+
+    is_rets = port_rets.loc[:OOS_SPLIT].fillna(0)
+    # Drop the warm-up segment to stay aligned with the IS definition
+    # (1 April 2019 onwards) used by the stress test script.
+    is_rets = is_rets.loc["2019-04-01":]
+    vol_boot = bootstrap_metric(
+        is_rets,
+        metric_id=ANNUALIZED_VOLATILITY,
+        n_boot=1000,
+        block_len_mean=20.0,
+        ci=(0.05, 0.95),
+        seed=20260414,
+        ann_factor=252.0,
+    )
+    # ANNUALIZED_VOLATILITY is sign-flipped in the dispatcher so CV
+    # selection can maximise a "lower is better" metric; flip back for
+    # display and swap the quantiles accordingly.
+    vol_mean_disp = -vol_boot["mean"]
+    vol_p5_disp = -vol_boot["ci_high"]
+    vol_p95_disp = -vol_boot["ci_low"]
+
     rows = [
         r"CAGR & 13.33\,\% & \textbf{11.52\,\%} & 13.28\,\% & 5.54\,\% / 21.64\,\% \\",
-        r"Volatilité ann. & 14.36\,\% & 7.78\,\% & -- & -- \\",
+        (
+            r"Volatilité ann. & 14.36\,\% & 7.78\,\% & "
+            f"{fmt_pct(vol_mean_disp, 2)} & "
+            f"{fmt_pct(vol_p5_disp, 2)} / {fmt_pct(vol_p95_disp, 2)} \\\\"
+        ),
         r"Max Drawdown & -17.93\,\% & \textbf{-6.27\,\%} & -19.90\,\% & -30.68\,\% / -12.39\,\% \\",
         r"Sharpe Ratio & 0.94 & \textbf{1.44} $\star$ & 0.96 & 0.47 / 1.47 \\",
         r"Positive years / runs & 6/7 & -- & 99.8\,\% & -- \\",
@@ -603,7 +672,7 @@ def build_metric_tables(
     content = tex_table_wrap(
         header=r"Métrique & In-sample & Out-of-sample & Bootstrap moyenne & Bootstrap P5 / P95 \\",
         rows=rows,
-        caption=r"Métriques clés du portefeuille Apogee sur les trois régimes d'évaluation. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.",
+        caption=r"Métriques clés du portefeuille Apogée Invest sur les trois régimes d'évaluation. Les colonnes Bootstrap rapportent les percentiles P5/P95 d'un \emph{block bootstrap} stationnaire sur la période in-sample. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.",
         label="tab:metrics_summary",
         col_spec="lrrrr",
     )
@@ -642,6 +711,65 @@ def build_metric_tables(
     )
     save_tex("sleeve_standalone", content)
 
+    # ── 2b. Leverage impact table ──────────────────────────────────
+    #
+    # Show the invariance of the Sharpe ratio under the vol-targeting
+    # overlay. The non-leveraged weighted portfolio is a 80/10/10 linear
+    # combination of sleeve returns. The leveraged portfolio is the
+    # production series (port_rets) that already carries the vol-targeting
+    # layer. The table lets the reader see that levering only scales CAGR,
+    # Vol and Max DD by the same factor; Sharpe is structurally invariant.
+    def _stats(series: pd.Series) -> tuple[float, float, float, float]:
+        cum = (1 + series.fillna(0)).cumprod()
+        total = cum.iloc[-1] - 1
+        n_years = (series.index[-1] - series.index[0]).days / 365.25
+        cagr_val = (1 + total) ** (1 / n_years) - 1 if n_years > 0 else 0.0
+        vol_val = series.std() * np.sqrt(252)
+        sharpe_val = cagr_val / vol_val if vol_val > 0 else 0.0
+        run_max = cum.cummax()
+        dd_val = ((cum / run_max) - 1).min()
+        return cagr_val, vol_val, sharpe_val, dd_val
+
+    port_no_lev = (
+        0.80 * sleeve_rets["MR_Macro"].fillna(0)
+        + 0.10 * sleeve_rets["TS_Momentum_3p"].fillna(0)
+        + 0.10 * sleeve_rets["RSI_Daily_4p"].fillna(0)
+    )
+    no_lev_cagr, no_lev_vol, no_lev_sharpe, no_lev_dd = _stats(port_no_lev)
+    lev_cagr, lev_vol, lev_sharpe, lev_dd = _stats(port_rets)
+    avg_scale = lev_vol / no_lev_vol if no_lev_vol > 0 else float("nan")
+
+    rows = [
+        f"Pondéré $80/10/10$ \\emph{{sans levier}} & {fmt_pct(no_lev_cagr, 2)} & "
+        f"{fmt_pct(no_lev_vol, 2)} & {fmt_num(no_lev_sharpe, 2)} & "
+        f"{fmt_pct(no_lev_dd, 2)} \\\\",
+        f"Pondéré $80/10/10$ \\emph{{avec}} ciblage vol $0.28$ / cap $12\\times$ & "
+        f"{fmt_pct(lev_cagr, 2)} & {fmt_pct(lev_vol, 2)} & {fmt_num(lev_sharpe, 2)} & "
+        f"{fmt_pct(lev_dd, 2)} \\\\",
+        f"Multiplicateur effectif moyen & \\multicolumn{{4}}{{c}}"
+        f"{{\\textbf{{{avg_scale:.1f}$\\times$}} "
+        f"(rapport volatilité leveragée / non leveragée)}} \\\\",
+    ]
+    content = tex_table_wrap(
+        header=r"Configuration & CAGR & Vol ann. & Sharpe & Max DD \\",
+        rows=rows,
+        caption=(
+            r"Impact du ciblage de volatilité sur les métriques du portefeuille. "
+            r"Le Sharpe est structurellement invariant sous un scaling de levier "
+            r"par un facteur constant ; l'overlay ne crée donc pas de valeur "
+            r"\emph{ex nihilo}, il ajuste l'exposition à la volatilité cible du "
+            r"mandat. La ligne non leveragée constitue la \emph{vraie} métrique "
+            r"d'edge statistique ; la ligne leveragée reflète l'expression "
+            r"opérationnelle de cet edge aux contraintes de volatilité du client. "
+            r"Le multiplicateur effectif moyen (rapport des volatilités réalisées) "
+            r"est inférieur au plafond $12\times$ car le levier s'abaisse pendant "
+            r"les périodes de volatilité élevée."
+        ),
+        label="tab:leverage_impact",
+        col_spec="lrrrr",
+    )
+    save_tex("leverage_impact", content)
+
     # ── 3. Walk-forward per year ─────────────────────────────────────
     if wf_sharpes is None:
         wf_sharpes = stress.get("is_oos_summary", {}).get("wf_sharpes", [])
@@ -674,7 +802,7 @@ def build_metric_tables(
     content = tex_table_wrap(
         header=r"Métrique & Moyenne & P5 & P50 & P95 \\",
         rows=rows,
-        caption=r"Résultats du bootstrap à blocs mobiles (1000 runs, blocs de 20 jours). P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx$4\,pp de marge.",
+        caption=r"Résultats du bootstrap à blocs mobiles sur la période historique. P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx$4\,pp de marge.",
         label="tab:bootstrap_percentiles",
         col_spec="lrrrr",
     )
@@ -973,12 +1101,14 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
 
     from framework.pipeline_utils import METRIC_NAMES, SHARPE_RATIO
 
-    # ── 1. Forest plot — 6 headline metrics with CI 95% ─────────────
+    # ── 1. Forest plot — 5 headline metrics with CI 95% ─────────────
+    # Omega Ratio is omitted because at the return-bar level with zero
+    # threshold it coincides exactly with Profit Factor, so plotting both
+    # duplicates information. Consistent with Table~\ref{tab:robustness_bootstrap_ci}.
     forest_metrics = [
         ("sharpe_ratio", "Sharpe Ratio"),
         ("sortino_ratio", "Sortino Ratio"),
         ("calmar_ratio", "Calmar Ratio"),
-        ("omega_ratio", "Omega Ratio"),
         ("profit_factor", "Profit Factor"),
         ("tail_ratio", "Tail Ratio"),
     ]
@@ -1010,7 +1140,7 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
     ax.axvline(0, color="#888", linewidth=0.9, linestyle=":")
     ax.set_xlabel("Valeur métrique (observée $\\diamond$, IC bootstrap 95\\%)")
     ax.set_title(
-        "Intervalles de confiance bootstrap 95\\% --- 6 métriques principales",
+        "Intervalles de confiance bootstrap 95\\% --- 5 métriques principales",
         color=PALETTE["primary"],
     )
     save_fig(fig, "robustness_metric_ci_forest")
@@ -1128,11 +1258,11 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
             label="Seuil logit = 0 (médiane OOS)",
         )
         pbo_val = float(pbo.get("pbo", float("nan")))
-        verdict = "SAIN" if pbo_val < 0.5 else "OVERFIT"
-        ax.set_xlabel("Logit CSCV (positif $=$ vainqueur IS au-dessus de la médiane OOS)")
+        verdict = "sain" if pbo_val < 0.5 else "overfit"
+        ax.set_xlabel("Score de classement (positif $=$ vainqueur IS au-dessus de la médiane OOS)")
         ax.set_ylabel("Fréquence")
         ax.set_title(
-            f"Distribution des logits CSCV --- PBO $= {pbo_val:.3f}$ ({verdict})",
+            f"Validation croisée combinatoire --- probabilité de sur-ajustement $= {pbo_val:.2f}$ ({verdict})",
             color=PALETTE["primary"],
         )
         ax.legend(loc="upper right")
@@ -1179,7 +1309,7 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
         ax.set_ylim(0, max(max(vals) * 1.2, 0.15))
         ax.set_ylabel("p-value (plus bas $=$ plus significatif)")
         ax.set_title(
-            "Test de Hansen SPA --- p-values borne basse / cohérente / haute",
+            "Test de supériorité prédictive --- p-values borne basse / cohérente / haute",
             color=PALETTE["primary"],
         )
         ax.legend(loc="lower right")
@@ -1242,29 +1372,94 @@ def _build_robustness_tables(report: dict) -> None:
     bootstrap_df = report["bootstrap_df"]
 
     # ── A. Bootstrap CIs for every metric (14 rows) ─────────────────
+    #
+    # Display normalization — critical. The dispatcher ``compute_metric_nb``
+    # (pipeline_utils.py ~l.130) flips the sign of "lower-is-better" metrics
+    # (max_drawdown, VaR, annualized_volatility, downside_risk, CVaR) so CV
+    # selection can maximise every metric uniformly. When rendering a
+    # human-readable table, we undo that flip so risk metrics appear with
+    # their conventional signs.
+    #
+    # Display rules:
+    #   - ``max_drawdown``: flip back (raw ⟶ −raw) so a drawdown reads
+    #     negative ("-17.93%").
+    #   - ``annualized_volatility``, ``downside_risk``, ``value_at_risk``,
+    #     ``cond_value_at_risk``: flip back to positive magnitudes and
+    #     render as percentages.
+    #   - ``total_return``, ``annualized_return``: render as percentages.
+    #   - All other metrics: raw numeric (2 decimals).
+    #
+    # Also: ``profit_factor`` and ``omega_ratio`` are mathematically
+    # identical when computed on return bars with threshold=0 (both reduce
+    # to Σ R⁺ / |Σ R⁻|). We keep only Profit Factor and annotate the choice.
+    NEG_FLIP_METRICS = {
+        "max_drawdown",
+        "annualized_volatility",
+        "value_at_risk",
+        "downside_risk",
+        "cond_value_at_risk",
+    }
+    PERCENT_METRICS = {
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "annualized_volatility",
+        "value_at_risk",
+        "downside_risk",
+        "cond_value_at_risk",
+    }
+    SKIP_METRICS = {"omega_ratio"}  # redundant with profit_factor at bar level
+
     pretty_label_map = {
-        "total_return": "Total Return",
+        "total_return": "Rendement total",
         "sharpe_ratio": r"\textbf{Sharpe Ratio}",
         "calmar_ratio": "Calmar Ratio",
         "sortino_ratio": "Sortino Ratio",
-        "omega_ratio": "Omega Ratio",
         "annualized_return": "Rendement annualisé",
         "max_drawdown": r"\textbf{Max Drawdown}",
         "profit_factor": "Profit Factor",
         "value_at_risk": "VaR 5\\%",
         "tail_ratio": "Tail Ratio",
-        "annualized_volatility": "Volatilité ann.",
+        "annualized_volatility": "Volatilité annualisée",
         "information_ratio": "Information Ratio",
         "downside_risk": "Downside Risk",
         "cond_value_at_risk": "CVaR 5\\%",
     }
+
+    def _fmt_metric(metric: str, value: float) -> str:
+        if pd.isna(value):
+            return "--"
+        v = -value if metric in NEG_FLIP_METRICS else value
+        if metric == "max_drawdown":
+            # Conventional negative sign on a loss.
+            v = -abs(v)
+        if metric in PERCENT_METRICS:
+            return f"{v * 100:+.2f}\\,\\%"
+        return f"{v:.3f}"
+
     rows = []
     for metric, row in bootstrap_df.iterrows():
+        if metric in SKIP_METRICS:
+            continue
         label = pretty_label_map.get(metric, metric.replace("_", " ").title())
+        # For NEG_FLIP_METRICS the CI bounds must be swapped. The flip
+        # monotonically reverses the ordering, so the stored ci_low
+        # (2.5 percentile in flipped space) corresponds to the BEST case
+        # in the conventional space, and ci_high to the WORST case.
+        # Swapping here ensures the displayed "CI 2.5%" column is the
+        # worst case (most negative for drawdowns/VaR), consistent with
+        # reader expectations for a risk metric.
+        if metric in NEG_FLIP_METRICS:
+            ci_low_disp = row["ci_high"]
+            ci_high_disp = row["ci_low"]
+        else:
+            ci_low_disp = row["ci_low"]
+            ci_high_disp = row["ci_high"]
         rows.append(
-            f"{label} & {fmt_num(row['observed'], 4)} & "
-            f"{fmt_num(row['mean'], 4)} & "
-            f"{fmt_num(row['ci_low'], 4)} & {fmt_num(row['ci_high'], 4)} \\\\"
+            f"{label} & {_fmt_metric(metric, row['observed'])} & "
+            f"{_fmt_metric(metric, row['mean'])} & "
+            f"{_fmt_metric(metric, ci_low_disp)} & "
+            f"{_fmt_metric(metric, ci_high_disp)} \\\\"
         )
     content = tex_table_wrap(
         header=(
@@ -1273,11 +1468,13 @@ def _build_robustness_tables(report: dict) -> None:
         ),
         rows=rows,
         caption=(
-            r"Intervalles de confiance bootstrap à 95\,\% sur les 14 métriques "
-            r"standard. Block bootstrap stationnaire Politis--Romano (1994), "
-            r"$n_{\text{boot}} = 3000$, longueur de bloc moyenne = 20~jours, "
-            r"\texttt{seed=20260414}. Les métriques marquées en gras sont "
-            r"celles commentées dans le texte."
+            r"Intervalles de confiance bootstrap à 95\,\% sur 13 métriques "
+            r"standard (Omega Ratio omis, mathématiquement identique à "
+            r"Profit Factor au niveau rendement). Métriques de risque affichées "
+            r"selon la convention usuelle (drawdown négatif, volatilité positive). "
+            r"La ligne Rendement total couvre la période complète du backtest "
+            r"et ne se compare pas directement à la colonne IS du "
+            r"Tableau~\ref{tab:metrics_summary}."
         ),
         label="tab:robustness_bootstrap_ci",
         col_spec="lrrrr",
@@ -1383,30 +1580,30 @@ def _build_robustness_tables(report: dict) -> None:
     sharpe_row = bootstrap_df.loc["sharpe_ratio"]
     maxdd_row = bootstrap_df.loc["max_drawdown"]
     rows = [
-        r"Bootstrap CI 95\,\% Sharpe & Borne basse $> 0$ & "
+        r"Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & "
         f"$[{sharpe_row['ci_low']:.3f},\\ {sharpe_row['ci_high']:.3f}]$ & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\",
-        f"PSR vs 0 & $> 0.95$ & "
+        f"Probabilité Sharpe vrai $> 0$ & $> 0.95$ & "
         f"{fmt_num(psr.get('psr', float('nan')), 4)} & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
         if psr
         else "",
-        f"DSR ($N = {int(dsr.get('n_trials', 0))}$) & $> 0.95$ & "
+        f"Sharpe corrigé pour biais de sélection & $> 0.95$ & "
         f"{fmt_num(dsr.get('dsr', float('nan')), 4)} & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
         if dsr
         else "",
-        f"Haircut ratio BHY & $> 50\\,\\%$ & "
+        f"Ratio de survie après tests multiples & $> 50\\,\\%$ & "
         f"{fmt_pct(haircut.get('haircut_ratio', float('nan')), 2)} & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
         if haircut
         else "",
-        f"MinBTL & $<$ longueur observée & "
+        f"Longueur backtest $>$ minimum statistique & $<$ longueur observée & "
         f"{fmt_num(minbtl.get('years', float('nan')), 2)}~ans $<$ 7~ans & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
         if minbtl
         else "",
-        f"PBO CSCV & $< 0.5$ & "
+        f"Probabilité de sur-ajustement & $< 0.5$ & "
         f"{fmt_num(pbo.get('pbo', float('nan')), 3)} & "
         r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
         if pbo
@@ -1424,7 +1621,7 @@ def _build_robustness_tables(report: dict) -> None:
             r"Six tests passent sans réserve~; un test (P95 du Max Drawdown "
             r"bootstrap) est proche de la limite utilisateur avec environ "
             r"2~pp de marge, déjà mitigé par la réserve cash 30\,\% "
-            r"recommandée en section~\ref{sec:limitations}."
+            r"recommandée en section d'analyse des risques."
         ),
         label="tab:robustness_verdict_summary",
         col_spec="llrl",

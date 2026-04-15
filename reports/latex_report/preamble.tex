@@ -24,6 +24,17 @@
 ]
 \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
 
+% Letter-spaced sans-serif family for wordmarks and small-cap labels on
+% the cover pages. Uses fontspec's LetterSpace feature (XeLaTeX native).
+\newfontfamily\interspaced{Inter}[
+  Scale=MatchLowercase,
+  Extension=.otf,
+  Path=/usr/share/fonts/opentype/inter/,
+  UprightFont=Inter-Regular,
+  BoldFont=Inter-Bold,
+  LetterSpace=18.0
+]
+
 % ── Geometry ──────────────────────────────────────────────────────
 \usepackage[
   a4paper,
@@ -51,11 +62,16 @@
 \definecolor{softYellow}{HTML}{FCF4D9}
 \definecolor{softGreen}{HTML}{E3F2E6}
 
+% Cover page — Apogée Invest brand gold (matches the client logo)
+\definecolor{apogeeGold}{HTML}{B08D3C}
+\definecolor{apogeeGoldLight}{HTML}{D4B36A}
+\definecolor{apogeeInk}{HTML}{1C1C1C}
+
 % ── Core packages ─────────────────────────────────────────────────
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
-\graphicspath{{figures/}}
+\graphicspath{{figures/}{../../docs/logo/}}
 \usepackage{float}
 \usepackage{booktabs}
 \usepackage{longtable}

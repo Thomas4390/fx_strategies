@@ -5,78 +5,99 @@
 \begin{document}
 
 % ═══════════════════════════════════════════════════════════════════
-%  PAGE DE TITRE
+%  PAGE DE TITRE — Apogée Invest
 % ═══════════════════════════════════════════════════════════════════
 \begin{titlepage}
 \thispagestyle{empty}
 \centering
 
-% Coloured header bar
-\vspace*{-1.5cm}
-\noindent\colorbox{primary}{%
-  \makebox[\textwidth][l]{%
-    \parbox{0.95\textwidth}{%
-      \vspace{1.2cm}
-      \color{white}\sffamily\raggedright
-      {\Large\bfseries RAPPORT D'INVESTISSEMENT}\\[0.3cm]
-      {\small\textcolor{lightGrey}{Stratégie quantitative FX diversifiée}}
-      \vspace{1.2cm}
-    }
-  }
-}
+% Top gold accent band — brand signature
+\vspace*{-1.8cm}
+\noindent{\color{apogeeGold}\rule{\textwidth}{2.5pt}}
 
-\vfill
+\vspace{1.0cm}
 
+% Logo Apogée Invest
+\includegraphics[width=4.2cm]{apogee_invest_logo}
+
+\vspace{0.25cm}
+
+% Client wordmark — letter-spaced small caps
+{\interspaced\color{apogeeGold}\large\bfseries APOGÉE INVEST\par}
+
+\vspace{0.3cm}
+
+% Thin gold rule
+{\color{apogeeGold}\rule{0.32\textwidth}{0.6pt}}
+
+\vspace{1.5cm}
+
+% Category label
+{\interspaced\color{slateGrey}\small RAPPORT D'INVESTISSEMENT\par}
+
+\vspace{0.7cm}
+
+% Main title
 {\sffamily\color{primary}\Huge\bfseries
-Stratégie FX\\[0.2cm]
+Stratégie FX\\[0.15cm]
 Tri-Signaux
 \par}
-\vspace{0.8cm}
+
+\vspace{0.6cm}
+
+% Subtitle
 {\sffamily\color{accent}\LARGE\itshape
 Un portefeuille à trois moteurs de rendement orthogonaux
 \par}
 
-\vspace{1.5cm}
+\vspace{0.8cm}
 
-\begin{minipage}{0.9\textwidth}
+\begin{minipage}{0.85\textwidth}
 \centering
-\color{slateGrey}\sffamily\large
-Mandat d'investissement, architecture, résultats\\[0.3cm]
-\small Backtest 2019--2026, validation hors échantillon, tests de résistance,\\
+\color{slateGrey}\sffamily\footnotesize
+Backtest 2019--2026, validation hors échantillon, tests de résistance,\\
 rejeu de scénarios historiques et conditions de déploiement
 \end{minipage}
 
 \vfill
 
-{\color{accent}\rule{0.6\textwidth}{1.5pt}}\\[0.6cm]
+% Metadata block
+{\color{apogeeGold}\rule{0.45\textwidth}{0.5pt}}\\[0.5cm]
 
 \begin{tabular}{rl}
   \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.2em]
-  \color{slateGrey}\sffamily Destinataire & \textbf{Client (confidentiel)} \\[0.2em]
-  \color{slateGrey}\sffamily Date & \textbf{13 avril 2026} \\[0.2em]
+  \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.2em]
+  \color{slateGrey}\sffamily Date & \textbf{14 avril 2026} \\[0.2em]
   \color{slateGrey}\sffamily Statut & \textbf{Prêt pour déploiement contrôlé} \\[0.2em]
   \color{slateGrey}\sffamily Version & \textbf{1.0} \\
 \end{tabular}
 
+\vspace{0.5cm}
+
+{\color{apogeeGold}\rule{0.45\textwidth}{0.5pt}}
+
 \vfill
 
+% Confidentiality block
 \noindent\colorbox{lightGrey}{%
   \makebox[\textwidth][l]{%
     \parbox{0.95\textwidth}{%
-      \vspace{0.4cm}
+      \vspace{0.3cm}
       \footnotesize\color{slateGrey}\sffamily
       \textbf{Confidentiel.} Ce document présente une stratégie quantitative
-      sur le marché des changes à l'intention exclusive de son destinataire.
-      Les performances indiquées sont issues de \emph{backtests} sur données
+      sur le marché des changes à l'intention exclusive d'Apogée Invest. Les
+      performances indiquées sont issues de \emph{backtests} sur données
       historiques et de simulations de résistance. Les performances passées
-      ne préjugent pas des performances futures. Les rendements réels
-      observés en environnement de production peuvent différer
-      substantiellement en raison des coûts de transaction, du \emph{slippage},
-      des contraintes de liquidité et des régimes de marché non anticipés.
-      \vspace{0.4cm}
+      ne préjugent pas des performances futures.
+      \vspace{0.3cm}
     }
   }
 }
+
+\vspace{0.3cm}
+
+% Bottom gold accent band — symmetric to top
+\noindent{\color{apogeeGold}\rule{\textwidth}{2.5pt}}
 
 \end{titlepage}
 
@@ -121,6 +142,5 @@ rejeu de scénarios historiques et conditions de déploiement
 \appendix
 \input{sections/appendix_a_inventory.tex}
 \input{sections/appendix_b_trade_walkthrough.tex}
-\input{sections/appendix_c_robustness_methodology.tex}
 
 \end{document}

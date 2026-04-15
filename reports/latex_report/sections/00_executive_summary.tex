@@ -12,23 +12,23 @@ L'objectif poursuivi est de générer un rendement annualisé compris entre 10\,
 \end{insightbox}
 
 \begin{insightbox}
-\textbf{Robustesse statistique validée par sept tests avancés.} Le Sharpe observé ($0.97$) dépasse de plus de trois fois l'espérance du maximum sous l'hypothèse nulle (\textit{Deflated Sharpe Ratio} $= 1.000$). La \textit{Probability of Backtest Overfitting} calculée via validation croisée combinatoire (CSCV) est de $30.5\,\%$, bien sous le seuil de danger de $50\,\%$. Après correction Benjamini--Hochberg--Yekutieli pour tests multiples, le Sharpe effectif reste à $0.84$ (ratio de survie $87\,\%$). Les intervalles de confiance bootstrap à 95\,\% sur les 14~métriques standard, les tests de Hansen SPA et Romano--Wolf StepM sur les composantes individuelles, ainsi que l'analyse de stabilité temporelle multi-métrique sont détaillés en section~\ref{sec:advanced_robustness}.
+\textbf{Robustesse statistique validée par sept tests avancés.} Le Sharpe observé ($0.97$ sur l'ensemble IS + OOS, $0.94$ sur l'IS seul) dépasse de plus de trois fois l'espérance du maximum sous l'hypothèse nulle d'absence d'\emph{edge}. La probabilité de surajustement calculée par validation croisée combinatoire est de $30.5\,\%$, bien sous le seuil de danger de $50\,\%$. Après correction pour tests multiples, le Sharpe effectif retombe seulement de $0.97$ à $0.84$ (ratio de survie $87\,\%$). Les intervalles de confiance bootstrap sur les métriques standard et l'analyse de stabilité temporelle sont détaillés en section~\ref{sec:advanced_robustness}.
 \end{insightbox}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{equity_combined_logscale.png}
-\caption{Courbes d'équité cumulative du portefeuille combiné et de ses trois moteurs individuels, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. La ligne verticale pointillée marque le début de la fenêtre hors échantillon (1\textsuperscript{er}~avril 2025).}
+\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération de portefeuille ni ciblage de volatilité} (chacun à sa volatilité intrinsèque naturelle). La courbe épaisse bordeaux est le portefeuille combiné Apogée Invest après application des poids $80/10/10$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 28\,\%$, plafond de levier $12\times$). La différence de niveau entre les courbes fines et la courbe combinée reflète donc l'amplification par le levier, pas une quelconque supériorité intrinsèque du combiné. La ligne verticale pointillée marque le début de la fenêtre hors échantillon (1\textsuperscript{er}~avril 2025).}
 \end{figure}
 
-\subsection*{Quatre conclusions pour la décision}
+\subsection*{Cinq conclusions pour la décision}
 
 \begin{enumerate}
 \item \textbf{Sharpe hors échantillon supérieur à l'in-sample} (1.44 contre 0.94). L'amélioration hors période de conception valide la robustesse de la structure multi-moteurs.
 \item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, strictement sous la contrainte de 35\,\% retenue pour le mandat, avec environ 4~pp de marge.
 \item \textbf{Six années positives sur sept} en validation par fenêtres annuelles~--- seule 2019 reste marginalement négative dans un régime de fin de cycle défavorable à l'ensemble des sleeves.
 \item \textbf{Tous les garde-fous méthodologiques sont franchis}~: tests in-sample, hors échantillon, bootstrap de résistance, et rejeu de scénarios historiques.
-\item \textbf{Sept tests de robustesse statistique avancés validés} (DSR, PBO via CSCV, Haircut Sharpe BHY, MinBTL, Hansen SPA, Romano--Wolf StepM, stabilité temporelle multi-métrique) --- voir section~\ref{sec:advanced_robustness} et appendice~\ref{app:robustness_methodology}.
+\item \textbf{Sept tests de robustesse statistique avancés validés}~: intervalles de confiance bootstrap, corrections pour biais de sélection et tests multiples, mesure de sur-ajustement par validation croisée combinatoire, et stabilité temporelle des métriques --- voir section~\ref{sec:advanced_robustness}.
 \end{enumerate}
 
 Les sections suivantes développent le mandat, l'architecture du portefeuille, les trois moteurs de rendement, les résultats complets et les conditions de déploiement.

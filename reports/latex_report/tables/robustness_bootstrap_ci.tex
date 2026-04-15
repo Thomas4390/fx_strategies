@@ -1,25 +1,24 @@
 \begin{table}[H]
 \centering
-\caption{Intervalles de confiance bootstrap à 95\,\% sur les 14 métriques standard. Block bootstrap stationnaire Politis--Romano (1994), $n_{\text{boot}} = 3000$, longueur de bloc moyenne = 20~jours, \texttt{seed=20260414}. Les métriques marquées en gras sont celles commentées dans le texte.}
+\caption{Intervalles de confiance bootstrap à 95\,\% sur 13 métriques standard (Omega Ratio omis, mathématiquement identique à Profit Factor au niveau rendement). Métriques de risque affichées selon la convention usuelle (drawdown négatif, volatilité positive). La ligne Rendement total couvre la période complète du backtest et ne se compare pas directement à la colonne IS du Tableau~\ref{tab:metrics_summary}.}
 \label{tab:robustness_bootstrap_ci}
 \begin{tabular}{lrrrr}
 \toprule
 Métrique & Observée & Moy. bootstrap & CI 2.5\,\% & CI 97.5\,\% \\
 \midrule
-Total Return & 2.5156 & 2.8818 & 0.4947 & 7.8079 \\
-\textbf{Sharpe Ratio} & 0.9659 & 0.9611 & 0.3653 & 1.5455 \\
-Calmar Ratio & 0.7303 & 0.7717 & 0.1499 & 1.8223 \\
-Sortino Ratio & 1.5889 & 1.6224 & 0.5416 & 2.9431 \\
-Omega Ratio & 1.3092 & 1.3130 & 1.1020 & 1.5630 \\
-Rendement annualisé & 0.1310 & 0.1317 & 0.0401 & 0.2374 \\
-\textbf{Max Drawdown} & 0.1793 & 0.1934 & 0.1144 & 0.3258 \\
-Profit Factor & 1.3092 & 1.3130 & 1.1020 & 1.5630 \\
-VaR 5\% & 0.0071 & 0.0071 & 0.0062 & 0.0079 \\
-Tail Ratio & 1.1393 & 1.1613 & 0.9977 & 1.4037 \\
-Volatilité ann. & -0.1371 & -0.1369 & -0.1566 & -0.1179 \\
-Information Ratio & 0.0608 & 0.0605 & 0.0230 & 0.0974 \\
-Downside Risk & -0.0834 & -0.0831 & -0.0977 & -0.0682 \\
-CVaR 5\% & 0.0166 & 0.0166 & 0.0134 & 0.0201 \\
+Rendement total & +251.56\,\% & +288.18\,\% & +49.47\,\% & +780.79\,\% \\
+\textbf{Sharpe Ratio} & 0.966 & 0.961 & 0.365 & 1.546 \\
+Calmar Ratio & 0.730 & 0.772 & 0.150 & 1.822 \\
+Sortino Ratio & 1.589 & 1.622 & 0.542 & 2.943 \\
+Rendement annualisé & +13.10\,\% & +13.17\,\% & +4.01\,\% & +23.74\,\% \\
+\textbf{Max Drawdown} & -17.93\,\% & -19.34\,\% & -32.58\,\% & -11.44\,\% \\
+Profit Factor & 1.309 & 1.313 & 1.102 & 1.563 \\
+VaR 5\% & -0.71\,\% & -0.71\,\% & -0.79\,\% & -0.62\,\% \\
+Tail Ratio & 1.139 & 1.161 & 0.998 & 1.404 \\
+Volatilité annualisée & +13.71\,\% & +13.69\,\% & +11.79\,\% & +15.66\,\% \\
+Information Ratio & 0.061 & 0.061 & 0.023 & 0.097 \\
+Downside Risk & +8.34\,\% & +8.31\,\% & +6.82\,\% & +9.77\,\% \\
+CVaR 5\% & -1.66\,\% & -1.66\,\% & -2.01\,\% & -1.34\,\% \\
 \bottomrule
 \end{tabular}
 \end{table}

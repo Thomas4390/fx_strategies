@@ -1,19 +1,17 @@
-\section{Annexe B --- Anatomie d'un signal}
+\section{Annexe B --- Anatomie d'un trade}
 \label{app:signal_flow}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{P}{o}ur ancrer la compréhension du fonctionnement du portefeuille, cette annexe déroule pas à pas les calculs qui mènent à un signal long pour chacun des trois moteurs. Les formulations sont volontairement intuitives plutôt que programmatiques.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{P}{o}ur ancrer la compréhension opérationnelle de la stratégie, cette annexe déroule pas à pas le cheminement qui mène à une entrée réelle sur le Moteur~1 (la composante principale du portefeuille). Les mécaniques des Moteurs~2 et~3 suivent la même logique de filtrage mais sur horizon journalier~; elles sont détaillées dans les sections~\ref{sec:ts_momentum} et~\ref{sec:rsi_daily}.
 
-\subsection{Moteur 1 --- signal intraday}
-
-\textit{Exemple~:} une entrée long sur EUR-USD le 15~juin 2024 à 10h30~UTC.
+\subsection*{Exemple : entrée long sur EUR-USD le 15~juin 2024 à 10h30~UTC}
 
 \begin{enumerate}
-\item Calcul du VWAP ancré au jour courant depuis l'ouverture à 00h00~UTC jusqu'à la minute courante.
-\item Calcul de la déviation entre le prix de clôture actuel et le VWAP, puis comparaison à une bande inférieure calculée à partir de l'écart-type glissant sur 80~minutes avec un coefficient de 5.
+\item \textbf{Calcul du VWAP ancré au jour courant} depuis l'ouverture à 00h00~UTC jusqu'à la minute courante.
+\item \textbf{Calcul de la déviation} entre le prix de clôture actuel et le VWAP, puis comparaison à la bande inférieure calculée à partir de l'écart-type glissant sur les 80 dernières minutes.
 \item Si la déviation est \emph{sous} la bande inférieure, cela signale une sur-vente intraday exploitable.
-\item Vérification du filtre session~: l'heure courante 10h30~UTC est bien dans la fenêtre de chevauchement Londres~+~New York (6h--14h~UTC).
-\item Vérification du filtre macro premier étage~: le spread 10Y--2Y des bons du Trésor américain à cette date est inférieur à 0.5, donc pas de stress cyclique majeur.
-\item Vérification du filtre macro second étage~: le taux de chômage américain sur trois mois n'est pas en hausse, donc pas de fin de cycle d'expansion.
+\item \textbf{Filtre session}~: l'heure courante 10h30~UTC est bien dans la fenêtre de chevauchement Londres~+~New~York (6h--14h~UTC) où la liquidité est maximale.
+\item \textbf{Filtre macro premier étage}~: le spread 10Y--2Y des bons du Trésor américain à cette date est inférieur à 0.5, donc pas de stress cyclique majeur.
+\item \textbf{Filtre macro second étage}~: le taux de chômage américain sur trois mois n'est pas en hausse, donc pas de fin de cycle d'expansion.
 \item Les trois filtres sont passants, et la position longue est ouverte.
 \item La taille de position est calculée à partir du pool de trésorerie alloué au Moteur~1 (80\,\% du portefeuille total) multiplié par le levier global courant, divisé par le prix d'entrée.
 \end{enumerate}
@@ -26,52 +24,6 @@
 \item Ou durée maximale de détention de 6~heures dépassée~;
 \item Ou arrêt forcé à 21h00~UTC (fin de session).
 \end{itemize}
-
-\subsection{Moteur 2 --- signal journalier de tendance}
-
-\textit{Exemple conceptuel~:} évaluation d'un signal sur EUR-USD à la clôture de New York d'un jour J.
-
-\begin{enumerate}
-\item Calcul de la moyenne mobile exponentielle à 20~jours sur les clôtures jusqu'au jour $J-1$ inclus.
-\item Calcul de la moyenne mobile exponentielle à 50~jours sur la même fenêtre.
-\item Calcul du RSI à 7~périodes sur la même fenêtre.
-\item Si la moyenne à 20~jours est strictement supérieure à la moyenne à 50~jours (tendance haussière) \emph{et} que le RSI à 7~périodes est inférieur à 60 (marché pas sur-acheté), alors signal d'achat.
-\item Inversement, si la moyenne à 20~jours est strictement inférieure à celle à 50~jours \emph{et} que le RSI est supérieur à 40, alors signal de vente à découvert.
-\item La position est ouverte à l'ouverture du jour $J$ (pas au close du jour $J-1$, pour éviter tout look-ahead).
-\item La taille de position individuelle est calibrée pour cibler une volatilité de 10\,\% annualisés par paire, avec un plafond à 5$\times$ de levier individuel.
-\item Le signal est répété indépendamment sur les trois paires (EUR-USD, GBP-USD, USD-JPY) et les rendements sont agrégés en moyenne \emph{equal-weight}.
-\end{enumerate}
-
-\subsection{Moteur 3 --- signal journalier de retour à la moyenne}
-
-\textit{Exemple conceptuel~:} évaluation d'un signal sur GBP-USD à la clôture d'un jour J.
-
-\begin{enumerate}
-\item Calcul du RSI à 14~périodes sur les clôtures journalières jusqu'au jour $J-1$ inclus.
-\item Si le RSI descend sous 25 (sur-vente extrême), le signal devient long.
-\item Si le RSI monte au-dessus de 75 (sur-achat extrême), le signal devient short.
-\item La sortie est déclenchée lorsque le RSI repasse la valeur neutre de 50, ou en cas d'inversion du signal.
-\item Le signal est répété indépendamment sur les quatre paires (EUR-USD, GBP-USD, USD-JPY, USD-CAD) et les rendements sont agrégés en moyenne \emph{equal-weight}.
-\end{enumerate}
-
-\subsection{Composition finale}
-
-À chaque instant $t$, le rendement du portefeuille combiné est~:
-\[
-r_{\text{portefeuille}}(t) \;=\; \Bigl(0.80 \cdot r_1(t) \,+\, 0.10 \cdot r_2(t) \,+\, 0.10 \cdot r_3(t)\Bigr) \cdot \mathrm{lev}_{\text{global}}(t)
-\]
-où~:
-\begin{itemize}
-\item $r_1(t)$ est le rendement journalier du Moteur~1, agrégé depuis ses trades minute~;
-\item $r_2(t)$ est le rendement journalier du Moteur~2, moyenné sur ses trois paires~;
-\item $r_3(t)$ est le rendement journalier du Moteur~3, moyenné sur ses quatre paires~;
-\item $\mathrm{lev}_{\text{global}}(t)$ est le levier global à volatilité ciblée, plafonné à 12$\times$, calculé sur les rendements strictement antérieurs à $t$.
-\end{itemize}
-
-L'équité finale du portefeuille est calculée par composition multiplicative~:
-\[
-V(t) \;=\; V(0) \cdot \prod_{s=1}^{t} \bigl(1 + r_{\text{portefeuille}}(s)\bigr)
-\]
 
 \vfill
 

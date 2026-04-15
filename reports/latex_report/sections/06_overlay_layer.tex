@@ -51,6 +51,24 @@ avec $v^{*} = 0.28$ la volatilité cible, $L_{\max} = 12$ le plafond de levier, 
 
 \input{tables/sensitivity.tex}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{leverage_timeline.png}
+\caption{Trajectoire du levier effectif appliqué par la couche de ciblage de volatilité. La ligne pointillée orange matérialise le plafond dur à $12\times$, la ligne pointillée bleue la moyenne empirique sur la période complète. Le levier s'abaisse mécaniquement pendant les épisodes de volatilité réalisée élevée (début 2020, mi-2022, début 2023) puis revient au plafond dès que la volatilité redescend. La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}
+\label{fig:leverage_timeline}
+\end{figure}
+
+\subsection{Impact du levier sur les métriques}
+\label{sec:leverage_impact}
+
+Un point de pédagogie financière souvent mal compris par les lecteurs non techniques mérite d'être explicité avant la présentation des résultats. Le ciblage de volatilité n'est \emph{pas} un mécanisme qui crée du rendement~: c'est un mécanisme qui \emph{aligne} la volatilité réalisée du portefeuille sur la cible du mandat. Sous un scaling par un facteur \emph{constant} $k$, le CAGR, la volatilité et le Max Drawdown sont tous multipliés par $k$ et le Sharpe Ratio reste strictement invariant. En pratique notre overlay applique un scaling \emph{variable} (contraint par le plafond $12\times$ et la volatilité réalisée glissante), ce qui produit un léger écart Sharpe entre les deux lignes du tableau ci-dessous~--- attribué à l'interaction entre l'overlay et la structure temporelle des rendements, pas à une source d'alpha nouvelle.
+
+\input{tables/leverage_impact.tex}
+
+\begin{insightbox}
+\textbf{Comment lire le tableau~\ref{tab:leverage_impact}}~: la ligne non leveragée représente la qualité statistique réelle du signal combiné (pondéré $80/10/10$). Elle est quasi plate sur l'axe du rendement car les trois moteurs tournent à leur volatilité intrinsèque naturelle, particulièrement basse pour un MR-intraday filtré. La ligne leveragée applique ensuite l'overlay de volatilité qui porte le portefeuille à l'exposition du mandat. Le Sharpe des deux lignes reste du même ordre de grandeur~: l'\emph{edge} statistique mesuré est celui de la première ligne~; le levier est un outil d'expression opérationnelle, pas une source de performance \emph{ex nihilo}. Le Max Drawdown leveragé à $-17.93\,\%$ est simplement le drawdown non leveragé ($-1.53\,\%$) multiplié par le levier moyen effectif.
+\end{insightbox}
+
 \subsection{Protection drawdown --- disponible mais désactivée}
 
 Le moteur de backtest dispose également d'un mécanisme de \emph{drawdown cap} qui déleverage progressivement le portefeuille à mesure que le drawdown s'approfondit, selon une table pré-calibrée~:

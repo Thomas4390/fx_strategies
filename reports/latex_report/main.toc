@@ -11,15 +11,13 @@
 \contentsline {subsection}{\numberline {3.2}Sources de données}{5}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{5}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{5}{subsection.3.4}%
-\contentsline {subsection}{\numberline {3.5}Robustesse numérique}{6}{subsection.3.5}%
-\contentsline {subsection}{\numberline {3.6}Module d'analyse de robustesse statistique}{6}{subsection.3.6}%
 \contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (80\,\%)}{6}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Intuition économique}{6}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{6}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Performance historique}{7}{subsection.4.3}%
 \contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{8}{subsection.4.4}%
 \contentsline {section}{\numberline {5}Moteur 2 --- Momentum Journalier Multi-Paires (10\,\%)}{8}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Intuition économique}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.1}Intuition économique}{8}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Mécanique du signal}{9}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Justification du choix des trois paires}{9}{subsection.5.3}%
 \contentsline {subsection}{\numberline {5.4}Performance historique}{10}{subsection.5.4}%
@@ -33,33 +31,33 @@
 \contentsline {section}{\numberline {7}Architecture de pondération et gestion du risque}{14}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Allocation statique 80 / 10 / 10}{14}{subsection.7.1}%
 \contentsline {subsection}{\numberline {7.2}Couche de ciblage de volatilité}{14}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Protection drawdown --- disponible mais désactivée}{15}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Performance historique in-sample (2019--2025)}{16}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Métriques agrégées}{16}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Validation par fenêtres annuelles (walk-forward)}{16}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}Heatmap des rendements mensuels}{18}{subsection.8.3}%
-\contentsline {subsection}{\numberline {8.4}Courbe \emph {underwater} du drawdown}{18}{subsection.8.4}%
-\contentsline {subsection}{\numberline {8.5}Sharpe glissant sur 63 jours}{19}{subsection.8.5}%
-\contentsline {subsection}{\numberline {8.6}Corrélations glissantes entre moteurs}{19}{subsection.8.6}%
-\contentsline {subsection}{\numberline {8.7}Contribution mensuelle par moteur}{20}{subsection.8.7}%
-\contentsline {section}{\numberline {9}Validation hors échantillon (2025-04 à 2026-04)}{20}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Comparaison directe}{20}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}Zoom sur la fenêtre de validation}{21}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Décomposition de la performance OOS par moteur}{21}{subsection.9.3}%
-\contentsline {subsection}{\numberline {9.4}Caveat méthodologique sur le caractère OOS}{22}{subsection.9.4}%
-\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap historique à 1000~trajectoires}{22}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Méthodologie}{22}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Résultats}{22}{subsection.10.2}%
-\contentsline {subsection}{\numberline {10.3}Interprétations critiques}{23}{subsection.10.3}%
-\contentsline {subsection}{\numberline {10.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{23}{subsection.10.4}%
-\contentsline {paragraph}{Lien avec la section suivante.}{24}{paragraph*.23}%
-\contentsline {section}{\numberline {11}Robustesse statistique avancée}{24}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Pourquoi un Sharpe ponctuel ne suffit pas}{24}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Intervalles de confiance bootstrap sur les 14 métriques}{25}{subsection.11.2}%
-\contentsline {paragraph}{Deux zones de vigilance identifiées.}{27}{paragraph*.27}%
-\contentsline {subsection}{\numberline {11.3}\emph {Equity fan chart} --- 300 trajectoires bootstrap alternatives}{27}{subsection.11.3}%
+\contentsline {subsection}{\numberline {7.3}Impact du levier sur les métriques}{15}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Protection drawdown --- disponible mais désactivée}{16}{subsection.7.4}%
+\contentsline {section}{\numberline {8}Performance historique in-sample (2019--2025)}{17}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Métriques agrégées}{17}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Validation par fenêtres annuelles (walk-forward)}{18}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Heatmap des rendements mensuels}{19}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Courbe \emph {underwater} du drawdown}{20}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Sharpe glissant sur 63 jours}{20}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}Corrélations glissantes entre moteurs}{21}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}Contribution mensuelle par moteur}{21}{subsection.8.7}%
+\contentsline {section}{\numberline {9}Validation hors échantillon (2025-04 à 2026-04)}{22}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Comparaison directe}{22}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Zoom sur la fenêtre de validation}{22}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Décomposition de la performance OOS par moteur}{23}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Caveat méthodologique sur le caractère OOS}{23}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Tests de résistance --- bootstrap historique}{23}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Méthodologie}{23}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Résultats}{24}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Interprétations critiques}{25}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{25}{subsection.10.4}%
+\contentsline {section}{\numberline {11}Robustesse statistique avancée}{25}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Pourquoi un Sharpe ponctuel ne suffit pas}{25}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Intervalles de confiance bootstrap sur les métriques}{25}{subsection.11.2}%
+\contentsline {paragraph}{Deux zones de vigilance identifiées.}{27}{paragraph*.28}%
+\contentsline {subsection}{\numberline {11.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{27}{subsection.11.3}%
 \contentsline {subsection}{\numberline {11.4}Tests d'\emph {overfitting}}{28}{subsection.11.4}%
-\contentsline {subsection}{\numberline {11.5}Tests de supériorité prédictive --- Hansen SPA et Romano--Wolf StepM}{29}{subsection.11.5}%
+\contentsline {subsection}{\numberline {11.5}Tests de supériorité prédictive}{29}{subsection.11.5}%
 \contentsline {subsection}{\numberline {11.6}Stabilité temporelle multi-métrique}{30}{subsection.11.6}%
 \contentsline {subsection}{\numberline {11.7}Verdict consolidé}{31}{subsection.11.7}%
 \contentsline {section}{\numberline {12}Rejeu de scénarios historiques}{32}{section.12}%
@@ -75,43 +73,6 @@
 \contentsline {section}{\numberline {14}Conditions de déploiement}{35}{section.14}%
 \contentsline {subsection}{\numberline {14.1}Décisionnaires et responsabilités}{36}{subsection.14.1}%
 \contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{37}{appendix.A}%
-\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un signal}{39}{appendix.B}%
-\contentsline {subsection}{\numberline {B.1}Moteur 1 --- signal intraday}{39}{subsection.B.1}%
-\contentsline {subsection}{\numberline {B.2}Moteur 2 --- signal journalier de tendance}{40}{subsection.B.2}%
-\contentsline {subsection}{\numberline {B.3}Moteur 3 --- signal journalier de retour à la moyenne}{40}{subsection.B.3}%
-\contentsline {subsection}{\numberline {B.4}Composition finale}{40}{subsection.B.4}%
-\contentsline {section}{\numberline {C}Principes méthodologiques du \textit {robustness report}}{41}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{41}{subsection.C.1}%
-\contentsline {paragraph}{Biais d'échantillon (\textsc {Lo} 2002).}{41}{paragraph*.36}%
-\contentsline {paragraph}{Biais de sélection (\textsc {Bailey--L\'opez~de~Prado} 2014).}{41}{paragraph*.37}%
-\contentsline {paragraph}{Dépendance temporelle.}{41}{paragraph*.38}%
-\contentsline {subsection}{\numberline {C.2}Block bootstrap stationnaire (\textsc {Politis--Romano} 1994)}{41}{subsection.C.2}%
-\contentsline {paragraph}{Principe.}{41}{paragraph*.39}%
-\contentsline {paragraph}{Pourquoi une longueur géométrique?}{42}{paragraph*.40}%
-\contentsline {paragraph}{Algorithme.}{42}{paragraph*.41}%
-\contentsline {paragraph}{Choix de $L$.}{42}{paragraph*.42}%
-\contentsline {subsection}{\numberline {C.3}Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{42}{subsection.C.3}%
-\contentsline {subsection}{\numberline {C.4}Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{42}{subsection.C.4}%
-\contentsline {paragraph}{Exemple numérique Apogee.}{43}{paragraph*.43}%
-\contentsline {subsection}{\numberline {C.5}Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{43}{subsection.C.5}%
-\contentsline {paragraph}{Ratio de survie.}{43}{paragraph*.44}%
-\contentsline {subsection}{\numberline {C.6}Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{43}{subsection.C.6}%
-\contentsline {paragraph}{Exemples numériques.}{44}{paragraph*.45}%
-\contentsline {paragraph}{Utilisation comme \emph {power calculation} a priori.}{44}{paragraph*.46}%
-\contentsline {subsection}{\numberline {C.7}Probability of Backtest Overfitting via CSCV (\textsc {Bailey et al.} 2015)}{44}{subsection.C.7}%
-\contentsline {paragraph}{Algorithme CSCV (Combinatorially Symmetric Cross-Validation).}{44}{paragraph*.47}%
-\contentsline {paragraph}{Pourquoi «~symétrique~»?}{44}{paragraph*.48}%
-\contentsline {paragraph}{Interprétation du logit.}{44}{paragraph*.49}%
-\contentsline {paragraph}{Limite.}{44}{paragraph*.50}%
-\contentsline {subsection}{\numberline {C.8}Hansen SPA (2005) et Romano--Wolf StepM (2005)}{45}{subsection.C.8}%
-\contentsline {paragraph}{Hansen SPA (Superior Predictive Ability).}{45}{paragraph*.51}%
-\contentsline {paragraph}{Romano--Wolf StepM.}{45}{paragraph*.52}%
-\contentsline {paragraph}{Implémentation.}{45}{paragraph*.53}%
-\contentsline {subsection}{\numberline {C.9}Stratégie de combinaison --- quelle hiérarchie de tests ?}{45}{subsection.C.9}%
-\contentsline {paragraph}{Stade~1 --- Backtest unique, zéro \emph {data snooping}.}{45}{paragraph*.54}%
-\contentsline {paragraph}{Stade~2 --- Après \emph {grid search} / optimisation de paramètres.}{45}{paragraph*.55}%
-\contentsline {paragraph}{Stade~3 --- Sélection finale parmi $N$~candidats.}{45}{paragraph*.56}%
-\contentsline {paragraph}{Stade~4 --- Validation opérationnelle.}{45}{paragraph*.57}%
-\contentsline {paragraph}{Application au portefeuille Apogee.}{45}{paragraph*.58}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{39}{appendix.B}%
 \xpginauxfilefalse 
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

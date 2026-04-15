@@ -1,14 +1,9 @@
-\section{Tests de résistance --- bootstrap historique à 1000~trajectoires}
+\section{Tests de résistance --- bootstrap historique}
 \label{sec:stress_test}
 
 \subsection{Méthodologie}
 
-\begin{itemize}
-\item \textbf{Méthode}~: bootstrap par blocs mobiles selon Künsch (1989), avec des blocs de 20~jours, soit environ un mois civil.
-\item \textbf{Objectif}~: préserver les autocorrélations intra-mois tout en cassant les corrélations cross-mois. Le ré-échantillonnage produit des trajectoires alternatives qui respectent la structure locale des rendements mais décorrèlent la séquence macroéconomique.
-\item \textbf{Nombre de ré-échantillons}~: 1000.
-\item \textbf{Seed}~: fixée, reproductible.
-\end{itemize}
+On applique un \emph{bootstrap} par blocs mobiles sur la série de rendements du portefeuille combiné. La méthode consiste à ré-échantillonner des blocs consécutifs d'environ un mois, ce qui préserve les autocorrélations intra-mois (volatility clustering, mean reversion) tout en décorrélant la séquence macroéconomique. Le ré-échantillonnage produit un millier de trajectoires alternatives qui respectent la structure locale des rendements mais explorent les ordres temporels plausibles.
 
 \subsection{Résultats}
 
@@ -36,8 +31,5 @@
 Le même rapport de stress conduit une analyse de sensibilité sur le couple (volatilité cible, levier maximal). Le tableau reproduit en section~\ref{sec:overlay} montre un plateau de Sharpe autour de 0.96--0.97 sur l'ensemble de la grille~--- la performance n'est pas un pic isolé mais une \emph{région plate}, ce qui indique une robustesse structurelle du choix retenu.
 
 \begin{warningbox}
-\textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage par blocs mobiles préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique 2019--2025 contient déjà. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, nous présentons à la section suivante un rejeu explicite de scénarios historiques sélectionnés. Un stress test plus ambitieux sur données pré-2019 pourrait être conduit à la demande du client, sous réserve de disponibilité des données minute FX correspondantes.
+\textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique 2019--2025 contient déjà. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, la section suivante présente un rejeu explicite de scénarios historiques sélectionnés.
 \end{warningbox}
-
-\paragraph{Lien avec la section suivante.}
-Le bootstrap historique présenté ici utilise la méthode Künsch~(1989) à blocs fixes avec 1000~ré-échantillons. La section~\ref{sec:advanced_robustness} applique une suite de tests plus exigeante au même portefeuille~: \emph{block bootstrap} stationnaire Politis--Romano~(1994) avec 3000~ré-échantillons, intervalles de confiance sur les 14~métriques standard, tests de correction d'\textit{overfitting} (\textit{Deflated Sharpe Ratio}, \textit{Haircut Sharpe}, \textit{Probability of Backtest Overfitting}) et tests de supériorité prédictive (Hansen SPA, Romano--Wolf StepM). Les deux sections sont complémentaires~: la section~\ref{sec:stress_test} quantifie la variance de performance sous ré-échantillonnage simple, la section~\ref{sec:advanced_robustness} corrige pour les biais de sélection et de tests multiples.

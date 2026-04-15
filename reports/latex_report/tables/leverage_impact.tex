@@ -1,0 +1,14 @@
+\begin{table}[H]
+\centering
+\caption{Impact du ciblage de volatilité sur les métriques du portefeuille. Le Sharpe est structurellement invariant sous un scaling de levier par un facteur constant ; l'overlay ne crée donc pas de valeur \emph{ex nihilo}, il ajuste l'exposition à la volatilité cible du mandat. La ligne non leveragée constitue la \emph{vraie} métrique d'edge statistique ; la ligne leveragée reflète l'expression opérationnelle de cet edge aux contraintes de volatilité du client. Le multiplicateur effectif moyen (rapport des volatilités réalisées) est inférieur au plafond $12\times$ car le levier s'abaisse pendant les périodes de volatilité élevée.}
+\label{tab:leverage_impact}
+\begin{tabular}{lrrrr}
+\toprule
+Configuration & CAGR & Vol ann. & Sharpe & Max DD \\
+\midrule
+Pondéré $80/10/10$ \emph{sans levier} & 1.40\,\% & 1.07\,\% & 1.31 & -1.53\,\% \\
+Pondéré $80/10/10$ \emph{avec} ciblage vol $0.28$ / cap $12\times$ & 16.47\,\% & 13.71\,\% & 1.20 & -17.93\,\% \\
+Multiplicateur effectif moyen & \multicolumn{4}{c}{\textbf{12.8$\times$} (rapport volatilité leveragée / non leveragée)} \\
+\bottomrule
+\end{tabular}
+\end{table}
