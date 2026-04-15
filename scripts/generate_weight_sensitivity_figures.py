@@ -320,7 +320,7 @@ def plot_named_bars(points: list[WeightPoint]) -> None:
     ax_sr.set_ylim(min(sharpes.min() - 0.1, -0.1), sharpes.max() + 0.15)
 
     ax_cagr.bar(x, cagrs, color=colors, edgecolor="white")
-    ax_cagr.set_ylabel("CAGR (\\%)".replace("\\", ""))
+    ax_cagr.set_ylabel("CAGR (%)")
     ax_cagr.set_title("CAGR annualisé", loc="left")
     for xi, v in zip(x, cagrs):
         ax_cagr.text(xi, v + 0.3, f"{v:+.1f}%", ha="center", fontsize=8)

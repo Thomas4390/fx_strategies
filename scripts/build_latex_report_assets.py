@@ -242,7 +242,7 @@ def build_figures(
         "Courbe underwater (drawdown du portefeuille combiné)", color=PALETTE["primary"]
     )
     ax.set_xlabel("Date")
-    ax.set_ylabel("Drawdown (\\%)")
+    ax.set_ylabel("Drawdown (%)")
     save_fig(fig, "drawdown_underwater")
 
     # ── 2b. Leverage trajectory through time ────────────────────────
@@ -314,7 +314,7 @@ def build_figures(
         fmt=".1f",
         cmap="RdYlGn",
         center=0,
-        cbar_kws={"label": "Rendement (\\%)"},
+        cbar_kws={"label": "Rendement (%)"},
         linewidths=0.5,
         linecolor="white",
         ax=ax,
@@ -455,7 +455,7 @@ def build_figures(
         color=PALETTE["primary"],
     )
     ax.set_xlabel("Date")
-    ax.set_ylabel("Contribution au rendement (\\%)")
+    ax.set_ylabel("Contribution au rendement (%)")
     ax.legend(loc="upper left")
     save_fig(fig, "sleeve_monthly_contribution")
 
@@ -518,10 +518,10 @@ def build_figures(
     ax.set_title(
         "Bootstrap 1000 paths — nuage CAGR × Max Drawdown", color=PALETTE["primary"]
     )
-    ax.set_xlabel("Max Drawdown (\\%)")
-    ax.set_ylabel("CAGR (\\%)")
+    ax.set_xlabel("Max Drawdown (%)")
+    ax.set_ylabel("CAGR (%)")
     ax.legend(loc="lower right")
-    plt.colorbar(sc, ax=ax, label="CAGR (\\%)")
+    plt.colorbar(sc, ax=ax, label="CAGR (%)")
     save_fig(fig, "bootstrap_scatter")
 
     # ── 8. OOS zoom 2025-2026 ────────────────────────────────────────
@@ -587,7 +587,7 @@ def build_figures(
         ax2.fill_between(dd.index, dd.values, 0, color=PALETTE["combined"], alpha=0.35)
         ax2.plot(dd.index, dd.values, color=PALETTE["combined"], linewidth=0.8)
         ax2.axvline(OOS_SPLIT, color="#707070", linestyle="--", linewidth=0.8)
-        ax2.set_ylabel("DD (\\%)")
+        ax2.set_ylabel("DD (%)")
         ax2.set_xlabel("Date")
         save_fig(fig, f"sleeve_{sleeve.lower()}_equity")
 
@@ -1138,9 +1138,9 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
     ax.set_yticklabels([label for _, label in forest_metrics])
     ax.invert_yaxis()
     ax.axvline(0, color="#888", linewidth=0.9, linestyle=":")
-    ax.set_xlabel("Valeur métrique (observée $\\diamond$, IC bootstrap 95\\%)")
+    ax.set_xlabel("Valeur métrique (observée $\\diamond$, IC bootstrap 95%)")
     ax.set_title(
-        "Intervalles de confiance bootstrap 95\\% --- 5 métriques principales",
+        "Intervalles de confiance bootstrap 95% --- 5 métriques principales",
         color=PALETTE["primary"],
     )
     save_fig(fig, "robustness_metric_ci_forest")
