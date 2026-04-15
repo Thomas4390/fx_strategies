@@ -310,7 +310,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 110--112
 
 Package polyglossia Warning: Failed to patch part for French on input line 2.
 
-[1]) [2] (./sections/00_executive_summary.tex
+[1] [2]) [3] (./sections/00_executive_summary.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 4.
@@ -407,11 +407,67 @@ Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
 ) [38] (./sections/appendix_a_inventory.tex [39] [40])
-(./sections/appendix_b_trade_walkthrough.tex [41]) [42] (./main.aux)
+(./sections/appendix_b_trade_walkthrough.tex [41])
+(./sections/appendix_c_weight_sensitivity.tex
+Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
+[]\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
+(0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
+95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
+ $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
+1/cmr/m/n/10.95 ) :
+(./tables/weight_sensitivity_named.tex) [42] [43]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+[44] (./tables/weight_sensitivity_extremes.tex) [45]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\times' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+) [46] [47] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (45 pages).
+Output written on main.pdf (51 pages).
 Transcript written on main.log.

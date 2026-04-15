@@ -74,5 +74,16 @@
 \contentsline {subsection}{\numberline {14.1}Décisionnaires et responsabilités}{38}{subsection.14.1}%
 \contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{39}{appendix.A}%
 \contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{41}{appendix.B}%
+\contentsline {section}{\numberline {C}Sensibilité à l'allocation --- robustesse du 80/10/10}{42}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}La question posée}{42}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{42}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{43}{subsection.C.3}%
+\contentsline {paragraph}{Trois observations saillantes.}{43}{paragraph*.39}%
+\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{44}{subsection.C.4}%
+\contentsline {paragraph}{Lecture du plateau.}{44}{paragraph*.41}%
+\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{45}{subsection.C.5}%
+\contentsline {paragraph}{Distance au maximum.}{45}{paragraph*.44}%
+\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{46}{subsection.C.6}%
+\contentsline {paragraph}{Pourquoi la frontière se courbe vers le haut à droite.}{46}{paragraph*.46}%
 \xpginauxfilefalse 
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

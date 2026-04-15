@@ -8,7 +8,7 @@
 \@writefile{lot}{\xpginauxfiletrue }
 \@writefile{toc}{\selectlanguage *{french}}
 \HyPL@Entry{1<</S/r>>}
-\HyPL@Entry{3<</S/D>>}
+\HyPL@Entry{4<</S/D>>}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Résumé exécutif}{1}{section.1}\protected@file@percent }
 \newlabel{sec:executive_summary}{{1}{1}{Résumé exécutif}{section.1}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Métriques clés du portefeuille Apogée Invest sur les trois régimes d'évaluation. Les colonnes Bootstrap rapportent les percentiles P5/P95 d'un \emph  {block bootstrap} stationnaire sur la période in-sample. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.}}{1}{table.caption.1}\protected@file@percent }
@@ -151,10 +151,30 @@
 \newlabel{app:glossary}{{A}{39}{Annexe A --- Glossaire des termes techniques}{appendix.A}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{41}{appendix.B}\protected@file@percent }
 \newlabel{app:signal_flow}{{B}{41}{Annexe B --- Anatomie d'un trade}{appendix.B}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {C}Sensibilité à l'allocation --- robustesse du 80/10/10}{42}{appendix.C}\protected@file@percent }
+\newlabel{app:weight_sensitivity}{{C}{42}{Sensibilité à l'allocation --- robustesse du 80/10/10}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}La question posée}{42}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{42}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{43}{subsection.C.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Comparaison de 8 allocations nommées sous le régime de risque production ($\mathrm  {tv}=0.28$, $\mathrm  {ml}=12$, DD-cap désactivé). Sharpe WF = moyenne sur les 7~fenêtres annuelles 2019--2025.}}{43}{table.caption.37}\protected@file@percent }
+\newlabel{tbl:weight_sensitivity_named}{{16}{43}{Comparaison de 8 allocations nommées sous le régime de risque production ($\mathrm {tv}=0.28$, $\mathrm {ml}=12$, DD-cap désactivé). Sharpe WF = moyenne sur les 7~fenêtres annuelles 2019--2025}{table.caption.37}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Comparaison directe de huit allocations nommées. Le 80/10/10 production (barres orange) est la seule allocation qui combine un Sharpe~WF supérieur à $0.95$ avec un Max~Drawdown inférieur à $18\,\%$.}}{43}{figure.caption.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Trois observations saillantes.}{43}{paragraph*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{44}{subsection.C.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces Quatre métriques tracées contre la part MR, avec $w_{\text  {TS}} = w_{\text  {RSI}} = (1-w_{\text  {MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text  {MR}} \approx 0.60$ et $w_{\text  {MR}} \approx 0.85$, alors que le Max Drawdown se dégrade progressivement dès qu'on s'éloigne du mix MR-lourd. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text  {MR}} = 0.75$--$0.80$.}}{44}{figure.caption.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Lecture du plateau.}{44}{paragraph*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{45}{subsection.C.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {23}{\ignorespaces Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux allocations pures $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI. La région sombre (Sharpe $<0.5$) occupe toute l'arête RSI~$\to $~TS~: aucune allocation sans MR ne produit un Sharpe acceptable. Le plateau haut (vert-jaune, Sharpe $>0.90$) forme une bande nettement visible autour de l'arête $w_{\text  {MR}} = 0.6$--$0.9$.}}{45}{figure.caption.42}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Top-3 et bottom-3 des 231 allocations du simplex (pas de 0.05), classées par Sharpe WF. Le top-3 est serré autour de la zone MR-lourde ; le bottom-3 correspond aux allocations sans exposition MR.}}{45}{table.caption.43}\protected@file@percent }
+\newlabel{tbl:weight_sensitivity_extremes}{{17}{45}{Top-3 et bottom-3 des 231 allocations du simplex (pas de 0.05), classées par Sharpe WF. Le top-3 est serré autour de la zone MR-lourde ; le bottom-3 correspond aux allocations sans exposition MR}{table.caption.43}{}}
+\@writefile{toc}{\contentsline {paragraph}{Distance au maximum.}{45}{paragraph*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{46}{subsection.C.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {24}{\ignorespaces Scatter de toutes les allocations du simplex dans le plan (Volatilité annualisée, CAGR), coloré par Sharpe WF. La ligne pointillée bourgogne trace la frontière efficiente empirique~--- l'enveloppe supérieure des points, c'est-à-dire le meilleur CAGR atteignable pour chaque niveau de volatilité. Le $80/10/10$ production (étoile orange) est \textbf  {sur la frontière}, dans la zone des volatilités les plus basses ($\approx 13.7\,\%$) parmi les allocations ayant un Sharpe supérieur à $0.90$.}}{46}{figure.caption.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi la frontière se courbe vers le haut à droite.}{46}{paragraph*.46}\protected@file@percent }
 \@writefile{toc}{\xpginauxfilefalse }
 \@writefile{lof}{\xpginauxfilefalse }
 \@writefile{lot}{\xpginauxfilefalse }
 \global\@namedef{scr@dte@section@lastmaxnumwidth}{13.03195pt}
 \global\@namedef{scr@dte@subsection@lastmaxnumwidth}{24.25418pt}
 \@writefile{toc}{\providecommand\tocbasic@end@toc@file{}\tocbasic@end@toc@file}
-\gdef \@abspage@last{45}
+\gdef \@abspage@last{51}

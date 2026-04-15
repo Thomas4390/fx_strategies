@@ -1,0 +1,77 @@
+\section{Sensibilité à l'allocation --- robustesse du 80/10/10}
+\label{app:weight_sensitivity}
+
+\subsection{La question posée}
+
+Le portefeuille final alloue $80\,\%$ à MR~Macro, $10\,\%$ à TS~Momentum~3p et $10\,\%$ à RSI~Daily~4p. Ce choix est justifié en section~\ref{sec:overlay} par une comparaison avec un régime adaptatif, mais une question complémentaire reste ouverte pour un allocateur critique~:
+
+\begin{quote}
+\emph{Le 80/10/10 est-il une pointe isolée sensible au moindre changement de pondération, ou un plateau stable à l'intérieur duquel toute perturbation raisonnable préserve la performance ?}
+\end{quote}
+
+Cette annexe balaye l'espace des poids sous la couche de risque production ($\mathrm{target\_vol}=0.28$, $\mathrm{max\_leverage}=12$, DD-cap désactivé) et répond à la question à l'aide de quatre figures et deux tableaux. Le calcul repose sur les séries de rendements journaliers déjà backtestées et mises en cache~: aucune nouvelle simulation n'est nécessaire, seulement une recombinaison vectorisée des composantes avec différents vecteurs de poids.
+
+\subsection{Méthodologie succincte}
+
+Trois grilles de poids sont testées~:
+
+\begin{itemize}
+\item \textbf{Huit allocations nommées} --- production $80/10/10$, pur~MR $100/0/0$, sans~MR $0/50/50$, $70/15/15$, $60/20/20$, $50/25/25$, équipondéré $33/33/33$, et risk-parity inverse-vol (allocation dynamique des composantes par l'inverse de leur volatilité expansive).
+\item \textbf{Balayage 1D} --- $w_{\text{MR}}$ varie de $0\,\%$ à $100\,\%$ par pas de $5\,\%$, avec $w_{\text{TS}} = w_{\text{RSI}} = (1-w_{\text{MR}})/2$ ($21$~points).
+\item \textbf{Maillage 2D du simplex} --- grille régulière de pas $0.05$ sur le 2-simplexe $\{(w_{\text{MR}}, w_{\text{TS}}, w_{\text{RSI}}) : w_i \ge 0,\ \sum_i w_i = 1\}$, soit $231$~points valides.
+\end{itemize}
+
+Cinq métriques sont calculées par allocation~: Sharpe walk-forward (moyenne sur les $7$~fenêtres annuelles), CAGR, volatilité annualisée, Max Drawdown et Calmar ($= \text{CAGR} / |\text{Max DD}|$). Les paramètres de risque sont fixés, ce qui isole proprement l'effet des poids sans confondre avec l'effet de la couche de ciblage de volatilité.
+
+\subsection{Comparaison d'allocations nommées}
+
+\input{tables/weight_sensitivity_named.tex}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\linewidth]{weight_sensitivity_named_bars.png}
+\caption{Comparaison directe de huit allocations nommées. Le 80/10/10 production (barres orange) est la seule allocation qui combine un Sharpe~WF supérieur à $0.95$ avec un Max~Drawdown inférieur à $18\,\%$.}
+\end{figure}
+
+\paragraph{Trois observations saillantes.}
+\begin{itemize}
+\item \textbf{Le retrait total de MR est catastrophique.} L'allocation $0/50/50$ voit son Sharpe s'effondrer à $0.61$ et son Max DD doubler à $-45.5\,\%$. Le moteur de mean reversion intraday filtré est le \emph{pilier} du portefeuille~; sans lui, les deux diversifiants n'ont pas assez d'alpha pour porter la cible de volatilité $0.28$ sans détruire le profil de drawdown.
+\item \textbf{Le pur MR est sous-optimal.} Le $100/0/0$ donne un Sharpe de seulement $0.64$, bien en-dessous des $0.96$ du 80/10/10. Les $20\,\%$ de diversifiants apportent un gain de Sharpe d'environ $0.30$ pour un coût nul en drawdown. Le mix strictement dominé par son contraire.
+\item \textbf{Le risk-parity inverse-vol rejoint le 80/10/10.} L'allocation dynamique par inverse de la volatilité converge en moyenne sur des pondérations très proches de l'optimum statique, avec un Sharpe WF de $0.964$ marginalement supérieur à la production. L'écart est inférieur au bruit d'estimation --- voir section~\ref{sec:advanced_robustness} sur l'intervalle de confiance bootstrap.
+\end{itemize}
+
+\subsection{Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\linewidth]{weight_sensitivity_1d_mr.png}
+\caption{Quatre métriques tracées contre la part MR, avec $w_{\text{TS}} = w_{\text{RSI}} = (1-w_{\text{MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text{MR}} \approx 0.60$ et $w_{\text{MR}} \approx 0.85$, alors que le Max Drawdown se dégrade progressivement dès qu'on s'éloigne du mix MR-lourd. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text{MR}} = 0.75$--$0.80$.}
+\end{figure}
+
+\paragraph{Lecture du plateau.} Sur le Sharpe WF, la courbe présente un plateau plat --- les points entre $w_{\text{MR}} = 0.60$ et $0.85$ produisent tous un Sharpe dans l'intervalle $[0.91, 0.97]$, soit une largeur de $25$~points de poids. Déplacer la production de $10$~points dans un sens ou dans l'autre ne modifie le Sharpe que de $0.01$ à $0.04$. C'est la définition opérationnelle d'un plateau robuste.
+
+\subsection{Carte ternaire du simplex complet}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\linewidth]{weight_sensitivity_simplex_ternary.png}
+\caption{Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux allocations pures $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI. La région sombre (Sharpe $<0.5$) occupe toute l'arête RSI~$\to$~TS~: aucune allocation sans MR ne produit un Sharpe acceptable. Le plateau haut (vert-jaune, Sharpe $>0.90$) forme une bande nettement visible autour de l'arête $w_{\text{MR}} = 0.6$--$0.9$.}
+\end{figure}
+
+\input{tables/weight_sensitivity_extremes.tex}
+
+\paragraph{Distance au maximum.} Le meilleur point du simplex est $70/10/20$ (Sharpe $0.969$), suivi de $75/10/15$ ($0.967$) et du $80/10/10$ production ($0.956$). L'écart entre la production et l'optimum est de $0.013$~Sharpe, soit environ $1.4\,\%$ en relatif~--- c'est une différence qui disparaît sous l'intervalle de confiance bootstrap de l'annexe \ref{sec:advanced_robustness} dont la demi-largeur est de l'ordre de $0.6$. \textbf{Changer la production pour $70/10/20$ n'est donc pas statistiquement défendable}~: la différence est invisible dans le bruit.
+
+\subsection{Frontière efficiente empirique Vol $\times$ CAGR}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\linewidth]{weight_sensitivity_pareto_frontier.png}
+\caption{Scatter de toutes les allocations du simplex dans le plan (Volatilité annualisée, CAGR), coloré par Sharpe WF. La ligne pointillée bourgogne trace la frontière efficiente empirique~--- l'enveloppe supérieure des points, c'est-à-dire le meilleur CAGR atteignable pour chaque niveau de volatilité. Le $80/10/10$ production (étoile orange) est \textbf{sur la frontière}, dans la zone des volatilités les plus basses ($\approx 13.7\,\%$) parmi les allocations ayant un Sharpe supérieur à $0.90$.}
+\end{figure}
+
+\paragraph{Pourquoi la frontière se courbe vers le haut à droite.} Les points en haut à droite de la frontière ($\text{Vol} > 20\,\%$) correspondent à des allocations où MR est écrasé par TS et RSI. Ces allocations capturent plus d'alpha brut sur les diversifiants, mais la couche de ciblage de volatilité à $0.28$ ne suffit pas à contenir leur drawdown --- d'où l'absence de gain de Sharpe malgré le gain de CAGR. Le $80/10/10$ est positionné à l'exact point d'équilibre où chaque point supplémentaire de volatilité cesse de se traduire en gain de ratio risque/rendement.
+
+\begin{insightbox}
+\textbf{Le 80/10/10 est un point de plateau, pas une pointe.} Le balayage exhaustif de $231$~allocations sur le simplex confirme que~: (i) le Sharpe reste au-dessus de $0.90$ sur toute une bande de $25$~points de poids autour de la production, (ii) l'écart entre le 80/10/10 et l'allocation strictement optimale ($70/10/20$, Sharpe $0.969$) est de $0.013$ soit environ le vingtième de l'intervalle de confiance bootstrap, et (iii) le risk-parity dynamique inverse-vol converge vers une allocation numériquement indistinguable du 80/10/10. La sensibilité aux poids est faible~--- l'\emph{edge} vient de la sélection des trois composantes et du ciblage de volatilité global, pas du ratio exact des pondérations.
+\end{insightbox}

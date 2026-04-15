@@ -1,0 +1,20 @@
+\begin{table}[H]
+\centering
+\caption{Top-3 et bottom-3 des 231 allocations du simplex (pas de 0.05), classées par Sharpe WF. Le top-3 est serré autour de la zone MR-lourde ; le bottom-3 correspond aux allocations sans exposition MR.}
+\label{tbl:weight_sensitivity_extremes}
+\begin{tabular}{lrrrrr}
+\toprule
+Allocation MR/TS/RSI & Sharpe WF & CAGR & Volatilité & Max DD & Calmar \\
+\midrule
+\multicolumn{6}{l}{\textbf{Top 3}} \\
+70/10/20 & 0.969 & 12.45\,\% & 12.94\,\% & -15.71\,\% & 0.79 \\
+75/10/15 & 0.967 & 12.80\,\% & 13.26\,\% & -16.82\,\% & 0.76 \\
+80/10/10 & 0.956 & 13.10\,\% & 13.71\,\% & -17.93\,\% & 0.73 \\
+\midrule
+\multicolumn{6}{l}{\textbf{Bottom 3}} \\
+10/0/90 & 0.336 & 0.67\,\% & 17.55\,\% & -39.92\,\% & 0.02 \\
+5/0/95 & 0.313 & 0.16\,\% & 18.09\,\% & -43.02\,\% & 0.00 \\
+0/0/100 & 0.287 & -0.39\,\% & 18.63\,\% & -46.00\,\% & -0.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
