@@ -54,25 +54,25 @@
 \contentsline {section}{\numberline {11}Robustesse statistique avancée}{25}{section.11}%
 \contentsline {subsection}{\numberline {11.1}Pourquoi un Sharpe ponctuel ne suffit pas}{25}{subsection.11.1}%
 \contentsline {subsection}{\numberline {11.2}Intervalles de confiance bootstrap sur les métriques}{25}{subsection.11.2}%
-\contentsline {paragraph}{Deux zones de vigilance identifiées.}{27}{paragraph*.28}%
-\contentsline {subsection}{\numberline {11.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{27}{subsection.11.3}%
-\contentsline {subsection}{\numberline {11.4}Tests d'\emph {overfitting}}{28}{subsection.11.4}%
-\contentsline {subsection}{\numberline {11.5}Tests de supériorité prédictive}{29}{subsection.11.5}%
-\contentsline {subsection}{\numberline {11.6}Stabilité temporelle multi-métrique}{30}{subsection.11.6}%
-\contentsline {subsection}{\numberline {11.7}Verdict consolidé}{31}{subsection.11.7}%
-\contentsline {section}{\numberline {12}Rejeu de scénarios historiques}{32}{section.12}%
-\contentsline {subsection}{\numberline {12.1}Lecture détaillée des six scénarios}{32}{subsection.12.1}%
-\contentsline {subsection}{\numberline {12.2}Observations transversales}{33}{subsection.12.2}%
-\contentsline {section}{\numberline {13}Analyse des risques et limites méthodologiques}{33}{section.13}%
-\contentsline {subsection}{\numberline {13.1}Avertissement 1 --- Data snooping résiduel}{34}{subsection.13.1}%
-\contentsline {subsection}{\numberline {13.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{34}{subsection.13.2}%
-\contentsline {subsection}{\numberline {13.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{34}{subsection.13.3}%
-\contentsline {subsection}{\numberline {13.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{35}{subsection.13.4}%
-\contentsline {subsection}{\numberline {13.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{35}{subsection.13.5}%
-\contentsline {subsection}{\numberline {13.6}Tableau récapitulatif des risques}{35}{subsection.13.6}%
-\contentsline {section}{\numberline {14}Conditions de déploiement}{35}{section.14}%
-\contentsline {subsection}{\numberline {14.1}Décisionnaires et responsabilités}{36}{subsection.14.1}%
-\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{37}{appendix.A}%
-\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{39}{appendix.B}%
+\contentsline {paragraph}{Deux zones de vigilance identifiées.}{28}{paragraph*.28}%
+\contentsline {subsection}{\numberline {11.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{28}{subsection.11.3}%
+\contentsline {subsection}{\numberline {11.4}Tests d'\emph {overfitting}}{29}{subsection.11.4}%
+\contentsline {subsection}{\numberline {11.5}Tests de supériorité prédictive}{31}{subsection.11.5}%
+\contentsline {subsection}{\numberline {11.6}Stabilité temporelle multi-métrique}{32}{subsection.11.6}%
+\contentsline {subsection}{\numberline {11.7}Verdict consolidé}{33}{subsection.11.7}%
+\contentsline {section}{\numberline {12}Rejeu de scénarios historiques}{34}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Lecture détaillée des six scénarios}{34}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Observations transversales}{35}{subsection.12.2}%
+\contentsline {section}{\numberline {13}Analyse des risques et limites méthodologiques}{35}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Avertissement 1 --- Data snooping résiduel}{36}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}Avertissement 2 --- Coûts de transaction au niveau portefeuille}{36}{subsection.13.2}%
+\contentsline {subsection}{\numberline {13.3}Avertissement 3 --- Levier 12$\times $ et margin buffer}{36}{subsection.13.3}%
+\contentsline {subsection}{\numberline {13.4}Avertissement 4 --- Corrélations glissantes vs. statiques}{37}{subsection.13.4}%
+\contentsline {subsection}{\numberline {13.5}Avertissement 5 --- Hyperparamètres des sub-stratégies}{37}{subsection.13.5}%
+\contentsline {subsection}{\numberline {13.6}Tableau récapitulatif des risques}{37}{subsection.13.6}%
+\contentsline {section}{\numberline {14}Conditions de déploiement}{37}{section.14}%
+\contentsline {subsection}{\numberline {14.1}Décisionnaires et responsabilités}{38}{subsection.14.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{39}{appendix.A}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{41}{appendix.B}%
 \xpginauxfilefalse 
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

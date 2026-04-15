@@ -9,6 +9,20 @@ Un Sharpe rapporté seul est une \emph{statistique ponctuelle} dont la fiabilit�
 
 Le bootstrap par blocs stationnaires ré-échantillonne la série de rendements en préservant l'autocorrélation locale (volatility clustering, mean reversion de court terme) tout en décorrélant la structure macroéconomique à l'échelle mensuelle. Chaque ré-échantillon donne un vecteur de métriques~; les quantiles à 2.5~\% et 97.5~\% forment l'intervalle de confiance à 95~\%.
 
+\begin{examplebox}
+\textbf{Le bootstrap par blocs sur 10 rendements --- illustration jouet.} Imaginons une série réelle de 10 rendements journaliers observés~:
+\[
+r = (\underbrace{+1.2,\ -0.8,\ +0.3}_{\text{calme}},\ \underbrace{-2.1,\ +1.9,\ -1.7,\ +2.3}_{\text{volatile}},\ \underbrace{+0.5,\ -0.4,\ +0.6}_{\text{calme}})\ \%
+\]
+Un bootstrap \emph{classique} (Efron 1979) tire 10~valeurs avec remise de façon indépendante. Résultat probable~: on mélange à égale chance les jours calmes et les jours volatils, \emph{détruisant} la structure temporelle~--- le ré-échantillon ressemble à une série iid alors que l'original ne l'est pas.
+
+Le \emph{block bootstrap stationnaire} tire au contraire des \textbf{blocs contigus} de longueur géométrique moyenne $L=3$. Un ré-échantillon typique pourrait être~:
+\[
+r^{*} = (\underbrace{r_{4}, r_{5}, r_{6}}_{\text{bloc L=3}},\ \underbrace{r_{8}, r_{9}}_{\text{bloc L=2}},\ \underbrace{r_{2}, r_{3}, r_{4}, r_{5}}_{\text{bloc L=4}},\ r_{1})
+\]
+Le deuxième bloc $(r_{4},r_{5},r_{6}) = (-2.1,+1.9,-1.7)$ est \textbf{copié intact}~: les trois jours volatils restent consécutifs, donc le \emph{volatility clustering} local est préservé. En répétant l'opération 3\,000~fois, on obtient une distribution bootstrap du Sharpe dont la variance reflète la vraie incertitude statistique, au lieu d'être artificiellement réduite par l'hypothèse iid.
+\end{examplebox}
+
 \input{tables/robustness_bootstrap_ci.tex}
 
 \begin{figure}[H]
@@ -54,10 +68,68 @@ Cinq tests complémentaires sont appliqués. Chacun pose une question légèreme
 \begin{itemize}
 \item \textbf{Probabilistic Sharpe Ratio (PSR)~$= 1.000$}~: la probabilité que le vrai Sharpe soit supérieur à zéro est de 100\,\%, après correction pour la non-normalité des rendements.
 \item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les cinq composantes candidates testées, le Sharpe observé dépasse de plus de trois fois l'espérance du maximum sous hypothèse nulle. La stratégie n'est pas le fruit d'un \emph{best of N}.
+\end{itemize}
+
+\begin{examplebox}
+\textbf{Pourquoi le DSR est-il plus sévère que le PSR --- l'analogie du concours de pile ou face.} Supposons qu'on organise un concours où $N=1\,000$ participants lancent chacun une pièce équitable 100 fois et reportent leur taux de «~face~». Par chance pure, \emph{au moins un} participant va tomber sur un score spectaculaire~--- disons 65~faces sur 100, soit un $z$-score de $+3$. Cela ne prouve \textbf{rien} sur son habileté~: c'est l'espérance mécanique du maximum sur 1\,000~essais.
+
+\smallskip
+Le \textbf{PSR} répond à~: \emph{ce participant-là est-il statistiquement différent de 50\,\%~?} Il regarde uniquement ses 100~tirages. Il dira oui.
+
+\smallskip
+Le \textbf{DSR} répond à~: \emph{ce participant est-il significatif sachant qu'il est le vainqueur de 1\,000 essais~?} Il compare son $z=3$ à $\mathbb{E}[\max z] \approx \sqrt{2\ln 1000} \approx 3.72$. Conclusion~: non, son score est en-dessous de ce qu'on attend par chance. Le DSR dira non.
+
+\smallskip
+\textbf{Application Apogée.} Avec $N=5$ composantes candidates testées, $\mathbb{E}[\max \mathrm{SR}\mid N=5] \approx 0.30$. Le Sharpe observé $\widehat{\mathrm{SR}}=0.97$ dépasse ce seuil d'un facteur~$3.26$, d'où DSR~$\approx 1.000$. \textbf{Si on avait testé 10\,000~configurations} au lieu de 5, le seuil monterait à $\sqrt{2\ln 10\,000} \cdot \sqrt{0.089} \approx 1.27$~--- et avec un Sharpe de $0.97$ on aurait DSR nettement inférieur à $0.95$. C'est pour ça que le DSR exige d'honnêtement déclarer $N$.
+\end{examplebox}
+
+\begin{itemize}
 \item \textbf{Haircut Sharpe~$= 0.84$ (ratio de survie $87\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $0.84$. On perd seulement 13\,\% du Sharpe à la correction, ce qui est très faible.
 \item \textbf{Minimum Backtest Length~$= 3.5$~ans}~: la longueur minimale de backtest requise pour valider statistiquement un Sharpe cible de $0.97$ est de 3.5~ans. On dispose de 7~ans, soit le double du minimum requis.
 \item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.31$}~: dans 70\,\% des découpages temporels, le vainqueur in-sample reste dans la moitié supérieure out-of-sample. Le seuil de danger est $0.5$~; $0.31$ est confortable.
 \end{itemize}
+
+\begin{examplebox}
+\textbf{Le Haircut Sharpe étape par étape.} On part du Sharpe observé $\widehat{\mathrm{SR}} = 0.97$ sur $T = 1\,764$~barres journalières, avec $N = 5$~essais.
+
+\begin{enumerate}
+\item \emph{Aller en t-stat}~: $t_{\text{obs}} = 0.97 \times \sqrt{1763} \approx 40.7$~--- statistiquement énorme sous hypothèse nulle.
+\item \emph{P-value brute} (survie Student-t)~: $p_{\text{raw}} \approx 10^{-6}$.
+\item \emph{Correction BHY} pour $N = 5$~essais~: on multiplie par $N$ puis par le 5\textsuperscript{e}~nombre harmonique $c(5) = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} + \tfrac{1}{5} \approx 2.28$. Donc $p_{\text{adj}} \approx 10^{-6} \times 5 \times 2.28 \approx 1.14 \times 10^{-5}$.
+\item \emph{Retour en t-stat}~: $t_{\text{adj}} = \Phi^{-1}_{\text{Student}}(1 - p_{\text{adj}}) \approx 34.3$.
+\item \emph{Retour en Sharpe}~: $\mathrm{SR}_{\text{haircut}} = 34.3 / \sqrt{1763} \approx 0.82$, soit un ratio de survie de $0.82 / 0.97 = 85\,\%$.
+\end{enumerate}
+
+\textbf{Intuition.} Le BHY pénalise le Sharpe de façon d'autant plus douce que l'\emph{edge} initial est grand par rapport à sa variance d'estimation. Une stratégie avec $\widehat{\mathrm{SR}} = 0.25$ et les mêmes paramètres verrait son Haircut s'effondrer à quasi-zéro~: la correction «~mord~» d'autant plus fort que le signal est faible.
+\end{examplebox}
+
+\begin{examplebox}
+\textbf{Le PBO démystifié --- CSCV avec $S=4$ blocs.} Le CSCV réel utilise $S=16$~blocs et $\binom{16}{8}=12\,870$~partitions, difficile à visualiser. Réduisons à $S=4$~blocs et $\binom{4}{2}=6$~partitions pour voir le mécanisme.
+
+\smallskip
+On découpe les 7~ans de rendements en 4~blocs temporels $B_{1}, B_{2}, B_{3}, B_{4}$ de taille égale. Pour chaque partition, on choisit $2$~blocs pour l'in-sample et les $2$~autres pour l'out-of-sample~:
+
+\begin{center}\small
+\begin{tabular}{c c c c}
+\toprule
+Partition & In-sample & Out-of-sample & Logit \\
+\midrule
+1 & $B_{1}, B_{2}$ & $B_{3}, B_{4}$ & $+1.4$ \\
+2 & $B_{1}, B_{3}$ & $B_{2}, B_{4}$ & $+0.8$ \\
+3 & $B_{1}, B_{4}$ & $B_{2}, B_{3}$ & $+0.3$ \\
+4 & $B_{2}, B_{3}$ & $B_{1}, B_{4}$ & $-0.2$ \\
+5 & $B_{2}, B_{4}$ & $B_{1}, B_{3}$ & $+1.1$ \\
+6 & $B_{3}, B_{4}$ & $B_{1}, B_{2}$ & $+0.5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\smallskip
+Pour chaque partition, on identifie le \emph{vainqueur} in-sample~--- la configuration au meilleur Sharpe sur $B_{1},B_{2}$ par exemple~--- puis on regarde son rang out-of-sample sur $B_{3},B_{4}$. Ce rang est converti en \emph{logit}~: positif si le vainqueur reste dans la moitié supérieure, négatif s'il tombe sous la médiane.
+
+\smallskip
+Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaut donc $1/6 \approx 0.17$. Sous $0.5$~: régime sain. Sur le vrai CSCV à 12\,870~partitions, Apogée reporte $\mathrm{PBO} = 0.31$~--- 3~926~partitions sur 12\,870 voient un retournement IS$\to$OOS, ce qui reste confortablement sous le seuil critique.
+\end{examplebox}
 
 \begin{figure}[H]
 \centering
