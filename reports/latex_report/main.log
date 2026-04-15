@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.8.20)  15 APR 2026 12:14
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.8.20)  15 APR 2026 12:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1836,7 +1836,12 @@ File: figures/bootstrap_scatter.png Graphic file (type bmp)
 <figures/bootstrap_scatter.png>
  [24])
 (./sections/10_advanced_robustness.tex [25]
-(./tables/robustness_bootstrap_ci.tex)
+(./tables/robustness_bootstrap_ci.tex
+Overfull \hbox (18.42181pt too wide) in paragraph at lines 5--24
+ [][] 
+ []
+
+)
 File: figures/robustness_metric_ci_forest.png Graphic file (type bmp)
 <figures/robustness_metric_ci_forest.png>
  [26]
@@ -1845,8 +1850,7 @@ File: figures/robustness_bootstrap_sharpe.png Graphic file (type bmp)
  [27]
 File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
 <figures/robustness_equity_fan_chart.png>
-
-(./tables/robustness_overfitting.tex [28]) [29]
+ (./tables/robustness_overfitting.tex [28]) [29]
 File: figures/robustness_pbo_logits.png Graphic file (type bmp)
 <figures/robustness_pbo_logits.png>
  [30]
@@ -1995,7 +1999,7 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Here is how much of TeX's memory you used:
  42079 strings out of 474878
  958880 string characters out of 5762516
- 1943627 words of memory out of 5000000
+ 1942627 words of memory out of 5000000
  63343 multiletter control sequences out of 15000+600000
  568434 words of font info for 146 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191

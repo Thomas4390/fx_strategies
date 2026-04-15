@@ -12,6 +12,7 @@ Typical usage
 >>> df.loc["sharpe_ratio"]
 observed    1.27
 mean        1.24
+median      1.25
 std         0.18
 ci_low      0.89
 ci_high     1.60
@@ -87,8 +88,8 @@ def bootstrap_metric(
     Returns
     -------
     dict
-        ``{observed, mean, std, ci_low, ci_high, samples, metric_id,
-        metric_name}``.
+        ``{observed, mean, median, std, ci_low, ci_high, samples,
+        metric_id, metric_name}``.
     """
     arr = _as_1d_float(returns)
     observed = float(compute_metric_nb(arr, int(metric_id), ann_factor, cutoff))
@@ -105,6 +106,7 @@ def bootstrap_metric(
     return {
         "observed": observed,
         "mean": float(np.mean(samples)),
+        "median": float(np.median(samples)),
         "std": float(np.std(samples, ddof=1)),
         "ci_low": float(q_low),
         "ci_high": float(q_high),
@@ -142,8 +144,8 @@ def bootstrap_all_metrics(
     -------
     pd.DataFrame
         Rows = metric name (snake_case), columns = ``[observed, mean,
-        std, ci_low, ci_high, label]``. ``label`` is the human display
-        name from ``METRIC_LABELS``.
+        median, std, ci_low, ci_high, label]``. ``label`` is the human
+        display name from ``METRIC_LABELS``.
     np.ndarray, optional
         Raw ``(n_boot, 14)`` sample matrix when ``return_samples=True``.
     """
@@ -166,6 +168,7 @@ def bootstrap_all_metrics(
     )
 
     q_low, q_high = np.quantile(samples, ci, axis=0)
+    medians = np.median(samples, axis=0)
     rows = []
     for m in range(samples.shape[1]):
         col = samples[:, m]
@@ -177,6 +180,7 @@ def bootstrap_all_metrics(
                 label=label,
                 observed=float(observed[m]),
                 mean=float(np.mean(col)),
+                median=float(medians[m]),
                 std=float(np.std(col, ddof=1)),
                 ci_low=float(q_low[m]),
                 ci_high=float(q_high[m]),

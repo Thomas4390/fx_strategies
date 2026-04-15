@@ -376,8 +376,10 @@ Overfull \hbox (63.8498pt too wide) in paragraph at lines 5--14
 (./sections/08_out_of_sample.tex [21] [22]) (./sections/09_stress_test.tex
 (./tables/bootstrap_percentiles.tex) [23] [24])
 (./sections/10_advanced_robustness.tex [25]
-(./tables/robustness_bootstrap_ci.tex) [26] [27]
-(./tables/robustness_overfitting.tex [28]) [29] [30]
+(./tables/robustness_bootstrap_ci.tex
+Overfull \hbox (18.42181pt too wide) in paragraph at lines 5--24
+ [][] 
+) [26] [27] (./tables/robustness_overfitting.tex [28]) [29] [30]
 (./tables/robustness_arch_tests.tex) [31] [32]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (64.41673pt too wide) in paragraph at lines 5--18

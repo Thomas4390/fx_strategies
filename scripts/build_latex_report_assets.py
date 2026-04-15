@@ -1167,14 +1167,14 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
         color=PALETTE["rsi"],
         linewidth=1.8,
         linestyle="--",
-        label=f"CI bas 2.5\\% = {sharpe_row['ci_low']:.3f}",
+        label=f"CI bas 2.5% = {sharpe_row['ci_low']:.3f}",
     )
     ax.axvline(
         sharpe_row["ci_high"],
         color=PALETTE["rsi"],
         linewidth=1.8,
         linestyle="--",
-        label=f"CI haut 97.5\\% = {sharpe_row['ci_high']:.3f}",
+        label=f"CI haut 97.5% = {sharpe_row['ci_high']:.3f}",
     )
     ax.axvline(0, color="#888", linewidth=0.9, linestyle=":")
     ax.set_xlabel("Sharpe Ratio")
@@ -1458,12 +1458,13 @@ def _build_robustness_tables(report: dict) -> None:
         rows.append(
             f"{label} & {_fmt_metric(metric, row['observed'])} & "
             f"{_fmt_metric(metric, row['mean'])} & "
+            f"{_fmt_metric(metric, row['median'])} & "
             f"{_fmt_metric(metric, ci_low_disp)} & "
             f"{_fmt_metric(metric, ci_high_disp)} \\\\"
         )
     content = tex_table_wrap(
         header=(
-            r"Métrique & Observée & Moy. bootstrap & "
+            r"Métrique & Observée & Moy. bootstrap & Médiane (P50) & "
             r"CI 2.5\,\% & CI 97.5\,\% \\"
         ),
         rows=rows,
@@ -1477,7 +1478,7 @@ def _build_robustness_tables(report: dict) -> None:
             r"Tableau~\ref{tab:metrics_summary}."
         ),
         label="tab:robustness_bootstrap_ci",
-        col_spec="lrrrr",
+        col_spec="lrrrrr",
     )
     save_tex("robustness_bootstrap_ci", content)
 
