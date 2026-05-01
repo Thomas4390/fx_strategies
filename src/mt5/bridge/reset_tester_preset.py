@@ -60,38 +60,49 @@ def find_preset_files(tester_dir: Path, ea: str) -> list[Path]:
 def update_preset(path: Path, suffix: str, mode_int: int,
                   check_only: bool) -> bool:
     """Read .set/.ini (UTF-16), patch SymbolSuffix and MacroSourceMode,
-    write back. Returns True if the file needed changes."""
-    text = path.read_text(encoding="utf-16")
+    write back. Returns True if the file needed changes (value diff OR
+    corrupted line endings)."""
+    raw = path.read_bytes()
+    # Detect the previous version of this script that wrote \r\r\n line
+    # terminators (Windows universal-newline translation bug). MT5 keeps the
+    # trailing \r as part of the string value, breaking symbol lookup.
+    bad_eol = b"\r\x00\r\x00\n\x00" in raw
+    text = raw.decode("utf-16")
     lines = text.splitlines(keepends=False)
 
     new_lines = []
-    changed = False
+    value_changed = False
     for ln in lines:
         if ln.startswith("Inp_SymbolSuffix="):
             new = f"Inp_SymbolSuffix={suffix}"
             if new != ln:
                 print(f"  - {ln}")
                 print(f"  + {new}")
-                changed = True
+                value_changed = True
             new_lines.append(new)
         elif ln.startswith("Inp_MacroSourceMode="):
-            # Format: value||initial||step||stop||use_for_opt
             new = (f"Inp_MacroSourceMode={mode_int}||{mode_int}"
                    f"||0||{MACRO_SOURCE_MODE_MAX}||N")
             if new != ln:
                 print(f"  - {ln}")
                 print(f"  + {new}")
-                changed = True
+                value_changed = True
             new_lines.append(new)
         else:
             new_lines.append(ln)
 
-    if check_only or not changed:
-        return changed
+    if bad_eol and not value_changed:
+        print(f"  (no value diff, but fixing corrupted \\r\\r\\n line endings)")
 
-    # MT5 expects UTF-16 LE with BOM and CRLF line terminators
+    needs_write = value_changed or bad_eol
+    if check_only or not needs_write:
+        return needs_write
+
+    # MT5 expects UTF-16 LE with BOM and CRLF line terminators.
+    # IMPORTANT: write_bytes (not write_text) to bypass Windows universal-newline
+    # translation, which would turn our '\n' into '\r\n' and produce '\r\r\n'.
     new_text = "\r\n".join(new_lines) + "\r\n"
-    path.write_text(new_text, encoding="utf-16")
+    path.write_bytes(new_text.encode("utf-16"))
     return True
 
 
