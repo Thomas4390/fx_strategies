@@ -63,8 +63,26 @@ public:
         {
             m_symbols[i] = MakeSymbolWithSuffix(raw[i], Inp_SymbolSuffix);
             if(!EnsureSymbolSelected(m_symbols[i])) return false;
-            // 1500 M1 bars = ~1 jour de trading + warmup BB(80)
-            if(!EnsureHistory(m_symbols[i], PERIOD_M1, 1500)) return false;
+            // Ideally 1500 M1 bars (~1 jour de trading + buffer), but accept
+            // graceful degradation down to BBWindow+20 so backtests can start
+            // from the broker M1 history boundary. BB will fill its window of
+            // Inp_MR_BBWindow bars as new bars arrive. Below the floor the
+            // sleeve cannot warmup BB at all → hard fail.
+            if(!EnsureHistory(m_symbols[i], PERIOD_M1, 1500))
+            {
+                int floor_bars = Inp_MR_BBWindow + 20;
+                if(!EnsureHistory(m_symbols[i], PERIOD_M1, floor_bars))
+                {
+                    g_logger.Error(m_name, StringFormat(
+                        "%s: cannot load even %d M1 bars; sleeve disabled",
+                        m_symbols[i], floor_bars));
+                    return false;
+                }
+                g_logger.Warn(m_name, StringFormat(
+                    "%s: %d/1500 M1 bars; BB warmup degraded, signals improve "
+                    "as bars accumulate",
+                    m_symbols[i], (int)Bars(m_symbols[i], PERIOD_M1)));
+            }
 
             m_bb[i].Init(Inp_MR_BBWindow, Inp_MR_BBAlpha);
             if(!m_vwap[i].Warmup(m_symbols[i]))
