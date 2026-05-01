@@ -1,4 +1,3 @@
-2
 //+------------------------------------------------------------------+
 //| FxPreflight.mq5                                                  |
 //| Vérifie l'environnement avant de lancer FxMultiSleeve :          |
@@ -14,8 +13,8 @@
 #include "..\Include\FxCommon.mqh"
 #include "..\Include\FxMacroFilter.mqh"
 
-input string           Inp_SymbolSuffix      = "";
-input EMacroSourceMode Inp_MacroSourceMode   = MACRO_SOURCE_FILE;
+input string           Inp_SymbolSuffix      = ".c";              // Broker-specific (ECN/Raw uses ".c")
+input EMacroSourceMode Inp_MacroSourceMode   = MACRO_SOURCE_NATIVE; // FRED API + MT5 Calendar
 input string           Inp_MacroCacheFile    = "macro_cache.csv";
 input bool             Inp_MacroUseCommon    = true;
 input int              Inp_MacroMaxAgeHours  = 24;

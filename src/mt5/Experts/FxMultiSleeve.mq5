@@ -71,7 +71,7 @@ input double Inp_RSI_ExitMid       = 50.0;
 input int    Inp_RSI_SlippageBps   = 10;       // LaTeX § 05 — 10 bps daily
 
 // === Operational ===
-input string Inp_SymbolSuffix      = "";
+input string Inp_SymbolSuffix      = ".c";    // Broker-specific (ECN/Raw uses ".c"; change for other brokers)
 input int    Inp_MagicMR           = 831;
 input int    Inp_MagicTS           = 832;
 input int    Inp_MagicRSI          = 833;
@@ -89,7 +89,7 @@ input int    Inp_DailyRecomputeHr  = 21;       // heure UTC de recompute daily
 // Pré-requis NATIVE : URL FRED whitelistée dans Outils → Options → EA →
 //   "Allow WebRequest for listed URL" → https://api.stlouisfed.org
 //   Et un fichier `fred_api_key.txt` dans Common/Files contenant la clé.
-input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_FILE;
+input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_NATIVE;  // FRED API + MT5 Calendar (no Python bridge needed)
 input string           Inp_FREDApiKeyFile       = "fred_api_key.txt";
 input bool             Inp_FREDKeyUseCommon     = true;
 input string           Inp_FREDSeriesId         = "T10Y2Y";

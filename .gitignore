@@ -25,3 +25,11 @@ __pycache__/
 .idea/
 .vscode/
 *.swp
+
+# Secrets / local env (NEVER commit)
+.env
+.env.*
+!.env.example
+fred_api_key.txt
+*.key
+*.pem
