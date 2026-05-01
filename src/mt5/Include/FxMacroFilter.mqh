@@ -2,13 +2,19 @@
 //| FxMacroFilter.mqh                                                |
 //| Filtre macro 2-étages utilisé par le sleeve MR Macro.            |
 //|                                                                  |
-//| Trois modes de récupération possibles via `EMacroSourceMode` :   |
+//| Cinq modes de récupération via `EMacroSourceMode` :              |
 //|                                                                  |
-//|  - MACRO_SOURCE_FILE   : lit `macro_cache.csv` (bridge Python)   |
-//|  - MACRO_SOURCE_NATIVE : Calendar MT5 + WebRequest FRED          |
-//|  - MACRO_SOURCE_HYBRID : tente NATIVE, fallback FILE             |
+//|  - MACRO_SOURCE_FILE    : lit `macro_cache.csv` (bridge Python,  |
+//|                           1 ligne live)                          |
+//|  - MACRO_SOURCE_NATIVE  : Calendar MT5 + WebRequest FRED         |
+//|                           (live uniquement)                      |
+//|  - MACRO_SOURCE_HYBRID  : tente NATIVE, fallback FILE            |
+//|  - MACRO_SOURCE_HISTORY : lit `macro_history.csv` (multi-lignes  |
+//|                           time-indexed, pour le backtest)        |
+//|  - MACRO_SOURCE_AUTO    : recommandé. MQLInfoInteger(MQL_TESTER) |
+//|                           => HISTORY en tester, NATIVE en live.  |
 //|                                                                  |
-//| Format CSV (mode FILE) — header + 1 ligne :                      |
+//| Format CSV (FILE & HISTORY identiques) :                         |
 //|   timestamp_utc,spread_10y2y,unemp_rising,spread_threshold,      |
 //|   macro_ok                                                       |
 //|   2026-04-24T18:00:00Z,0.3520,0,0.50,1                           |
@@ -18,6 +24,7 @@
 
 #include "FxCommon.mqh"             // EMacroSourceMode défini ici
 #include "FxMacroSourceNative.mqh"
+#include "FxMacroSourceHistory.mqh"
 
 //+------------------------------------------------------------------+
 //| CMacroFilter : refresh, validité, accesseurs.                    |
@@ -32,6 +39,8 @@ private:
     double   m_user_threshold;     // seuil spread fixé par l'EA
     string   m_fred_api_key_file;  // nom du fichier contenant la clé FRED
     bool     m_fred_key_use_common;
+    string   m_history_filename;
+    bool     m_history_use_common;
 
     datetime m_last_refresh;
     datetime m_last_read_at;
@@ -40,19 +49,22 @@ private:
     double   m_spread_threshold;
     bool     m_macro_ok;
     bool     m_loaded;
-    string   m_last_source;        // "file" / "native"
+    string   m_last_source;        // "file" / "native" / "history"
 
     CMacroSourceCalendar m_cal;
     CMacroSourceFRED     m_fred;
+    CMacroSourceHistory  m_history;
 
 public:
-    CMacroFilter() : m_mode(MACRO_SOURCE_FILE),
+    CMacroFilter() : m_mode(MACRO_SOURCE_AUTO),
                      m_filename("macro_cache.csv"),
                      m_max_age_seconds(86400),
                      m_use_common(true),
                      m_user_threshold(0.5),
                      m_fred_api_key_file("fred_api_key.txt"),
                      m_fred_key_use_common(true),
+                     m_history_filename("macro_history.csv"),
+                     m_history_use_common(true),
                      m_last_refresh(0), m_last_read_at(0),
                      m_spread(0.0), m_unemp_rising(false),
                      m_spread_threshold(0.5), m_macro_ok(false),
@@ -62,6 +74,8 @@ public:
               string filename, int max_age_hours, bool use_common,
               double spread_threshold,
               string fred_api_key_file, bool fred_key_use_common,
+              string history_filename = "macro_history.csv",
+              bool   history_use_common = true,
               string fred_series_id = "T10Y2Y")
     {
         m_mode = mode;
@@ -71,26 +85,43 @@ public:
         m_user_threshold = spread_threshold;
         m_fred_api_key_file = fred_api_key_file;
         m_fred_key_use_common = fred_key_use_common;
+        m_history_filename = history_filename;
+        m_history_use_common = history_use_common;
 
         m_cal.Init("US", "Unemployment Rate");
         m_fred.Init(fred_series_id, ReadFREDKey());
+        m_history.Init(history_filename, history_use_common);
     }
 
-    //--- Refresh : selon le mode, lit le fichier, sources natives, ou les deux.
+    //--- Refresh : selon le mode, dispatche vers la bonne source.
+    //--- AUTO : detect Strategy Tester via MQLInfoInteger(MQL_TESTER) and
+    //--- pick HISTORY in tester (only thing that works there) or NATIVE in live.
     bool Refresh()
     {
-        switch(m_mode)
+        EMacroSourceMode effective = ResolveEffectiveMode();
+        switch(effective)
         {
-            case MACRO_SOURCE_FILE:   return RefreshFromFile();
-            case MACRO_SOURCE_NATIVE: return RefreshFromNative();
+            case MACRO_SOURCE_FILE:    return RefreshFromFile();
+            case MACRO_SOURCE_NATIVE:  return RefreshFromNative();
+            case MACRO_SOURCE_HISTORY: return RefreshFromHistory();
             case MACRO_SOURCE_HYBRID:
             {
                 if(RefreshFromNative()) return true;
                 Print("CMacroFilter: native sources failed, fallback to file");
                 return RefreshFromFile();
             }
+            default: break;
         }
         return false;
+    }
+
+    //--- Resolve AUTO -> concrete mode based on runtime context. Exposed for
+    //--- logging/preflight purposes; idempotent.
+    EMacroSourceMode ResolveEffectiveMode() const
+    {
+        if(m_mode != MACRO_SOURCE_AUTO) return m_mode;
+        if(MQLInfoInteger(MQL_TESTER)) return MACRO_SOURCE_HISTORY;
+        return MACRO_SOURCE_NATIVE;
     }
 
     bool IsValid() const
@@ -172,6 +203,41 @@ private:
         m_last_source = "native";
         PrintFormat("CMacroFilter::NATIVE OK: spread=%.4f unemp_rising=%d → macro_ok=%d",
                     m_spread, (int)m_unemp_rising, (int)m_macro_ok);
+        return true;
+    }
+
+    //--- Mode HISTORY : lookup time-indexed dans macro_history.csv.
+    //--- Lazy-load au premier appel, puis binary search par TimeCurrent().
+    //--- En tester : TimeCurrent() est le temps simulé.
+    //--- En live   : TimeCurrent() est le temps réel (la dernière ligne sera retournée).
+    bool RefreshFromHistory()
+    {
+        if(!m_history.IsLoaded())
+        {
+            if(!m_history.LoadAll())
+            {
+                Print("CMacroFilter::HISTORY: failed to load history CSV");
+                return false;
+            }
+        }
+        datetime t = TimeCurrent();
+        double sp = 0.0;
+        bool ur = false, mo = false;
+        datetime row_ts = 0;
+        if(!m_history.LookupAt(t, sp, ur, mo, row_ts))
+        {
+            PrintFormat("CMacroFilter::HISTORY: no row at or before %s",
+                        TimeToString(t, TIME_DATE | TIME_SECONDS));
+            return false;
+        }
+        m_spread           = sp;
+        m_unemp_rising     = ur;
+        m_macro_ok         = mo;
+        m_spread_threshold = m_user_threshold;
+        m_last_refresh     = row_ts;
+        m_last_read_at     = TimeGMT();
+        m_loaded           = true;
+        m_last_source      = "history";
         return true;
     }
 

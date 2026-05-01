@@ -19,14 +19,21 @@ enum ESleeveID
 };
 
 //--- Source des données macro pour le filtre MR Macro
-//---   FILE   : lit macro_cache.csv (bridge Python)
-//---   NATIVE : Calendar MT5 + WebRequest FRED
-//---   HYBRID : NATIVE puis fallback FILE en cas d'échec
+//---   FILE    : lit macro_cache.csv (bridge Python, 1 ligne live)
+//---   NATIVE  : Calendar MT5 + WebRequest FRED (live uniquement, WebRequest
+//---            bloqué dans Strategy Tester)
+//---   HYBRID  : NATIVE puis fallback FILE en cas d'échec
+//---   HISTORY : lit macro_history.csv (multi-lignes, time-indexed, généré
+//---            par bridge/fx_macro_history.py — pour le backtest)
+//---   AUTO    : recommandé. Détecte MQLInfoInteger(MQL_TESTER) et choisit
+//---            HISTORY en tester, NATIVE en live → zero config.
 enum EMacroSourceMode
 {
-    MACRO_SOURCE_FILE   = 0,
-    MACRO_SOURCE_NATIVE = 1,
-    MACRO_SOURCE_HYBRID = 2
+    MACRO_SOURCE_FILE    = 0,
+    MACRO_SOURCE_NATIVE  = 1,
+    MACRO_SOURCE_HYBRID  = 2,
+    MACRO_SOURCE_HISTORY = 3,
+    MACRO_SOURCE_AUTO    = 4
 };
 
 //--- Constantes globales

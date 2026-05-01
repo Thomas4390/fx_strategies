@@ -83,16 +83,22 @@ input int    Inp_MacroMaxAgeHours  = 168;      // LaTeX § 13.1 — freshness 7 
 input int    Inp_DailyRecomputeHr  = 21;       // heure UTC de recompute daily
 
 // === Macro source mode ===
-//   FILE   : lit macro_cache.csv produit par bridge/fx_macro_bridge.py
-//   NATIVE : Calendar MT5 (chômage US) + WebRequest FRED (spread 10Y-2Y)
-//   HYBRID : essaie NATIVE, fallback FILE
+//   FILE    : lit macro_cache.csv (bridge/fx_macro_bridge.py, 1 ligne live)
+//   NATIVE  : Calendar MT5 (chômage US) + WebRequest FRED (spread 10Y-2Y) — live only
+//   HYBRID  : essaie NATIVE, fallback FILE
+//   HISTORY : lit macro_history.csv (bridge/fx_macro_history.py, time-indexed) — backtest
+//   AUTO    : recommandé. MQLInfoInteger(MQL_TESTER) → HISTORY en tester, NATIVE en live
 // Pré-requis NATIVE : URL FRED whitelistée dans Outils → Options → EA →
 //   "Allow WebRequest for listed URL" → https://api.stlouisfed.org
 //   Et un fichier `fred_api_key.txt` dans Common/Files contenant la clé.
-input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_NATIVE;  // FRED API + MT5 Calendar (no Python bridge needed)
+// Pré-requis HISTORY/AUTO-en-tester : `macro_history.csv` généré au préalable
+//   via `python src/mt5/bridge/fx_macro_history.py` (couvre la période de backtest).
+input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_AUTO;  // dispatch tester vs live
 input string           Inp_FREDApiKeyFile       = "fred_api_key.txt";
 input bool             Inp_FREDKeyUseCommon     = true;
 input string           Inp_FREDSeriesId         = "T10Y2Y";
+input string           Inp_MacroHistoryFile     = "macro_history.csv";
+input bool             Inp_MacroHistoryUseCommon = true;
 
 //============================================================ INCLUDES
 
@@ -138,6 +144,7 @@ int OnInit()
                  Inp_MacroCacheFile, Inp_MacroMaxAgeHours, Inp_MacroUseCommon,
                  Inp_MR_SpreadThresh,
                  Inp_FREDApiKeyFile, Inp_FREDKeyUseCommon,
+                 Inp_MacroHistoryFile, Inp_MacroHistoryUseCommon,
                  Inp_FREDSeriesId);
     if(!g_macro.Refresh())
         g_logger.Warn("INIT",

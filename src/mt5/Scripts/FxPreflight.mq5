@@ -13,15 +13,17 @@
 #include "..\Include\FxCommon.mqh"
 #include "..\Include\FxMacroFilter.mqh"
 
-input string           Inp_SymbolSuffix      = ".c";              // Broker-specific (ECN/Raw uses ".c")
-input EMacroSourceMode Inp_MacroSourceMode   = MACRO_SOURCE_NATIVE; // FRED API + MT5 Calendar
-input string           Inp_MacroCacheFile    = "macro_cache.csv";
-input bool             Inp_MacroUseCommon    = true;
-input int              Inp_MacroMaxAgeHours  = 24;
-input double           Inp_MR_SpreadThresh   = 0.5;
-input string           Inp_FREDApiKeyFile    = "fred_api_key.txt";
-input bool             Inp_FREDKeyUseCommon  = true;
-input string           Inp_FREDSeriesId      = "T10Y2Y";
+input string           Inp_SymbolSuffix          = ".c";              // Broker-specific (ECN/Raw uses ".c")
+input EMacroSourceMode Inp_MacroSourceMode       = MACRO_SOURCE_AUTO; // tester->HISTORY, live->NATIVE
+input string           Inp_MacroCacheFile        = "macro_cache.csv";
+input bool             Inp_MacroUseCommon        = true;
+input int              Inp_MacroMaxAgeHours      = 24;
+input double           Inp_MR_SpreadThresh       = 0.5;
+input string           Inp_FREDApiKeyFile        = "fred_api_key.txt";
+input bool             Inp_FREDKeyUseCommon      = true;
+input string           Inp_FREDSeriesId          = "T10Y2Y";
+input string           Inp_MacroHistoryFile      = "macro_history.csv";
+input bool             Inp_MacroHistoryUseCommon = true;
 
 void OnStart()
 {
@@ -66,6 +68,7 @@ void OnStart()
                    Inp_MacroCacheFile, Inp_MacroMaxAgeHours, Inp_MacroUseCommon,
                    Inp_MR_SpreadThresh,
                    Inp_FREDApiKeyFile, Inp_FREDKeyUseCommon,
+                   Inp_MacroHistoryFile, Inp_MacroHistoryUseCommon,
                    Inp_FREDSeriesId);
         if(!macro.Refresh())
         {

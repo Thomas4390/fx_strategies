@@ -28,7 +28,7 @@ Si on change de broker plus tard : vérifier les noms de symboles dans MarketWat
 
 ## Procédure drag-and-drop standard
 
-Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSourceMode=MACRO_SOURCE_NATIVE`), le drag-and-drop est maintenant zero-config :
+Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSourceMode=MACRO_SOURCE_AUTO`), le drag-and-drop est maintenant zero-config en live ET en backtest :
 
 1. Ouvrir un chart **`EURUSD.c` M1** (timeframe critique pour Sleeve 1)
 2. Vérifier `Outils → Options → Expert Advisors` :
@@ -43,19 +43,71 @@ Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSource
 
 > ⚠️ Si l'EA était déjà attaché à un chart avec d'anciennes valeurs sauvegardées : `clic-droit chart → Expert Advisors → Remove`, puis re-drag pour bénéficier des nouveaux défauts.
 
-## Mode macro NATIVE (FRED API + MT5 Calendar)
+## Modes macro — 5 valeurs de `EMacroSourceMode`
 
-Utilisé à la place du bridge Python `fx_macro_bridge.py` (mode FILE) — autonome et plus simple.
+| Mode | Use case | Source de données | Fichiers requis |
+|---|---|---|---|
+| `MACRO_SOURCE_FILE` | Live legacy (cron Python horaire) | `macro_cache.csv` (1 ligne) | `bridge/fx_macro_bridge.py` planifié |
+| `MACRO_SOURCE_NATIVE` | Live autonome (recommandé live) | FRED `WebRequest` + MT5 Calendar | `fred_api_key.txt` + URL whitelist |
+| `MACRO_SOURCE_HYBRID` | Live robuste | tente NATIVE, fallback FILE | les deux ci-dessus |
+| `MACRO_SOURCE_HISTORY` | Backtest (Strategy Tester) | `macro_history.csv` time-indexed | `bridge/fx_macro_history.py` lancé une fois |
+| `MACRO_SOURCE_AUTO` | **Défaut** | Détecte `MQLInfoInteger(MQL_TESTER)` → HISTORY en tester, NATIVE en live | les fichiers requis du mode résolu |
 
-**Sources de données** :
-- **Spread Treasury 10Y-2Y** : série FRED `T10Y2Y` via `WebRequest` (`FxMacroSourceNative.mqh::CMacroSourceFRED`)
-- **Taux de chômage US** : `CalendarValueHistoryByEvent("Unemployment Rate", "US")` natif MT5
+**Mode AUTO = best of both worlds** : un seul `.ex5` compilé tourne sans modification d'inputs en live ET en backtest. Le dispatch se fait à chaque `Refresh()` via `CMacroFilter::ResolveEffectiveMode()`.
 
-**Fichiers requis** :
-- `Common\Files\fred_api_key.txt` : la clé API FRED (32 chars hex), une seule ligne, ANSI (déjà créé sur ce poste)
-- URL whitelist : `https://api.stlouisfed.org` dans `Outils → Options → Expert Advisors`
+### Sources implémentées
+
+- `FxMacroSourceNative.mqh` — `CMacroSourceCalendar` (chômage via MT5 Calendar) + `CMacroSourceFRED` (spread via WebRequest)
+- `FxMacroSourceHistory.mqh` — `CMacroSourceHistory` (CSV multi-lignes en mémoire + binary search par `TimeCurrent()`)
+
+### Fichiers requis sur ce poste
+
+| Fichier | Mode(s) | Statut local |
+|---|---|---|
+| `Common\Files\fred_api_key.txt` | NATIVE / HYBRID / AUTO-live | ✅ déployé |
+| `Common\Files\macro_cache.csv` | FILE / HYBRID-fallback | non requis (NATIVE par défaut) |
+| `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ généré pour 2019-2026 (1833 lignes) |
+| URL whitelist `https://api.stlouisfed.org` | NATIVE / HYBRID / AUTO-live | ✅ activé dans MT5 |
 
 **Pour obtenir une clé FRED (gratuit)** : https://fredaccount.stlouisfed.org/apikeys
+
+## Backtest dans Strategy Tester
+
+### 1) Régénérer (ou rafraîchir) `macro_history.csv`
+
+```bash
+python src/mt5/bridge/fx_macro_history.py
+# ou avec une fenêtre custom :
+python src/mt5/bridge/fx_macro_history.py --start 2019-01-01 --end 2026-04-30
+```
+
+Le script :
+- Lit `FRED_API_KEY` dans `<repo>/.env` (gitignoré)
+- Fetch `T10Y2Y` daily et `UNRATE` monthly via FRED API
+- Écrit les parquets bruts dans `data/` (utilisés aussi par `fx_macro_bridge.py`)
+- Calcule `unemp_rising` (delta 3m sur UNRATE) et `macro_ok` pour chaque date
+- Écrit `Common\Files\macro_history.csv` (multi-lignes, ASCII, ~1800 lignes pour 2019-2026)
+
+### 2) Lancer le tester
+
+1. `View → Strategy Tester` (Ctrl+R)
+2. **Expert** : `FxMultiSleeve`, **Symbol** : `EURUSD.c`, **Period** : `M1`
+3. **Modeling** : `Every tick based on real ticks` (le plus précis)
+4. **Date** : 2019-01-01 → 2026-04-30 (ou sous-fenêtre)
+5. Onglet **Inputs** : ne rien toucher (AUTO détecte le tester et bascule en HISTORY)
+6. **Start**
+
+### 3) Vérifier la sortie
+
+Dans le Journal du tester, chercher au démarrage :
+```
+CMacroSourceHistory: loaded 1833 rows from macro_history.csv [2019.01.02 ... 2026.04.30]
+```
+Et au fil du backtest, chaque refresh log : `Macro source=history spread=… macro_ok=…` avec une valeur qui change au cours du temps simulé (preuve que le binary search marche).
+
+### 4) Refresh régulier
+
+À refaire toutes les semaines/mois pour ajouter les nouvelles obs FRED. Idempotent : ré-exécuter le script écrase les parquets et le CSV avec les données fraîches.
 
 ## Secrets / clé FRED — où vit la clé sur ce poste
 
@@ -107,13 +159,14 @@ C:\Users\vaude\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF
 - 0.10 → Sleeve 2 TS Momentum (D1, 3 paires)
 - 0.10 → Sleeve 3 RSI Daily (D1, 4 paires)
 
-**Includes (12 fichiers `.mqh`)** :
+**Includes (13 fichiers `.mqh`)** :
 ```
-FxCommon.mqh                  Constantes, enums, helpers (EnsureSymbolSelected, EnsureHistory, MakeSymbolWithSuffix, SplitCsv)
+FxCommon.mqh                  Constantes, enums (EMacroSourceMode), helpers
 FxLogger.mqh                  Print + CSV logging
 FxRiskManager.mqh             Vol-targeting, sub-equity, circuit-breaker DD, marge cap
-FxMacroFilter.mqh             Filtre macro 2-étages (FILE / NATIVE / HYBRID)
-FxMacroSourceNative.mqh       Calendar MT5 + WebRequest FRED
+FxMacroFilter.mqh             Orchestrateur 5 modes (FILE / NATIVE / HYBRID / HISTORY / AUTO)
+FxMacroSourceNative.mqh       Calendar MT5 + WebRequest FRED (live)
+FxMacroSourceHistory.mqh      CSV time-indexed binary search (backtest)
 FxIndicatorVWAP.mqh           VWAP daily-anchor
 FxIndicatorBBDeviation.mqh    Bollinger Bands sur déviation VWAP
 FxSleeveBase.mqh              Interface abstraite des sleeves
@@ -127,8 +180,11 @@ FxTradeHelpers.mqh            CTrade wrappers, sizing, stop level
 - `Scripts/FxPreflight.mq5` — vérif environnement (symboles, history, macro) avant déploiement
 - `Scripts/FxIndicatorTest.mq5` — tests unitaires VWAP / BBDeviation
 
-**Bridge Python (mode FILE — non utilisé en NATIVE)** :
-- `bridge/fx_macro_bridge.py` génère `Common\Files\macro_cache.csv` toutes les heures via cron/Task Scheduler
+**Bridges Python** (séparation par responsabilité) :
+- `bridge/fx_macro_bridge.py` — live : 1 ligne CSV → `Common\Files\macro_cache.csv` (cron horaire si on veut le mode FILE)
+- `bridge/fx_macro_history.py` — backtest : N lignes CSV → `Common\Files\macro_history.csv` (one-shot, à relancer périodiquement)
+
+Les 2 scripts partagent le même schéma CSV ; la seule différence est le nombre de lignes (1 vs ~1800).
 
 ## Inputs critiques de référence
 
@@ -150,9 +206,12 @@ Inp_MarginCapPct      = 0.70
 Inp_SymbolSuffix      = ".c"      // ⚠️ adapter au broker
 
 // Macro
-Inp_MacroSourceMode   = MACRO_SOURCE_NATIVE
-Inp_MacroUseCommon    = true
-Inp_MacroMaxAgeHours  = 168
+Inp_MacroSourceMode       = MACRO_SOURCE_AUTO        // tester→HISTORY, live→NATIVE
+Inp_MacroCacheFile        = "macro_cache.csv"        // utilisé par FILE / HYBRID-fallback
+Inp_MacroHistoryFile      = "macro_history.csv"      // utilisé par HISTORY / AUTO-tester
+Inp_MacroUseCommon        = true
+Inp_MacroHistoryUseCommon = true
+Inp_MacroMaxAgeHours      = 168
 
 // Logging
 Inp_LogVerbose        = false
