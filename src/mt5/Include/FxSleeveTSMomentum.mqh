@@ -51,7 +51,24 @@ public:
         {
             m_pairs[i] = MakeSymbolWithSuffix(raw[i], Inp_SymbolSuffix);
             if(!EnsureSymbolSelected(m_pairs[i])) return false;
-            if(!EnsureHistory(m_pairs[i], PERIOD_D1, 250)) return false;
+            // Try ideal 250 D1 bars, gracefully accept any history >= 1.
+            // Below 1 bar there is no D1 data at all -> hard fail.
+            // ProcessPair's ReadShift1() returns false until iMA/iRSI
+            // have computed their first values, so the sleeve simply
+            // doesn't trade during the warmup period.
+            if(!EnsureHistory(m_pairs[i], PERIOD_D1, 250))
+            {
+                if(!EnsureHistory(m_pairs[i], PERIOD_D1, 1))
+                {
+                    g_logger.Error(m_name, StringFormat(
+                        "%s: no D1 history at all; sleeve disabled", m_pairs[i]));
+                    return false;
+                }
+                g_logger.Warn(m_name, StringFormat(
+                    "%s: %d/250 D1 bars; iMA(%d)/iRSI(%d) warm up as bars accumulate",
+                    m_pairs[i], (int)Bars(m_pairs[i], PERIOD_D1),
+                    Inp_TS_SlowEMA, Inp_TS_RSIPeriod));
+            }
             m_h_ema_fast[i] = iMA(m_pairs[i], PERIOD_D1, Inp_TS_FastEMA,
                                   0, MODE_EMA, PRICE_CLOSE);
             m_h_ema_slow[i] = iMA(m_pairs[i], PERIOD_D1, Inp_TS_SlowEMA,

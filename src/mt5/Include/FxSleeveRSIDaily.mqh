@@ -57,7 +57,23 @@ public:
         {
             m_pairs[i] = MakeSymbolWithSuffix(raw[i], Inp_SymbolSuffix);
             if(!EnsureSymbolSelected(m_pairs[i])) return false;
-            if(!EnsureHistory(m_pairs[i], PERIOD_D1, 100)) return false;
+            // Try ideal 100 D1 bars, gracefully accept any history >= 1.
+            // Below 1 bar there is no D1 data at all -> hard fail.
+            // ProcessPair's ReadRSI() returns false until iRSI has
+            // computed its first values (Inp_RSI_Period bars), so the
+            // sleeve simply doesn't trade during the warmup period.
+            if(!EnsureHistory(m_pairs[i], PERIOD_D1, 100))
+            {
+                if(!EnsureHistory(m_pairs[i], PERIOD_D1, 1))
+                {
+                    g_logger.Error(m_name, StringFormat(
+                        "%s: no D1 history at all; sleeve disabled", m_pairs[i]));
+                    return false;
+                }
+                g_logger.Warn(m_name, StringFormat(
+                    "%s: %d/100 D1 bars; iRSI(%d) warms up as bars accumulate",
+                    m_pairs[i], (int)Bars(m_pairs[i], PERIOD_D1), Inp_RSI_Period));
+            }
             m_h_rsi[i] = iRSI(m_pairs[i], PERIOD_D1, Inp_RSI_Period, PRICE_CLOSE);
             if(m_h_rsi[i] == INVALID_HANDLE)
             {
