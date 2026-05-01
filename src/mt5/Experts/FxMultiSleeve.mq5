@@ -146,6 +146,20 @@ int OnInit()
                  Inp_FREDApiKeyFile, Inp_FREDKeyUseCommon,
                  Inp_MacroHistoryFile, Inp_MacroHistoryUseCommon,
                  Inp_FREDSeriesId);
+
+    // Explicit diagnostic so the user can verify the actual input mode (vs the
+    // mode that AUTO resolves to). MQL_TESTER=1 inside Strategy Tester, 0 live.
+    g_logger.Info("INIT",
+        StringFormat("MacroSource: input=%s resolved=%s tester=%d",
+                     EnumToString(Inp_MacroSourceMode),
+                     EnumToString(g_macro.ResolveEffectiveMode()),
+                     (int)MQLInfoInteger(MQL_TESTER)));
+    g_logger.Info("INIT",
+        StringFormat("Inputs: SymbolSuffix='%s' Alloc=%.2f/%.2f/%.2f TargetVol=%.2f MaxLev=%.1f",
+                     Inp_SymbolSuffix,
+                     Inp_AllocMRMacro, Inp_AllocTSMomentum, Inp_AllocRSIDaily,
+                     Inp_GlobalTargetVol, Inp_GlobalMaxLeverage));
+
     if(!g_macro.Refresh())
         g_logger.Warn("INIT",
             StringFormat("Macro initial load failed (mode=%s); sleeve 1 disabled until refresh",
