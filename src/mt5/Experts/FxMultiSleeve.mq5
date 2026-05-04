@@ -27,8 +27,12 @@
 input double Inp_AllocMRMacro      = 0.80;
 input double Inp_AllocTSMomentum   = 0.10;
 input double Inp_AllocRSIDaily     = 0.10;
-input bool   Inp_EnableDDCap       = true;    // LaTeX § 13.3 — alerte DD 15 %
-input double Inp_DDCap             = 0.15;
+input bool   Inp_EnableDDCap       = true;    // LaTeX § 13.3 — circuit-breaker tail-risk
+input double Inp_DDCap             = 0.30;    // Relâché 0.15→0.30 (2026-05-04, cf.
+                                              // reports/optimization findings :
+                                              // DDCap=0.15 freinait 24% configs IS
+                                              // pour aucun bénéfice OOS, vol-targeting
+                                              // global suffit en régime normal)
 input bool   Inp_ResetDDState      = false;
 input bool   Inp_EnableMarginCap   = true;    // LaTeX § 13.2 — cap marge 70 %
 input double Inp_MarginCapPct      = 0.70;
