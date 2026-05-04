@@ -57,9 +57,32 @@ def write_utf16_ini(path: Path, content: str) -> None:
     path.write_bytes(crlf.encode("utf-16"))
 
 
+def _input_range(start: float, step: float, stop: float) -> str:
+    """Format MQL5 optim range : default||from||step||to||Y."""
+    default = (start + stop) / 2.0
+    return f"{default:.4f}||{start:.4f}||{step:.4f}||{stop:.4f}||Y"
+
+
+def _input_enum(values: list[float]) -> str:
+    """Pour énumérer un set de valeurs discrètes, on utilise la forme
+    range avec start=min, stop=max et step=step minimal couvrant toutes les
+    valeurs. Pour des valeurs non-uniformes, on les passe en multi-Y avec
+    un step constant (peut produire des combos extras qu'on filtre côté
+    parser)."""
+    if len(values) == 1:
+        return f"{values[0]:.6f}||{values[0]:.6f}||0||{values[0]:.6f}||N"
+    sorted_v = sorted(values)
+    # Step = plus petit écart entre valeurs consécutives
+    diffs = [sorted_v[i+1] - sorted_v[i] for i in range(len(sorted_v)-1)]
+    step = min(diffs)
+    return (f"{sorted_v[0]:.6f}||{sorted_v[0]:.6f}||"
+            f"{step:.6f}||{sorted_v[-1]:.6f}||Y")
+
+
 def build_optim_ini(*, mode: int, criterion: int,
                     vt_start: float, vt_step: float, vt_stop: float,
                     lev_start: int, lev_step: int, lev_stop: int,
+                    vfloor_values: list[float] | None,
                     from_date: str, to_date: str,
                     symbol: str, period: str, model: int,
                     deposit: int, leverage: str, currency: str,
@@ -67,9 +90,10 @@ def build_optim_ini(*, mode: int, criterion: int,
     """Build optimization INI.
 
     Format input range MT5: `key=value||from||step||to||N` — N=Y inclus dans
-    optim, N=N fixe.
+    optim, N=N fixe. Avec mode=1 (slow complete) et plusieurs Y, MT5 fait le
+    produit cartésien. Pour vfloor on utilise la même approche range.
     """
-    return "\n".join([
+    lines = [
         "[Tester]",
         f"Expert={EX5_RELATIVE}",
         f"Symbol={symbol}",
@@ -89,17 +113,23 @@ def build_optim_ini(*, mode: int, criterion: int,
         "ForwardMode=0",
         "",
         "[TesterInputs]",
-        # Inputs cibles : optimisés
-        f"Inp_GlobalTargetVol={(vt_start+vt_stop)/2:.4f}||"
-        f"{vt_start:.4f}||{vt_step:.4f}||{vt_stop:.4f}||Y",
-        f"Inp_GlobalMaxLeverage={(lev_start+lev_stop)/2:.4f}||"
-        f"{lev_start:.4f}||{lev_step:.4f}||{lev_stop:.4f}||Y",
-        # Inputs fixes (mêmes que défauts compilés)
+        f"Inp_GlobalTargetVol={_input_range(vt_start, vt_step, vt_stop)}",
+        f"Inp_GlobalMaxLeverage={_input_range(lev_start, lev_step, lev_stop)}",
+    ]
+    if vfloor_values:
+        if len(vfloor_values) == 1:
+            lines.append(f"Inp_GlobalVolFloor={vfloor_values[0]:.6f}||"
+                         f"{vfloor_values[0]:.6f}||0||{vfloor_values[0]:.6f}||N")
+        else:
+            lines.append(f"Inp_GlobalVolFloor={_input_enum(vfloor_values)}")
+    # Inputs fixes (mêmes que défauts compilés)
+    lines.extend([
         "Inp_SymbolSuffix=.c",
         "Inp_MacroSourceMode=4",
         "Inp_LogVerbose=false",
         "Inp_LogToFile=false",
-    ]) + "\n"
+    ])
+    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -187,16 +217,17 @@ def parse_optim_csv() -> list[dict]:
         try:
             vt = float(r["target_vol"])
             lev = float(r["max_lev"])
+            vfl = float(r["vol_floor"])
         except (ValueError, TypeError):
             continue
-        sig = (round(vt, 5), round(lev, 5))
+        sig = (round(vt, 5), round(lev, 5), round(vfl, 6))
         if sig in seen:
             continue
         seen.add(sig)
         rows.append({
             "target_vol": vt,
             "max_lev": lev,
-            "vol_floor": float(r["vol_floor"]),
+            "vol_floor": vfl,
             "cagr_pct": float(r["cagr"]) * 100.0,
             "equity_dd_pct": float(r["equity_dd_pct"]),
             "sharpe": float(r["sharpe"]),
@@ -215,6 +246,8 @@ def parse_optim_csv() -> list[dict]:
 
 
 def plot_heatmaps(df: pd.DataFrame, png_path: Path, title_suffix: str) -> None:
+    """Si vol_floor est constant → 4 panels (CAGR/DD/Sharpe/Calmar).
+    Si vol_floor varie → un fichier PNG par valeur de vol_floor (slice 2D)."""
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -228,6 +261,27 @@ def plot_heatmaps(df: pd.DataFrame, png_path: Path, title_suffix: str) -> None:
         if r["equity_dd_pct"] not in (None, 0)
         else None, axis=1)
 
+    vfloor_values = sorted(df["vol_floor"].unique())
+    if len(vfloor_values) <= 1:
+        # Mode 2D : une seule heatmap
+        _plot_2d(df, png_path, title_suffix, plt)
+        return
+
+    # Mode 3D : un PNG par valeur de vol_floor + un PNG combiné CAGR
+    base_path = png_path.parent / png_path.stem
+    for vfloor in vfloor_values:
+        slice_df = df[df["vol_floor"].round(4) == round(vfloor, 4)]
+        if slice_df.empty:
+            continue
+        slice_path = Path(f"{base_path}_vfloor{vfloor:.3f}.png")
+        _plot_2d(slice_df, slice_path,
+                 f"{title_suffix} — vol_floor={vfloor:.3f}", plt)
+
+    # Heatmap combinée CAGR (1 ligne par vfloor)
+    _plot_3d_cagr(df, png_path, title_suffix, plt, vfloor_values)
+
+
+def _plot_2d(df, png_path, title_suffix, plt):
     pivots = {
         "CAGR (%)": df.pivot(index="target_vol", columns="max_lev",
                              values="cagr_pct"),
@@ -238,7 +292,6 @@ def plot_heatmaps(df: pd.DataFrame, png_path: Path, title_suffix: str) -> None:
         "Calmar (CAGR/|DD|)": df.pivot(index="target_vol", columns="max_lev",
                                        values="calmar"),
     }
-
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     for ax, (title, pv) in zip(axes.flat, pivots.items()):
         if pv is None or pv.empty:
@@ -246,8 +299,7 @@ def plot_heatmaps(df: pd.DataFrame, png_path: Path, title_suffix: str) -> None:
                     transform=ax.transAxes)
             ax.set_title(title)
             continue
-        cmap = "RdYlGn"
-        im = ax.imshow(pv.values, aspect="auto", cmap=cmap, origin="lower")
+        im = ax.imshow(pv.values, aspect="auto", cmap="RdYlGn", origin="lower")
         ax.set_xticks(range(len(pv.columns)))
         ax.set_xticklabels([f"{c:g}" for c in pv.columns], rotation=0)
         ax.set_yticks(range(len(pv.index)))
@@ -262,13 +314,59 @@ def plot_heatmaps(df: pd.DataFrame, png_path: Path, title_suffix: str) -> None:
                     ax.text(jj, ii, f"{v:.1f}", ha="center", va="center",
                             fontsize=7, color="black")
         plt.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
-
     plt.suptitle(
         f"FxMultiSleeve — Sensitivity (TargetVol × MaxLev) {title_suffix}",
         fontsize=12, fontweight="bold")
     plt.tight_layout()
     plt.savefig(png_path, dpi=110, bbox_inches="tight")
+    plt.close(fig)
     print(f"[ok] heatmap → {png_path}", flush=True)
+
+
+def _plot_3d_cagr(df, png_path, title_suffix, plt, vfloor_values):
+    """Heatmap combinée : 1 ligne par vfloor, 4 colonnes (CAGR/DD/Sharpe/Calmar)."""
+    n = len(vfloor_values)
+    fig, axes = plt.subplots(n, 4, figsize=(20, 4 * n), squeeze=False)
+    metrics = [
+        ("cagr_pct", "CAGR (%)"),
+        ("equity_dd_pct", "Equity DD (%)"),
+        ("sharpe", "Sharpe"),
+        ("calmar", "Calmar"),
+    ]
+    for row, vfloor in enumerate(vfloor_values):
+        slice_df = df[df["vol_floor"].round(4) == round(vfloor, 4)]
+        for col, (metric_key, metric_name) in enumerate(metrics):
+            ax = axes[row][col]
+            pv = slice_df.pivot(index="target_vol", columns="max_lev",
+                                values=metric_key)
+            if pv.empty:
+                ax.text(0.5, 0.5, "no data", ha="center", va="center")
+                continue
+            im = ax.imshow(pv.values, aspect="auto", cmap="RdYlGn",
+                           origin="lower")
+            ax.set_xticks(range(len(pv.columns)))
+            ax.set_xticklabels([f"{c:g}" for c in pv.columns], fontsize=8)
+            ax.set_yticks(range(len(pv.index)))
+            ax.set_yticklabels([f"{i:.2f}" for i in pv.index], fontsize=8)
+            ax.set_xlabel("max_lev")
+            if col == 0:
+                ax.set_ylabel(f"vol_floor={vfloor:.3f}\\ntarget_vol")
+            ax.set_title(metric_name, fontsize=10)
+            for ii in range(pv.shape[0]):
+                for jj in range(pv.shape[1]):
+                    v = pv.values[ii, jj]
+                    if pd.notna(v):
+                        ax.text(jj, ii, f"{v:.1f}", ha="center",
+                                va="center", fontsize=6, color="black")
+            plt.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
+    plt.suptitle(
+        f"FxMultiSleeve — Sensitivity 3D ({title_suffix}) — "
+        f"rows = vol_floor",
+        fontsize=12, fontweight="bold")
+    plt.tight_layout()
+    plt.savefig(png_path, dpi=100, bbox_inches="tight")
+    plt.close(fig)
+    print(f"[ok] combined 3D heatmap → {png_path}", flush=True)
 
 
 # ---------------------------------------------------------------------------
@@ -285,9 +383,12 @@ def main() -> int:
     ap.add_argument("--vt-start", type=float, default=0.10)
     ap.add_argument("--vt-stop",  type=float, default=0.50)
     ap.add_argument("--vt-step",  type=float, default=0.05)
-    ap.add_argument("--lev-start", type=int, default=2)
-    ap.add_argument("--lev-stop",  type=int, default=20)
-    ap.add_argument("--lev-step",  type=int, default=2)
+    ap.add_argument("--lev-start", type=int, default=8)
+    ap.add_argument("--lev-stop",  type=int, default=80)
+    ap.add_argument("--lev-step",  type=int, default=8)
+    ap.add_argument("--vfloor-grid", default=None,
+                    help="Liste de valeurs vol_floor (ex: '0.01,0.02,0.04,0.08'); "
+                         "omis = vol_floor fixe au défaut compilé 0.02")
     ap.add_argument("--from-date", default="2020.11.23")
     ap.add_argument("--to-date",   default="2026.04.30")
     ap.add_argument("--symbol", default="EURUSD.c")
@@ -304,12 +405,18 @@ def main() -> int:
 
     n_vt = int(round((args.vt_stop - args.vt_start) / args.vt_step)) + 1
     n_lev = int(round((args.lev_stop - args.lev_start) / args.lev_step)) + 1
-    n_combos_estimated = n_vt * n_lev
+    if args.vfloor_grid:
+        vfloor_values = [float(x) for x in args.vfloor_grid.split(",")]
+    else:
+        vfloor_values = [0.02]  # défaut compilé
+    n_vfloor = len(vfloor_values)
+    n_combos_estimated = n_vt * n_lev * n_vfloor
     print(f"=== Optim MT5 ({args.mode}) ===")
     print(f"  Window  : {args.from_date} → {args.to_date}")
     print(f"  Symbol  : {args.symbol} {args.period} (model={args.model})")
     print(f"  TargetVol: {args.vt_start} → {args.vt_stop} step {args.vt_step} ({n_vt})")
     print(f"  MaxLev   : {args.lev_start} → {args.lev_stop} step {args.lev_step} ({n_lev})")
+    print(f"  VolFloor : {vfloor_values} ({n_vfloor})")
     if args.mode == "complete":
         print(f"  Total    : {n_combos_estimated} combos (slow complete)")
     else:
@@ -333,6 +440,7 @@ def main() -> int:
         criterion=6,  # Custom max — utilise OnTester() qui retourne CAGR
         vt_start=args.vt_start, vt_step=args.vt_step, vt_stop=args.vt_stop,
         lev_start=args.lev_start, lev_step=args.lev_step, lev_stop=args.lev_stop,
+        vfloor_values=vfloor_values,
         from_date=args.from_date, to_date=args.to_date,
         symbol=args.symbol, period=args.period, model=args.model,
         deposit=10000, leverage="1:100", currency="USD",
