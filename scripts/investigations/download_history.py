@@ -155,7 +155,7 @@ def main() -> int:
         print("\n=== STEP 1/3 — Force download history ===\n")
         ok = run_mt5_with_script(
             script_name="FxDownloadHistory",
-            expected_finish_marker="FxDownloadHistory",
+            expected_finish_marker="=== Done:",  # match "=== Done: N OK, M FAILED ==="
             timeout=args.download_timeout,
             since_epoch=started_epoch,
         )
@@ -174,7 +174,7 @@ def main() -> int:
         time.sleep(3)
         ok = run_mt5_with_script(
             script_name="FxExportRates",
-            expected_finish_marker="FxExportRates",
+            expected_finish_marker="=== Done:",  # match "=== Done: N OK, M FAILED ==="
             timeout=args.export_timeout,
             since_epoch=time.time(),
         )

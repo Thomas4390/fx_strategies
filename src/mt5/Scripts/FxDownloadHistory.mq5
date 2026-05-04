@@ -16,7 +16,7 @@
 #include "..\Include\FxCommon.mqh"
 
 input string  Inp_SymbolSuffix = ".c";
-input string  Inp_SymbolsCSV   = "EURUSD,GBPUSD,USDJPY,USDCAD";
+input string  Inp_SymbolsCSV   = "EURUSD,GBPUSD,USDJPY,USDCAD,USDCHF,AUDUSD,NZDUSD,EURGBP,EURJPY,GBPJPY";
 input string  Inp_PeriodsCSV   = "M1,D1";
 input datetime Inp_FromDate    = D'2019.01.01 00:00';
 input datetime Inp_ToDate      = D'2026.05.01 00:00';

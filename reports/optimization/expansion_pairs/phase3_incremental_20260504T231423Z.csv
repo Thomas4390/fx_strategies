@@ -1,0 +1,7 @@
+id,label,sharpe,cagr_pct,net_profit,trades,equity_dd_pct,profit_factor,recovery_factor
+V0_baseline_4pair,Baseline 4-pair (prod default),1.15,7.238797198045144,4615.41,835,7.21,1.38,4.98
+V1_MR_plus_AUDUSD,MR Macro = 5 paires (+AUDUSD),1.09,6.9278668186491865,4386.78,899,7.09,1.36,4.79
+V2_MR_plus_NZDUSD,MR Macro = 5 paires (+NZDUSD),1.05,6.628876696684682,4169.69,904,7.45,1.35,4.57
+V3_MR_plus_AUDNZD,MR Macro = 6 paires (+AUDUSD +NZDUSD),1.06,6.754052888066053,4260.25,968,6.49,1.36,4.58
+V4_TS_plus_EURJPY,TS Momentum = 4 paires (+EURJPY),0.0,0.0,0.0,0,0.0,0.0,0.0
+V5_combined,Combiné : MR=6 + TS=4 (AUDUSD+NZDUSD+EURJPY),0.0,0.0,0.0,0,0.0,0.0,0.0
