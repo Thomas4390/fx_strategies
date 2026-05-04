@@ -49,9 +49,12 @@ CAGR_TARGET_OOS = 10.0  # plus tolérant en OOS (régime 2024-2026 défavorable)
 
 
 def run_sweep(name: str, from_date: str, to_date: str,
+              ddcap: float | None = None,
+              disable_ddcap: bool = False,
+              prefix_tag: str = "agg",
               timeout: int = 1800) -> Path:
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    prefix = f"agg_{name}_{ts}"
+    prefix = f"{prefix_tag}_{name}_{ts}"
     cmd = [
         "python3", str(WRAPPER),
         "--vt-start", VT_GRID.split(",")[0],
@@ -66,6 +69,10 @@ def run_sweep(name: str, from_date: str, to_date: str,
         "--out-prefix", prefix,
         "--timeout",   str(timeout),
     ]
+    if disable_ddcap:
+        cmd.extend(["--fixed-input", "Inp_EnableDDCap=false"])
+    if ddcap is not None:
+        cmd.extend(["--fixed-input", f"Inp_DDCap={ddcap:.4f}"])
     print(f"\n{'='*70}\n  SWEEP {name.upper()} — {from_date} → {to_date}\n{'='*70}",
           flush=True)
     result = subprocess.run(cmd, cwd=str(ROOT), check=False)
@@ -98,18 +105,41 @@ def main() -> int:
     ap.add_argument("--full-csv", default=None)
     ap.add_argument("--is-csv",   default=None)
     ap.add_argument("--oos-csv",  default=None)
+    ap.add_argument("--ddcap", type=float, default=None,
+                    help="Override Inp_DDCap (défaut compilé 0.15). "
+                         "Augmenter = autoriser plus de drawdown avant circuit-breaker. "
+                         "Ex: --ddcap 0.40 pour autoriser 40%% DD")
+    ap.add_argument("--disable-ddcap", action="store_true",
+                    help="Désactive complètement le DD circuit-breaker "
+                         "(Inp_EnableDDCap=false)")
+    ap.add_argument("--tag", default="agg",
+                    help="Tag dans le nom de fichier de sortie (defaut 'agg')")
     args = ap.parse_args()
 
     full_csv = Path(args.full_csv) if args.full_csv else None
     is_csv   = Path(args.is_csv)   if args.is_csv   else None
     oos_csv  = Path(args.oos_csv)  if args.oos_csv  else None
 
+    if args.ddcap is not None:
+        print(f"\n*** DD-cap override : {args.ddcap*100:.0f}% (défaut compilé 15%) ***\n")
+    if args.disable_ddcap:
+        print(f"\n*** DD-cap DESACTIVE (Inp_EnableDDCap=false) ***\n")
+
     if not args.skip_full and not full_csv:
-        full_csv = run_sweep("full", FULL_FROM, FULL_TO)
+        full_csv = run_sweep("full", FULL_FROM, FULL_TO,
+                             ddcap=args.ddcap,
+                             disable_ddcap=args.disable_ddcap,
+                             prefix_tag=args.tag)
     if not args.skip_is and not is_csv:
-        is_csv = run_sweep("is", IS_FROM, IS_TO)
+        is_csv = run_sweep("is", IS_FROM, IS_TO,
+                           ddcap=args.ddcap,
+                           disable_ddcap=args.disable_ddcap,
+                           prefix_tag=args.tag)
     if not args.skip_oos and not oos_csv:
-        oos_csv = run_sweep("oos", OOS_FROM, OOS_TO)
+        oos_csv = run_sweep("oos", OOS_FROM, OOS_TO,
+                            ddcap=args.ddcap,
+                            disable_ddcap=args.disable_ddcap,
+                            prefix_tag=args.tag)
 
     if not (is_csv and oos_csv):
         print("\n[abort] missing IS or OOS sweep")

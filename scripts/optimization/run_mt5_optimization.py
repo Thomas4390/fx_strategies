@@ -83,6 +83,7 @@ def build_optim_ini(*, mode: int, criterion: int,
                     vt_start: float, vt_step: float, vt_stop: float,
                     lev_start: int, lev_step: int, lev_stop: int,
                     vfloor_values: list[float] | None,
+                    fixed_inputs: list[str] | None,
                     from_date: str, to_date: str,
                     symbol: str, period: str, model: int,
                     deposit: int, leverage: str, currency: str,
@@ -129,6 +130,12 @@ def build_optim_ini(*, mode: int, criterion: int,
         "Inp_LogVerbose=false",
         "Inp_LogToFile=false",
     ])
+    if fixed_inputs:
+        for entry in fixed_inputs:
+            if "=" not in entry:
+                continue
+            key, value = entry.split("=", 1)
+            lines.append(f"{key.strip()}={value.strip()}")
     return "\n".join(lines) + "\n"
 
 
@@ -389,6 +396,10 @@ def main() -> int:
     ap.add_argument("--vfloor-grid", default=None,
                     help="Liste de valeurs vol_floor (ex: '0.01,0.02,0.04,0.08'); "
                          "omis = vol_floor fixe au défaut compilé 0.02")
+    ap.add_argument("--fixed-input", action="append", default=[],
+                    metavar="KEY=VAL",
+                    help="Input fixe additionnel (répétable). "
+                         "Ex: --fixed-input Inp_DDCap=0.40")
     ap.add_argument("--from-date", default="2020.11.23")
     ap.add_argument("--to-date",   default="2026.04.30")
     ap.add_argument("--symbol", default="EURUSD.c")
@@ -441,6 +452,7 @@ def main() -> int:
         vt_start=args.vt_start, vt_step=args.vt_step, vt_stop=args.vt_stop,
         lev_start=args.lev_start, lev_step=args.lev_step, lev_stop=args.lev_stop,
         vfloor_values=vfloor_values,
+        fixed_inputs=args.fixed_input,
         from_date=args.from_date, to_date=args.to_date,
         symbol=args.symbol, period=args.period, model=args.model,
         deposit=10000, leverage="1:100", currency="USD",
