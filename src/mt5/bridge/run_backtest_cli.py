@@ -448,6 +448,10 @@ def parse_args() -> argparse.Namespace:
                    help="Nom de l'INI persistant écrit dans Config/")
     p.add_argument("--runtime-ini", default="fxbk.ini",
                    help="Nom de l'INI de runtime copié dans drive_c/ (sans espace)")
+    p.add_argument("--input", action="append", default=[], metavar="KEY=VAL",
+                   dest="input_overrides",
+                   help="Override d'un input EA (répétable). "
+                        "Ex: --input Inp_AllocMRMacro=0 --input Inp_AllocRSIDaily=1.0")
     p.add_argument("--skip-checks", action="store_true",
                    help="Ignorer les sanity checks pré-run")
     p.add_argument("--dry-run", action="store_true",
@@ -472,6 +476,19 @@ def main() -> int:
     persistent_ini = PORTABLE / "Config" / args.ini_name
     runtime_ini = DRIVE_C / args.runtime_ini
 
+    # Merge inputs default + overrides
+    inputs = dict(DEFAULT_TESTER_INPUTS)
+    for override in args.input_overrides:
+        if "=" not in override:
+            print(f"[abort] --input invalide (format KEY=VAL): {override!r}",
+                  file=sys.stderr)
+            return 2
+        key, value = override.split("=", 1)
+        inputs[key.strip()] = value.strip()
+    if args.input_overrides:
+        print(f"[ok] {len(args.input_overrides)} input override(s) appliqué(s)",
+              flush=True)
+
     write_tester_ini(
         persistent_ini=persistent_ini,
         runtime_ini=runtime_ini,
@@ -484,7 +501,7 @@ def main() -> int:
         leverage=args.leverage,
         currency=args.currency,
         report_name=args.report_name,
-        inputs=DEFAULT_TESTER_INPUTS,
+        inputs=inputs,
     )
     print(f"[ok] tester.ini écrit (persistent={persistent_ini.name}, "
           f"runtime={runtime_ini})", flush=True)

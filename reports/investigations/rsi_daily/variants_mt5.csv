@@ -1,0 +1,4 @@
+id,label,json,sharpe,trades,net_profit,profit_factor,equity_dd_max
+A_isolated,"Sleeve 3 seul, settings défaut",run_20260504T144741Z.json,-0.12,4,-1 302.15,0.27,1 538.33 (15.03%)
+B_no_voltarget,Sleeve 3 seul + vol-target neutralisé (lev=1),run_20260504T144802Z.json,-0.46,45,-204.73,0.77,430.91 (4.30%)
+C_no_slippage,Sleeve 3 seul + lev=1 + slippage 0 bps,run_20260504T144822Z.json,-0.43,45,-199.12,0.78,437.88 (4.37%)
