@@ -286,3 +286,87 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
         }
     }
 }
+
+//============================================================ ON TESTER
+//
+// Custom optimization metric : computes CAGR over the test window and
+// emits a structured `[OPTIM]` log line with all key inputs + metrics.
+// MT5 distributes optimization runs across local agents (parallel cores)
+// and each agent's log accumulates these lines — `scripts/optimization/
+// run_optimization_cli.py` parses them post-run to rebuild the surface.
+//
+// Returned value drives `OptimizationCriterion=6` (Custom max).
+double OnTester()
+{
+    double initial = TesterStatistics(STAT_INITIAL_DEPOSIT);
+    double net     = TesterStatistics(STAT_PROFIT);
+    double dd_pct  = TesterStatistics(STAT_EQUITY_DDREL_PERCENT);
+    double sharpe  = TesterStatistics(STAT_SHARPE_RATIO);
+    double pf      = TesterStatistics(STAT_PROFIT_FACTOR);
+    double rf      = TesterStatistics(STAT_RECOVERY_FACTOR);
+    double trades  = TesterStatistics(STAT_TRADES);
+
+    double final_eq = initial + net;
+
+    // Window in years from tester period (inclusive of from_date, exclusive
+    // of to_date). MQL5 expose ces dates via TesterStatistics indirectly,
+    // mais le plus simple est de calculer depuis le premier et dernier deal
+    // selectionné en historique.
+    double years = 1.0;
+    if(HistorySelect(0, TimeCurrent()))
+    {
+        int n = HistoryDealsTotal();
+        if(n > 1)
+        {
+            datetime first_t = (datetime)HistoryDealGetInteger(
+                HistoryDealGetTicket(0), DEAL_TIME);
+            datetime last_t  = (datetime)HistoryDealGetInteger(
+                HistoryDealGetTicket(n - 1), DEAL_TIME);
+            if(last_t > first_t)
+                years = (double)(last_t - first_t) / 31557600.0;  // s/an
+        }
+    }
+    if(years <= 0.01) years = 1.0;
+
+    double cagr = (final_eq > 0.0)
+                  ? MathPow(final_eq / initial, 1.0 / years) - 1.0
+                  : -1.0;
+
+    PrintFormat("[OPTIM] vt=%.4f maxlev=%.4f volfloor=%.4f"
+                " cagr=%.6f dd=%.4f sharpe=%.4f pf=%.4f rf=%.4f"
+                " trades=%.0f net=%.2f years=%.3f",
+                Inp_GlobalTargetVol, Inp_GlobalMaxLeverage, Inp_GlobalVolFloor,
+                cagr, dd_pct, sharpe, pf, rf, trades, net, years);
+
+    // En mode optimization MT5 filtre les Print() côté agents → fallback sur
+    // une écriture CSV en FILE_COMMON. Chaque agent ajoute une ligne ; le
+    // FILE_SHARE_WRITE + le lock interne MT5 sérialisent les writes.
+    int h = FileOpen("optim_results.csv",
+        FILE_READ | FILE_WRITE | FILE_COMMON | FILE_TXT | FILE_SHARE_READ |
+        FILE_SHARE_WRITE, ',', CP_UTF8);
+    if(h != INVALID_HANDLE)
+    {
+        FileSeek(h, 0, SEEK_END);
+        // Header automatique si fichier vide
+        if(FileTell(h) == 0)
+            FileWrite(h, "ts_utc", "target_vol", "max_lev", "vol_floor",
+                      "cagr", "equity_dd_pct", "sharpe", "profit_factor",
+                      "recovery_factor", "trades", "net_profit", "years");
+        string ts = TimeToString(TimeGMT(), TIME_DATE | TIME_SECONDS);
+        FileWrite(h, ts,
+                  DoubleToString(Inp_GlobalTargetVol, 4),
+                  DoubleToString(Inp_GlobalMaxLeverage, 4),
+                  DoubleToString(Inp_GlobalVolFloor, 4),
+                  DoubleToString(cagr, 6),
+                  DoubleToString(dd_pct, 4),
+                  DoubleToString(sharpe, 4),
+                  DoubleToString(pf, 4),
+                  DoubleToString(rf, 4),
+                  IntegerToString((int)trades),
+                  DoubleToString(net, 2),
+                  DoubleToString(years, 3));
+        FileClose(h);
+    }
+
+    return cagr;
+}
