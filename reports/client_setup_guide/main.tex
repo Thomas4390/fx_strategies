@@ -1,0 +1,725 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Apogée Invest — Guide d'installation client (FxMultiSleeve sur MT5)
+%  Réutilise le préambule editorial du rapport principal.
+% ═══════════════════════════════════════════════════════════════════════
+\documentclass[11pt, a4paper]{scrartcl}
+
+\input{../latex_report/preamble.tex}
+
+% Override paths/headers pour ce document
+\graphicspath{{figures/}{../../docs/logo/}{../latex_report/figures/}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide d'installation client --- Mai 2026}}
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{FxMultiSleeve --- Setup MT5}}
+
+\hypersetup{
+  pdftitle={Stratégie FX Tri-Signaux --- Guide d'installation client},
+  pdfsubject={Setup MetaTrader 5 Windows pour FxMultiSleeve},
+  pdfkeywords={MT5, MetaTrader, FxMultiSleeve, setup, installation, client}
+}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 1 — COUVERTURE
+% ═══════════════════════════════════════════════════════════════════════
+\thispagestyle{empty}
+\begin{center}
+
+\vspace*{-1.5cm}
+\noindent{\color{apogeeGold}\rule{\textwidth}{2pt}}
+
+\vspace{1.0cm}
+
+\includegraphics[width=3.6cm]{apogee_invest_logo}
+
+\vspace{0.3cm}
+
+{\interspaced\color{apogeeGold}\normalsize\bfseries APOGÉE INVEST\par}
+
+\vspace{0.3cm}
+
+{\color{apogeeGold}\rule{0.28\textwidth}{0.5pt}}
+
+\vspace{1.2cm}
+
+{\interspaced\color{slateGrey}\footnotesize GUIDE D'INSTALLATION CLIENT \enskip\textbullet\enskip METATRADER 5\par}
+
+\vspace{0.7cm}
+
+{\sffamily\color{primary}\huge\bfseries
+Stratégie FX Tri-Signaux\par}
+
+\vspace{0.4cm}
+
+{\sffamily\color{accent}\Large\itshape
+Déploiement clé en main sur Windows\par}
+
+\end{center}
+
+\vspace{0.9cm}
+
+\noindent\begin{minipage}{\textwidth}
+\centering
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}\\[0.5em]
+\begin{tabular}{@{}rl@{}}
+  \color{slateGrey}\sffamily Document & \textbf{Guide de setup et reproduction des backtests} \\[0.18em]
+  \color{slateGrey}\sffamily Public & \textbf{Client final --- Windows / MetaTrader 5} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{Mai 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Statut & \textbf{Plug \& play --- prêt à déployer} \\[0.18em]
+  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+\end{tabular}\\[0.7em]
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
+\end{minipage}
+
+\vspace{0.8cm}
+
+\begin{thesisbox}
+\textbf{Objectif de ce guide.} En 30~minutes de setup, déployer la stratégie
+\textbf{FxMultiSleeve} sur votre installation MetaTrader~5 (Windows), reproduire à
+l'identique les métriques de backtest validées par Apogée Invest, et basculer en
+trading démo en un clic. Aucune compétence en programmation requise --- uniquement
+l'usage standard de MetaTrader.
+\end{thesisbox}
+
+\vspace{0.4cm}
+
+{\small\color{slateGrey}\sffamily
+À la fin de ce guide, vous aurez : (i)~MT5 configuré avec le broker recommandé,
+(ii)~la stratégie compilée et chargeable en un drag-and-drop, (iii)~un backtest
+\textbf{Sharpe~$\approx 1.15$, drawdown maximal $-7\,\%$, 835~trades sur 5.4~ans}
+reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
+
+\vfill
+
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.3cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Confidentiel.} Document destiné au client final d'Apogée~Invest.
+      Performances issues de \emph{backtests} historiques. Les performances passées
+      ne préjugent pas des performances futures. Avant tout déploiement avec capital
+      réel, voir la checklist en page~\pageref{sec:deployment}.
+      \vspace{0.3cm}
+    }
+  }
+}
+
+\vspace{0.3cm}
+
+\noindent{\color{apogeeGold}\rule{\textwidth}{2pt}}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 2 — LA STRATÉGIE EN BREF
+% ═══════════════════════════════════════════════════════════════════════
+\section*{1. La stratégie en bref}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{F}{xMultiSleeve} est un Expert
+Advisor MQL5 qui combine \textbf{trois moteurs de rendement orthogonaux} sur
+quatre paires de devises majeures (EUR/USD, GBP/USD, USD/JPY, USD/CAD). Un seul
+EA attaché à un seul chart EUR/USD~M1 dispatche les signaux vers les trois
+sleeves, applique un ciblage de volatilité global et un plafond de levier
+à $12\times$.
+
+\vspace{0.3em}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.4cm}@{\hspace{0.5cm}}p{4.4cm}@{\hspace{0.5cm}}p{4.4cm}@{}}
+\multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Sleeve 1 --- MR Macro}}} &
+\multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Sleeve 2 --- TS Momentum}}} &
+\multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Sleeve 3 --- RSI Daily}}} \\[0.2em]
+\multicolumn{1}{c}{\small \textbf{80~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} \\
+\midrule
+Mean reversion intraday M1 sur 4~paires, fenêtre 6--14~UTC, filtre
+Bollinger(80, 5$\sigma$) sur la déviation VWAP, gating macro (courbe
+10Y--2Y, taux de chômage US). &
+Suivi de tendance daily sur 3~paires (EUR, GBP, JPY), EMA~20/50
+$+$ filtre RSI(7), vol-targeting par paire à $10\,\%$. USD/CAD
+explicitement exclu. &
+Mean reversion daily RSI(14) sur 4~paires equal-weight,
+oversold/overbought 25/75, exit à 50. Sleeve diversificateur
+anti-corrélé en années difficiles. \\
+\end{tabular}
+\end{center}
+
+\vspace{0.6em}
+
+\paragraph{Métriques de référence du backtest.}
+Période 2020-11-23 $\rightarrow$ 2026-04-30 (5.43~ans), broker SquaredFinancial Demo,
+EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{\hspace{1cm}}lr@{}}
+\toprule
+Métrique & Valeur & Métrique & Valeur \\
+\midrule
+Sharpe Ratio       & \metric{1.15}             & Total Net Profit  & \metric{+4\,615.41~USD} \\
+Profit Factor      & \metric{1.38}             & Rendement total   & \metric{+46.15~\%} \\
+Recovery Factor    & \metric{4.98}             & Equity DD Max     & \metric{$-7.21~\%$} \\
+Total Trades       & \metric{835}              & Balance DD Max    & \metric{$-6.58~\%$} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+Ces chiffres sont la cible que votre installation doit reproduire. Un écart de
+plus de $\pm 5\,\%$ sur le Sharpe ou $\pm 50$ trades indique un problème de setup
+(mauvais broker, fichier macro stale, suffixe symbole incorrect) --- voir
+la section \textbf{Troubleshooting} page~\pageref{sec:troubleshooting}.
+\end{insightbox}
+
+\paragraph{Pourquoi MetaTrader~5.}
+MT5 fournit un environnement d'exécution mature, un \emph{Strategy Tester}
+multi-symboles avec ticks réels, et l'accès direct au broker via DOM. La
+stratégie utilise exclusivement les API natives MQL5~--- aucune DLL externe,
+aucun indicateur custom à installer.
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 3 — CONTENU DU PACKAGE
+% ═══════════════════════════════════════════════════════════════════════
+\section*{2. Contenu du package livré}
+\label{sec:package}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+Le livrable est une archive \code{FxMultiSleeve\_v1.0.zip} contenant les fichiers
+ci-dessous. L'arborescence reproduit la structure attendue par MT5~--- vous
+copierez chaque dossier vers son équivalent dans le \emph{Data Folder} de MT5
+(section~3).
+
+\vspace{0.4em}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{6.5cm}p{8.5cm}@{}}
+\toprule
+\textbf{Chemin dans l'archive} & \textbf{Rôle} \\
+\midrule
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Experts/}} --- Expert Advisor principal}} \\
+\quad\code{FxMultiSleeve.mq5} & Source MQL5 de l'EA orchestrateur (3~sleeves) \\
+\quad\code{FxMultiSleeve.ex5} & Binaire pré-compilé (à recompiler localement) \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Include/}} --- Modules MQL5 ($\sim 13$~fichiers)}} \\
+\quad\code{FxCommon.mqh} & Constantes, enums (\code{EMacroSourceMode}), helpers \\
+\quad\code{FxRiskManager.mqh} & Vol-targeting, sub-equity, circuit-breaker DD \\
+\quad\code{FxMacroFilter.mqh} & Orchestrateur macro 5 modes \\
+\quad\code{FxMacroSourceNative.mqh} & Live: Calendar~MT5 + WebRequest~FRED \\
+\quad\code{FxMacroSourceHistory.mqh} & Backtest: CSV time-indexed + binary search \\
+\quad\code{FxSleeveMRMacro.mqh} & Sleeve~1 --- mean reversion intraday \\
+\quad\code{FxSleeveTSMomentum.mqh} & Sleeve~2 --- momentum daily \\
+\quad\code{FxSleeveRSIDaily.mqh} & Sleeve~3 --- RSI daily \\
+\quad\code{(autres .mqh)} & Logger, indicateurs VWAP/BB, helpers trade \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Scripts/}} --- Outils auxiliaires}} \\
+\quad\code{FxPreflight.mq5} & Vérification environnement avant déploiement \\
+\quad\code{FxOpenAllCharts.mq5} & Ouvre les 4~charts (EUR/GBP/JPY/CAD) en 1~clic \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Profiles/Tester/}} --- Preset Strategy Tester}} \\
+\quad\code{FxMultiSleeve\_Default.set} & Inputs par défaut, mode macro \emph{AUTO} \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Common/Files/}} --- Données macro (FILE\_COMMON)}} \\
+\quad\code{macro\_history.csv} & Données FRED 2020-2026 (1\,585~lignes, à régénérer) \\
+\quad\code{fred\_api\_key.txt} & Votre clé FRED personnelle (à créer) \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{bridge/}} --- Outils Python (optionnels)}} \\
+\quad\code{fx\_macro\_history.py} & Régénère \code{macro\_history.csv} (FRED API) \\
+\quad\code{reset\_tester\_preset.py} & Force les défauts dans les \code{.set} cachés \\
+\addlinespace
+\multicolumn{2}{l}{\textcolor{primary}{\textbf{Documentation}}} \\
+\quad\code{README.md} & Description stratégie + risques \\
+\quad\code{CLAUDE.md} & Référence opérationnelle (chemins, codes erreur) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+Ne déposez \textbf{jamais} \code{fred\_api\_key.txt} dans un dépôt~git ni dans une
+sauvegarde non chiffrée. Cette clé est personnelle (votre compte FRED) et son
+exposition entraîne un usage frauduleux du quota d'API.
+\end{warningbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 4 — INSTALLATION MT5 + DÉPLOIEMENT CODE
+% ═══════════════════════════════════════════════════════════════════════
+\section*{3. Installation et déploiement du code}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\subsection*{3.1 Installer MetaTrader~5}
+
+Téléchargez l'installateur officiel de votre broker (recommandé pour
+reproductibilité)~: \href{https://www.squared-financial.com}{SquaredFinancial},
+ou tout broker offrant un compte démo \textbf{ECN/Raw} avec des symboles à
+suffixe \code{.c} (les autres suffixes nécessitent un ajustement, voir~3.4).
+
+\paragraph{Étapes.}
+\begin{enumerate}
+\item Lancer l'installateur, accepter les valeurs par défaut.
+\item Se connecter au compte démo broker (login + password reçus par email).
+\item Confirmer dans \code{Outils $\rightarrow$ Options $\rightarrow$ Server} que le
+serveur indique bien \code{SquaredFinancialSC-MT5 Demo} (ou équivalent).
+\item Vérifier que les 4~paires sont visibles dans \emph{Market Watch} avec le
+suffixe \code{.c}~: \code{EURUSD.c}, \code{GBPUSD.c}, \code{USDJPY.c},
+\code{USDCAD.c}. Si un symbole est absent, clic-droit dans Market Watch
+$\rightarrow$ \emph{Show All}.
+\end{enumerate}
+
+\subsection*{3.2 Localiser le \emph{Data Folder} de MT5}
+
+Dans MT5~: \code{Fichier $\rightarrow$ Open Data Folder}. Une fenêtre Explorateur
+s'ouvre sur le dossier de travail de votre instance, du type~:
+\begin{center}
+\code{\small C:\textbackslash Users\textbackslash <vous>\textbackslash AppData\textbackslash Roaming\textbackslash MetaQuotes\textbackslash Terminal\textbackslash <HASH>\textbackslash}
+\end{center}
+
+\subsection*{3.3 Copier les fichiers}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{6cm}p{9cm}@{}}
+\toprule
+\textbf{Depuis l'archive} & \textbf{Vers le Data Folder} \\
+\midrule
+\code{Experts/*}                 & \code{MQL5\textbackslash Experts\textbackslash} \\
+\code{Include/*}                 & \code{MQL5\textbackslash Include\textbackslash} \\
+\code{Scripts/*}                 & \code{MQL5\textbackslash Scripts\textbackslash} \\
+\code{Profiles/Tester/*.set}     & \code{MQL5\textbackslash Profiles\textbackslash Tester\textbackslash} \\
+\code{Common/Files/macro\_history.csv} & \code{Common\textbackslash Files\textbackslash} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{À noter.} Le dossier \code{Common\textbackslash Files} est commun à
+toutes vos instances MT5 (un cran au-dessus du dossier d'instance). Pour
+y naviguer~: \code{Fichier $\rightarrow$ Open Data Folder} puis remonter
+de deux niveaux jusqu'à \code{MetaQuotes\textbackslash Terminal\textbackslash},
+puis ouvrir \code{Common\textbackslash Files}.
+
+\subsection*{3.4 Compiler l'EA}
+
+Dans MT5~: \code{F4} pour ouvrir \emph{MetaEditor}, naviguer vers
+\code{Experts\textbackslash FxMultiSleeve.mq5}, puis \code{F7} pour
+compiler. Résultat attendu en bas de l'éditeur~:
+\begin{center}
+\code{0 errors, 0 warnings.}
+\end{center}
+
+\begin{warningbox}
+\textbf{Si votre broker n'utilise pas le suffixe~\code{.c}}~: ouvrir
+\code{FxMultiSleeve.mq5} ligne~74 et remplacer
+\code{Inp\_SymbolSuffix=".c"} par votre suffixe broker (par exemple
+\code{""}, \code{"m"}, \code{".raw"}, \code{"-pro"}). Recompiler avec~F7.
+Le suffixe est visible dans le nom des paires de \emph{Market Watch}.
+\end{warningbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 5 — CLÉ FRED + macro_history.csv
+% ═══════════════════════════════════════════════════════════════════════
+\section*{4. Configuration des données macro}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+La stratégie utilise deux séries macro publiques de la \href{https://fred.stlouisfed.org/}{Federal Reserve Bank of St-Louis}~:
+\code{T10Y2Y} (spread courbe 10Y-2Y) et \code{UNRATE} (taux de chômage US).
+Ces deux séries gatent le sleeve~MR Macro --- ce filtre désactive le
+sleeve~1 pendant les régimes de fin de cycle défavorables.
+
+\subsection*{4.1 Obtenir une clé FRED (gratuit, 2~minutes)}
+
+\begin{enumerate}
+\item Créer un compte sur \href{https://fredaccount.stlouisfed.org/login/secure/}{fredaccount.stlouisfed.org}.
+\item Une fois connecté, aller dans \emph{My~Account $\rightarrow$ API~Keys}.
+\item Cliquer \emph{Request~API~Key}, indiquer un usage personnel.
+\item Copier la clé (32~caractères hexadécimaux).
+\end{enumerate}
+
+\subsection*{4.2 Déployer la clé dans MT5}
+
+Créer le fichier \code{Common\textbackslash Files\textbackslash fred\_api\_key.txt} avec votre clé
+en une seule ligne, sans espace ni saut de ligne. Encodage~UTF-8.
+
+Autoriser MT5 à appeler FRED~: \code{Outils $\rightarrow$ Options $\rightarrow$
+Expert Advisors $\rightarrow$ Allow~WebRequest~for~listed~URL}, ajouter
+\code{https://api.stlouisfed.org}.
+
+\subsection*{4.3 Vérifier ou régénérer \code{macro\_history.csv}}
+
+Le fichier livré couvre 2020-01 $\rightarrow$ 2026-04 (1\,585~lignes). Pour
+backtester la période standard ce fichier est suffisant tel quel.
+
+Pour le rafraîchir (recommandé une fois par mois)~:
+
+\begin{enumerate}
+\item Installer Python~3.10$+$ et la dépendance requise~:
+  \code{pip install pandas requests python-dotenv}.
+\item Créer \code{<repo>\textbackslash .env} avec la ligne \code{FRED\_API\_KEY=<votre\_clé>}.
+\item Exécuter \code{python bridge\textbackslash fx\_macro\_history.py}.
+\item Le script écrit automatiquement le CSV mis à jour dans
+\code{Common\textbackslash Files\textbackslash macro\_history.csv}.
+\end{enumerate}
+
+\begin{insightbox}
+Si vous ne voulez pas installer Python, conservez le \code{macro\_history.csv}
+livré tel quel pour reproduire à l'identique le backtest de référence. Vous
+n'aurez besoin de Python que pour étendre la fenêtre de backtest au-delà
+de 2026-04.
+\end{insightbox}
+
+\subsection*{4.4 Mode macro --- comprendre l'\emph{AUTO}}
+
+L'EA expose 5~modes via \code{Inp\_MacroSourceMode}. Le défaut compilé
+est \emph{AUTO} (valeur~4)~: en \emph{Strategy Tester} il bascule
+automatiquement en mode \emph{HISTORY} (lit le CSV par recherche
+binaire), en live il utilise \emph{NATIVE} (FRED API + Calendar~MT5).
+\textbf{Aucune action manuelle requise~--- le mode AUTO couvre les
+deux usages.}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 6 — LANCER LE BACKTEST
+% ═══════════════════════════════════════════════════════════════════════
+\section*{5. Lancer le backtest de référence}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\subsection*{5.1 Ouvrir le \emph{Strategy Tester}}
+
+Dans MT5~: \code{Ctrl+R} (ou \code{View $\rightarrow$ Strategy Tester}). Onglet
+\emph{Settings}, configurer~:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{Champ} & \textbf{Valeur} \\
+\midrule
+Expert      & \code{FxMultiSleeve} \\
+Symbol      & \code{EURUSD.c} (ou EURUSD$\langle$suffixe$\rangle$) \\
+Period      & \code{M1} \\
+Date        & \code{2020.11.23} $\rightarrow$ \code{2026.04.30} \\
+Forward     & \code{No} (laisser à zéro pour la baseline) \\
+Modeling    & \code{1 minute OHLC} (rapide) ou \code{Every tick based on real ticks} \\
+Deposit     & \code{10\,000~USD} \\
+Leverage    & \code{1:100} \\
+Optimization& \code{Disabled} \\
+Visual mode & \emph{décoché} (bien plus rapide en non-visuel) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection*{5.2 Charger le preset \code{FxMultiSleeve\_Default.set}}
+
+Onglet \emph{Inputs} du Strategy Tester $\rightarrow$ bouton \emph{Load}
+$\rightarrow$ sélectionner \code{FxMultiSleeve\_Default.set}. Tous les
+inputs par défaut sont chargés (allocations $80/10/10$, vol cible $28\,\%$,
+levier max $12\times$, mode macro AUTO).
+
+\subsection*{5.3 Lancer le test}
+
+Cliquer \emph{Start}. Sur un PC moderne~:
+\begin{itemize}
+\item Modèle \code{1 minute OHLC}~: $\sim 30$~secondes pour 5.4~ans.
+\item Modèle \code{real ticks}~: 5--15~minutes selon le~CPU.
+\end{itemize}
+
+Surveiller le \emph{Journal} du tester pour confirmer le démarrage~:
+
+\begin{center}
+\small\code{[INIT][INFO] EA ready}\\
+\code{CMacroSourceHistory: loaded 1584 rows from macro\_history.csv}\\
+\code{[2020.11.23 ... 2026.05.01]}
+\end{center}
+
+\subsection*{5.4 Lire les résultats}
+
+Onglet \emph{Backtest} pour le résumé chiffré, onglet \emph{Graph} pour
+la courbe d'équité, onglet \emph{Report $\rightarrow$ Save~as~Report}
+pour exporter un HTML complet.
+
+\begin{warningbox}
+Si l'onglet \emph{Backtest} affiche \textbf{0 trades} alors que le journal
+indique \emph{EA~ready}, c'est presque toujours un problème de fichier
+macro stale. Vérifier que le \code{loaded N rows} est $\geq 1500$ et que
+la dernière date est postérieure à votre \code{ToDate}. Sinon, retourner
+en section~4.3 pour régénérer.
+\end{warningbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 7 — RÉSULTATS ATTENDUS
+% ═══════════════════════════════════════════════════════════════════════
+\section*{6. Résultats attendus et interprétation}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+Voici les métriques de référence produites par Apogée Invest sur la
+configuration ci-dessus. Vos résultats locaux doivent en être proches~--- les
+écarts mineurs ($\pm 1\,\%$ sur le Sharpe, $\pm 5$ trades) sont attendus à
+cause de différences microscopiques dans les flux de ticks broker.
+
+\vspace{0.4em}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.8cm}rr@{}}
+\toprule
+\textbf{Métrique} & \textbf{Référence} & \textbf{Tolérance} \\
+\midrule
+Sharpe Ratio                       & \metric{1.15}            & $\pm 0.10$ \\
+Total Net Profit                   & \metric{$+$4\,615.41~USD} & $\pm 200$~USD \\
+Profit Factor                      & \metric{1.38}            & $\pm 0.05$ \\
+Recovery Factor                    & \metric{4.98}            & $\pm 0.30$ \\
+Total Trades                       & \metric{835}             & $\pm 15$ \\
+Equity Drawdown Maximal            & \metric{$-7.21\,\%$}     & $\pm 0.5$~pp \\
+Balance Drawdown Maximal           & \metric{$-6.58\,\%$}     & $\pm 0.5$~pp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Ventilation par sleeve (indicative).}
+Le rapport HTML ne ventile pas par \emph{magic number}, mais le journal
+permet de compter manuellement~: $\sim 350$ trades MR~Macro, $\sim 440$~TS
+Momentum, $\sim 45$~RSI~Daily. Le Sleeve~1 (M1) est le plus actif~; les
+sleeves~2 et~3 (D1) prennent peu de positions mais à plus fort levier.
+
+\paragraph{Interprétation rapide.}
+\begin{itemize}
+\item \textbf{Sharpe~$1.15$}~: rendement par unité de risque solide pour
+une stratégie FX retail. Au-dessus de~$1.0$ est le seuil empirique de
+\enquote{stratégie déployable}.
+\item \textbf{Drawdown $-7\,\%$}~: trois fois inférieur au plafond
+contractuel de~$15\,\%$. La stratégie peut absorber un \enquote{event}
+de l'ordre de $2\sigma$ sans déclencher le circuit-breaker.
+\item \textbf{Recovery Factor $4.98$}~: pour 1~unité de risque
+(drawdown maximal), la stratégie a généré $5$~unités de gain net. Indice
+synthétique de qualité de la trajectoire.
+\item \textbf{835 trades sur 5.4~ans}~: $\sim 154$~trades/an, soit
+$\sim 3$/semaine. Volume modéré, trade frequency raisonnable pour les
+coûts de transaction.
+\end{itemize}
+
+\begin{insightbox}
+\textbf{Sharpe live attendu vs backtest.} Sur des stratégies similaires en
+production, il est typique d'observer une dégradation de $-15\,\%$ à
+$-25\,\%$ du Sharpe lors du passage live --- notamment à cause du slippage
+réel, des coupures de connexion et de la variabilité des spreads. Un
+Sharpe live de $0.85$--$0.95$ après 3~mois de paper-trade est donc
+considéré comme un succès de transition.
+\end{insightbox}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 8 — TRADING LIVE (DRAG-AND-DROP)
+% ═══════════════════════════════════════════════════════════════════════
+\section*{7. Passage en trading live (démo puis réel)}
+\label{sec:deployment}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\subsection*{7.1 Préparer le chart}
+
+\begin{enumerate}
+\item Activer le trading algo global~: \code{Outils $\rightarrow$ Options
+$\rightarrow$ Expert Advisors $\rightarrow$ Allow~Algo~Trading} \emph{coché}.
+\item Confirmer que le bouton \emph{Algo Trading} de la barre d'outils
+principale est \textbf{en vert} (sinon clic pour activer).
+\item Ouvrir un chart \code{EURUSD.c} en \code{M1} (timeframe critique
+pour le sleeve~1).
+\end{enumerate}
+
+\subsection*{7.2 Lancer FxPreflight (recommandé)}
+
+Glisser \code{Navigator $\rightarrow$ Scripts $\rightarrow$ FxPreflight}
+sur le chart~M1. Le script vérifie en quelques secondes~: présence des
+4~symboles, historique M1/D1 disponible, fichier macro accessible, clé FRED
+valide. Lire le \emph{Journal Experts} pour le verdict.
+
+\subsection*{7.3 Attacher l'EA}
+
+Glisser \code{Navigator $\rightarrow$ Expert Advisors $\rightarrow$
+FxMultiSleeve} sur le chart \code{EURUSD.c~M1}. Dans la fenêtre qui
+s'ouvre, onglet \emph{Common}~: \emph{Allow~Algo~Trading} coché.
+Onglet \emph{Inputs}~: ne rien toucher (les défauts compilés
+sont déjà bons). \emph{OK}.
+
+Vérifier dans le coin supérieur droit du chart la présence du \emph{smiley
+souriant} (icône \enquote{:-)}), et dans le \emph{Journal} la ligne~:
+\begin{center}\small\code{[INIT][INFO] EA ready}\end{center}
+
+\subsection*{7.4 Checklist avant capital réel}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.3cm}p{14cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Gate de déploiement} \\
+\midrule
+1  & Paper-trade \emph{démo} $\geq$~3~mois sur le broker cible. Sharpe live $\geq 1.0$ requis. \\
+2  & Réserve cash hors-broker $\geq 30\,\%$ accessible en $<24$~heures. \\
+3  & Alerte drawdown live~: stop manuel si DD live $> -15\,\%$. \\
+4  & Vérifier mensuellement que \code{macro\_history.csv} est rafraîchi (cf.~4.3). \\
+5  & Surveillance hebdomadaire du Journal MT5 pour les warnings d'history M1/D1. \\
+6  & Slippage réel mesuré en démo \emph{avant} le passage capital réel. \\
+7  & Cap d'utilisation de marge en place~: auto-deleverage si margin~$> 70\,\%$ (déjà actif). \\
+8  & Kill switch~: capacité à flatten toutes les positions en $< 10$~minutes. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 9 — TROUBLESHOOTING
+% ═══════════════════════════════════════════════════════════════════════
+\section*{8. Troubleshooting}
+\label{sec:troubleshooting}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.5cm}p{4.5cm}p{5.5cm}@{}}
+\toprule
+\textbf{Symptôme} & \textbf{Cause probable} & \textbf{Résolution} \\
+\midrule
+\code{cannot add EURUSD} (err~4305) & Mauvais suffixe broker &
+Modifier \code{Inp\_SymbolSuffix} (cf.~3.4) et recompiler. \\
+\addlinespace
+\code{cannot open macro\_history.csv} (err~5004) & Fichier absent du
+\code{Common\textbackslash Files} & Recopier depuis l'archive ou
+régénérer (cf.~4.3). \\
+\addlinespace
+\code{loaded 70 rows} dans le journal & CSV stale livré par défaut
+(certaines distributions) & Régénérer avec
+\code{fx\_macro\_history.py} (cf.~4.3). Le \emph{nombre attendu est
+$\sim 1\,584$}. \\
+\addlinespace
+\code{[DEINIT] reason=8} & OnInit a échoué &
+Lire le journal --- erreur précise sur la ligne précédente. \\
+\addlinespace
+0~trade en backtest, init OK & Filtre macro toujours faux &
+Vérifier la dernière date du CSV vs \code{ToDate} du tester. \\
+\addlinespace
+0~trade en live & \emph{Algo~Trading} désactivé ou hors session &
+Vérifier le bouton \emph{Algo~Trading} vert + sleeve~1 ne trade que
+6h-14h~UTC. \\
+\addlinespace
+Sharpe $< 0.9$ ou trades $< 700$ & Configuration broker différente &
+Vérifier suffixe symbole, leverage, modèle de simulation, \emph{Forward}
+désactivé. \\
+\addlinespace
+\emph{cannot load library mql5.dll} & Aucune cause~: l'EA n'utilise pas
+de DLL & Ignorer (message générique de MT5 au démarrage). \\
+\addlinespace
+EA stoppe au bout de 7~jours en live & Filtre fraîcheur macro
+($168$~heures) & Régénérer \code{macro\_history.csv} ou utiliser
+le mode~NATIVE (clé~FRED valide). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection*{Lecture des logs MT5}
+
+Les logs sont en \emph{UTF-16~LE avec BOM}. Sous Windows, \emph{Notepad} les
+ouvre correctement. Sous PowerShell~:
+\begin{center}
+\small\code{Get-Content -Encoding Unicode "<chemin\textbackslash log.log>"}
+\end{center}
+
+Trois fichiers à connaître~:
+\begin{itemize}
+\item \code{<DataFolder>\textbackslash logs\textbackslash YYYYMMDD.log}~--- log du terminal.
+\item \code{<DataFolder>\textbackslash MQL5\textbackslash logs\textbackslash YYYYMMDD.log}~--- log live de l'EA.
+\item \code{<DataFolder>\textbackslash Tester\textbackslash logs\textbackslash YYYYMMDD.log}~--- log du backtest.
+\end{itemize}
+
+Dans tous les fichiers, chercher \code{[INIT]}, \code{[ERROR]}, \code{[DEINIT]}
+pour les messages structurels de l'EA.
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE 10 — DISCLAIMER + CONTACT
+% ═══════════════════════════════════════════════════════════════════════
+\section*{9. Support, version et avertissement}
+\vspace{-0.4em}
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
+
+\paragraph{Reproductibilité.} Cette stratégie a été validée sur le
+broker SquaredFinancial Demo, MT5~build~5836, période 2020-11-23~$\rightarrow$~2026-04-30.
+Les métriques rapportées en page~7 sont reproduites à l'identique en relançant
+le backtest sur la même configuration~--- aux variations microscopiques près
+des flux de ticks broker.
+
+\paragraph{Mise à jour.} La stratégie est livrée en version~$1.0$, gelée.
+Toute modification ultérieure (nouveau sleeve, nouveau filtre, ajustement
+des paramètres) sera distribuée comme version~$1.x$ avec un changelog
+détaillé. Le \code{macro\_history.csv} est néanmoins à régénérer
+mensuellement (procédure section~4.3).
+
+\paragraph{Précautions opérationnelles.}
+\begin{itemize}
+\item Maintenir MT5 à jour vers la dernière build stable.
+\item Conserver une copie hors-ligne de l'archive originale en cas de
+corruption locale du Data Folder.
+\item Sauvegarder le journal MT5 \emph{avant} toute mise à jour
+broker ou modification des paramètres.
+\end{itemize}
+
+\vfill
+
+\noindent\colorbox{softBlue}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.4cm}
+      \small\color{primary}\sffamily
+      \textbf{Support technique.} Apogée Invest~--- contact via votre
+      conseiller dédié.\\
+      \textbf{Version de ce document.} 1.0~--- mai~2026.\\
+      \textbf{Compatibilité.} MetaTrader~5 build~$\geq 4885$ sur Windows~10/11.
+      Linux/Wine supporté --- voir documentation interne séparée.
+      \vspace{0.4cm}
+    }
+  }
+}
+
+\vspace{0.6cm}
+
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.3cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Avertissement légal.} Ce document et la stratégie qui l'accompagne
+      sont confidentiels et destinés à l'usage exclusif de leur destinataire.
+      Les performances présentées sont issues de \emph{backtests} sur données
+      historiques. \textbf{Les performances passées ne préjugent pas des
+      performances futures.} Les rendements en conditions réelles peuvent
+      différer substantiellement à cause des coûts de transaction, du
+      \emph{slippage}, des contraintes de liquidité, des coupures de connexion
+      et des régimes de marché non anticipés. Le trading sur le marché des
+      changes implique un risque de perte en capital significatif. Ne tradez
+      jamais avec des fonds dont vous ne pouvez vous permettre la perte totale.
+      \vspace{0.3cm}
+    }
+  }
+}
+
+\end{document}
