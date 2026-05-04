@@ -46,46 +46,64 @@ public:
             g_logger.Error(m_name, StringFormat("invalid Inp_TS_Pairs=%s", Inp_TS_Pairs));
             return false;
         }
-        m_n_pairs = n;
+        // Pack valid pairs into [0..valid_n-1]. Skip pairs without any D1
+        // history so adding e.g. EURJPY (broker D1 starts 2022-11) on a
+        // 2020-2026 window doesn't disable the entire sleeve.
+        int valid_n = 0;
         for(int i = 0; i < n; i++)
         {
-            m_pairs[i] = MakeSymbolWithSuffix(raw[i], Inp_SymbolSuffix);
-            if(!EnsureSymbolSelected(m_pairs[i])) return false;
-            // Try ideal 250 D1 bars, gracefully accept any history >= 1.
-            // Below 1 bar there is no D1 data at all -> hard fail.
-            // ProcessPair's ReadShift1() returns false until iMA/iRSI
-            // have computed their first values, so the sleeve simply
-            // doesn't trade during the warmup period.
-            if(!EnsureHistory(m_pairs[i], PERIOD_D1, 250))
+            string pair = MakeSymbolWithSuffix(raw[i], Inp_SymbolSuffix);
+            if(!EnsureSymbolSelected(pair))
             {
-                if(!EnsureHistory(m_pairs[i], PERIOD_D1, 1))
+                g_logger.Warn(m_name, StringFormat(
+                    "%s: skipped (symbol not selectable on broker)", pair));
+                continue;
+            }
+            // Try ideal 250 D1 bars, gracefully accept any history >= 1.
+            // Below 1 bar there is no D1 data at all -> skip this pair only
+            // (was hard-fail before 2026-05-04).
+            if(!EnsureHistory(pair, PERIOD_D1, 250))
+            {
+                if(!EnsureHistory(pair, PERIOD_D1, 1))
                 {
-                    g_logger.Error(m_name, StringFormat(
-                        "%s: no D1 history at all; sleeve disabled", m_pairs[i]));
-                    return false;
+                    g_logger.Warn(m_name, StringFormat(
+                        "%s: skipped (no D1 history available on broker)", pair));
+                    continue;
                 }
                 g_logger.Warn(m_name, StringFormat(
                     "%s: %d/250 D1 bars; iMA(%d)/iRSI(%d) warm up as bars accumulate",
-                    m_pairs[i], (int)Bars(m_pairs[i], PERIOD_D1),
+                    pair, (int)Bars(pair, PERIOD_D1),
                     Inp_TS_SlowEMA, Inp_TS_RSIPeriod));
             }
-            m_h_ema_fast[i] = iMA(m_pairs[i], PERIOD_D1, Inp_TS_FastEMA,
-                                  0, MODE_EMA, PRICE_CLOSE);
-            m_h_ema_slow[i] = iMA(m_pairs[i], PERIOD_D1, Inp_TS_SlowEMA,
-                                  0, MODE_EMA, PRICE_CLOSE);
-            m_h_rsi[i]      = iRSI(m_pairs[i], PERIOD_D1, Inp_TS_RSIPeriod,
-                                   PRICE_CLOSE);
-            if(m_h_ema_fast[i] == INVALID_HANDLE ||
-               m_h_ema_slow[i] == INVALID_HANDLE ||
-               m_h_rsi[i] == INVALID_HANDLE)
+            int h_fast = iMA(pair, PERIOD_D1, Inp_TS_FastEMA,
+                             0, MODE_EMA, PRICE_CLOSE);
+            int h_slow = iMA(pair, PERIOD_D1, Inp_TS_SlowEMA,
+                             0, MODE_EMA, PRICE_CLOSE);
+            int h_rsi  = iRSI(pair, PERIOD_D1, Inp_TS_RSIPeriod, PRICE_CLOSE);
+            if(h_fast == INVALID_HANDLE || h_slow == INVALID_HANDLE ||
+               h_rsi == INVALID_HANDLE)
             {
-                g_logger.Error(m_name, StringFormat("indicator handle FAIL for %s", m_pairs[i]));
-                return false;
+                g_logger.Warn(m_name, StringFormat(
+                    "%s: skipped (indicator handle FAIL)", pair));
+                continue;
             }
+            m_pairs[valid_n]      = pair;
+            m_h_ema_fast[valid_n] = h_fast;
+            m_h_ema_slow[valid_n] = h_slow;
+            m_h_rsi[valid_n]      = h_rsi;
+            valid_n++;
         }
+        if(valid_n == 0)
+        {
+            g_logger.Error(m_name, "no valid pairs after filtering; sleeve disabled");
+            return false;
+        }
+        m_n_pairs = valid_n;
         m_trade.SetExpertMagicNumber(m_magic);
         m_trade.SetDeviationInPoints(20);
-        g_logger.Info(m_name, StringFormat("Init OK %d pairs", n));
+        g_logger.Info(m_name, StringFormat(
+            "Init OK %d/%d pairs (skipped %d for missing D1/symbol)",
+            valid_n, n, n - valid_n));
         return true;
     }
 

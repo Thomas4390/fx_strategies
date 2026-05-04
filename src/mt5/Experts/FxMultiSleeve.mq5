@@ -27,15 +27,23 @@
 input double Inp_AllocMRMacro      = 0.80;
 input double Inp_AllocTSMomentum   = 0.10;
 input double Inp_AllocRSIDaily     = 0.10;
-input bool   Inp_EnableDDCap       = true;    // LaTeX § 13.3 — circuit-breaker tail-risk
-input double Inp_DDCap             = 0.30;    // Relâché 0.15→0.30 (2026-05-04, cf.
-                                              // reports/optimization findings :
-                                              // DDCap=0.15 freinait 24% configs IS
-                                              // pour aucun bénéfice OOS, vol-targeting
-                                              // global suffit en régime normal)
+input bool   Inp_EnableDDCap       = false;   // Désactivé par défaut (2026-05-04)
+                                              // — circuit-breaker tail-risk LaTeX § 13.3.
+                                              // Findings cumulés : DDCap=0.15 freinait
+                                              // 24% configs IS pour aucun bénéfice OOS ;
+                                              // DDCap=0.30 jamais touché en backtest 5.4 ans.
+                                              // Code conservé pour ré-activation manuelle
+                                              // (tail-risk insurance optionnelle).
+input double Inp_DDCap             = 0.30;    // Seuil (utilisé uniquement si Inp_EnableDDCap=true)
 input bool   Inp_ResetDDState      = false;
-input bool   Inp_EnableMarginCap   = true;    // LaTeX § 13.2 — cap marge 70 %
-input double Inp_MarginCapPct      = 0.70;
+input bool   Inp_EnableMarginCap   = false;   // Désactivé par défaut (2026-05-04)
+                                              // — cap marge 70 % LaTeX § 13.2.
+                                              // Test on/off identique sur baseline 5.4 ans
+                                              // (Sharpe 1.15, +4615 USD, DD 7.21%) :
+                                              // marge utilisée jamais > 70% en config
+                                              // normale (vol-targeting suffit).
+                                              // Code conservé pour ré-activation manuelle.
+input double Inp_MarginCapPct      = 0.70;    // Seuil (utilisé uniquement si Inp_EnableMarginCap=true)
 
 // === Vol-targeting global ===
 input double Inp_GlobalTargetVol   = 0.28;
@@ -126,6 +134,8 @@ CSleeveRSIDaily    g_sleeve_rsi;
 datetime           g_last_d1_bar     = 0;
 datetime           g_last_macro_age_warn = 0;
 datetime           g_last_margin_check   = 0;
+datetime           g_session_start   = 0;     // Captured at OnInit() to compute years
+                                              // window in OnTester() (robust to 0-deal runs)
 
 //============================================================ ON INIT
 
@@ -133,6 +143,7 @@ int OnInit()
 {
     g_logger.Init(Inp_LogVerbose, Inp_LogToFile);
     g_logger.Info("INIT", StringFormat("FxMultiSleeve start build %s", __DATE__));
+    g_session_start = TimeCurrent();   // tester start_date in backtest, live time otherwise
 
     // Validation des allocations
     if(!g_risk.Init(Inp_AllocMRMacro, Inp_AllocTSMomentum, Inp_AllocRSIDaily,
@@ -305,6 +316,10 @@ double OnTester()
     double initial = TesterStatistics(STAT_INITIAL_DEPOSIT);
     double net     = TesterStatistics(STAT_PROFIT);
     double dd_pct  = TesterStatistics(STAT_EQUITY_DDREL_PERCENT);
+    // Note: STAT_SHARPE_RATIO is capped at -5.00 by MT5 when the underlying
+    // equity-curve Sharpe is -inf or below floor (configs that wipe equity
+    // very fast). Treat sharpe == -5.0 as a sentinel "config plante" rather
+    // than a real metric. Sortino/Calmar can complement if needed.
     double sharpe  = TesterStatistics(STAT_SHARPE_RATIO);
     double pf      = TesterStatistics(STAT_PROFIT_FACTOR);
     double rf      = TesterStatistics(STAT_RECOVERY_FACTOR);
@@ -312,23 +327,16 @@ double OnTester()
 
     double final_eq = initial + net;
 
-    // Window in years from tester period (inclusive of from_date, exclusive
-    // of to_date). MQL5 expose ces dates via TesterStatistics indirectly,
-    // mais le plus simple est de calculer depuis le premier et dernier deal
-    // selectionné en historique.
+    // Window in years computed from session timestamps captured at OnInit()
+    // (= tester start_date in backtest) and TimeCurrent() at OnTester
+    // (= tester end_date). Robust to 0-deal runs and avoids drift when only
+    // a few deals fire near edges of the window.
     double years = 1.0;
-    if(HistorySelect(0, TimeCurrent()))
+    if(g_session_start > 0)
     {
-        int n = HistoryDealsTotal();
-        if(n > 1)
-        {
-            datetime first_t = (datetime)HistoryDealGetInteger(
-                HistoryDealGetTicket(0), DEAL_TIME);
-            datetime last_t  = (datetime)HistoryDealGetInteger(
-                HistoryDealGetTicket(n - 1), DEAL_TIME);
-            if(last_t > first_t)
-                years = (double)(last_t - first_t) / 31557600.0;  // s/an
-        }
+        datetime now = TimeCurrent();
+        if(now > g_session_start)
+            years = (double)(now - g_session_start) / 31557600.0;  // s/an
     }
     if(years <= 0.01) years = 1.0;
 
