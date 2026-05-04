@@ -202,5 +202,71 @@ python src/mt5/bridge/reset_tester_preset.py --check    # dry-run
 **Suggestion d'ordre pour la prochaine session** :
 1. Walk-forward (point #1 ci-dessus) — 30 min, donne la métrique manquante (Sharpe OOS) pour valider 100%
 2. Optimisation génétique 32-cores (point #2) — fire-and-forget pendant qu'on fait autre chose
-3. Pendant que l'optim tourne : investiguer RSI Daily faible turnover (point #4)
+3. Pendant que l'optim tourne : **investiguer écart VBT vs MT5 sur RSI Daily** — plan d'investigation détaillé dans [`docs/investigations/rsi_daily_vbt_vs_mt5.md`](../../docs/investigations/rsi_daily_vbt_vs_mt5.md) (8 hypothèses ordonnées par magnitude, méthodologie, critères de succès)
 4. Setup démo live (point #3) avec le profil 4-charts (point #6)
+
+---
+
+## Mise à jour 2026-05-04 — Infrastructure CLI Linux/Wine
+
+### Nouveau : pipeline de backtest CLI 100 % automatisé
+
+Le wrapper Python `src/mt5/bridge/run_backtest_cli.py` orchestre maintenant
+un backtest complet en 22 secondes (M1 OHLC, 5.4 ans) sans toucher au GUI :
+
+| Composant | Rôle |
+|---|---|
+| `bridge/run_backtest_cli.py` | sanity checks + INI UTF-16 LE + lance Wine + parse log + parse HTML + dump JSON |
+| `bridge/write_default_preset.py` | génère `FxMultiSleeve_Default.set` chargeable depuis le GUI MT5 |
+| `Profiles/Tester/FxMultiSleeve_Default.set` | preset GUI rechargeable (mode AUTO=4) |
+| `reports/mt5/run_<timestamp>.json` | sortie structurée (Sharpe, DD, trades, log_summary) |
+
+**Lancement standard** :
+```bash
+python src/mt5/bridge/run_backtest_cli.py
+# Args optionnels : --from --to --symbol --period --model --report-name --timeout
+```
+
+### Nouveau : guide client PDF
+
+`reports/client_setup_guide/main.pdf` (11 pages, design Apogée Invest) — guide
+d'installation MT5 Windows pour client final, depuis l'archive zip jusqu'au
+trading live. Source LaTeX dans `main.tex`, recompiler avec `xelatex` (réutilise
+`../latex_report/preamble.tex`).
+
+### Bug d'infrastructure documenté : `Common/Files` portable vs Roaming
+
+⚠️ **MT5 portable (mode `/portable`) lit `FILE_COMMON` dans `users/<user>/AppData/Roaming/.../Common/Files/`,
+PAS dans le `Common/Files/` à la racine portable.** Symptôme : log Tester
+indique `loaded 70 rows` au lieu de `loaded 1584 rows`, sleeve MR Macro ne
+trade pas dans la deuxième moitié du backtest.
+
+Le sanity check de `run_backtest_cli.py` vérifie l'emplacement effectif et
+alerte si le CSV est stale. Resync manuel :
+```bash
+cp "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Common/Files/macro_history.csv" \
+   "/home/thomas/.mt5/drive_c/users/thomas/AppData/Roaming/MetaQuotes/Terminal/Common/Files/macro_history.csv"
+```
+
+### Baseline numérique validé sur Linux/Wine
+
+Backtest CLI 2020-11-23 → 2026-04-30, EURUSD.c M1, model 1, deposit 10k, levier 1:100 :
+
+| Métrique | Valeur | Baseline Windows (rappel) |
+|---|---|---|
+| Sharpe Ratio | **1.15** | 1.02 |
+| Net Profit | **+4 615 USD (+46.15 %)** | +38.26 % |
+| Profit Factor | **1.38** | 1.33 |
+| Recovery Factor | **4.98** | 4.48 |
+| Total Trades | **835** | 838 |
+| Equity DD Max | **−7.21 %** | −7.06 % |
+
+→ Cohérent avec Windows. Légère sur-performance (Sharpe +0.13) probablement
+liée au levier 1:100 vs 1:30. Dump JSON complet :
+`reports/mt5/run_20260504T140659Z.json`.
+
+### Commits relatifs à cette session (branche main)
+
+- `f622382` — feat(mt5): add CLI backtest wrapper and default preset
+- `892bf13` — docs(reports): add client-facing setup guide
+- *(à venir)* — docs(investigations): RSI Daily VBT vs MT5 plan + SESSION_NOTES update

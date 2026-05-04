@@ -2,7 +2,33 @@
 
 > **Stratégie de trading FX algorithmique pour MetaTrader 5** : 3 sleeves (mean-reversion macro intraday + trend-following + RSI mean-reversion daily).
 > **Référence stratégie/risque/maths** : voir `README.md` (388 lignes, exhaustif).
-> **Ce fichier** : informations opérationnelles spécifiques à ce déploiement (chemins absolus, broker, debug).
+> **Ce fichier** : informations opérationnelles Windows (chemins absolus, broker, debug).
+>
+> 🐧 **Pour l'environnement Linux/Wine** (pilotage CLI, mode portable, symlinks) : voir [`docs/mt5/14_cli_backtest_linux.md`](../../docs/mt5/14_cli_backtest_linux.md).
+
+---
+
+## 🚀 Démarrage rapide pour agent fresh
+
+Si tu reprends une nouvelle session, lis dans cet ordre :
+
+1. **Ce fichier** — environnement Windows + procédure drag-and-drop + codes d'erreur.
+2. [`SESSION_NOTES.md`](./SESSION_NOTES.md) — état d'avancement, baselines numériques, todo prioritaire, mise à jour 2026-05-04 sur l'infra Linux/Wine.
+3. [`docs/mt5/14_cli_backtest_linux.md`](../../docs/mt5/14_cli_backtest_linux.md) — pipeline CLI Wine, format `.ini` UTF-16, pièges connus.
+4. [`README.md`](./README.md) — théorie complète (3 sleeves, risk management, vol-targeting).
+
+**Investigations ouvertes** :
+- [`docs/investigations/rsi_daily_vbt_vs_mt5.md`](../../docs/investigations/rsi_daily_vbt_vs_mt5.md) — écart entre la référence VBT~Pro et le port MQL5 du sleeve RSI Daily, plan complet d'enquête (8 hypothèses).
+
+**Outils CLI clés** (Linux/Wine, mais transposable Windows) :
+- `bridge/run_backtest_cli.py` — backtest 5.4 ans en 22 s (Sharpe 1.15 baseline).
+- `bridge/write_default_preset.py` — régénère `FxMultiSleeve_Default.set` depuis les défauts compilés.
+- `bridge/reset_tester_preset.py` — patch les `.set` cachés MT5 quand on change un défaut compilé.
+- `bridge/fx_macro_history.py` — régénère `macro_history.csv` (FRED API, à faire mensuellement).
+
+**Livrables client** :
+- [`reports/client_setup_guide/main.pdf`](../../reports/client_setup_guide/main.pdf) — guide client 11 pages plug-and-play.
+- [`reports/latex_report/main_executive.pdf`](../../reports/latex_report/main_executive.pdf) — synthèse exécutive 10 pages (rapport investissement).
 
 ---
 

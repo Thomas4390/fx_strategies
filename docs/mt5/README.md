@@ -23,6 +23,9 @@ sert de référence pour :
 | Traduire du Python en MQL5 | [11_porting_from_python.md](./11_porting_from_python.md) |
 | Trouver une source externe | [12_references.md](./12_references.md) |
 | Accéder à des données macro depuis MQL5 (Calendar, WebRequest) | [13_native_data_sources.md](./13_native_data_sources.md) |
+| Piloter MT5 en CLI sur Linux/Wine (compile, backtest headless) | [14_cli_backtest_linux.md](./14_cli_backtest_linux.md) |
+| Investiguer l'écart RSI Daily VBT vs MT5 | [`../investigations/rsi_daily_vbt_vs_mt5.md`](../investigations/rsi_daily_vbt_vs_mt5.md) |
+| Livrer la stratégie à un client (Windows MT5) | [`../../reports/client_setup_guide/main.pdf`](../../reports/client_setup_guide/main.pdf) |
 
 ## Conventions de code MQL5 utilisées dans ce repo
 
