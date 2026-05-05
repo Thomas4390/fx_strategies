@@ -1,4 +1,4 @@
-# Parité vbt pro vs MT5 C1 — 2026-05-05 19:49 UTC
+# Parité vbt pro vs MT5 C1 — 2026-05-05 20:00 UTC
 
 **MT5 C1 reference** : `run_20260505T172809Z.json` (5.43y backtest, vt=0.75, lev=64.0)
 
@@ -23,48 +23,73 @@
 - **profit_factor** : MT5=1.4978 vs vbt=nan, delta +nan ✗
 - **trades** : MT5=785 vs vbt=0, delta -100.0% ✗
 
-## Phase M.1 SUCCESS (calibration sizing)
+## Phase M.3 attempt — Signal alignment (résultats)
 
-### Évolution
+### Diagnostic deep-dive trade-by-trade
 
-| Métrique | MT5 C1 | vbt PRE-M | vbt POST-M.1 | Verdict |
-|---|---|---|---|---|
-| Sharpe | 1.38 | 0.97 | **0.97** | ✗ gap structurel |
-| CAGR | 15.26% | 45.09% | **10.11%** | borderline (-5.15pp) |
-| DD | 13.0% | 49.63% | **13.52%** | ✅ **gap 0.52pp** |
-| vol | ~11% | 1.74% | **10.45%** | ✅ **gap 0.5pp** |
+Comparaison stats trades MT5 MR vs vbt MR (multi-pair, full 5.4y) :
 
-### Patches M.1
+| Métrique | MT5 MR | vbt MR | Δ |
+|---|---|---|---|
+| Trades count | 312 | 374 | vbt +20% (over-trade) |
+| Duration médiane | 360 min | 360 min | ✅ identique (= time-stop 6h) |
+| Duration mean | 280 min | 327 min | vbt +17% holds longer |
+| Win rate | 55.8% | 53.7% | vbt -2.1pp |
+| **PnL mean** | **$24.47** | **$8.94** | vbt **-64%** per trade |
+| PnL std | $128 | $87 | vbt -32% |
 
-1. `combined_portfolio.py:_compute_strategy_daily_returns` :
-   - `init_cash=10_000.0` (match MT5 deposit)
-   - MR pipeline : `size=0.20, size_type="percent", leverage=12.0`
-   - TS rets × 12.0 + RSI rets × 12.0 (uniform MT5 GlobalLeverage)
-2. `compare_vbt_vs_mt5_c1.py` : `target_vol=None` (évite double-stacking)
-3. `mr_macro.py:pipeline()` : ajouter `size`, `size_type` params
-4. Cache version : v3-phase-k → v5e-phase-m
+**Cause Sharpe gap structurel** : vbt PnL/trade = 1/2.7 MT5. PnL/notional MT5
+50× supérieur (notional MT5 plus petit lots discrets, mais wins captent moves
+plus grands).
 
-### Verdict M.1
+### Tentatives M.3
 
-✅ **Sizing/leverage calibrés** — DD et vol matchent quasi-parfaitement MT5
-✅ **Pas de blowup** (vs Phase L Sharpe -0.25)
-⚠️ **Sharpe gap 0.40 persiste** = écart d'edge signal logic intrinsèque
-⚠️ **CAGR borderline** (-5.15pp, juste hors tolérance ±5pp M.1)
+**Tentative 1 — slippage 1.5bps → 15bps + stop_exit_price="Stop"** :
+- Sharpe **-1.21** (catastrophe)
+- DD **69.83%**
+- Slippage 10× appliqué uniformly sur multi-symbol = tue edge complètement.
+- **Rollback**.
 
-### Cause Sharpe gap résiduel
+**Tentative 2 — stop_exit_price="Stop" only** :
+- Sharpe **0.97** (identique M.1, no change)
+- vbt déjà check sl_stop/tp_stop contre HIGH/LOW de la bar par défaut.
+- "Stop" exit price seulement change exit price (vs Close), pas le trigger.
+- Effet marginal sur intraday minute (vol bar < 0.1% → diff close vs stop ≈ 0).
+- **Rollback** (no benefit).
 
-Pas problème sizing (calibré). Edge intrinsèque vbt vs MT5 :
-1. Tick events (MT5) vs M1 OHLC (vbt) — TP/SL execution priority
-2. Macro filter timing : MT5 evalué à entry order ; vbt broadcast row-wise
-3. Slippage : MT5 ajuste SL distance per-trade ; vbt uniforme
+### Conclusion Phase M.3
 
-### Phase M.2/M.3 (future, optionnel)
+Sharpe gap 0.40 = **vraiment structurel signal-level**, pas accessible via
+config tweaks vbt. Causes profondes :
 
-- **M.2 LotsForRisk Python** (~1j) : amélioration marginale (gap signal-level pas sizing-level)
-- **M.3 Refactor signal logic** (~3j) : aligne timing TP/SL/macro filter exact MT5, vraie convergence Sharpe ±0.05
+1. **TP/SL execution model** : MT5 fire @ tick exact ; vbt check @ bar close
+   contre HIGH/LOW = approximation grossière sur volatilité intraday.
+2. **Macro filter timing** : MT5 evalué à entry order tick ; vbt mask boolean
+   broadcast row-wise = différence quelques minutes peut filter trades
+   différemment.
+3. **No-pyramiding par-symbol** : MT5 explicit `CountSleevePositions(magic, sym) > 0`
+   ; vbt via accumulate=False (default) = équivalent mais peut diverger sur
+   edge cases (re-entry après exit dans même bar).
 
-### Causes documentées (résiduel post-M.1)
+**Refacto vrai requise (Phase N future, ~5-7 jours)** :
+- Implémenter tick-level TP/SL simulation Python (utiliser HIGH/LOW interpolation)
+- Macro filter at-entry-time check (pas mask broadcast)
+- Per-symbol position tracker explicit
+- OU passer au backtest QuantConnect (déjà installé selon CLAUDE.md) qui
+  supporte tick events natifs.
 
-1. **Sharpe gap signal-level** : edge diverge ~0.40 (architectural, pas sizing)
-2. **PF/Trades non-applicable** : vbt `from_optimizer` synthetic price
-3. **CAGR borderline** : conséquence directe Sharpe gap × vol equivalente
+### Verdict M.3
+
+❌ **Convergence Sharpe non atteinte** — gap 0.40 reste structurel.
+✅ **Diagnostic complet** : PnL/trade MT5 2.7× vbt = TP/SL execution timing
+   limitation vbt fundamental.
+📋 **État actuel maintenu** : M.1 calibration sizing (DD/vol parité) ✅.
+   Phase M.3 attempts rollbacked (no benefit ou catastrophe).
+
+## Causes documentées (résiduel post-M.3)
+
+1. **Sharpe gap signal-level (0.40)** : TP/SL execution sur ticks vs minute close.
+   Non-fixable sans tick data ou refactor majeur.
+2. **PF/Trades non-applicable** : vbt `from_optimizer` synthetic price.
+3. **vbt over-trade léger (+20%)** : possibly entry-edge cases différentes timing.
+4. **PnL/trade vbt < MT5 (×0.37)** : conséquence TP/SL miss intra-bar moves.
