@@ -27,6 +27,8 @@
 input double Inp_AllocMRMacro      = 0.80;
 input double Inp_AllocTSMomentum   = 0.10;
 input double Inp_AllocRSIDaily     = 0.10;
+input double Inp_AllocH1Momentum   = 0.0;     // Phase D — sleeve H1 (default off)
+                                              // sum(MR+TS+RSI+H1) doit être 1.0
 input bool   Inp_EnableDDCap       = false;   // Désactivé par défaut (2026-05-04)
                                               // — circuit-breaker tail-risk LaTeX § 13.3.
                                               // Findings cumulés : DDCap=0.15 freinait
@@ -86,11 +88,26 @@ input double Inp_RSI_Overbought    = 75.0;
 input double Inp_RSI_ExitMid       = 50.0;
 input int    Inp_RSI_SlippageBps   = 10;       // LaTeX § 05 — 10 bps daily
 
+// === Sleeve 4 — H1 Momentum (Phase D) ===
+input string Inp_H1_Pairs          = "EURUSD,GBPUSD,USDJPY";
+input int    Inp_H1_FastEMA        = 20;
+input int    Inp_H1_SlowEMA        = 50;
+input int    Inp_H1_RSIPeriod      = 7;
+input int    Inp_H1_RSILow         = 40;
+input int    Inp_H1_RSIHigh        = 60;
+input int    Inp_H1_ATRPeriod      = 14;
+input double Inp_H1_ATRMultSL      = 2.0;
+input double Inp_H1_TargetVol      = 0.10;
+input double Inp_H1_MaxLeverage    = 3.0;
+input int    Inp_H1_SlippageBps    = 12;       // 12 bps H1 (entre TS daily 10
+                                              // et MR M1 15 bps)
+
 // === Operational ===
 input string Inp_SymbolSuffix      = ".c";    // Broker-specific (ECN/Raw uses ".c"; change for other brokers)
 input int    Inp_MagicMR           = 831;
 input int    Inp_MagicTS           = 832;
 input int    Inp_MagicRSI          = 833;
+input int    Inp_MagicH1           = 834;     // Phase D
 input bool   Inp_LogVerbose        = false;
 input bool   Inp_LogToFile         = true;
 input bool   Inp_ExportDeals       = false;   // Dump per-deal CSV in OnTester
@@ -129,6 +146,7 @@ input bool             Inp_MacroHistoryUseCommon = true;
 #include "..\Include\FxSleeveMRMacro.mqh"
 #include "..\Include\FxSleeveTSMomentum.mqh"
 #include "..\Include\FxSleeveRSIDaily.mqh"
+#include "..\Include\FxSleeveH1Momentum.mqh"
 
 //============================================================ STATE
 
@@ -137,6 +155,7 @@ CMacroFilter       g_macro;
 CSleeveMRMacro     g_sleeve_mr;
 CSleeveTSMomentum  g_sleeve_ts;
 CSleeveRSIDaily    g_sleeve_rsi;
+CSleeveH1Momentum  g_sleeve_h1;
 
 datetime           g_last_d1_bar     = 0;
 datetime           g_last_macro_age_warn = 0;
@@ -156,7 +175,8 @@ int OnInit()
     if(!g_risk.Init(Inp_AllocMRMacro, Inp_AllocTSMomentum, Inp_AllocRSIDaily,
                     Inp_GlobalTargetVol, Inp_GlobalMaxLeverage, Inp_GlobalVolFloor,
                     Inp_EnableDDCap, Inp_DDCap, Inp_ResetDDState,
-                    Inp_EnableMarginCap, Inp_MarginCapPct))
+                    Inp_EnableMarginCap, Inp_MarginCapPct,
+                    Inp_AllocH1Momentum))
     {
         g_logger.Error("INIT", "RiskManager init failed");
         return INIT_PARAMETERS_INCORRECT;
@@ -207,6 +227,11 @@ int OnInit()
         g_logger.Error("INIT", "Sleeve RSI Daily init failed");
         return INIT_FAILED;
     }
+    if(Inp_AllocH1Momentum > 0.0 && !g_sleeve_h1.Init())
+    {
+        g_logger.Error("INIT", "Sleeve H1 Momentum init failed");
+        return INIT_FAILED;
+    }
 
     // Timer 1 minute (refresh macro, monitoring DD, déclenche daily)
     EventSetTimer(60);
@@ -222,6 +247,7 @@ void OnDeinit(const int reason)
     g_sleeve_mr.Shutdown();
     g_sleeve_ts.Shutdown();
     g_sleeve_rsi.Shutdown();
+    if(Inp_AllocH1Momentum > 0.0) g_sleeve_h1.Shutdown();
     g_logger.Info("DEINIT", StringFormat("EA stopped reason=%d", reason));
     g_logger.Shutdown();
 }
@@ -249,6 +275,10 @@ void OnTick()
 
     // Time-stops intraday + close forcé 21h UTC (vérif fréquente)
     g_sleeve_mr.CheckIntradayExits();
+
+    // H1 momentum (Phase D) : détection new H1 bar en multi-pair.
+    if(Inp_AllocH1Momentum > 0.0)
+        g_sleeve_h1.OnNewBarH1Multi(g_risk);
 }
 
 //============================================================ ON TIMER

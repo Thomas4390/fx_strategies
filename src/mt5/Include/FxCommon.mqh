@@ -9,13 +9,15 @@
 #define MAGIC_MR_MACRO     831
 #define MAGIC_TS_MOMENTUM  832
 #define MAGIC_RSI_DAILY    833
+#define MAGIC_H1_MOMENTUM  834   // Phase D — sleeve H1 timeframe
 
 //--- Identifiants de sleeve
 enum ESleeveID
 {
     SLEEVE_MR_MACRO    = 0,
     SLEEVE_TS_MOMENTUM = 1,
-    SLEEVE_RSI_DAILY   = 2
+    SLEEVE_RSI_DAILY   = 2,
+    SLEEVE_H1_MOMENTUM = 3   // Phase D
 };
 
 //--- Source des données macro pour le filtre MR Macro

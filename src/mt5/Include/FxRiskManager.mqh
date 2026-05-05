@@ -19,6 +19,7 @@ private:
     double m_alloc_mr;
     double m_alloc_ts;
     double m_alloc_rsi;
+    double m_alloc_h1;       // Phase D — alloc sleeve H1 momentum
     double m_target_vol;
     double m_max_leverage;
     double m_vol_floor;
@@ -29,6 +30,7 @@ private:
 
 public:
     CRiskManager() : m_alloc_mr(0.80), m_alloc_ts(0.10), m_alloc_rsi(0.10),
+                     m_alloc_h1(0.0),
                      m_target_vol(FX_VOL_TARGET_GLOBAL),
                      m_max_leverage(FX_MAX_LEVERAGE_GLOBAL),
                      m_vol_floor(FX_MIN_VOL_FLOOR),
@@ -40,18 +42,22 @@ public:
     bool Init(double alloc_mr, double alloc_ts, double alloc_rsi,
               double target_vol, double max_leverage, double vol_floor,
               bool dd_cap_enabled, double dd_cap, bool reset_dd_state,
-              bool margin_cap_enabled = true, double margin_cap_pct = 0.70)
+              bool margin_cap_enabled = true, double margin_cap_pct = 0.70,
+              double alloc_h1 = 0.0)
     {
-        // Validation des allocations
-        double sum = alloc_mr + alloc_ts + alloc_rsi;
+        // Validation des allocations (4 sleeves, sum = 1.0)
+        double sum = alloc_mr + alloc_ts + alloc_rsi + alloc_h1;
         if(MathAbs(sum - 1.0) > 1e-6)
         {
-            PrintFormat("CRiskManager::Init: allocations sum=%.4f != 1.0", sum);
+            PrintFormat("CRiskManager::Init: allocations sum=%.4f != 1.0 "
+                        "(mr=%.2f ts=%.2f rsi=%.2f h1=%.2f)",
+                        sum, alloc_mr, alloc_ts, alloc_rsi, alloc_h1);
             return false;
         }
         m_alloc_mr  = alloc_mr;
         m_alloc_ts  = alloc_ts;
         m_alloc_rsi = alloc_rsi;
+        m_alloc_h1  = alloc_h1;
         m_target_vol = target_vol;
         m_max_leverage = max_leverage;
         m_vol_floor = vol_floor;
@@ -83,6 +89,7 @@ public:
             case SLEEVE_MR_MACRO:    return equity * m_alloc_mr;
             case SLEEVE_TS_MOMENTUM: return equity * m_alloc_ts;
             case SLEEVE_RSI_DAILY:   return equity * m_alloc_rsi;
+            case SLEEVE_H1_MOMENTUM: return equity * m_alloc_h1;
         }
         return 0.0;
     }
@@ -197,6 +204,7 @@ public:
                 CloseAllByMagic(MAGIC_MR_MACRO,    "DD breaker");
                 CloseAllByMagic(MAGIC_TS_MOMENTUM, "DD breaker");
                 CloseAllByMagic(MAGIC_RSI_DAILY,   "DD breaker");
+                CloseAllByMagic(MAGIC_H1_MOMENTUM, "DD breaker");
                 GlobalVariableSet(GV_DD_TRIGGERED, 1.0);
                 Alert("FX DD circuit-breaker triggered");
             }
@@ -234,6 +242,7 @@ public:
             CloseAllByMagic(MAGIC_MR_MACRO,    "margin critical");
             CloseAllByMagic(MAGIC_TS_MOMENTUM, "margin critical");
             CloseAllByMagic(MAGIC_RSI_DAILY,   "margin critical");
+            CloseAllByMagic(MAGIC_H1_MOMENTUM, "margin critical");
             return true;
         }
         if(usage >= m_margin_cap_pct)
