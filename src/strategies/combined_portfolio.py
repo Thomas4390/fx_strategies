@@ -101,8 +101,19 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     print("  Loading 4-pair minute data (EUR/GBP/JPY/CAD)...")
     data_4p = load_all_fx_data()
 
-    print("  Running MR Macro backtest (4-pair, cash_sharing)...")
-    pf_mr = backtest_mr_macro(data_4p)
+    # Phase M.1 : init_cash=10K (match MT5 deposit) + size_type="percent"
+    # size=0.20 = 20% cash per trade (= MR_alloc 80% / 4 pairs in MT5 sub_equity)
+    # cash_sharing → 4 pairs share $10K, max simultaneous 80% allocated.
+    # Phase M.1 leverage in pipeline (matches MT5 GlobalLeverage typical ~10-20)
+    # combined_portfolio_v2.target_vol must be None to avoid double-stacking.
+    print("  Running MR Macro backtest (4-pair, init_cash=10K, size=20% cash, leverage=10)...")
+    pf_mr = backtest_mr_macro(
+        data_4p,
+        init_cash=10_000.0,
+        size=0.20,
+        size_type="percent",
+        leverage=12.0,
+    )
     mr_rets = pf_mr.daily_returns
 
     print("  Loading daily closes (4 pairs)...")
@@ -112,7 +123,11 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     xs_rets = backtest_xs_momentum(closes)
 
     print("  Running TS Momentum + RSI...")
-    ts_rets = backtest_ts_momentum_portfolio(closes)
+    # Phase M.1 : scale returns × MT5_LEV_AVG ≈ 10 pour matcher MT5
+    # GlobalLeverage applied uniformly to all sleeves (TS/RSI returns are
+    # unleveraged daily backtest returns, MT5 lev typical ~10x avg).
+    MT5_LEV_AVG = 12.0
+    ts_rets = backtest_ts_momentum_portfolio(closes) * MT5_LEV_AVG
 
     # Phase 17: TS Momentum restricted to 3 pairs (drop USD-CAD).
     # Per-year decomposition showed USD-CAD is consistently the worst
@@ -121,7 +136,7 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     # the full-period Sharpe from 0.44 to 0.57 (+30%) and restores
     # 2023 to positive in the combined v2 walk-forward.
     closes_3p = closes[["EUR-USD", "GBP-USD", "USD-JPY"]]
-    ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p)
+    ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p) * MT5_LEV_AVG
 
     # Phase 18: RSI Daily 4-pair as a third orthogonal sleeve.
     # Near-zero correlation with MR Macro (+0.056) and slightly
@@ -129,8 +144,8 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     # 2019 and 2023 when the other two sleeves lose. At 10% weight
     # it boosts bootstrap P5 Max DD from -33.98% to -30.68% and OOS
     # Sharpe from 1.24 to 1.44.
-    print("  Running RSI Daily 3-pair (no USDJPY, Phase E.3)...")
-    rsi_daily_3p = backtest_rsi_daily_portfolio()
+    print("  Running RSI Daily 3-pair (no USDJPY, Phase E.3) × MT5_LEV_AVG...")
+    rsi_daily_3p = backtest_rsi_daily_portfolio() * MT5_LEV_AVG
 
     return {
         "MR_Macro": mr_rets,

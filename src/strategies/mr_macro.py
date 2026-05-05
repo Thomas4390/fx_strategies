@@ -315,6 +315,8 @@ def pipeline(
     slippage: float | None = PROJECT_CONFIG["slippage_intraday"],
     leverage: float | None = None,
     fees: float | None = None,
+    size: float | None = None,        # Phase M.1 — size per trade (None = vbt default 1 unit)
+    size_type: str | None = None,     # Phase M.1 — "percent", "value", etc.
 ) -> tuple[vbt.Portfolio, MRMacroIndicator]:
     """Investigation path — bit-equivalent to the legacy ``backtest_mr_macro``.
 
@@ -396,6 +398,10 @@ def pipeline(
         fees=fees,
         freq="1min",
     )
+    if size is not None:
+        pf_kwargs["size"] = size
+    if size_type is not None:
+        pf_kwargs["size_type"] = size_type
     if is_multi:
         pf_kwargs["cash_sharing"] = True
         pf_kwargs["group_by"] = True

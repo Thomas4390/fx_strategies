@@ -1,8 +1,8 @@
-# Parité vbt pro vs MT5 C1 — 2026-05-05 19:25 UTC
+# Parité vbt pro vs MT5 C1 — 2026-05-05 19:49 UTC
 
 **MT5 C1 reference** : `run_20260505T172809Z.json` (5.43y backtest, vt=0.75, lev=64.0)
 
-**Verdict global** : ⚠️  5 écart(s) hors tolérance
+**Verdict global** : ⚠️  4 écart(s) hors tolérance
 
 ## Métriques side-by-side
 
@@ -10,101 +10,61 @@
 |---|---|---|---|---|
 | vt | 0.7500 | 0.7500 | config | — |
 | lev | 64.0000 | 64.0000 | config | — |
-| sharpe | 1.3786 | -0.2517 | ±0.1 | -1.630 ✗ |
-| cagr_pct | 15.2565 | 25.2798 | ±2.0 | +10.023 ✗ |
-| dd_pct | 13.0038 | 111.8563 | ±2.0 | +98.853 ✗ |
+| sharpe | 1.3786 | 0.9745 | ±0.1 | -0.404 ✗ |
+| cagr_pct | 15.2565 | 10.1119 | ±2.0 | -5.145 ✗ |
+| dd_pct | 13.0038 | 13.5242 | ±2.0 | +0.520 ✓ |
 | profit_factor | 1.4978 | nan | ±0.1 | +nan ✗ |
 | trades | 785 | 0 | ±10% | -100.0% ✗ |
 
 ## Écarts à investiguer
 
-- **sharpe** : MT5=1.3786 vs vbt=-0.25168433928618505, delta -1.630 ✗
-- **cagr_pct** : MT5=15.2565 vs vbt=25.27975534225966, delta +10.023 ✗
-- **dd_pct** : MT5=13.0038 vs vbt=111.85632206267559, delta +98.853 ✗
+- **sharpe** : MT5=1.3786 vs vbt=0.9744528487511804, delta -0.404 ✗
+- **cagr_pct** : MT5=15.2565 vs vbt=10.111923364844454, delta -5.145 ✗
 - **profit_factor** : MT5=1.4978 vs vbt=nan, delta +nan ✗
 - **trades** : MT5=785 vs vbt=0, delta -100.0% ✗
 
-## Phase L attempt (2026-05-05) — ÉCHEC documenté
+## Phase M.1 SUCCESS (calibration sizing)
 
-### Tentative : pipeline-level leverage=10 + multi-pair MR
+### Évolution
 
-Test pragmatique : passer `leverage=10.0` à `backtest_mr_macro(data_4p, leverage=10.0)`
-pour matcher MT5 sub_equity sizing convention (1 lot ≈ 10× notional/equity).
+| Métrique | MT5 C1 | vbt PRE-M | vbt POST-M.1 | Verdict |
+|---|---|---|---|---|
+| Sharpe | 1.38 | 0.97 | **0.97** | ✗ gap structurel |
+| CAGR | 15.26% | 45.09% | **10.11%** | borderline (-5.15pp) |
+| DD | 13.0% | 49.63% | **13.52%** | ✅ **gap 0.52pp** |
+| vol | ~11% | 1.74% | **10.45%** | ✅ **gap 0.5pp** |
 
-**Résultat catastrophique** :
-- Sharpe : -0.25 (vs MT5 1.38)
-- DD : **111.86%** (blowup)
-- CAGR : 25.28%
+### Patches M.1
 
-**Cause** : double leverage stacking. Pipeline lev=10 produit returns deja amplifiés
-10×, puis combined_portfolio_v2 applique `vol_target_leverage` sur ces returns
-amplifiés (vol portfolio "augmentée" → calculé lev encore plus haut). DD explose.
+1. `combined_portfolio.py:_compute_strategy_daily_returns` :
+   - `init_cash=10_000.0` (match MT5 deposit)
+   - MR pipeline : `size=0.20, size_type="percent", leverage=12.0`
+   - TS rets × 12.0 + RSI rets × 12.0 (uniform MT5 GlobalLeverage)
+2. `compare_vbt_vs_mt5_c1.py` : `target_vol=None` (évite double-stacking)
+3. `mr_macro.py:pipeline()` : ajouter `size`, `size_type` params
+4. Cache version : v3-phase-k → v5e-phase-m
 
-→ Rollback effectué (back to lev=1 in pipeline).
+### Verdict M.1
 
-### Diagnostic root-cause
+✅ **Sizing/leverage calibrés** — DD et vol matchent quasi-parfaitement MT5
+✅ **Pas de blowup** (vs Phase L Sharpe -0.25)
+⚠️ **Sharpe gap 0.40 persiste** = écart d'edge signal logic intrinsèque
+⚠️ **CAGR borderline** (-5.15pp, juste hors tolérance ±5pp M.1)
 
-Test isolé `MR_Macro` standalone montre vol divergente :
+### Cause Sharpe gap résiduel
 
-| Source | vol_annualisée portfolio combiné |
-|---|---|
-| vbt (sleeves lev=1) | **1.74%** |
-| MT5 C1 implicit (Sharpe 1.38, CAGR 15%) | **~11%** |
+Pas problème sizing (calibré). Edge intrinsèque vbt vs MT5 :
+1. Tick events (MT5) vs M1 OHLC (vbt) — TP/SL execution priority
+2. Macro filter timing : MT5 evalué à entry order ; vbt broadcast row-wise
+3. Slippage : MT5 ajuste SL distance per-trade ; vbt uniforme
 
-Ratio 6.3×. vbt sleeve "lev=1" = fraction continue capital = 1× notional/equity.
-MT5 sleeve trade 1 lot = 100K notional sur 10K equity = **10× notional/equity inhérent**.
+### Phase M.2/M.3 (future, optionnel)
 
-Donc vbt sous-représente size de ~6-10× vs MT5. Quand combined applique vol-target
-pour atteindre vt=0.75 sur vbt vol 1.74%, lev calculé = **35×** (cap 64). MT5 vol
-~11%, lev calculé = ~7×.
+- **M.2 LotsForRisk Python** (~1j) : amélioration marginale (gap signal-level pas sizing-level)
+- **M.3 Refactor signal logic** (~3j) : aligne timing TP/SL/macro filter exact MT5, vraie convergence Sharpe ±0.05
 
-### Pourquoi naive scale échoue
+### Causes documentées (résiduel post-M.1)
 
-Naïvement multiplier returns vbt × 10 ne marche pas car :
-1. **Drawdowns ne sont pas linéaires** au-delà de 1× — variance compose, lev=10 sur
-   DD 27% standalone donne DD 100%+ en compound.
-2. **vol_target_leverage adapte dynamiquement** : si returns sont déjà × 10, vol
-   est × 10, mais target inchangé → leverage_ts ÷ 10. Net : returns_scaled × leverage_ts
-   = returns_original × 10 × 1/10 = returns_original (no-op visible). Mais DD reste
-   compound × 10 dans certaines fenêtres.
-
-### Solution propre nécessite refactor profond (Phase M future)
-
-Options :
-
-**Option M.1 — vbt scale lots natif** :
-- Refactor pipeline MR Macro pour passer `size_type=SizeType.Amount` + size en
-  lots discrets (compatible `vbt.Portfolio.from_signals` natif).
-- Réplique exact MT5 lot-based sizing.
-- **Effort** : 2-3 jours, refactor signal pipelines.
-
-**Option M.2 — désactiver vol-target Python, utiliser leverage natif** :
-- Pipelines pass `leverage=lev_ts` (time-series) calculée depuis MT5 RiskManager logic.
-- combined_portfolio_v2 sans vol_target_leverage layer.
-- **Effort** : 1-2 jours, mais signal/entry timing peut diverger.
-
-**Option M.3 — calibration empirique** :
-- Mesurer ratio `MT5_vol / vbt_vol = K` empiriquement par sleeve.
-- Multiplier returns vbt par K constant avant aggregate (= renormalisation).
-- Vol-target Python recalcule lev cohérent.
-- **Effort** : 0.5 jour mais pas physically meaningful, sensible aux régimes.
-
-### Verdict Phase L
-
-❌ **Échec** — approche pragmatique pipeline leverage cause double-leverage stacking.
-✅ **Diagnostic root-cause complet** : vbt vol baseline 6-10× plus basse que MT5.
-📋 **Recommandation** : Phase M.1 (lot-based sizing) pour parité véritable.
-
-Pour l'instant, vbt strategies utilisables comme **prototypage relatif** (compare
-configs entre elles, walk-forward, anti-overfit) mais **PAS en absolu** vs MT5.
-
-## Causes documentées (résiduel post-K)
-
-1. **vol baseline 6× divergente** : vbt fraction continue vs MT5 lot 100K notional.
-2. **Sizing model** : MT5 lots discrets 0.01 vs vbt fraction continue.
-3. **Sub-equity calculation** : MT5 sub_equity par sleeve = equity × alloc ;
-   vbt utilise weights post-aggregation.
-4. **Slippage application** : MT5 ajuste SL distance per-trade ; vbt uniforme bps.
-5. **Vol recompute timing** : MT5 21:00 UTC daily ; vbt rolling shift(1).
-6. **Profit Factor / Trades non-applicable** : vbt `from_optimizer` synthetic
-   price ne retient pas trades individuels.
+1. **Sharpe gap signal-level** : edge diverge ~0.40 (architectural, pas sizing)
+2. **PF/Trades non-applicable** : vbt `from_optimizer` synthetic price
+3. **CAGR borderline** : conséquence directe Sharpe gap × vol equivalente

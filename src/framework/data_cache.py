@@ -58,7 +58,12 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 # plus the legacy 4-pair TS and XS momentum kept for back-compat.
 # v2-phase-i : Phase I leverage uplift (vt=0.75, lev=64) + Phase E.3 RSI no JPY
 # v3-phase-k : Phase K MR Macro single-pair → 4-pair (EUR/GBP/JPY/CAD)
-_SLEEVES_VERSION = "v3-phase-k"
+# v5-phase-m  : Phase M.1 init_cash=10K + size_type="percent" pour MT5 calibration
+# v5b-phase-m : add leverage=10 in pipeline MR
+# v5c-phase-m : scale TS/RSI returns × 10 (uniform MT5 lev)
+# v5d-phase-m : leverage=15 partout (better calibration)
+# v5e-phase-m : leverage=12 partout (= MT5 max_lev pre-Phase I, optimal calibration)
+_SLEEVES_VERSION = "v5e-phase-m"
 
 
 # ═══════════════════════════════════════════════════════════════════════

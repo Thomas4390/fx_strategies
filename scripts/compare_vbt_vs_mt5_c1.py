@@ -100,7 +100,10 @@ def run_vbt() -> dict:
     print(f"[vbt] Weights : {PRODUCTION_WEIGHTS}")
     print("[vbt] Building production portfolio (slow ~60-90s warm cache)...")
 
-    res = build_production_portfolio()
+    # Phase M.1 : pipelines have built-in leverage=12. Disable Python vol-target
+    # to avoid double-leverage stacking. MT5 GlobalLeverage applied uniformly to
+    # all sleeves via pipeline leverage param, not via portfolio-level scaling.
+    res = build_production_portfolio(target_vol=None)
 
     pf = res.get("portfolio")
     sharpe = res.get("sharpe", float("nan"))
