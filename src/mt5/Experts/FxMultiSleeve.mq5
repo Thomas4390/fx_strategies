@@ -58,8 +58,10 @@ input int    Inp_MR_BBWindow       = 80;
 input double Inp_MR_BBAlpha        = 5.0;
 input double Inp_MR_TPStop         = 0.006;
 input double Inp_MR_SLStop         = 0.005;
-input int    Inp_MR_SessionStart   = 6;
-input int    Inp_MR_SessionEnd     = 14;
+input int    Inp_MR_SessionStart   = 8;       // London full + early NY (Phase E.1)
+                                              // ex 6 ; 8-16 UTC validé N=5 OOS :
+                                              // ΔSharpe_med +0.27 ΔDD -0.91 pp.
+input int    Inp_MR_SessionEnd     = 16;
 input int    Inp_MR_TimeStopHours  = 6;
 input int    Inp_MR_ForcedCloseHr  = 21;
 input double Inp_MR_SpreadThresh   = 0.5;
@@ -81,7 +83,10 @@ input double Inp_TS_MaxLeverage    = 3.0;
 input int    Inp_TS_SlippageBps    = 10;       // LaTeX § 04 — 10 bps daily
 
 // === Sleeve 3 — RSI Daily ===
-input string Inp_RSI_Pairs         = "EURUSD,GBPUSD,USDJPY,USDCAD";
+input string Inp_RSI_Pairs         = "EURUSD,GBPUSD,USDCAD";  // Phase E.3:
+                                              // USDJPY retiré (drag -295 USD
+                                              // sur 5.4y, validé N=5 OOS
+                                              // ΔSharpe_med +0.06).
 input int    Inp_RSI_Period        = 14;
 input double Inp_RSI_Oversold      = 25.0;
 input double Inp_RSI_Overbought    = 75.0;

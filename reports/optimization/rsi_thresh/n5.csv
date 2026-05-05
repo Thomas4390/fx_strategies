@@ -1,0 +1,11 @@
+label,pairs,fold,sharpe,net,max_dd_pct,trades
+baseline,"EURUSD,GBPUSD,USDJPY,USDCAD",fold1_oos,2.24,1712.45,5.07,174.0
+baseline,"EURUSD,GBPUSD,USDJPY,USDCAD",fold2_oos,1.04,581.88,4.94,192.0
+baseline,"EURUSD,GBPUSD,USDJPY,USDCAD",fold3_oos,2.04,1473.2,4.16,157.0
+baseline,"EURUSD,GBPUSD,USDJPY,USDCAD",fold4_oos,1.77,1014.69,3.28,156.0
+baseline,"EURUSD,GBPUSD,USDJPY,USDCAD",fold5_oos,-0.17,-30.76,3.11,46.0
+no_jpy,"EURUSD,GBPUSD,USDCAD",fold1_oos,2.44,1833.33,5.2,168.0
+no_jpy,"EURUSD,GBPUSD,USDCAD",fold2_oos,1.0,556.74,4.94,191.0
+no_jpy,"EURUSD,GBPUSD,USDCAD",fold3_oos,2.23,1630.64,4.16,155.0
+no_jpy,"EURUSD,GBPUSD,USDCAD",fold4_oos,1.83,1044.7,3.28,156.0
+no_jpy,"EURUSD,GBPUSD,USDCAD",fold5_oos,0.04,7.68,2.92,45.0
