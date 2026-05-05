@@ -1,12 +1,41 @@
 # Plan — Amélioration CAGR + cleanup features + qualité résultats
 
 > **Date création** : 2026-05-04 · **Cible** : agent fresh ou Thomas en
-> session suivante · **Statut** : OUVERT
+> session suivante · **Statut** : ✅ COMPLET (exécuté 2026-05-04)
 >
 > Plan structuré pour améliorer le CAGR du portfolio FxMultiSleeve au-delà
 > du plafond actuel ~7-12%, supprimer les features qui n'apportent pas de
 > valeur (DDCap notamment), inspecter rigoureusement la qualité des trades
 > et des chiffres, et limiter l'overfit via méthodes statistiques avancées.
+
+---
+
+## ✅ STATUT D'EXÉCUTION (2026-05-04)
+
+Plan exécuté de bout en bout en ~4 h (vs 9-16 h estimé). Synthèse finale :
+**`reports/optimization/cagr_improvement_final.md`**.
+
+| Phase | Statut | Verdict | Commit |
+|---|---|---|---|
+| A — Cleanup | ✅ COMPLET | no-op safe (DDCap/MarginCap off, years robust, TS skip per pair) | `3c5f3b7` |
+| B — Trade inspection | ✅ COMPLET | edge sain MR diversifié, TS USDJPY-concentré, RSI flat | `94ba514` |
+| C — Allocation sweep | ✅ COMPLET | 80/10/10 reste optimal (mr_heavy ΔSharpe -0.13) | `fbba698` |
+| D — H1 Momentum | ✅ COMPLET | NEGATIF (Sharpe -3.98 standalone), code en place mais off | `1a28e54` |
+| E — Refonte sleeves | ✅ COMPLET | **E.1 session 8-16 + E.3 RSI no_jpy retenus**, E.2 EMA non retenu | `39a4ca9` |
+| F — Carry | ⏭ SKIP | CAGR ≥ 10 % atteint en E (10.15 %), F optionnel non requis | — |
+| G — Anti-overfit | ✅ COMPLET | PSR 100 %, DSR 94.5 %, Bootstrap P5(Sharpe)=+0.75 — edge confirmé | `9942d0e` |
+| H — Synthèse | ✅ COMPLET | Sharpe 1.15→1.44 (+25 %), CAGR 7.24→9.18 % | `0061a7e` |
+
+**Améliorations live** : `Inp_MR_SessionStart 6→8`, `Inp_MR_SessionEnd 14→16`,
+`Inp_RSI_Pairs` retire USDJPY, `Inp_EnableDDCap` et `Inp_EnableMarginCap`
+default off, `OnTester().years` robust.
+
+**Tous les critères §3.1 validés** : ΔCAGR +2.25 pp, ΔSharpe_med +0.33,
+PSR 100 %, DSR 94.5 %, ΔMaxDD -0.78 pp, ρ_IS↔OOS héritage +0.71.
+
+Pour les détails par phase : voir `reports/{analysis,optimization,anti_overfit}/findings*.md`.
+
+---
 
 ---
 
@@ -79,9 +108,13 @@ Baseline    : Sharpe 1.15, CAGR ~7%, MaxDD ~7% (5.4 ans)
 
 ## 2. Phases du plan (ordonnées)
 
-### Phase A — Cleanup code et fix bugs (1-2h)
+### Phase A — Cleanup code et fix bugs (1-2h) — ✅ FAIT (commit `3c5f3b7`)
 
 **But** : éliminer le bruit avant d'optimiser.
+
+**Résultat** : tous les sub-phases livrées en no-op safe. Baseline 5.4y
+inchangé (Sharpe 1.15, +4615 USD, DD 7.21 %, 835 trades identique pré/post).
+Compile clean 0/0.
 
 #### A.1 Confirmer DDCap inutile et le retirer (ou désactiver par défaut)
 
@@ -163,9 +196,18 @@ alternative (Sortino, Calmar).
 
 ---
 
-### Phase B — Inspection qualité trades (2-3h)
+### Phase B — Inspection qualité trades (2-3h) — ✅ FAIT (commit `94ba514`)
 
 **But** : comprendre OÙ vient l'edge, identifier trades aberrants/lucky.
+
+**Résultat** :
+- MR Macro = sain, edge diversifié 4 paires (EUR 44 %, GBP 28 %, JPY 15 %, CAD 13 %)
+- TS Momentum = concentré : USDJPY 83 % du PnL sleeve
+- RSI Daily = flat (PF 1.01) avec USDJPY drag -295 USD → candidat retrait paire
+- Macro filter = net protecteur 5.4 ans (-5610 USD si bypass) MAIS bloque
+  fold5 entièrement via canal `unemp_rising=1`
+
+Findings : `reports/analysis/phase_b_findings.md`.
 
 #### B.1 Extract deal log par sleeve
 
@@ -240,9 +282,18 @@ relâcher le seuil pourrait débloquer.
 
 ---
 
-### Phase C — Allocation sweep (1h)
+### Phase C — Allocation sweep (1h) — ✅ FAIT (commit `fbba698`)
 
 **But** : tester si 80/10/10 est sub-optimal.
+
+**Résultat** : 80/10/10 reste optimal sur Sharpe et N=5 OOS.
+
+| Cand | Sharpe_med N=5 | Sharpe_avg | CAGR_avg % | Verdict |
+|---|---|---|---|---|
+| baseline 80/10/10 | 1.50 | 1.12 | 7.76 | ✓ optimal |
+| mr_heavy 90/5/5 | 1.37 | 1.01 | 8.60 | ✗ ΔSharpe -0.13 |
+
+Findings : `reports/optimization/allocations/findings.md`.
 
 #### C.1 Grid allocations
 
@@ -279,9 +330,22 @@ récente est élevée vs ses returns.
 
 ---
 
-### Phase D — Expansion timeframe (H1/H4) (2-3h)
+### Phase D — Expansion timeframe (H1/H4) (2-3h) — ✅ FAIT NEGATIF (commit `1a28e54`)
 
 **But** : trouver edge entre M1 (MR Macro) et D1 (TS/RSI).
+
+**Résultat** : sleeve H1 Momentum construit + intégré (4 sleeves
+support, alloc 4-way, off par défaut) puis test standalone négatif :
+
+| Variant | Sharpe | Net | DD % |
+|---|---|---|---|
+| EMA 20/50 RSI 40/60 | -3.98 | -1 493 | 15.05 |
+| EMA 50/200 RSI 30/70 ATR 3× | -3.12 | -1 079 | 15.42 |
+
+Whipsaw H1 sans filtre régime mange l'edge. Skip selon §3.2 plan source.
+Code conservé en `Inp_AllocH1Momentum=0.0` pour refonte future.
+
+Findings : `reports/optimization/h1_momentum/findings.md`.
 
 #### D.1 Création nouveau sleeve `H1_Momentum` (refonte)
 
@@ -306,9 +370,22 @@ Comparer V0 (4 paires actuelles) vs V_new (avec H1_Momentum 5%) sur N=5 folds.
 
 ---
 
-### Phase E — Refonte sleeves existants (2-3h)
+### Phase E — Refonte sleeves existants (2-3h) — ✅ FAIT POSITIF (commit `39a4ca9`)
 
 **But** : améliorer chaque sleeve individuellement.
+
+**Résultat** : 2 améliorations validées N=5 OOS et appliquées en défaut compilé :
+
+| Sub-phase | Action | Δ N=5 OOS |
+|---|---|---|
+| **E.1** | MR session 6-14 → 8-16 UTC (London full + NY early) | Sharpe_med +0.27, DD -0.91 pp |
+| E.2 | TS EMA grid 17 combos | non retenu strict (best 14/50, 30/50 ΔSharpe_med < 0.05) |
+| **E.3** | RSI Pairs : USDJPY retiré | Sharpe_med +0.06, Sharpe_avg +0.13 |
+
+Combined config 5.4 ans : Sharpe **1.15→1.44 (+25 %)**, CAGR **7.24→9.18 %**.
+Combined N=5 OOS : Sharpe_med **1.50→1.83**, CAGR_avg **~7.9→~10.15 %**.
+
+Findings : `reports/optimization/phase_e/findings.md`.
 
 #### E.1 MR Macro : ajuster session
 
@@ -344,9 +421,15 @@ robustes.
 
 ---
 
-### Phase F — Nouveau sleeve carry trade (3-4h, optionnel)
+### Phase F — Nouveau sleeve carry trade (3-4h, optionnel) — ⏭ SKIPPED
 
 **But** : edge orthogonal aux 3 sleeves existants.
+
+**Décision** : SKIP. Phase E livre CAGR_avg N=5 = 10.15 % ≥ seuil 10 %
+défini par §3.3. F devient optionnel non requis.
+
+Re-considérer si on cible CAGR ≥ 15 % ultérieurement. FRED BoJ/RBA/RBNZ
+rates accessibles via `bridge/fx_macro_history.py` (à étendre).
 
 #### F.1 Hypothèse
 
@@ -379,10 +462,26 @@ contrepartie.
 
 ---
 
-### Phase G — Validation anti-overfit avancée (2h)
+### Phase G — Validation anti-overfit avancée (2h) — ✅ FAIT (commit `9942d0e`)
 
 **But** : confirmer que les améliorations Phase A-F ne sont pas du
 data-mining.
+
+**Résultat** :
+
+| Test | Critère | Mesure | Verdict |
+|---|---|---|---|
+| PSR(SR > 0) | ≥ 95 % | **100.0 %** | ✓ |
+| PSR(SR > 1.0) | informatif | 82.9 % | — |
+| DSR (35 trials, V=0.119) | ≥ 80 % | **94.5 %** | ✓ |
+| Bootstrap P5(Sharpe) | > 0 | **+0.75** | ✓ |
+| Bootstrap P5(CAGR) | > 0 | **+4.62 %** | ✓ |
+
+Source returns : 1382 daily reconstruits depuis `deals_phase_e.csv`.
+n_trials = 35 (sessions 4 + EMA 17 + RSI 8 + alloc 6). V_annual = 0.1193
+calculée sur les Sharpes observés des grids.
+
+Edge confirmé statistiquement. Findings : `reports/anti_overfit/findings.md`.
 
 #### G.1 Probabilistic Sharpe Ratio (PSR)
 
@@ -433,25 +532,31 @@ en tenant compte de toutes les configs testées.
 
 ---
 
-### Phase H — Synthèse et recommandation finale (1h)
+### Phase H — Synthèse et recommandation finale (1h) — ✅ FAIT (commit `0061a7e`)
+
+Synthèse complète et tableau §H.1 rempli :
+**`reports/optimization/cagr_improvement_final.md`**.
 
 #### H.1 Tableau comparatif
 
-| Config | CAGR_avg | Sharpe_med | MaxDD | PSR | DSR | Verdict |
+| Config | CAGR_avg N=5 | Sharpe_med N=5 | MaxDD N=5 | PSR | DSR | Verdict |
 |---|---|---|---|---|---|---|
-| Baseline (V0) | 7-12% | 1.0-1.6 | 7-9% | 90% | 65% | OK |
-| Phase A cleanup | ? | ? | ? | ? | ? | ? |
-| Phase C alloc | ? | ? | ? | ? | ? | ? |
-| Phase D +H1 | ? | ? | ? | ? | ? | ? |
-| Phase E refonte | ? | ? | ? | ? | ? | ? |
-| Phase F +carry | ? | ? | ? | ? | ? | ? |
-| **Combiné final** | **TARGET ≥ 10%** | **TARGET ≥ 1.0** | **< 15%** | **≥ 95%** | **≥ 80%** | ? |
+| Baseline V0 (pre-A) | 7.93 % | 1.50 | 5.98 % | n/a | n/a | OK |
+| Phase A cleanup | 7.93 % | 1.50 | 5.98 % | n/a | n/a | no-op safe |
+| Phase C alloc | 7.93 % (80/10/10 reste optimal) | 1.50 | 5.98 % | n/a | n/a | no change |
+| Phase D +H1 | -22.5 % standalone | -3.98 standalone | 15.05 % | — | — | ✗ skip |
+| **Phase E refonte** | **10.15 %** | **1.83** | **5.20 %** | **100 %** | **94.5 %** | ✓ retenu |
+| Phase F +carry | — | — | — | — | — | ⏭ skipped (E ≥ 10 %) |
+| **Combiné final** | **10.15 %** ≥ 10 % | **1.83** ≥ 1.0 | **5.20 %** < 15 % | **100 %** ≥ 95 % | **94.5 %** ≥ 80 % | ✅ ALL PASS |
 
 #### H.2 Updates recommended
 
-- [ ] Modif défauts compilés `FxMultiSleeve.mq5`
-- [ ] Mise à jour `src/mt5/SESSION_NOTES.md` + `CLAUDE.md`
-- [ ] Update `reports/client_setup_guide/main.tex` avec nouveau baseline
+- [x] Modif défauts compilés `FxMultiSleeve.mq5` (sessions 8-16, RSI no_jpy,
+      DDCap/MarginCap off, OnTester years robust, TS skip per pair)
+- [ ] Mise à jour `src/mt5/SESSION_NOTES.md` + `CLAUDE.md` avec nouveaux
+      baseline (Sharpe 1.44, CAGR 9.18 % 5.4y) — TODO post-déploiement
+- [ ] Update `reports/client_setup_guide/main.tex` avec nouveau baseline —
+      TODO post-déploiement live démo
 
 ---
 
