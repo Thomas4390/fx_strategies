@@ -34,7 +34,7 @@ from strategies.daily_momentum import (
     backtest_xs_momentum,
     load_daily_closes,
 )
-from strategies.mr_macro import backtest_mr_macro
+from strategies.mr_macro import backtest_mr_macro, load_all_fx_data
 from strategies.rsi_daily import pipeline as rsi_daily_pipeline
 from utils import apply_vbt_settings, load_fx_data
 
@@ -90,15 +90,19 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
 
     Internal helper — prefer :func:`get_strategy_daily_returns` at
     call-sites so that the Phase 22 disk cache is used whenever the
-    data manifest is fresh. The expensive steps are the EUR-USD minute
-    load (~5 s), the MR Macro backtest (~40 s) and the four RSI Daily
-    backtests (~30 s). Total ~60-90 s on a warm cache, ~2 min cold.
-    """
-    print("  Loading EUR-USD minute data...")
-    _, data_eur = load_fx_data()
+    data manifest is fresh. The expensive steps are the 4-pair minute
+    load (~20 s), the multi-pair MR Macro backtest (~90 s) and the four
+    RSI Daily backtests (~30 s). Total ~2-3 min cold.
 
-    print("  Running MR Macro backtest...")
-    pf_mr = backtest_mr_macro(data_eur)
+    Phase K (2026-05-05) : MR Macro passe de single-pair EUR-USD à 4-pair
+    (EUR/GBP/JPY/CAD) pour parité MT5 C1. La fonction backtest_mr_macro
+    supporte multi-symbol via la branch is_multi=True dans pipeline().
+    """
+    print("  Loading 4-pair minute data (EUR/GBP/JPY/CAD)...")
+    data_4p = load_all_fx_data()
+
+    print("  Running MR Macro backtest (4-pair, cash_sharing)...")
+    pf_mr = backtest_mr_macro(data_4p)
     mr_rets = pf_mr.daily_returns
 
     print("  Loading daily closes (4 pairs)...")

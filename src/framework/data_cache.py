@@ -57,7 +57,8 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 # state : production trio (MR_Macro + TS_Momentum_3p + RSI_Daily_3p, Phase E.3)
 # plus the legacy 4-pair TS and XS momentum kept for back-compat.
 # v2-phase-i : Phase I leverage uplift (vt=0.75, lev=64) + Phase E.3 RSI no JPY
-_SLEEVES_VERSION = "v2-phase-i"
+# v3-phase-k : Phase K MR Macro single-pair → 4-pair (EUR/GBP/JPY/CAD)
+_SLEEVES_VERSION = "v3-phase-k"
 
 
 # ═══════════════════════════════════════════════════════════════════════
