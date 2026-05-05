@@ -1,0 +1,3 @@
+config,Sharpe,Net,PF,Trades,MaxDD %
+baseline (macro filter ON),-0.49,-90.63,0.86,47.0,3.73
+macro filter RELAXED,0.02,8.33,1.01,94.0,6.0

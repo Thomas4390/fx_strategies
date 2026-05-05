@@ -62,6 +62,10 @@ input int    Inp_MR_TimeStopHours  = 6;
 input int    Inp_MR_ForcedCloseHr  = 21;
 input double Inp_MR_SpreadThresh   = 0.5;
 input int    Inp_MR_SlippageBps    = 15;       // LaTeX § 03 — 15 bps intraday
+input bool   Inp_MR_DisableMacroFilter = false; // Phase B.4 bypass macro_ok
+                                              // (force MacroOk()=true). Off
+                                              // par défaut, à utiliser pour
+                                              // mesurer l'impact du filtre.
 
 // === Sleeve 2 — TS Momentum ===
 input string Inp_TS_Pairs          = "EURUSD,GBPUSD,USDJPY";
@@ -89,6 +93,9 @@ input int    Inp_MagicTS           = 832;
 input int    Inp_MagicRSI          = 833;
 input bool   Inp_LogVerbose        = false;
 input bool   Inp_LogToFile         = true;
+input bool   Inp_ExportDeals       = false;   // Dump per-deal CSV in OnTester
+                                              // → deals_<ts>.csv en FILE_COMMON.
+                                              // Phase B trade inspection (Plan CAGR).
 input string Inp_MacroCacheFile    = "macro_cache.csv";
 input bool   Inp_MacroUseCommon    = true;     // FILE_COMMON ou MQL5/Files
 input int    Inp_MacroMaxAgeHours  = 168;      // LaTeX § 13.1 — freshness 7 jours
@@ -160,7 +167,7 @@ int OnInit()
                  Inp_MR_SpreadThresh,
                  Inp_FREDApiKeyFile, Inp_FREDKeyUseCommon,
                  Inp_MacroHistoryFile, Inp_MacroHistoryUseCommon,
-                 Inp_FREDSeriesId);
+                 Inp_FREDSeriesId, Inp_MR_DisableMacroFilter);
 
     // Explicit diagnostic so the user can verify the actual input mode (vs the
     // mode that AUTO resolves to). MQL_TESTER=1 inside Strategy Tester, 0 live.
@@ -378,6 +385,68 @@ double OnTester()
                   DoubleToString(net, 2),
                   DoubleToString(years, 3));
         FileClose(h);
+    }
+
+    // Per-deal CSV export (Phase B trade inspection). Disabled by default to
+    // avoid overhead during optimization sweeps where only aggregate metrics
+    // matter. Enable via --input Inp_ExportDeals=true on a single backtest run.
+    if(Inp_ExportDeals)
+    {
+        string ts_run = TimeToString(TimeGMT(), TIME_DATE | TIME_MINUTES);
+        StringReplace(ts_run, ".", "");
+        StringReplace(ts_run, ":", "");
+        StringReplace(ts_run, " ", "T");
+        string deals_file = StringFormat("deals_%s.csv", ts_run);
+        int hd = FileOpen(deals_file,
+            FILE_WRITE | FILE_COMMON | FILE_TXT | FILE_SHARE_READ |
+            FILE_SHARE_WRITE, ',', CP_UTF8);
+        if(hd != INVALID_HANDLE)
+        {
+            FileWrite(hd, "deal_id", "position_id", "time_utc", "symbol",
+                      "magic", "sleeve", "type", "entry", "volume", "price",
+                      "profit", "commission", "swap");
+            if(HistorySelect(0, TimeCurrent()))
+            {
+                int nd = HistoryDealsTotal();
+                for(int k = 0; k < nd; k++)
+                {
+                    ulong tk = HistoryDealGetTicket(k);
+                    if(tk == 0) continue;
+                    long magic = HistoryDealGetInteger(tk, DEAL_MAGIC);
+                    string sleeve;
+                    if(magic == Inp_MagicMR)       sleeve = "MR_MACRO";
+                    else if(magic == Inp_MagicTS)  sleeve = "TS_MOMENTUM";
+                    else if(magic == Inp_MagicRSI) sleeve = "RSI_DAILY";
+                    else                            sleeve = "OTHER";
+                    long deal_type  = HistoryDealGetInteger(tk, DEAL_TYPE);
+                    long deal_entry = HistoryDealGetInteger(tk, DEAL_ENTRY);
+                    datetime t      = (datetime)HistoryDealGetInteger(tk, DEAL_TIME);
+                    string sym      = HistoryDealGetString(tk, DEAL_SYMBOL);
+                    double vol      = HistoryDealGetDouble(tk, DEAL_VOLUME);
+                    double price    = HistoryDealGetDouble(tk, DEAL_PRICE);
+                    double profit   = HistoryDealGetDouble(tk, DEAL_PROFIT);
+                    double comm     = HistoryDealGetDouble(tk, DEAL_COMMISSION);
+                    double swap     = HistoryDealGetDouble(tk, DEAL_SWAP);
+                    long pos_id = HistoryDealGetInteger(tk, DEAL_POSITION_ID);
+                    FileWrite(hd,
+                        IntegerToString((int)tk),
+                        IntegerToString((int)pos_id),
+                        TimeToString(t, TIME_DATE | TIME_SECONDS),
+                        sym,
+                        IntegerToString((int)magic),
+                        sleeve,
+                        IntegerToString((int)deal_type),
+                        IntegerToString((int)deal_entry),
+                        DoubleToString(vol, 4),
+                        DoubleToString(price, 5),
+                        DoubleToString(profit, 2),
+                        DoubleToString(comm, 4),
+                        DoubleToString(swap, 4));
+                }
+            }
+            FileClose(hd);
+            PrintFormat("[OPTIM] deals exported → %s", deals_file);
+        }
     }
 
     return cagr;

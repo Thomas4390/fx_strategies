@@ -41,6 +41,8 @@ private:
     bool     m_fred_key_use_common;
     string   m_history_filename;
     bool     m_history_use_common;
+    bool     m_disable_filter;     // Phase B.4 — bypass macro_ok pour mesurer
+                                   // l'impact du filtre (force MacroOk()=true).
 
     datetime m_last_refresh;
     datetime m_last_read_at;
@@ -65,6 +67,7 @@ public:
                      m_fred_key_use_common(true),
                      m_history_filename("macro_history.csv"),
                      m_history_use_common(true),
+                     m_disable_filter(false),
                      m_last_refresh(0), m_last_read_at(0),
                      m_spread(0.0), m_unemp_rising(false),
                      m_spread_threshold(0.5), m_macro_ok(false),
@@ -76,7 +79,8 @@ public:
               string fred_api_key_file, bool fred_key_use_common,
               string history_filename = "macro_history.csv",
               bool   history_use_common = true,
-              string fred_series_id = "T10Y2Y")
+              string fred_series_id = "T10Y2Y",
+              bool   disable_filter = false)
     {
         m_mode = mode;
         m_filename = filename;
@@ -87,6 +91,7 @@ public:
         m_fred_key_use_common = fred_key_use_common;
         m_history_filename = history_filename;
         m_history_use_common = history_use_common;
+        m_disable_filter = disable_filter;
 
         m_cal.Init("US", "Unemployment Rate");
         m_fred.Init(fred_series_id, ReadFREDKey());
@@ -131,7 +136,11 @@ public:
         return (TimeGMT() - m_last_refresh) <= m_max_age_seconds;
     }
 
-    bool   MacroOk() const { return m_loaded && m_macro_ok; }
+    bool   MacroOk() const
+    {
+        if(m_disable_filter) return true;   // Phase B.4 bypass for impact tests
+        return m_loaded && m_macro_ok;
+    }
     double Spread() const { return m_spread; }
     bool   UnempRising() const { return m_unemp_rising; }
     double SpreadThreshold() const { return m_spread_threshold; }
