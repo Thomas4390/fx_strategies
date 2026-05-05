@@ -69,10 +69,10 @@ from strategies.combined_portfolio import (
 PRODUCTION_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
-    "RSI_Daily_4p": 0.10,
+    "RSI_Daily_3p": 0.10,    # Phase E.3 retire USDJPY (was RSI_Daily_4p)
 }
-PRODUCTION_TARGET_VOL: float = 0.28
-PRODUCTION_MAX_LEVERAGE: float = 12.0
+PRODUCTION_TARGET_VOL: float = 0.75    # Phase I 2026-05-05 (was 0.28)
+PRODUCTION_MAX_LEVERAGE: float = 64.0  # Phase I 2026-05-05 (was 12.0)
 
 
 def build_production_portfolio(
@@ -724,7 +724,7 @@ def _collect_production_trio_sweep(
     """Production trio MR Macro 80% + TS Momentum 3-pair 10% + RSI Daily 4-pair 10%
     with the RSI sleeve added as third orthogonal diversifier."""
     filtered = {
-        k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
+        k: strat_rets[k] for k in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p")
     }
     out: dict[str, dict[str, Any]] = {}
     for target_vol, max_lev in [(0.28, 10), (0.28, 12), (0.28, 14)]:

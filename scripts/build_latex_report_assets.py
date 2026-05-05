@@ -161,7 +161,7 @@ def main() -> None:
     sleeve_rets = {
         "MR_Macro": strat_rets["MR_Macro"].fillna(0.0),
         "TS_Momentum_3p": strat_rets["TS_Momentum_3p"].fillna(0.0),
-        "RSI_Daily_4p": strat_rets["RSI_Daily_4p"].fillna(0.0),
+        "RSI_Daily_3p": strat_rets["RSI_Daily_3p"].fillna(0.0),
     }
 
     print("\n[2/6] Generating figures...")
@@ -199,7 +199,7 @@ def build_figures(
             cum.values,
             label=name.replace("_", " "),
             color=PALETTE[
-                {"MR_Macro": "mr", "TS_Momentum_3p": "ts", "RSI_Daily_4p": "rsi"}[name]
+                {"MR_Macro": "mr", "TS_Momentum_3p": "ts", "RSI_Daily_3p": "rsi"}[name]
             ],
             linewidth=1.3,
             alpha=0.85,
@@ -367,9 +367,9 @@ def build_figures(
     df_sleeves = pd.DataFrame(sleeve_rets).dropna()
     roll = 63
     corr_mr_ts = df_sleeves["MR_Macro"].rolling(roll).corr(df_sleeves["TS_Momentum_3p"])
-    corr_mr_rsi = df_sleeves["MR_Macro"].rolling(roll).corr(df_sleeves["RSI_Daily_4p"])
+    corr_mr_rsi = df_sleeves["MR_Macro"].rolling(roll).corr(df_sleeves["RSI_Daily_3p"])
     corr_ts_rsi = (
-        df_sleeves["TS_Momentum_3p"].rolling(roll).corr(df_sleeves["RSI_Daily_4p"])
+        df_sleeves["TS_Momentum_3p"].rolling(roll).corr(df_sleeves["RSI_Daily_3p"])
     )
     fig, ax = plt.subplots(figsize=(9.5, 4.0))
     ax.plot(
@@ -412,7 +412,7 @@ def build_figures(
             for name, rets in sleeve_rets.items()
         }
     )
-    weights = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10}
+    weights = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10}
     contrib = df_m * pd.Series(weights) * 100
     fig, ax = plt.subplots(figsize=(9.5, 4.5))
     dates = contrib.index
@@ -422,9 +422,9 @@ def build_figures(
     colors = {
         "MR_Macro": PALETTE["mr"],
         "TS_Momentum_3p": PALETTE["ts"],
-        "RSI_Daily_4p": PALETTE["rsi"],
+        "RSI_Daily_3p": PALETTE["rsi"],
     }
-    for col in ["MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"]:
+    for col in ["MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"]:
         vals = contrib[col].values
         pos_vals = np.where(vals >= 0, vals, 0)
         neg_vals = np.where(vals < 0, vals, 0)
@@ -566,7 +566,7 @@ def build_figures(
     for sleeve, color_key in [
         ("MR_Macro", "mr"),
         ("TS_Momentum_3p", "ts"),
-        ("RSI_Daily_4p", "rsi"),
+        ("RSI_Daily_3p", "rsi"),
     ]:
         rets = sleeve_rets[sleeve]
         cum = (1 + rets).cumprod() * 100
@@ -695,7 +695,7 @@ def build_metric_tables(
     label_map = {
         "MR_Macro": r"MR Macro (80\,\%)",
         "TS_Momentum_3p": r"TS Momentum 3p (10\,\%)",
-        "RSI_Daily_4p": r"RSI Daily 4p (10\,\%)",
+        "RSI_Daily_3p": r"RSI Daily 4p (10\,\%)",
     }
     for name, tot, cagr, vol, sr, dd in sleeve_stats:
         rows.append(
@@ -733,7 +733,7 @@ def build_metric_tables(
     port_no_lev = (
         0.80 * sleeve_rets["MR_Macro"].fillna(0)
         + 0.10 * sleeve_rets["TS_Momentum_3p"].fillna(0)
-        + 0.10 * sleeve_rets["RSI_Daily_4p"].fillna(0)
+        + 0.10 * sleeve_rets["RSI_Daily_3p"].fillna(0)
     )
     no_lev_cagr, no_lev_vol, no_lev_sharpe, no_lev_dd = _stats(port_no_lev)
     lev_cagr, lev_vol, lev_sharpe, lev_dd = _stats(port_rets)
@@ -955,7 +955,7 @@ def build_trade_examples(sleeve_rets: dict) -> None:
 
     # ── RSI Daily: synthesize episodes ──────────────────────────────
     _build_episode_table(
-        sleeve_rets["RSI_Daily_4p"],
+        sleeve_rets["RSI_Daily_3p"],
         name="rsi_daily",
         label_fr="RSI Daily 4-pair",
         caption=(

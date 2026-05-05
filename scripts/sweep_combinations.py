@@ -69,16 +69,16 @@ if str(_PROJECT_ROOT / "scripts") not in sys.path:
 # Legacy v1 trio (MR_Macro + XS_Momentum + TS_Momentum_RSI) — used by
 # DEFAULT_REGIME_WEIGHTS_3STRAT in combined_portfolio_v2.
 #
-# Phase 18 trio (MR_Macro + TS_Momentum_3p + RSI_Daily_4p) — same
+# Phase 18 trio (MR_Macro + TS_Momentum_3p + RSI_Daily_3p) — same
 # structural pattern but substitutes TS3p for XS (both trend-ish) and
 # RSI_4p for TS_RSI (both mean-reverting).
 P18_REGIME_WEIGHTS: dict[tuple[str, str], dict[str, float]] = {
-    ("low",    "up"):   {"MR_Macro": 0.40, "TS_Momentum_3p": 0.35, "RSI_Daily_4p": 0.25},
-    ("low",    "down"): {"MR_Macro": 0.55, "TS_Momentum_3p": 0.25, "RSI_Daily_4p": 0.20},
-    ("normal", "up"):   {"MR_Macro": 0.45, "TS_Momentum_3p": 0.30, "RSI_Daily_4p": 0.25},
-    ("normal", "down"): {"MR_Macro": 0.60, "TS_Momentum_3p": 0.20, "RSI_Daily_4p": 0.20},
-    ("high",   "up"):   {"MR_Macro": 0.60, "TS_Momentum_3p": 0.25, "RSI_Daily_4p": 0.15},
-    ("high",   "down"): {"MR_Macro": 0.75, "TS_Momentum_3p": 0.15, "RSI_Daily_4p": 0.10},
+    ("low",    "up"):   {"MR_Macro": 0.40, "TS_Momentum_3p": 0.35, "RSI_Daily_3p": 0.25},
+    ("low",    "down"): {"MR_Macro": 0.55, "TS_Momentum_3p": 0.25, "RSI_Daily_3p": 0.20},
+    ("normal", "up"):   {"MR_Macro": 0.45, "TS_Momentum_3p": 0.30, "RSI_Daily_3p": 0.25},
+    ("normal", "down"): {"MR_Macro": 0.60, "TS_Momentum_3p": 0.20, "RSI_Daily_3p": 0.20},
+    ("high",   "up"):   {"MR_Macro": 0.60, "TS_Momentum_3p": 0.25, "RSI_Daily_3p": 0.15},
+    ("high",   "down"): {"MR_Macro": 0.75, "TS_Momentum_3p": 0.15, "RSI_Daily_3p": 0.10},
 }
 
 
@@ -112,8 +112,8 @@ class SweepConfig:
         return f"{self.allocation} / {tv} / {ml} / {dd}"
 
 
-_P18 = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10}
-_P18_SLEEVES = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
+_P18 = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10}
+_P18_SLEEVES = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p")
 _V1_SLEEVES = ("MR_Macro", "XS_Momentum", "TS_Momentum_RSI")
 
 
@@ -146,31 +146,31 @@ def build_grid() -> list[SweepConfig]:
     ]
 
     # ─── Bloc B — alt-sleeve trios ─────────────────────────────────
-    MR_XS_RSI = ("MR_Macro", "XS_Momentum", "RSI_Daily_4p")
-    MR_RSI = ("MR_Macro", "RSI_Daily_4p")
+    MR_XS_RSI = ("MR_Macro", "XS_Momentum", "RSI_Daily_3p")
+    MR_RSI = ("MR_Macro", "RSI_Daily_3p")
     MR_TS3P = ("MR_Macro", "TS_Momentum_3p")
-    MR_TSRSI_RSI = ("MR_Macro", "TS_Momentum_RSI", "RSI_Daily_4p")
-    ALL4 = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p", "XS_Momentum")
+    MR_TSRSI_RSI = ("MR_Macro", "TS_Momentum_RSI", "RSI_Daily_3p")
+    ALL4 = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p", "XS_Momentum")
     cfgs += [
         SweepConfig("B1", "B", "MR+XS+RSI / 80-10-10 / tv=0.28 ml=12",
                     MR_XS_RSI, "custom", 0.28, 12.0, False,
-                    custom_weights={"MR_Macro": 0.80, "XS_Momentum": 0.10, "RSI_Daily_4p": 0.10}),
+                    custom_weights={"MR_Macro": 0.80, "XS_Momentum": 0.10, "RSI_Daily_3p": 0.10}),
         SweepConfig("B2", "B", "MR+XS+RSI / 80-10-10 / tv=0.20 ml=8 DDon",
                     MR_XS_RSI, "custom", 0.20, 8.0, True,
-                    custom_weights={"MR_Macro": 0.80, "XS_Momentum": 0.10, "RSI_Daily_4p": 0.10}),
+                    custom_weights={"MR_Macro": 0.80, "XS_Momentum": 0.10, "RSI_Daily_3p": 0.10}),
         SweepConfig("B3", "B", "MR+RSI / 90-10 / tv=0.28 ml=12",
                     MR_RSI, "custom", 0.28, 12.0, False,
-                    custom_weights={"MR_Macro": 0.90, "RSI_Daily_4p": 0.10}),
+                    custom_weights={"MR_Macro": 0.90, "RSI_Daily_3p": 0.10}),
         SweepConfig("B4", "B", "MR+TS3p / 90-10 / tv=0.28 ml=12 DDon (P17+DD)",
                     MR_TS3P, "custom", 0.28, 12.0, True,
                     custom_weights={"MR_Macro": 0.90, "TS_Momentum_3p": 0.10}),
         SweepConfig("B5", "B", "MR+TS_RSI(CAD)+RSI / 80-10-10 / tv=0.28 ml=12",
                     MR_TSRSI_RSI, "custom", 0.28, 12.0, False,
-                    custom_weights={"MR_Macro": 0.80, "TS_Momentum_RSI": 0.10, "RSI_Daily_4p": 0.10}),
+                    custom_weights={"MR_Macro": 0.80, "TS_Momentum_RSI": 0.10, "RSI_Daily_3p": 0.10}),
         SweepConfig("B6", "B", "All-4-sleeve / 70-10-10-10 / tv=0.28 ml=12",
                     ALL4, "custom", 0.28, 12.0, False,
                     custom_weights={"MR_Macro": 0.70, "TS_Momentum_3p": 0.10,
-                                    "RSI_Daily_4p": 0.10, "XS_Momentum": 0.10}),
+                                    "RSI_Daily_3p": 0.10, "XS_Momentum": 0.10}),
         SweepConfig("B7", "B", "All-4-sleeve / risk_parity / no lev",
                     ALL4, "risk_parity", None, 5.0, False),
         SweepConfig("B8", "B", "All-4-sleeve / equal / tv=0.18 ml=6",
@@ -178,9 +178,9 @@ def build_grid() -> list[SweepConfig]:
     ]
 
     # ─── Bloc C — non-MR "all-daily" ───────────────────────────────
-    XS_TS3P_RSI = ("XS_Momentum", "TS_Momentum_3p", "RSI_Daily_4p")
-    XS_RSI = ("XS_Momentum", "RSI_Daily_4p")
-    TS3P_RSI = ("TS_Momentum_3p", "RSI_Daily_4p")
+    XS_TS3P_RSI = ("XS_Momentum", "TS_Momentum_3p", "RSI_Daily_3p")
+    XS_RSI = ("XS_Momentum", "RSI_Daily_3p")
+    TS3P_RSI = ("TS_Momentum_3p", "RSI_Daily_3p")
     cfgs += [
         SweepConfig("C1", "C", "XS+TS3p+RSI / equal / no lev",
                     XS_TS3P_RSI, "equal", None, 5.0, False),
@@ -190,10 +190,10 @@ def build_grid() -> list[SweepConfig]:
                     XS_TS3P_RSI, "risk_parity", 0.18, 6.0, False),
         SweepConfig("C4", "C", "XS+RSI / 50-50 / tv=0.15 ml=5 DDon",
                     XS_RSI, "custom", 0.15, 5.0, True,
-                    custom_weights={"XS_Momentum": 0.50, "RSI_Daily_4p": 0.50}),
+                    custom_weights={"XS_Momentum": 0.50, "RSI_Daily_3p": 0.50}),
         SweepConfig("C5", "C", "TS3p+RSI / 50-50 / tv=0.12 ml=4 DDon",
                     TS3P_RSI, "custom", 0.12, 4.0, True,
-                    custom_weights={"TS_Momentum_3p": 0.50, "RSI_Daily_4p": 0.50}),
+                    custom_weights={"TS_Momentum_3p": 0.50, "RSI_Daily_3p": 0.50}),
     ]
 
     # ─── Bloc D — Vol target sweep on P18 ──────────────────────────

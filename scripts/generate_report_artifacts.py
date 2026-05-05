@@ -101,7 +101,7 @@ def figure_equity_comparison(
     colors = {
         "MR_Macro": "#1f77b4",
         "TS_Momentum_3p": "#ff7f0e",
-        "RSI_Daily_4p": "#2ca02c",
+        "RSI_Daily_3p": "#2ca02c",
         "Phase18 Combined": "#d62728",
     }
 
@@ -148,7 +148,7 @@ def figure_rolling_correlation(
     df = pd.DataFrame(strat_rets).dropna()
     mr = df["MR_Macro"]
     ts = df["TS_Momentum_3p"]
-    rsi = df["RSI_Daily_4p"]
+    rsi = df["RSI_Daily_3p"]
 
     roll = pd.DataFrame(
         {
@@ -400,7 +400,7 @@ def run_stress_test(production_strat_rets: dict[str, pd.Series]) -> dict[str, An
             "allocation": "custom",
             "weights": dict(stress_test_combined.RECOMMENDED_CONFIG["custom_weights"])
             if False
-            else {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10},
+            else {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10},
             "target_vol": 0.28,
             "max_leverage": 12.0,
             "dd_cap_enabled": False,
@@ -497,7 +497,7 @@ def main() -> None:
     with open(summary_path, "w") as fh:
         fh.write("Phase 18 — Final Strategy Summary\n")
         fh.write("=" * 45 + "\n\n")
-        fh.write("Config: MR80 / TS_Momentum_3p 10 / RSI_Daily_4p 10\n")
+        fh.write("Config: MR80 / TS_Momentum_3p 10 / RSI_Daily_3p 10\n")
         fh.write("        target_vol=0.28, max_leverage=12, DDcap=OFF\n\n")
         fh.write("In-sample (2019 → 2025-04):\n")
         _is = is_oos["in_sample"]

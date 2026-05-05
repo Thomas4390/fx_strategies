@@ -83,7 +83,7 @@ def main() -> None:
                 custom_weights={
                     "MR_Macro": 0.80,
                     "TS_Momentum_3p": 0.10,
-                    "RSI_Daily_4p": 0.10,
+                    "RSI_Daily_3p": 0.10,
                 },
                 target_vol=0.28,
                 max_leverage=12.0,

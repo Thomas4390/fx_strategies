@@ -28,7 +28,7 @@ def synthetic_production_rets() -> dict[str, pd.Series]:
 
     Uses the same generator as ``test_combined_portfolio_v2`` so the
     fixture is reproducible; only the strategy names differ to match
-    the production sleeves (MR_Macro / TS_Momentum_3p / RSI_Daily_4p).
+    the production sleeves (MR_Macro / TS_Momentum_3p / RSI_Daily_3p).
     """
     rng = np.random.default_rng(20260413)
     n = 2500
@@ -38,8 +38,8 @@ def synthetic_production_rets() -> dict[str, pd.Series]:
         "TS_Momentum_3p": pd.Series(
             rng.normal(0.0003, 0.009, n), index=idx, name="TS_Momentum_3p"
         ),
-        "RSI_Daily_4p": pd.Series(
-            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_4p"
+        "RSI_Daily_3p": pd.Series(
+            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_3p"
         ),
     }
 

@@ -13,7 +13,7 @@ Grid (~60 configs)
 spot):
   - ``mr_weight`` ∈ {0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90} (8)
   - ``rsi_fraction`` ∈ {0.25, 0.40, 0.50, 0.60, 0.75} — the share of the
-    diversifier budget (= 1 - mr) routed to ``RSI_Daily_4p`` vs
+    diversifier budget (= 1 - mr) routed to ``RSI_Daily_3p`` vs
     ``TS_Momentum_3p`` (5)
   - Total: 8 × 5 = **40 configs**
 
@@ -76,12 +76,12 @@ from sweep_combinations import (  # noqa: E402
 _BASELINE_SLEEVES: tuple[str, ...] = (
     "MR_Macro",
     "TS_Momentum_3p",
-    "RSI_Daily_4p",
+    "RSI_Daily_3p",
 )
 _BASELINE_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
-    "RSI_Daily_4p": 0.10,
+    "RSI_Daily_3p": 0.10,
 }
 
 # Leverage plateau sweet-spot: tv=0.25, ml=14, DDoff.
@@ -108,7 +108,7 @@ def _make_weights(mr: float, rsi_fraction: float) -> dict[str, float]:
     return {
         "MR_Macro": round(mr, 4),
         "TS_Momentum_3p": round(ts_w, 4),
-        "RSI_Daily_4p": round(rsi_w, 4),
+        "RSI_Daily_3p": round(rsi_w, 4),
     }
 
 
@@ -116,7 +116,7 @@ def _weight_tag(mr: float, rsi_fraction: float) -> str:
     w = _make_weights(mr, rsi_fraction)
     mr_pct = int(round(w["MR_Macro"] * 100))
     ts_pct = int(round(w["TS_Momentum_3p"] * 100))
-    rsi_pct = int(round(w["RSI_Daily_4p"] * 100))
+    rsi_pct = int(round(w["RSI_Daily_3p"] * 100))
     return f"{mr_pct:02d}-{ts_pct:02d}-{rsi_pct:02d}"
 
 
@@ -258,7 +258,7 @@ def build_weight_markdown(
         "at 0.966 across the region `(target_vol ≥ 0.22, max_leverage ≥ 14, "
         "DDoff)` with production weights fixed at 80/10/10. This sweep asks "
         "the complementary question : does a different weight allocation "
-        "across MR_Macro, TS_Momentum_3p and RSI_Daily_4p break out of that "
+        "across MR_Macro, TS_Momentum_3p and RSI_Daily_3p break out of that "
         "plateau ?\n"
     )
     lines.append(

@@ -2,7 +2,7 @@
 
 Follow-up to ``scripts/sweep_combinations.py``. Drills into the promising
 region of the canonical production trio
-(`MR_Macro + TS_Momentum_3p + RSI_Daily_4p`) with a much denser grid on
+(`MR_Macro + TS_Momentum_3p + RSI_Daily_3p`) with a much denser grid on
 ``target_vol × max_leverage × dd_cap_enabled``, plus a small
 weights-variation sub-block around the canonical 80/10/10 baseline.
 
@@ -75,8 +75,8 @@ from sweep_combinations import (  # noqa: E402
 )
 
 
-_BASELINE_WEIGHTS = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10}
-_BASELINE_SLEEVES = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
+_BASELINE_WEIGHTS = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10}
+_BASELINE_SLEEVES = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -145,13 +145,13 @@ def build_leverage_grid() -> list[SweepConfig]:
     # The question asked here: does a different weight mix around that
     # sweet spot outperform the canonical 80/10/10?
     WEIGHT_VARIATIONS = [
-        ("85-10-5", {"MR_Macro": 0.85, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.05}),
-        ("80-15-5", {"MR_Macro": 0.80, "TS_Momentum_3p": 0.15, "RSI_Daily_4p": 0.05}),
-        ("80-10-10", {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.10}),
-        ("75-15-10", {"MR_Macro": 0.75, "TS_Momentum_3p": 0.15, "RSI_Daily_4p": 0.10}),
-        ("75-10-15", {"MR_Macro": 0.75, "TS_Momentum_3p": 0.10, "RSI_Daily_4p": 0.15}),
-        ("70-20-10", {"MR_Macro": 0.70, "TS_Momentum_3p": 0.20, "RSI_Daily_4p": 0.10}),
-        ("70-15-15", {"MR_Macro": 0.70, "TS_Momentum_3p": 0.15, "RSI_Daily_4p": 0.15}),
+        ("85-10-5", {"MR_Macro": 0.85, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.05}),
+        ("80-15-5", {"MR_Macro": 0.80, "TS_Momentum_3p": 0.15, "RSI_Daily_3p": 0.05}),
+        ("80-10-10", {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10}),
+        ("75-15-10", {"MR_Macro": 0.75, "TS_Momentum_3p": 0.15, "RSI_Daily_3p": 0.10}),
+        ("75-10-15", {"MR_Macro": 0.75, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.15}),
+        ("70-20-10", {"MR_Macro": 0.70, "TS_Momentum_3p": 0.20, "RSI_Daily_3p": 0.10}),
+        ("70-15-15", {"MR_Macro": 0.70, "TS_Momentum_3p": 0.15, "RSI_Daily_3p": 0.15}),
     ]
     for tag, w in WEIGHT_VARIATIONS:
         cfgs.append(
@@ -463,7 +463,7 @@ def main() -> None:
     print("Loading sleeves…")
     sleeves = get_strategy_daily_returns()
     # Drop sleeves that are not in the production trio (we only need
-    # MR_Macro + TS_Momentum_3p + RSI_Daily_4p for this sweep).
+    # MR_Macro + TS_Momentum_3p + RSI_Daily_3p for this sweep).
     sleeves_trio = {k: sleeves[k] for k in _BASELINE_SLEEVES}
     print(f"  Loaded {len(sleeves_trio)} sleeves: {sorted(sleeves_trio)}")
     print()

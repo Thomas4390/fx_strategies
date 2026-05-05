@@ -2,7 +2,7 @@
 
 Follow-up to ``scripts/sweep_weight_grid.py``. The weight sweep confirmed
 that on the 3-sleeve production trio (MR_Macro / TS_Momentum_3p /
-RSI_Daily_4p) the walk-forward Sharpe plateau is essentially flat
+RSI_Daily_3p) the walk-forward Sharpe plateau is essentially flat
 between 0.96 and 0.97 regardless of the weight split — the alpha is
 dominated by MR_Macro and adding more weight to either diversifier
 only moves the Sharpe by a few basis points. This sweep asks the next
@@ -122,7 +122,7 @@ def compute_ou_mr_returns() -> pd.Series:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-# Base 3-sleeve splits. Each tuple is (MR, TS_Momentum_3p, RSI_Daily_4p)
+# Base 3-sleeve splits. Each tuple is (MR, TS_Momentum_3p, RSI_Daily_3p)
 # for the base trio. The grid rescales these by (1 - w_extra) and adds
 # the 4th sleeve at w_extra.
 _BASE_SPLITS_3: list[tuple[float, float, float]] = [
@@ -158,7 +158,7 @@ def _make_weights_4(
     weights = {
         "MR_Macro": round(mr * scale, 4),
         "TS_Momentum_3p": round(ts * scale, 4),
-        "RSI_Daily_4p": round(rsi * scale, 4),
+        "RSI_Daily_3p": round(rsi * scale, 4),
         extra_key: round(extra, 4),
     }
     # Safety renorm against rounding drift.
@@ -188,7 +188,7 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
                     sleeves=(
                         "MR_Macro",
                         "TS_Momentum_3p",
-                        "RSI_Daily_4p",
+                        "RSI_Daily_3p",
                         "Composite_FX_Alpha",
                     ),
                     allocation="custom",
@@ -216,7 +216,7 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
                     sleeves=(
                         "MR_Macro",
                         "TS_Momentum_3p",
-                        "RSI_Daily_4p",
+                        "RSI_Daily_3p",
                         "OU_MR",
                     ),
                     allocation="custom",
@@ -252,7 +252,7 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
                     sleeves=(
                         "MR_Macro",
                         "TS_Momentum_3p",
-                        "RSI_Daily_4p",
+                        "RSI_Daily_3p",
                         "XS_Momentum",
                     ),
                     allocation="custom",
@@ -269,7 +269,7 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
             id="BL-prod",
             block="BASELINE",
             name="production (MR80/TS10/RSI10 tv=0.28 ml=12 DDoff)",
-            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
+            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"),
             allocation="custom",
             target_vol=0.28,
             max_leverage=12.0,
@@ -277,14 +277,14 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
             custom_weights={
                 "MR_Macro": 0.80,
                 "TS_Momentum_3p": 0.10,
-                "RSI_Daily_4p": 0.10,
+                "RSI_Daily_3p": 0.10,
             },
         ),
         SweepConfig(
             id="BL-plateau",
             block="BASELINE",
             name="leverage plateau (MR80/TS10/RSI10 tv=0.25 ml=14 DDoff)",
-            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
+            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"),
             allocation="custom",
             target_vol=_PLATEAU_TV,
             max_leverage=_PLATEAU_ML,
@@ -292,14 +292,14 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
             custom_weights={
                 "MR_Macro": 0.80,
                 "TS_Momentum_3p": 0.10,
-                "RSI_Daily_4p": 0.10,
+                "RSI_Daily_3p": 0.10,
             },
         ),
         SweepConfig(
             id="BL-weight-top",
             block="BASELINE",
             name="weight-sweep top-1 (MR75/TS10/RSI15 tv=0.25 ml=14 DDoff)",
-            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"),
+            sleeves=("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"),
             allocation="custom",
             target_vol=_PLATEAU_TV,
             max_leverage=_PLATEAU_ML,
@@ -307,7 +307,7 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
             custom_weights={
                 "MR_Macro": 0.75,
                 "TS_Momentum_3p": 0.10,
-                "RSI_Daily_4p": 0.15,
+                "RSI_Daily_3p": 0.15,
             },
         ),
     ]
@@ -367,7 +367,7 @@ def build_fourth_sleeve_markdown(
                 lines.append(
                     f"| {k} | {v['MR_Macro']:+.3f} "
                     f"| {v['TS_Momentum_3p']:+.3f} "
-                    f"| {v['RSI_Daily_4p']:+.3f} |"
+                    f"| {v['RSI_Daily_3p']:+.3f} |"
                 )
         lines.append("")
 
@@ -532,7 +532,7 @@ def main() -> None:
 
     print("Loading base 3 sleeves (production trio)…")
     sleeves = get_strategy_daily_returns()
-    base_keys = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p", "XS_Momentum")
+    base_keys = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p", "XS_Momentum")
     sleeves_all: dict[str, pd.Series] = {k: sleeves[k] for k in base_keys}
 
     print("Loading extra sleeves…")
@@ -549,7 +549,7 @@ def main() -> None:
     correlations: dict[str, Any] = {}
     for extra in ("Composite_FX_Alpha", "OU_MR", "XS_Momentum"):
         corr_row: dict[str, float] = {}
-        for base in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"):
+        for base in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"):
             a = sleeves_all[extra].loc[common_idx]
             b = sleeves_all[base].loc[common_idx]
             corr_row[base] = float(a.corr(b))
@@ -558,7 +558,7 @@ def main() -> None:
             f"  corr({extra:<20}) vs trio : "
             f"MR={corr_row['MR_Macro']:+.3f}  "
             f"TS={corr_row['TS_Momentum_3p']:+.3f}  "
-            f"RSI={corr_row['RSI_Daily_4p']:+.3f}"
+            f"RSI={corr_row['RSI_Daily_3p']:+.3f}"
         )
     print()
 

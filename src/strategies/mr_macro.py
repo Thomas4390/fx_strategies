@@ -116,14 +116,20 @@ _ALIGNED_MACRO_CACHE_MAX = 4  # plenty for a single strategy run
 
 
 def _load_macro_series(data_dir: Path) -> tuple[pd.Series, pd.Series]:
-    """Read raw macro parquets and return (spread_daily, unemp_rising_monthly)."""
+    """Read raw macro parquets and return (spread_daily, unemp_rising_monthly).
+
+    Parquets ont 'date' comme DatetimeIndex (pas colonne) et la colonne
+    de valeur s'appelle T10Y2Y / UNRATE (FRED series IDs).
+    """
     spread_df = pd.read_parquet(data_dir / "SPREAD_10Y2Y_daily.parquet")
-    spread_df["date"] = pd.to_datetime(spread_df["date"])
-    spread = spread_df.set_index("date")["spread_10y2y"].sort_index()
+    spread_df.index = pd.to_datetime(spread_df.index)
+    val_col = "T10Y2Y" if "T10Y2Y" in spread_df.columns else "spread_10y2y"
+    spread = spread_df[val_col].sort_index()
 
     unemp_df = pd.read_parquet(data_dir / "UNEMPLOYMENT_monthly.parquet")
-    unemp_df["date"] = pd.to_datetime(unemp_df["date"])
-    unemp = unemp_df.set_index("date")["unemployment"].sort_index()
+    unemp_df.index = pd.to_datetime(unemp_df.index)
+    val_col = "UNRATE" if "UNRATE" in unemp_df.columns else "unemployment"
+    unemp = unemp_df[val_col].sort_index()
     unemp_rising = unemp.diff(3) > 0  # 3-month change, boolean
     return spread, unemp_rising
 
@@ -179,7 +185,7 @@ def _get_aligned_macro(
 
 def load_macro_filters(
     minute_index: pd.DatetimeIndex,
-    spread_threshold: float = 0.3,
+    spread_threshold: float = 0.5,
     data_dir: Path | None = None,
 ) -> pd.Series:
     """Return the boolean macro regime filter aligned to ``minute_index``.
@@ -300,8 +306,8 @@ def pipeline(
     bb_alpha: float = 5.0,
     sl_stop: float = 0.005,
     tp_stop: float = 0.006,
-    session_start: int = 6,
-    session_end: int = 14,
+    session_start: int = 8,    # Phase E.1 (was 6) — London + early NY overlap
+    session_end: int = 16,     # Phase E.1 (was 14)
     spread_threshold: float = 0.5,
     dt_stop: str = "21:00",
     td_stop: str = "6h",
@@ -427,8 +433,8 @@ def pipeline_nb(
     sl_stop: float,
     tp_stop: float,
     spread_threshold: float = 0.5,
-    session_start: int = 6,
-    session_end: int = 14,
+    session_start: int = 8,    # Phase E.1 (was 6)
+    session_end: int = 16,     # Phase E.1 (was 14)
     dt_stop: str = "21:00",
     td_stop: str = "6h",
     init_cash: float | None = None,
@@ -511,8 +517,8 @@ def create_cv_pipeline(
     splitter_kwargs = pipeline_defaults.pop("splitter_kwargs", {})
 
     defaults = dict(
-        session_start=6,
-        session_end=14,
+        session_start=8,    # Phase E.1 (was 6)
+        session_end=16,     # Phase E.1 (was 14)
         spread_threshold=0.5,
         dt_stop="21:00",
         td_stop="6h",

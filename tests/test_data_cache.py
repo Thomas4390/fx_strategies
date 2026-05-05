@@ -71,7 +71,7 @@ def _synthetic_sleeves(seed: int = 0) -> dict[str, pd.Series]:
     return {
         "MR_Macro": pd.Series(rng.normal(0.0005, 0.01, 500), index=idx),
         "TS_Momentum_3p": pd.Series(rng.normal(0.0003, 0.012, 500), index=idx),
-        "RSI_Daily_4p": pd.Series(rng.normal(0.0002, 0.009, 500), index=idx),
+        "RSI_Daily_3p": pd.Series(rng.normal(0.0002, 0.009, 500), index=idx),
     }
 
 
@@ -117,7 +117,7 @@ def test_missing_manifest_falls_back_to_rebuild(tmp_cache):
 
     result = data_cache.cached_strategy_daily_returns(_rebuild, verbose=False)
     assert call_count["n"] == 1
-    assert set(result) == {"MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p"}
+    assert set(result) == {"MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"}
     # No parquet/key file written on the fallback path.
     assert not tmp_cache["parquet"].exists()
     assert not tmp_cache["key"].exists()

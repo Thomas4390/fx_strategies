@@ -83,7 +83,7 @@ from sweep_combinations import (  # noqa: E402
 _BASELINE_SLEEVES: tuple[str, ...] = (
     "MR_Macro",
     "TS_Momentum_3p",
-    "RSI_Daily_4p",
+    "RSI_Daily_3p",
 )
 _PLATEAU_TV: float = 0.25
 _PLATEAU_ML: float = 14.0
@@ -91,12 +91,12 @@ _PLATEAU_ML: float = 14.0
 _CANONICAL_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.80,
     "TS_Momentum_3p": 0.10,
-    "RSI_Daily_4p": 0.10,
+    "RSI_Daily_3p": 0.10,
 }
 _WEIGHT_TOP_WEIGHTS: dict[str, float] = {
     "MR_Macro": 0.75,
     "TS_Momentum_3p": 0.10,
-    "RSI_Daily_4p": 0.15,
+    "RSI_Daily_3p": 0.15,
 }
 
 

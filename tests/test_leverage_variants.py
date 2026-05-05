@@ -32,8 +32,8 @@ def synthetic_leverage_variants_rets() -> dict[str, pd.Series]:
         "TS_Momentum_3p": pd.Series(
             rng.normal(0.0003, 0.009, n), index=idx, name="TS_Momentum_3p"
         ),
-        "RSI_Daily_4p": pd.Series(
-            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_4p"
+        "RSI_Daily_3p": pd.Series(
+            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_3p"
         ),
     }
 

@@ -54,11 +54,11 @@ TARGET_VOL: float = 0.28
 MAX_LEVERAGE: float = 12.0
 
 # Sleeves in canonical order.
-SLEEVE_KEYS: tuple[str, str, str] = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_4p")
+SLEEVE_KEYS: tuple[str, str, str] = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p")
 SLEEVE_LABELS: dict[str, str] = {
     "MR_Macro": "MR",
     "TS_Momentum_3p": "TS",
-    "RSI_Daily_4p": "RSI",
+    "RSI_Daily_3p": "RSI",
 }
 
 # Palette aligned with build_latex_report_assets.py.
@@ -126,7 +126,7 @@ def make_weights(w_mr: float, w_ts: float, w_rsi: float) -> dict[str, float]:
     return {
         "MR_Macro": w_mr / total,
         "TS_Momentum_3p": w_ts / total,
-        "RSI_Daily_4p": w_rsi / total,
+        "RSI_Daily_3p": w_rsi / total,
     }
 
 
@@ -159,7 +159,7 @@ def compute_metrics(
         label=label,
         w_mr=weights["MR_Macro"],
         w_ts=weights["TS_Momentum_3p"],
-        w_rsi=weights["RSI_Daily_4p"],
+        w_rsi=weights["RSI_Daily_3p"],
         sharpe=sharpe,
         cagr=cagr,
         vol=vol,
@@ -208,7 +208,7 @@ def run_named_allocations(
         label="risk-parity",
         w_mr=float(avg_w.get("MR_Macro", 0.0)),
         w_ts=float(avg_w.get("TS_Momentum_3p", 0.0)),
-        w_rsi=float(avg_w.get("RSI_Daily_4p", 0.0)),
+        w_rsi=float(avg_w.get("RSI_Daily_3p", 0.0)),
         sharpe=float(result["wf_avg_sharpe"]),
         cagr=float(result["annual_return"]),
         vol=float(result["annual_vol"]),

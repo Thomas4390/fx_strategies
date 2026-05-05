@@ -38,7 +38,7 @@ from strategies.mr_macro import backtest_mr_macro
 from strategies.rsi_daily import pipeline as rsi_daily_pipeline
 from utils import apply_vbt_settings, load_fx_data
 
-RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-JPY", "USD-CAD")
+RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-CAD")  # Phase E.3 (no USDJPY, drag -295 USD over 5.4y)
 
 # Back-compat alias — strategies.combined_portfolio_v2 imports _INIT_CASH
 # directly. Left in place so that module keeps working until its import
@@ -125,15 +125,15 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     # 2019 and 2023 when the other two sleeves lose. At 10% weight
     # it boosts bootstrap P5 Max DD from -33.98% to -30.68% and OOS
     # Sharpe from 1.24 to 1.44.
-    print("  Running RSI Daily 4-pair...")
-    rsi_daily_4p = backtest_rsi_daily_portfolio()
+    print("  Running RSI Daily 3-pair (no USDJPY, Phase E.3)...")
+    rsi_daily_3p = backtest_rsi_daily_portfolio()
 
     return {
         "MR_Macro": mr_rets,
         "XS_Momentum": xs_rets,
         "TS_Momentum_RSI": ts_rets,
         "TS_Momentum_3p": ts_rets_3p,
-        "RSI_Daily_4p": rsi_daily_4p,
+        "RSI_Daily_3p": rsi_daily_3p,
     }
 
 
@@ -162,7 +162,7 @@ def get_strategy_daily_returns(
     -------
     dict[str, pd.Series]
         Keyed by ``MR_Macro`` / ``XS_Momentum`` / ``TS_Momentum_RSI`` /
-        ``TS_Momentum_3p`` / ``RSI_Daily_4p``.
+        ``TS_Momentum_3p`` / ``RSI_Daily_3p`` (Phase E.3 retire USDJPY).
     """
     if not use_cache:
         return _compute_strategy_daily_returns()
