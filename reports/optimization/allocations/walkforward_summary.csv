@@ -1,0 +1,3 @@
+alloc_label,sharpe_med_oos,sharpe_avg_oos,cagr_avg_oos,max_dd_oos,n_oos
+baseline,1.5,1.1239999999999999,7.761871243196952,5.98,5
+mr_heavy,1.37,1.012,8.600760377169491,6.0,5
