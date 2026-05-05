@@ -220,12 +220,12 @@ Inp_AllocMRMacro      = 0.80
 Inp_AllocTSMomentum   = 0.10
 Inp_AllocRSIDaily     = 0.10
 
-// Risk
-Inp_GlobalTargetVol   = 0.28      // 28% annualisé
-Inp_GlobalMaxLeverage = 12.0
-Inp_EnableDDCap       = true      // Circuit-breaker à -15%
-Inp_DDCap             = 0.15
-Inp_EnableMarginCap   = true
+// Risk (Phase I 2026-05-05 leverage uplift)
+Inp_GlobalTargetVol   = 0.75      // 75% annualisé (vs 28% pré-Phase I)
+Inp_GlobalMaxLeverage = 64.0      // (vs 12.0 pré-Phase I)
+Inp_EnableDDCap       = false     // Désactivé Phase A (pas de bénéfice OOS)
+Inp_DDCap             = 0.30
+Inp_EnableMarginCap   = false     // Désactivé Phase A (jamais touché en backtest)
 Inp_MarginCapPct      = 0.70
 
 // Broker (CRITIQUE)

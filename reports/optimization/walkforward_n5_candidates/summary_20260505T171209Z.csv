@@ -1,0 +1,4 @@
+candidate,vt,lev,vfl,cagr_oos_median,cagr_oos_mean,sharpe_oos_median,sharpe_oos_min,dd_oos_max,sharpe_pass_count,n_folds
+C1_conservateur,0.75,64,0.02,21.8164,18.306440000000002,1.9715,0.2879,14.9854,4,5
+C2_median,1.0,64,0.02,25.732100000000003,21.301360000000003,1.8948,0.1878,19.64,4,5
+C3_agressif,1.5,64,0.01,33.8538,26.997300000000003,1.9208,0.1185,25.2743,4,5

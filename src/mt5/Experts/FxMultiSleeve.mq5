@@ -48,8 +48,12 @@ input bool   Inp_EnableMarginCap   = false;   // Désactivé par défaut (2026-0
 input double Inp_MarginCapPct      = 0.70;    // Seuil (utilisé uniquement si Inp_EnableMarginCap=true)
 
 // === Vol-targeting global ===
-input double Inp_GlobalTargetVol   = 0.28;
-input double Inp_GlobalMaxLeverage = 12.0;
+// Phase I (2026-05-05) : leverage uplift validé walk-forward N=5.
+// Pré-Phase I : vt=0.28, lev=12, Sharpe 1.44, CAGR 9.18%, DD 7.77%.
+// Phase I C1  : vt=0.75, lev=64, Sharpe 1.38, CAGR 21.82% OOS_med, DD 13.0%.
+// Anti-overfit confirmé : PSR 100%, DSR 82.7% (235 trials), Bootstrap P5 +0.70.
+input double Inp_GlobalTargetVol   = 0.75;
+input double Inp_GlobalMaxLeverage = 64.0;
 input double Inp_GlobalVolFloor    = 0.02;
 
 // === Sleeve 1 — MR Macro (4 paires equal-weight, LaTeX § 03) ===
