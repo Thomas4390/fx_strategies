@@ -59,16 +59,38 @@ def read_env_var(name: str) -> str:
 
 
 def fetch_fred_series(series_id: str, api_key: str,
-                      start: str, end: str) -> pd.Series:
-    qs = urllib.parse.urlencode({
+                      start: str, end: str,
+                      use_alfred: bool = True) -> pd.Series:
+    """Fetch FRED series.
+
+    Phase M.5 (2026-05-05): when ``use_alfred=True`` (default), use ALFRED mode
+    to index observations by ``realtime_start`` (publication / release date)
+    instead of ``date`` (period_date). This eliminates the look-ahead bias on
+    UNRATE (~30-35 day BLS publication lag) and DGS10/DGS2 (T+1 lag).
+
+    For each (period_date, value) pair, ALFRED can return multiple rows when
+    the value has been revised. We keep only the FIRST published value per
+    period_date (ordered by realtime_start ascending) — this matches what was
+    actually known at the release date in real-time decision making.
+
+    When ``use_alfred=False``, falls back to legacy behaviour (period_date as
+    index). Kept for backwards compatibility / parquet diffing.
+    """
+    params: dict[str, str] = {
         "series_id": series_id,
         "api_key": api_key,
         "file_type": "json",
         "observation_start": start,
         "observation_end": end,
-    })
+    }
+    if use_alfred:
+        # ALFRED activation: ask for all releases between start and forever.
+        params["realtime_start"] = start
+        params["realtime_end"] = "9999-12-31"
+    qs = urllib.parse.urlencode(params)
     url = f"{FRED_BASE}?{qs}"
-    print(f"GET {series_id} from FRED ({start} -> {end})")
+    print(f"GET {series_id} from FRED ({start} -> {end}) "
+          f"[mode={'ALFRED' if use_alfred else 'legacy'}]")
     with urllib.request.urlopen(url, timeout=30) as resp:
         if resp.status != 200:
             raise RuntimeError(f"FRED HTTP {resp.status} for {series_id}")
@@ -77,17 +99,41 @@ def fetch_fred_series(series_id: str, api_key: str,
     obs = data.get("observations", [])
     if not obs:
         raise RuntimeError(f"FRED returned 0 observations for {series_id}")
+
     rows = []
     for o in obs:
         v = o["value"]
         if v in (".", ""):
             continue  # FRED missing-value sentinel
-        rows.append((pd.Timestamp(o["date"]), float(v)))
+        if use_alfred:
+            # ALFRED returns realtime_start = the date the value became
+            # publicly known. Use that as the index timestamp.
+            release_date = pd.Timestamp(o["realtime_start"])
+            period_date = pd.Timestamp(o["date"])
+            rows.append((release_date, period_date, float(v)))
+        else:
+            rows.append((pd.Timestamp(o["date"]), pd.Timestamp(o["date"]),
+                        float(v)))
     if not rows:
         raise RuntimeError(f"FRED returned only missing values for {series_id}")
-    s = (pd.DataFrame(rows, columns=["date", series_id])
-         .set_index("date").sort_index()[series_id])
-    print(f"  {len(s)} observations from {s.index.min().date()} to {s.index.max().date()}")
+
+    df = pd.DataFrame(rows, columns=["release_date", "period_date", series_id])
+    if use_alfred:
+        # Keep only first published value per period_date (initial release,
+        # not subsequent revisions). Preserves real-time information set.
+        df = (df.sort_values(["period_date", "release_date"])
+                .drop_duplicates(subset="period_date", keep="first"))
+        # Diagnostic: average lag (release_date - period_date)
+        lag_days = (df["release_date"] - df["period_date"]).dt.days
+        print(f"  {len(df)} observations, "
+              f"avg release lag {lag_days.mean():.1f}d, "
+              f"max lag {lag_days.max()}d, "
+              f"min lag {lag_days.min()}d")
+    s = (df.set_index("release_date").sort_index()[series_id]
+           .rename_axis("date"))
+    if not use_alfred:
+        print(f"  {len(s)} observations from "
+              f"{s.index.min().date()} to {s.index.max().date()}")
     return s
 
 
@@ -150,15 +196,24 @@ def main() -> int:
                         help=f"Spread threshold (default {DEFAULT_THRESHOLD})")
     parser.add_argument("--output", type=Path, default=None,
                         help="CSV output path (default <MT5 Common>/macro_history.csv)")
+    parser.add_argument("--no-alfred", action="store_true",
+                        help="Disable ALFRED mode (use period_date — legacy, "
+                             "KNOWN to introduce look-ahead bias on UNRATE).")
     args = parser.parse_args()
 
     end = args.end or dt.datetime.now(dt.timezone.utc).date().isoformat()
-    unrate_start = (pd.Timestamp(args.start) - pd.DateOffset(months=6)).date().isoformat()
+    # Need extra history for UNRATE 3-month diff window. ALFRED also needs
+    # observations released BEFORE args.start to be available at args.start.
+    unrate_start = (pd.Timestamp(args.start) - pd.DateOffset(months=12)).date().isoformat()
+    spread_start = (pd.Timestamp(args.start) - pd.DateOffset(months=2)).date().isoformat()
 
     api_key = read_env_var("FRED_API_KEY")
+    use_alfred = not args.no_alfred
 
-    spread = fetch_fred_series("T10Y2Y", api_key, args.start, end)
-    unrate = fetch_fred_series("UNRATE", api_key, unrate_start, end)
+    spread = fetch_fred_series("T10Y2Y", api_key, spread_start, end,
+                               use_alfred=use_alfred)
+    unrate = fetch_fred_series("UNRATE", api_key, unrate_start, end,
+                               use_alfred=use_alfred)
 
     DATA_DIR.mkdir(exist_ok=True)
     spread.to_frame().to_parquet(DATA_DIR / "SPREAD_10Y2Y_daily.parquet")
