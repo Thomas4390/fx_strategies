@@ -378,7 +378,7 @@ Audit ingénieur financier effectué avant publication. **Cinq warnings** sont i
 
 ### Warning 2 — Transaction costs au niveau combined
 
-**Nature :** le combined applique `port_rets = (common * weights_ts).sum(axis=1)` — une somme pondérée qui **ne charge pas** de coût de rebalancement inter-sleeve. Le code le documente explicitement (`combined_portfolio.py:205-207`). Les coûts intra-sleeve (slippage 15 bps sur MR intraday, 10 bps sur daily, fees 5 bps) sont en revanche bien chargés par chaque pipeline individuel.
+**Nature :** le combined applique `port_rets = (common * weights_ts).sum(axis=1)` — une somme pondérée qui **ne charge pas** de coût de rebalancement inter-sleeve. Le code le documente explicitement (`combined_portfolio.py:205-207`). Les coûts intra-sleeve (slippage 15 bps sur MR intraday, 10 bps sur daily, fees 5 bps) sont en revanche bien chargés par chaque pipeline individuel **côté vbt**. **Côté MT5, voir `docs/investigations/phase_m4_m7_realism_corrections.md`** : avant Phase M.4 (2026-05-05), `Inp_*_SlippageBps` MQL5 servait UNIQUEMENT comme tolérance fill (`SetDeviationInPoints`), pas comme coût soustrait du P&L. Phase M.4 corrige via shift SL/TP par `slip_pct`. Sharpe MT5 baseline 1.38 → 0.98 post-fix complet (M.4+M.5+M.7), match vbt 0.97.
 
 **Impact sur Phase 18 (weights statiques 80/10/10) :** estimation ~5-10 bp/an (négligeable vs ~5% de CAGR de bruit annuel). Raison : avec des poids fixes, le seul rebalancement est celui nécessaire pour maintenir les ratios face au drift de PnL différentiel — ce drift est < 1% par jour sur ces 3 sleeves, donc le coût de rebalance quotidien est microscopique.
 
@@ -470,9 +470,9 @@ python -m src.strategies.combined_portfolio_v2 | grep MR80_TS3p10_RSI10
 - [ ] **Live drawdown alert** configuré : auto-stop trading si drawdown live dépasse −15%.
 - [ ] **Per-sleeve monitoring** : rolling 63d Sharpe pour chaque sleeve, alerte si un sleeve passe sous 0.5.
 - [ ] **Re-run stress test mensuel** : `python scripts/generate_phase18_report_artifacts.py` chaque 1er du mois, comparer les métriques aux baselines.
-- [ ] **Slippage réel vs modèle** : 1er mois de paper-trade, mesurer l'execution spread réel sur MR Macro (15 bps assumé) et TS/RSI (10 bps assumé). Si réel > modèle, re-baseline.
-- [ ] **Margin utilization cap** : configurer le compte broker pour auto-deleverage si margin utilization > 70%.
-- [ ] **Filtre macro data freshness** : vérifier que `SPREAD_10Y2Y_daily.parquet` et `UNEMPLOYMENT_monthly.parquet` sont mis à jour automatiquement depuis FRED. Alerte si stale > 7 jours.
+- [ ] **Slippage réel vs modèle** : 1er mois de paper-trade, mesurer l'execution spread réel sur MR Macro (15 bps + 2 bps commission Phase M.7 assumés) et TS/RSI (10 bps + 2 bps commission). Cf. `docs/investigations/phase_m4_m7_realism_corrections.md`.
+- [ ] **Margin utilization cap** : configurer le compte broker pour auto-deleverage si margin utilization > 50% (Phase M.7 ramené à 50% vs 70% précédent).
+- [ ] **Filtre macro data freshness** : régénérer `SPREAD_10Y2Y_daily.parquet` et `UNEMPLOYMENT_monthly.parquet` mensuellement via `python src/mt5/bridge/fx_macro_history.py` (Phase M.5: utilise FRED ALFRED endpoint pour release_date correct). Alerte si stale > 30 jours.
 - [ ] **Broker execution logs** audit hebdomadaire : entry/exit time, price, fees, slippage.
 - [ ] **Disaster recovery** : capacité à flatten toutes les positions en < 10 minutes via une kill switch manuelle.
 
