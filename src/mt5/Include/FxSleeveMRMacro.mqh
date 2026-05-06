@@ -220,9 +220,15 @@ private:
     //--- Ouvre une position sur la paire idx.
     //--- Sizing : sub_equity_MR / n_pairs (allocation egal entre paires)
     //--- × global_leverage. Le SL à 0.5% × leverage donne le risque effectif.
-    //--- Slippage : Inp_MR_SlippageBps converti en SYMBOL_POINT pour
-    //---             SetDeviationInPoints + majoration SL_distance pour
-    //---             ne pas sur-sizer face au coût attendu.
+    //---
+    //--- Slippage modeling (Phase M.4 fix, 2026-05-05) :
+    //--- AVANT (bug LaTeX § 03) : Inp_MR_SlippageBps servait UNIQUEMENT
+    //--- comme tolérance fill (SetDeviationInPoints) + majoration sl_distance
+    //--- pour sizing. Pas de coût slippage soustrait du P&L. Sharpe surestimé.
+    //--- APRÈS : SL et TP shifted by slip_pct so each closed trade absorbs
+    //--- 1 leg slippage cost (matches vbt from_signals(slippage=0.0015)).
+    //--- Time-stop / EOD / reverse-signal exits ne paient pas le slip
+    //--- (vbt convention : slippage signal-entries seulement).
     void OpenPosition(int idx, ENUM_ORDER_TYPE type, CRiskManager &risk)
     {
         string sym = m_symbols[idx];
@@ -231,24 +237,27 @@ private:
                        : SymbolInfoDouble(sym, SYMBOL_BID);
         if(price <= 0.0) return;
 
+        // Phase M.4 + M.7 : slippage + commission cost shift on SL/TP levels.
+        double slip_pct = (Inp_MR_SlippageBps + Inp_CommissionBpsPerSide) / 10000.0;
+
         double sl = (type == ORDER_TYPE_BUY)
-                    ? price * (1.0 - Inp_MR_SLStop)
-                    : price * (1.0 + Inp_MR_SLStop);
+                    ? price * (1.0 - Inp_MR_SLStop - slip_pct)
+                    : price * (1.0 + Inp_MR_SLStop + slip_pct);
         double tp = (type == ORDER_TYPE_BUY)
-                    ? price * (1.0 + Inp_MR_TPStop)
-                    : price * (1.0 - Inp_MR_TPStop);
+                    ? price * (1.0 + Inp_MR_TPStop - slip_pct)
+                    : price * (1.0 - Inp_MR_TPStop + slip_pct);
 
         sl = EnforceStopLevel(sym, price, sl, type, true);
         tp = EnforceStopLevel(sym, price, tp, type, false);
 
         double point = SymbolInfoDouble(sym, SYMBOL_POINT);
-        double slip_price = (Inp_MR_SlippageBps / 10000.0) * price;
+        double slip_price = slip_pct * price;
         int slip_pts = (point > 0.0) ? (int)MathCeil(slip_price / point) : 20;
         m_trade.SetDeviationInPoints(MathMax(slip_pts, 5));
 
         // Sizing : ¼ du sub-equity MR Macro par paire (equal-weight 4 paires)
-        // SL distance majoré du slippage pour que LotsForRisk ne sur-size pas.
-        double sl_distance = MathAbs(price - sl) + slip_price;
+        // SL distance reflète déjà le shift slippage (sl déjà majoré en haut).
+        double sl_distance = MathAbs(price - sl);
         double per_pair_alloc = 1.0 / (double)m_n_pairs;
         double risk_pct = 0.01;   // 1 % du sub-equity par trade (cf. v1)
         double lots = risk.LotsFor(SLEEVE_MR_MACRO, sym, risk_pct, sl_distance,

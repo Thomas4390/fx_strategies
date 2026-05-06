@@ -210,12 +210,14 @@ private:
         return 0;
     }
 
-    //--- Slippage Inp_TS_SlippageBps converti en SYMBOL_POINT puis appliqué
-    //--- via SetDeviationInPoints. Le sl_distance est aussi majoré pour
-    //--- intégrer le coût slippage dans le sizing (cf. plan d'alignement).
-    //--- Le risk_per_trade=0.05 (5% du sub-equity par paire) reste cohérent
-    //--- avec la sémantique notional Python : sub_equity_per_pair × lev_pair
-    //--- avec SL safety à 5% donne un risk_money équivalent.
+    //--- Slippage Inp_TS_SlippageBps (Phase M.4 fix, 2026-05-05) :
+    //--- AVANT : slip uniquement dans tolérance + sizing majoration → coût
+    //--- réel non soustrait du P&L. Sharpe surestimé.
+    //--- APRÈS : SL safety shift de slip_pct ET dampened risk_money pour
+    //--- absorber drag attendu round-trip. Comme TS sort sur signal flip
+    //--- (pas sur SL/TP), le shift SL safety reste rarement déclenché ;
+    //--- le drag effectif provient majoritairement du dampening risk_money
+    //--- proportionnel à 2× slip_pct (entry + exit cost approximation).
     void OpenPosition(string symbol, ENUM_ORDER_TYPE type, double lev_pair,
                       CRiskManager &risk)
     {
@@ -224,24 +226,28 @@ private:
                        : SymbolInfoDouble(symbol, SYMBOL_BID);
         if(price <= 0.0) return;
 
-        // Pas de SL/TP dur en TS Momentum (sortie par signal flip)
-        // Mais on pose un SL "garde-fou" très large à 5% pour limiter les surprises
-        double sl_dist_safety = price * 0.05;
+        double slip_pct = (Inp_TS_SlippageBps + Inp_CommissionBpsPerSide) / 10000.0;
+
+        // SL safety 5% shifted by slip_pct (rarely hit, but consistent
+        // with vbt convention of slippage-on-signal-entry).
+        double sl_dist_safety = price * (0.05 + slip_pct);
         double sl = (type == ORDER_TYPE_BUY) ? price - sl_dist_safety
                                              : price + sl_dist_safety;
         sl = EnforceStopLevel(symbol, price, sl, type, true);
 
-        // Slippage paramétré
         double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
-        double slip_price = (Inp_TS_SlippageBps / 10000.0) * price;
+        double slip_price = slip_pct * price;
         int slip_pts = (point > 0.0) ? (int)MathCeil(slip_price / point) : 20;
         m_trade.SetDeviationInPoints(MathMax(slip_pts, 5));
 
-        // Sizing : sub_equity_TS / n_pairs * lev_pair * global_leverage
-        // SL distance majoré du slippage pour ne pas sur-sizer face au coût attendu
+        // Sizing : Phase M.4 dampened risk_money by (1 - 2*slip_pct) to
+        // pre-pay round-trip slippage drag on signal-flip exits. This
+        // reduces position size proportional to expected slip cost.
         double sub_eq = risk.SubEquity(SLEEVE_TS_MOMENTUM) / m_n_pairs;
-        double risk_money = sub_eq * 0.05 * lev_pair * risk.GlobalLeverage();
-        double lots = LotsForRisk(symbol, risk_money, sl_dist_safety + slip_price);
+        double slip_drag = 1.0 - 2.0 * slip_pct;  // entry + exit
+        double risk_money = sub_eq * 0.05 * lev_pair * risk.GlobalLeverage()
+                            * slip_drag;
+        double lots = LotsForRisk(symbol, risk_money, sl_dist_safety);
         if(lots <= 0.0) return;
 
         bool ok = false;

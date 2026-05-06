@@ -165,11 +165,14 @@ private:
         return 0;
     }
 
-    //--- Slippage Inp_RSI_SlippageBps converti en SYMBOL_POINT puis appliqué
-    //--- via SetDeviationInPoints. SL distance majorée de slip_price pour
-    //--- intégrer le coût slippage dans le sizing.
-    //--- Le risk_per_trade=0.05 (5% sub-equity par paire) reflète la
-    //--- sémantique notional Python (lev=1.0 × sub_equity_per_pair).
+    //--- Slippage Inp_RSI_SlippageBps (Phase M.4 fix, 2026-05-05) :
+    //--- AVANT : slip uniquement dans tolérance + sizing majoration → coût
+    //--- réel non soustrait du P&L. Sharpe surestimé.
+    //--- APRÈS : SL safety shift + risk_money dampening pour absorber drag
+    //--- round-trip. Architecture exit-on-signal (pas SL/TP) → impact réel
+    //--- limité au dampening (réduction proportionnelle gains+pertes).
+    //--- Note : RSI Daily 33 entries / 5.43y → drag annuel ~0.02% (négligeable
+    //--- vs MR Macro ~5%).
     void OpenPosition(string symbol, ENUM_ORDER_TYPE type, CRiskManager &risk)
     {
         double price = (type == ORDER_TYPE_BUY)
@@ -177,21 +180,21 @@ private:
                        : SymbolInfoDouble(symbol, SYMBOL_BID);
         if(price <= 0.0) return;
 
-        // Pas de SL/TP dur — sortie par RSI mid. SL safety très large 5%.
-        double sl_dist = price * 0.05;
+        double slip_pct = (Inp_RSI_SlippageBps + Inp_CommissionBpsPerSide) / 10000.0;
+
+        double sl_dist = price * (0.05 + slip_pct);
         double sl = (type == ORDER_TYPE_BUY) ? price - sl_dist : price + sl_dist;
         sl = EnforceStopLevel(symbol, price, sl, type, true);
 
-        // Slippage paramétré
         double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
-        double slip_price = (Inp_RSI_SlippageBps / 10000.0) * price;
+        double slip_price = slip_pct * price;
         int slip_pts = (point > 0.0) ? (int)MathCeil(slip_price / point) : 20;
         m_trade.SetDeviationInPoints(MathMax(slip_pts, 5));
 
-        // Sizing : sub_equity_RSI / n_pairs * 1.0 (levier natif) * global_leverage
         double sub_eq = risk.SubEquity(SLEEVE_RSI_DAILY) / m_n_pairs;
-        double risk_money = sub_eq * 0.05 * risk.GlobalLeverage();
-        double lots = LotsForRisk(symbol, risk_money, sl_dist + slip_price);
+        double slip_drag = 1.0 - 2.0 * slip_pct;
+        double risk_money = sub_eq * 0.05 * risk.GlobalLeverage() * slip_drag;
+        double lots = LotsForRisk(symbol, risk_money, sl_dist);
         if(lots <= 0.0) return;
 
         bool ok = (type == ORDER_TYPE_BUY)

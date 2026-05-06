@@ -29,23 +29,16 @@ input double Inp_AllocTSMomentum   = 0.10;
 input double Inp_AllocRSIDaily     = 0.10;
 input double Inp_AllocH1Momentum   = 0.0;     // Phase D — sleeve H1 (default off)
                                               // sum(MR+TS+RSI+H1) doit être 1.0
-input bool   Inp_EnableDDCap       = false;   // Désactivé par défaut (2026-05-04)
-                                              // — circuit-breaker tail-risk LaTeX § 13.3.
-                                              // Findings cumulés : DDCap=0.15 freinait
-                                              // 24% configs IS pour aucun bénéfice OOS ;
-                                              // DDCap=0.30 jamais touché en backtest 5.4 ans.
-                                              // Code conservé pour ré-activation manuelle
-                                              // (tail-risk insurance optionnelle).
-input double Inp_DDCap             = 0.30;    // Seuil (utilisé uniquement si Inp_EnableDDCap=true)
+// Phase M.7 (2026-05-05) : protections RÉACTIVÉES pour réalisme live.
+// Lev=64 maintenu (Phase I) → DD-cap + margin-cap nécessaires pour bornes.
+input bool   Inp_EnableDDCap       = true;    // Phase M.7: ACTIVÉ (was false).
+                                              // Circuit-breaker tail-risk LaTeX § 13.3.
+                                              // Lev=64 sans cap = blow-up risk live.
+input double Inp_DDCap             = 0.20;    // Phase M.7: 20% (was 0.30) plus conservateur.
 input bool   Inp_ResetDDState      = false;
-input bool   Inp_EnableMarginCap   = false;   // Désactivé par défaut (2026-05-04)
-                                              // — cap marge 70 % LaTeX § 13.2.
-                                              // Test on/off identique sur baseline 5.4 ans
-                                              // (Sharpe 1.15, +4615 USD, DD 7.21%) :
-                                              // marge utilisée jamais > 70% en config
-                                              // normale (vol-targeting suffit).
-                                              // Code conservé pour ré-activation manuelle.
-input double Inp_MarginCapPct      = 0.70;    // Seuil (utilisé uniquement si Inp_EnableMarginCap=true)
+input bool   Inp_EnableMarginCap   = true;    // Phase M.7: ACTIVÉ (was false).
+                                              // Cap marge LaTeX § 13.2.
+input double Inp_MarginCapPct      = 0.50;    // Phase M.7: 50% (was 0.70) plus conservateur.
 
 // === Vol-targeting global ===
 // Phase I (2026-05-05) : leverage uplift validé walk-forward N=5.
@@ -110,6 +103,13 @@ input double Inp_H1_TargetVol      = 0.10;
 input double Inp_H1_MaxLeverage    = 3.0;
 input int    Inp_H1_SlippageBps    = 12;       // 12 bps H1 (entre TS daily 10
                                               // et MR M1 15 bps)
+
+// === Phase M.7 — Commission modelling (2026-05-05) ===
+// Per-side commission in basis points. Typical OANDA Standard / IC Markets
+// Raw spread ECN: 0.5-1.0 USD per micro lot per side ≈ 1-2 bps on EUR/USD.
+// Applied as additional slippage shift on SL/TP in all 3 sleeves.
+// Default 2 bps = conservative (high-end retail ECN broker).
+input double Inp_CommissionBpsPerSide = 2.0;
 
 // === Operational ===
 input string Inp_SymbolSuffix      = ".c";    // Broker-specific (ECN/Raw uses ".c"; change for other brokers)
