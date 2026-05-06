@@ -1,7 +1,14 @@
 //+------------------------------------------------------------------+
 //| FxIndicatorVWAP.mqh                                              |
-//| VWAP daily-anchored : reset à 00:00 UTC, cumul tick_volume       |
-//| × typical_price = (high+low+close)/3 (convention vbt.VWAP).      |
+//|                                                                  |
+//| Daily-anchored Volume-Weighted Average Price.                    |
+//|                                                                  |
+//|   typical_price = (high + low + close) / 3                       |
+//|   VWAP          = sum(typical_price * tick_volume) / sum(volume) |
+//|                                                                  |
+//| Cumulative buffers reset at 00:00 UTC. Tick volume is used as a  |
+//| proxy for true volume since spot Forex is OTC and no centralised |
+//| volume feed exists.                                              |
 //+------------------------------------------------------------------+
 #ifndef __FX_INDICATOR_VWAP_MQH__
 #define __FX_INDICATOR_VWAP_MQH__
@@ -9,17 +16,17 @@
 #include "FxCommon.mqh"
 
 //+------------------------------------------------------------------+
-//| CVWAPDaily — accumulateur volume-weighted price reset à chaque   |
-//| nouveau jour UTC. Maintient cum_pv et cum_v en interne.          |
+//| CVWAPDaily: streaming volume-weighted accumulator that resets    |
+//| each calendar day in UTC.                                        |
 //+------------------------------------------------------------------+
 class CVWAPDaily
 {
 private:
-    double   m_cum_pv;       // Sum(typical_price * volume) du jour
-    double   m_cum_v;        // Sum(volume) du jour
-    double   m_last_vwap;    // Dernière valeur calculée
-    datetime m_anchor_day;   // Minuit UTC du jour courant
-    int      m_bars_today;   // Nombre de bars ingérées sur le jour
+    double   m_cum_pv;       // sum(typical_price * tick_volume) for the day
+    double   m_cum_v;        // sum(tick_volume) for the day
+    double   m_last_vwap;    // last computed VWAP (or close on first bar)
+    datetime m_anchor_day;   // UTC midnight of the active session
+    int      m_bars_today;   // number of bars accumulated today
 
 public:
     CVWAPDaily() { Reset(); }
@@ -33,7 +40,7 @@ public:
         m_bars_today = 0;
     }
 
-    //--- Ingère une bar M1. À appeler une fois par bar fermée.
+    //--- Ingest a closed M1 bar (call exactly once per bar).
     void OnNewBarM1(const MqlRates &bar)
     {
         datetime day = FloorToDayUTC(bar.time);
@@ -52,14 +59,12 @@ public:
         m_bars_today++;
     }
 
-    double Get() const { return m_last_vwap; }
-
+    double Get() const       { return m_last_vwap; }
     int    BarsToday() const { return m_bars_today; }
+    bool   IsReady() const   { return m_bars_today > 0; }
 
-    bool   IsReady() const { return m_bars_today > 0; }
-
-    //--- Reconstruit le cumul depuis minuit UTC du jour courant.
-    //--- À appeler à OnInit pour ne pas démarrer "vide" en milieu de session.
+    //--- Replay every M1 bar of today's session so the accumulator is in
+    //--- sync when the EA attaches mid-session.
     bool Warmup(string symbol)
     {
         Reset();
@@ -73,7 +78,7 @@ public:
                         symbol);
             return false;
         }
-        // CopyRates retourne en ordre chronologique croissant par défaut
+        // CopyRates returns chronological ascending order by default.
         for(int i = 0; i < copied; i++) OnNewBarM1(rates[i]);
         return true;
     }

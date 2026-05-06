@@ -113,17 +113,39 @@ Diagnostic post-fix:
 
 ---
 
-## 4. Phase M.6 — Diagnostic Model=2 OHLC (refactor abandonné)
+## 4. Phase M.6 — Diagnostic Model OHLC vs Open prices (refactor abandonné)
+
+> ⚠️ **CORRECTION 2026-05-06 (audit MQL5)** : la nomenclature MT5 originale de
+> cette section était inversée. Repris ci-dessous avec les noms exacts des
+> docs MT5 officielles.
 
 ### Hypothèse audit
 
 `OnNewBarM1()` invoqué via `OnTick()` (chaque tick) suspectait look-ahead intra-bar : signal trigger avant close M1.
 
-### Diagnostic Model=2 OHLC M1
+### Nomenclature MT5 (docs officielles)
 
-Hypothèse réfutée: avec Modeling=2 (OHLC M1, pas every-tick), Sharpe = **1.05** vs Model=1 = 1.01.
+```
+Model=0  Every tick (simulé)
+Model=1  1 minute OHLC  ← baseline phase M.4-M.7 (ÉTAIT le default)
+Model=2  Open prices only
+Model=3  Math calculations (sans data)
+Model=4  Every tick based on real ticks  ← mode rigoureux, recommandé
+```
 
-**Tick mode est PLUS conservateur, pas un look-ahead.** OHLC mode lisse l'intra-bar et perd le coût spread tick-level. Décision: garder Model=1, abandonner refactor OnTick → OnTimer.
+### Diagnostic effectivement réalisé
+
+- **Model=1 (1-min OHLC)** : Sharpe **1.01** (baseline phase M.5)
+- **Model=2 (Open prices only)** : Sharpe **1.05**
+
+**Conclusion révisée** : on a comparé OHLC vs Open prices only, **PAS** every-tick vs OHLC. Open prices only Sharpe > OHLC car Open mode ne déclenche pas SL/TP intra-bar (less exits). Conclusion originale « tick mode plus conservateur » était mal-formulée. Le **vrai diagnostic intra-bar look-ahead** demanderait :
+
+- Model=4 real ticks vs Model=1 OHLC (à FAIRE)
+- Selon tickstory + MQL5 forums, `Model=1` interpole les fills SL/TP à l'intérieur des bars avec entrées « parfaites », surestimant systématiquement le Sharpe vs real ticks.
+
+### Décision Phase M.10 (audit 2026-05-06)
+
+`run_backtest_cli.py:DEFAULT_MODEL` patché de `1` (OHLC) → `4` (real ticks). Re-run baseline attendu Sharpe ↓ -0.05 à -0.20 vs 0.98 actuel. Le refactor OnTick → OnTimer reste abandonné mais sera re-évalué en fonction du delta Model=1 ↔ Model=4.
 
 ---
 

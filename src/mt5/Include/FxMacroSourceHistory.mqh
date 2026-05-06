@@ -1,22 +1,23 @@
 //+------------------------------------------------------------------+
 //| FxMacroSourceHistory.mqh                                         |
-//| Source macro historique pour le BACKTEST (Strategy Tester).      |
 //|                                                                  |
-//| Lit `macro_history.csv` (multi-lignes, généré par                |
-//| `bridge/fx_macro_history.py`) en mémoire au premier appel, puis  |
-//| effectue une recherche binaire par date pour retourner la        |
-//| dernière observation macro <= `t` (où `t = TimeCurrent()`        |
-//| renvoie le temps simulé en tester, et le temps réel en live).    |
+//| Historical macro source for the Strategy Tester. Loads a CSV     |
+//| of pre-computed macro filter values and answers point-in-time    |
+//| lookups via binary search.                                       |
 //|                                                                  |
-//| Counterpart de `CMacroSourceCalendar` + `CMacroSourceFRED` qui   |
-//| eux interrogent les sources natives MT5/FRED en live (mais       |
-//| WebRequest est bloqué dans Strategy Tester).                     |
+//| In tester mode TimeCurrent() returns simulated time; the lookup  |
+//| therefore gives the latest observation visible at that instant,  |
+//| reproducing what a live system would have seen at that date.     |
 //|                                                                  |
-//| Schéma CSV attendu (header puis N lignes triées asc) :           |
-//|   timestamp_utc,spread_10y2y,unemp_rising,spread_threshold,      |
-//|   macro_ok                                                       |
-//|   2019-01-02T00:00:00Z,0.160000,1,0.5000,0                       |
-//|   ...                                                            |
+//| Counterpart of CMacroSourceCalendar / CMacroSourceFRED, which    |
+//| query MT5 calendar and the FRED API directly in live mode (both  |
+//| unavailable inside the Strategy Tester).                         |
+//|                                                                  |
+//| Expected CSV schema (header + N rows sorted ascending):          |
+//|     timestamp_utc,spread_10y2y,unemp_rising,spread_threshold,    |
+//|     macro_ok                                                     |
+//|     2019-01-02T00:00:00Z,0.160000,1,0.5000,0                     |
+//|     ...                                                          |
 //+------------------------------------------------------------------+
 #ifndef __FX_MACRO_SOURCE_HISTORY_MQH__
 #define __FX_MACRO_SOURCE_HISTORY_MQH__
@@ -24,7 +25,7 @@
 #include "FxCommon.mqh"
 
 //+------------------------------------------------------------------+
-//| CMacroSourceHistory : reader CSV time-indexed (binary search).   |
+//| CMacroSourceHistory: time-indexed CSV reader with binary search.|
 //+------------------------------------------------------------------+
 class CMacroSourceHistory
 {
@@ -59,8 +60,8 @@ public:
     bool IsLoaded() const { return m_loaded; }
     int  Count()    const { return m_count; }
 
-    //--- Lit toutes les lignes du CSV en mémoire. Idempotent : retourne true
-    //--- immédiatement si déjà chargé.
+    //--- Load every row of the CSV into memory. Idempotent: subsequent
+    //--- calls are a no-op once the data has been cached.
     bool LoadAll()
     {
         if(m_loaded) return true;
@@ -75,7 +76,7 @@ public:
             return false;
         }
 
-        // Skip header (5 columns)
+        // Skip the header (5 columns).
         for(int i = 0; i < 5; i++) FileReadString(h);
 
         int cap = 4096;
@@ -133,8 +134,8 @@ public:
         return true;
     }
 
-    //--- Recherche la ligne avec le plus grand timestamp <= `t`.
-    //--- Retourne false si t est antérieur à la première observation.
+    //--- Locate the row with the largest timestamp <= 't'. Returns false
+    //--- when 't' precedes the first observation.
     bool LookupAt(datetime t,
                   double   &out_spread,
                   bool     &out_unemp_rising,
@@ -144,7 +145,6 @@ public:
         if(!m_loaded || m_count == 0) return false;
         if(t < m_ts[0]) return false;
 
-        // Edge case: t >= last row → return last row
         if(t >= m_ts[m_count - 1])
         {
             int last = m_count - 1;
@@ -155,7 +155,7 @@ public:
             return true;
         }
 
-        // Binary search: invariant m_ts[lo] <= t < m_ts[hi]
+        // Binary search invariant: m_ts[lo] <= t < m_ts[hi].
         int lo = 0, hi = m_count - 1;
         while(lo < hi - 1)
         {
@@ -171,7 +171,7 @@ public:
     }
 
 private:
-    //--- Parse "YYYY-MM-DDTHH:MM:SSZ" en datetime UTC.
+    //--- Parse "YYYY-MM-DDTHH:MM:SSZ" into MQL5 datetime (UTC).
     datetime ParseIsoUTC(string iso)
     {
         if(StringLen(iso) < 19) return 0;

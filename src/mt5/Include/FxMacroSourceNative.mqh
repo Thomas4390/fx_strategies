@@ -1,36 +1,41 @@
 //+------------------------------------------------------------------+
 //| FxMacroSourceNative.mqh                                          |
-//| Sources macro natives MQL5 (sans bridge Python externe).         |
 //|                                                                  |
-//|  - CMacroSourceCalendar : taux de chômage US via le calendrier   |
-//|    économique intégré MT5 (CalendarValueHistoryByEvent).          |
-//|  - CMacroSourceFRED     : spread Treasury 10Y-2Y via WebRequest  |
-//|    sur l'API FRED (St. Louis Fed).                                |
+//| Native MQL5 macro sources used in live mode (the Strategy        |
+//| Tester blocks both endpoints, so use CMacroSourceHistory there). |
 //|                                                                  |
-//| Pré-requis FRED :                                                 |
-//|  1. Clé API gratuite : https://fred.stlouisfed.org/docs/api/      |
-//|     api_key.html                                                  |
-//|  2. URL whitelistée dans Terminal → Outils → Options → Expert    |
-//|     Advisors → "Allow WebRequest for listed URL" :                |
-//|         https://api.stlouisfed.org                                |
+//|   - CMacroSourceCalendar : US unemployment rate via the MT5      |
+//|     economic calendar (CalendarValueHistoryByEvent).             |
 //|                                                                  |
-//| Pré-requis Calendar : aucun (natif MT5).                          |
+//|   - CMacroSourceFRED     : Treasury 10Y-2Y spread via WebRequest |
+//|     against the FRED API (St. Louis Fed) using the ALFRED        |
+//|     endpoint to retrieve release-date-indexed observations.      |
+//|                                                                  |
+//| FRED prerequisites:                                              |
+//|   1. Free API key: https://fred.stlouisfed.org/docs/api/api_key  |
+//|   2. Whitelist https://api.stlouisfed.org in MetaTrader options  |
+//|      ("Allow WebRequest for listed URL").                        |
+//|                                                                  |
+//| Calendar prerequisites: none (native MT5).                       |
 //+------------------------------------------------------------------+
 #ifndef __FX_MACRO_SOURCE_NATIVE_MQH__
 #define __FX_MACRO_SOURCE_NATIVE_MQH__
 
 #include "FxCommon.mqh"
 
+#define FX_FRED_TIMEOUT_MS    5000
+#define FX_FRED_MAX_RETRIES   2
+#define FX_FRED_RETRY_BACKOFF 2000
+
 //+------------------------------------------------------------------+
-//| CMacroSourceCalendar : accès au calendar économique MT5 pour     |
-//| récupérer les 4 dernières publications du US Unemployment Rate   |
-//| et calculer la variation 3 mois.                                 |
+//| CMacroSourceCalendar: fetches the latest US unemployment rate    |
+//| releases from the MT5 calendar and computes a 3-month change.   |
 //+------------------------------------------------------------------+
 class CMacroSourceCalendar
 {
 private:
-    string m_country;       // "US"
-    string m_event_keyword; // "Unemployment Rate"
+    string m_country;
+    string m_event_keyword;
     ulong  m_cached_event_id;
     bool   m_event_resolved;
 
@@ -48,7 +53,7 @@ public:
         m_cached_event_id = 0;
     }
 
-    //--- Résout l'ID de l'événement "Unemployment Rate" pour `country`.
+    //--- Resolve the calendar event ID for the unemployment release.
     bool ResolveEventId()
     {
         if(m_event_resolved) return true;
@@ -76,50 +81,65 @@ public:
         return false;
     }
 
-    //--- Récupère les `n_releases` dernières publications dans `out` (chrono asc).
-    //--- Retourne le nombre de publications copiées.
+    //--- Copy the most recent 'n_releases' published values into the
+    //--- output arrays, in chronological ascending order. Returns the
+    //--- number of values written.
+    //---
+    //--- The raw 'actual_value' returned by the calendar is scaled by
+    //--- 'event.multiplier' (THOUSANDS, MILLIONS, ...). The function
+    //--- divides by the resolved scale so callers get plain percentages.
     int GetRecentReleases(int n_releases, double &out_values[], datetime &out_times[])
     {
         if(!ResolveEventId()) return 0;
-        // Fenêtre : 18 mois en arrière (chômage publié mensuellement)
+
+        MqlCalendarEvent ev;
+        double divisor = 1e6;  // safe default for unemployment rate
+        if(CalendarEventById(m_cached_event_id, ev) && ev.multiplier > 0)
+        {
+            switch((int)ev.multiplier)
+            {
+                case 0: divisor = 1.0;       break;  // NONE
+                case 1: divisor = 1e3;       break;  // THOUSANDS
+                case 2: divisor = 1e6;       break;  // MILLIONS
+                case 3: divisor = 1e9;       break;  // BILLIONS
+                case 4: divisor = 1e12;      break;  // TRILLIONS
+                default: divisor = 1e6;      break;
+            }
+        }
+
+        // 18-month lookback window covers monthly publications with margin.
         datetime now = TimeGMT();
-        datetime from = now - (long)(86400 * 30 * 18);
+        datetime from = (datetime)((long)now - 86400L * 30L * 18L);
 
         MqlCalendarValue values[];
         int total = CalendarValueHistoryByEvent(m_cached_event_id, values, from, now);
         if(total <= 0) return 0;
 
-        // Filtrer : ne garder que les publications avec actual_value valide
-        // (HasValue() équivaut à `actual_value != LONG_MAX` dans la doc MQL5).
         int valid = 0;
         for(int i = 0; i < total; i++)
         {
-            if(values[i].HasActualValue())
-                valid++;
+            if(values[i].HasActualValue()) valid++;
         }
         if(valid == 0) return 0;
 
-        // Allocation et copie chrono ascendante des `n_releases` dernières
         int take = (n_releases < valid) ? n_releases : valid;
         ArrayResize(out_values, take);
         ArrayResize(out_times, take);
 
-        // Les MqlCalendarValue retournés sont déjà chrono ascendant (doc MQL5).
-        // On prend les `take` dernières.
+        // CalendarValueHistoryByEvent returns ascending order; copy the
+        // last 'take' entries while skipping invalid actuals.
         int written = 0;
         for(int i = total - 1; i >= 0 && written < take; i--)
         {
             if(!values[i].HasActualValue()) continue;
-            // actual_value est en 1e6 ; pour un % comme 3.7, on lit 3700000
-            out_values[take - 1 - written] = (double)values[i].actual_value / 1e6;
+            out_values[take - 1 - written] = (double)values[i].actual_value / divisor;
             out_times[take - 1 - written]  = values[i].time;
             written++;
         }
         return written;
     }
 
-    //--- Calcule unemp_rising : variation 3 mois > 0.
-    //--- Retourne true si OK, false si pas assez de data.
+    //--- Compute a "rising unemployment" flag from the 3-month diff.
     bool ComputeUnempRising(bool &out_rising)
     {
         double vals[];
@@ -133,14 +153,18 @@ public:
 };
 
 //+------------------------------------------------------------------+
-//| CMacroSourceFRED : récupère la dernière valeur d'une série FRED  |
-//| via WebRequest. Par défaut : T10Y2Y (10-Year Treasury Constant   |
-//| Maturity Minus 2-Year Treasury Constant Maturity).               |
+//| CMacroSourceFRED: fetch the latest observation for a FRED        |
+//| series via WebRequest. Default series: T10Y2Y (Treasury 10Y-2Y). |
+//|                                                                  |
+//| Uses the ALFRED endpoint (realtime_start parameter) so revised   |
+//| observations are anchored to their actual publication date and   |
+//| not the period date. This avoids a subtle look-ahead bias when   |
+//| the series is later revised retroactively.                       |
 //+------------------------------------------------------------------+
 class CMacroSourceFRED
 {
 private:
-    string m_series_id;     // T10Y2Y
+    string m_series_id;
     string m_api_key;
     string m_base_url;
 
@@ -157,7 +181,9 @@ public:
 
     bool HasApiKey() const { return StringLen(m_api_key) > 0; }
 
-    //--- Fetch la dernière observation. Retourne true et remplit `out_value`.
+    //--- Retrieve the latest observation. Performs up to
+    //--- FX_FRED_MAX_RETRIES attempts with FX_FRED_RETRY_BACKOFF ms
+    //--- between attempts to absorb transient timeouts.
     bool FetchLatest(double &out_value, datetime &out_obs_date)
     {
         if(!HasApiKey())
@@ -169,35 +195,46 @@ public:
                      + "?series_id=" + m_series_id
                      + "&api_key=" + m_api_key
                      + "&file_type=json"
+                     + "&realtime_start=2000-01-01"
+                     + "&realtime_end=9999-12-31"
                      + "&limit=1"
                      + "&sort_order=desc";
 
-        char post[], result[];
-        string response_headers;
-        ResetLastError();
-        int code = WebRequest("GET", url, NULL, NULL, 5000,
-                              post, 0, result, response_headers);
-        if(code == -1)
+        for(int attempt = 1; attempt <= FX_FRED_MAX_RETRIES; attempt++)
         {
-            PrintFormat("CMacroSourceFRED::WebRequest failed err=%d "
-                        "(check URL whitelist for %s)",
-                        GetLastError(), m_base_url);
-            return false;
+            char post[], result[];
+            string response_headers;
+            ResetLastError();
+            int code = WebRequest("GET", url, NULL, NULL, FX_FRED_TIMEOUT_MS,
+                                  post, 0, result, response_headers);
+            if(code == 200)
+            {
+                string body = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
+                return ParseLatestObservation(body, out_value, out_obs_date);
+            }
+
+            if(code == -1)
+            {
+                PrintFormat("CMacroSourceFRED::WebRequest err=%d "
+                            "(check URL whitelist for %s) attempt=%d/%d",
+                            GetLastError(), m_base_url,
+                            attempt, FX_FRED_MAX_RETRIES);
+            }
+            else
+            {
+                PrintFormat("CMacroSourceFRED::WebRequest HTTP %d attempt=%d/%d",
+                            code, attempt, FX_FRED_MAX_RETRIES);
+            }
+            if(attempt < FX_FRED_MAX_RETRIES)
+                Sleep(FX_FRED_RETRY_BACKOFF);
         }
-        if(code != 200)
-        {
-            PrintFormat("CMacroSourceFRED::WebRequest HTTP %d", code);
-            return false;
-        }
-        string body = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
-        return ParseLatestObservation(body, out_value, out_obs_date);
+        return false;
     }
 
 private:
-    //--- Parse le JSON FRED minimaliste : on cherche la première occurrence
-    //--- de "value":"X.XX" et "date":"YYYY-MM-DD" dans `body`.
-    //--- Format typique :
-    //---   {"observations":[{"date":"2026-04-23","value":"0.51",...}]}
+    //--- Minimal JSON extractor: locates the first "value":"..." and
+    //--- "date":"..." substrings in the FRED payload. Sufficient for
+    //--- the deterministic single-observation response we request.
     bool ParseLatestObservation(string body, double &out_value, datetime &out_date)
     {
         int idx_value = StringFind(body, "\"value\":\"");
@@ -207,7 +244,7 @@ private:
             Print("CMacroSourceFRED: cannot find value/date in JSON body");
             return false;
         }
-        // value
+        // Value
         int v_start = idx_value + StringLen("\"value\":\"");
         int v_end   = StringFind(body, "\"", v_start);
         if(v_end <= v_start) return false;
@@ -219,7 +256,7 @@ private:
         }
         out_value = StringToDouble(v_str);
 
-        // date
+        // Date
         int d_start = idx_date + StringLen("\"date\":\"");
         int d_end   = StringFind(body, "\"", d_start);
         if(d_end <= d_start) return false;

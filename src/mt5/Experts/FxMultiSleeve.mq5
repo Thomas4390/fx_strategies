@@ -1,144 +1,145 @@
 //+------------------------------------------------------------------+
 //| FxMultiSleeve.mq5                                                |
-//| EA orchestrateur de la stratégie FX Tri-Signaux (LaTeX § 2-13). |
-//| Mono-EA attaché à n'importe quel chart (typiquement EUR/USD M1).|
-//| Chaque sleeve gère son propre univers de paires.                 |
 //|                                                                  |
-//| Sleeves :                                                        |
-//|   1. MR Macro     (80%) — intraday 4 paires, VWAP+BB + macro    |
-//|   2. TS Momentum  (10%) — daily 3 paires, EMA20/50 + RSI(7)      |
-//|   3. RSI Daily    (10%) — daily 4 paires, RSI(14)                |
+//| Multi-sleeve FX expert advisor combining three independent       |
+//| trading systems behind a single shared risk manager:             |
 //|                                                                  |
-//| Overlay : vol-targeting global (target=0.28, max_lev=12),       |
-//| circuit-breaker DD activé à 15%, cap marge 70%, freshness        |
-//| macro 7 jours (cf. plan d'alignement MQL5 ↔ Python ↔ LaTeX).     |
+//|   1. MR Macro     (80%) - intraday VWAP / Bollinger band mean    |
+//|                           reversion, gated by a macro filter     |
+//|                           (4 majors equal-weighted on M1).       |
+//|   2. TS Momentum  (10%) - daily EMA cross + RSI confirmation     |
+//|                           (3 majors equal-weighted on D1).       |
+//|   3. RSI Daily    (10%) - daily RSI mean reversion               |
+//|                           (3-4 majors equal-weighted on D1).     |
+//|                                                                  |
+//| The risk manager applies a portfolio-wide vol-target leverage    |
+//| recomputed every UTC trading day, a peak-equity drawdown         |
+//| circuit breaker, and a margin-usage breaker for tail-risk        |
+//| protection.                                                      |
+//|                                                                  |
+//| One EA instance is attached to any chart; each sleeve manages    |
+//| its own pair universe and bar-detection logic so the chart       |
+//| symbol/timeframe is irrelevant to the active sleeves.            |
 //+------------------------------------------------------------------+
-#property copyright "fx_strategies port — Apogee Invest"
+#property copyright "FxMultiSleeve"
 #property version   "1.00"
 #property strict
 
-//--- Include FxCommon en premier pour que les enums (ESleeveID,
-//--- EMacroSourceMode) soient connus au moment de la déclaration des inputs.
 #include "..\Include\FxCommon.mqh"
 
 //============================================================ INPUTS
 
-// === Allocation & Risk ===
-input double Inp_AllocMRMacro      = 0.80;
-input double Inp_AllocTSMomentum   = 0.10;
-input double Inp_AllocRSIDaily     = 0.10;
-input double Inp_AllocH1Momentum   = 0.0;     // Phase D — sleeve H1 (default off)
-                                              // sum(MR+TS+RSI+H1) doit être 1.0
-// Phase M.7 (2026-05-05) : protections RÉACTIVÉES pour réalisme live.
-// Lev=64 maintenu (Phase I) → DD-cap + margin-cap nécessaires pour bornes.
-input bool   Inp_EnableDDCap       = true;    // Phase M.7: ACTIVÉ (was false).
-                                              // Circuit-breaker tail-risk LaTeX § 13.3.
-                                              // Lev=64 sans cap = blow-up risk live.
-input double Inp_DDCap             = 0.20;    // Phase M.7: 20% (was 0.30) plus conservateur.
-input bool   Inp_ResetDDState      = false;
-input bool   Inp_EnableMarginCap   = true;    // Phase M.7: ACTIVÉ (was false).
-                                              // Cap marge LaTeX § 13.2.
-input double Inp_MarginCapPct      = 0.50;    // Phase M.7: 50% (was 0.70) plus conservateur.
+// === Allocation & Risk =============================================
+input double Inp_AllocMRMacro       = 0.80;     // sum across all sleeves must equal 1.0
+input double Inp_AllocTSMomentum    = 0.10;
+input double Inp_AllocRSIDaily      = 0.10;
+input double Inp_AllocH1Momentum    = 0.0;      // optional sleeve, off by default
 
-// === Vol-targeting global ===
-// Phase I (2026-05-05) : leverage uplift validé walk-forward N=5.
-// Pré-Phase I : vt=0.28, lev=12, Sharpe 1.44, CAGR 9.18%, DD 7.77%.
-// Phase I C1  : vt=0.75, lev=64, Sharpe 1.38, CAGR 21.82% OOS_med, DD 13.0%.
-// Anti-overfit confirmé : PSR 100%, DSR 82.7% (235 trials), Bootstrap P5 +0.70.
-input double Inp_GlobalTargetVol   = 0.75;
-input double Inp_GlobalMaxLeverage = 64.0;
-input double Inp_GlobalVolFloor    = 0.02;
+// Tail-risk protections. Both breakers are active by default and
+// required when running with elevated leverage targets.
+input bool   Inp_EnableDDCap        = true;
+input double Inp_DDCap              = 0.20;     // peak-equity drawdown threshold
+input bool   Inp_ResetDDState       = false;    // wipe persisted DD state on init
+input bool   Inp_EnableMarginCap    = true;
+input double Inp_MarginCapPct       = 0.50;     // margin / equity threshold
 
-// === Sleeve 1 — MR Macro (4 paires equal-weight, LaTeX § 03) ===
-input string Inp_MR_Pairs          = "EURUSD,GBPUSD,USDJPY,USDCAD";
-input int    Inp_MR_BBWindow       = 80;
-input double Inp_MR_BBAlpha        = 5.0;
-input double Inp_MR_TPStop         = 0.006;
-input double Inp_MR_SLStop         = 0.005;
-input int    Inp_MR_SessionStart   = 8;       // London full + early NY (Phase E.1)
-                                              // ex 6 ; 8-16 UTC validé N=5 OOS :
-                                              // ΔSharpe_med +0.27 ΔDD -0.91 pp.
-input int    Inp_MR_SessionEnd     = 16;
-input int    Inp_MR_TimeStopHours  = 6;
-input int    Inp_MR_ForcedCloseHr  = 21;
-input double Inp_MR_SpreadThresh   = 0.5;
-input int    Inp_MR_SlippageBps    = 15;       // LaTeX § 03 — 15 bps intraday
-input bool   Inp_MR_DisableMacroFilter = false; // Phase B.4 bypass macro_ok
-                                              // (force MacroOk()=true). Off
-                                              // par défaut, à utiliser pour
-                                              // mesurer l'impact du filtre.
+// === Global vol-targeting overlay ==================================
+input double Inp_GlobalTargetVol    = 0.75;
+input double Inp_GlobalMaxLeverage  = 64.0;
+input double Inp_GlobalVolFloor     = 0.02;
 
-// === Sleeve 2 — TS Momentum ===
-input string Inp_TS_Pairs          = "EURUSD,GBPUSD,USDJPY";
-input int    Inp_TS_FastEMA        = 20;
-input int    Inp_TS_SlowEMA        = 50;
-input int    Inp_TS_RSIPeriod      = 7;
-input int    Inp_TS_RSILow         = 40;
-input int    Inp_TS_RSIHigh        = 60;
-input double Inp_TS_TargetVol      = 0.10;
-input double Inp_TS_MaxLeverage    = 3.0;
-input int    Inp_TS_SlippageBps    = 10;       // LaTeX § 04 — 10 bps daily
+// === Sleeve 1 - MR Macro ===========================================
+input string Inp_MR_Pairs           = "EURUSD,GBPUSD,USDJPY,USDCAD";
+input int    Inp_MR_BBWindow        = 80;
+input double Inp_MR_BBAlpha         = 5.0;
+input double Inp_MR_TPStop          = 0.006;
+input double Inp_MR_SLStop          = 0.005;
+input int    Inp_MR_SessionStart    = 8;        // UTC trading window start
+input int    Inp_MR_SessionEnd      = 16;       // UTC trading window end (exclusive)
+input int    Inp_MR_TimeStopHours   = 6;        // per-trade time stop
+input int    Inp_MR_ForcedCloseHr   = 21;       // daily forced flat (UTC)
+input double Inp_MR_SpreadThresh    = 0.5;      // 10Y-2Y spread threshold
+input int    Inp_MR_SlippageBps     = 15;       // intraday slippage (bps per side)
+input bool   Inp_MR_DisableMacroFilter = false; // diagnostic bypass for macro_ok
+input bool   Inp_MR_NewsFilterEnabled  = true;  // skip entries near high-impact USD events
 
-// === Sleeve 3 — RSI Daily ===
-input string Inp_RSI_Pairs         = "EURUSD,GBPUSD,USDCAD";  // Phase E.3:
-                                              // USDJPY retiré (drag -295 USD
-                                              // sur 5.4y, validé N=5 OOS
-                                              // ΔSharpe_med +0.06).
-input int    Inp_RSI_Period        = 14;
-input double Inp_RSI_Oversold      = 25.0;
-input double Inp_RSI_Overbought    = 75.0;
-input double Inp_RSI_ExitMid       = 50.0;
-input int    Inp_RSI_SlippageBps   = 10;       // LaTeX § 05 — 10 bps daily
+// === Sleeve 2 - TS Momentum ========================================
+input string Inp_TS_Pairs           = "EURUSD,GBPUSD,USDJPY";
+input int    Inp_TS_FastEMA         = 20;
+input int    Inp_TS_SlowEMA         = 50;
+input int    Inp_TS_RSIPeriod       = 7;
+input int    Inp_TS_RSILow          = 40;
+input int    Inp_TS_RSIHigh         = 60;
+input double Inp_TS_TargetVol       = 0.10;
+input double Inp_TS_MaxLeverage     = 3.0;
+input int    Inp_TS_SlippageBps     = 10;       // daily slippage (bps per side)
 
-// === Sleeve 4 — H1 Momentum (Phase D) ===
-input string Inp_H1_Pairs          = "EURUSD,GBPUSD,USDJPY";
-input int    Inp_H1_FastEMA        = 20;
-input int    Inp_H1_SlowEMA        = 50;
-input int    Inp_H1_RSIPeriod      = 7;
-input int    Inp_H1_RSILow         = 40;
-input int    Inp_H1_RSIHigh        = 60;
-input int    Inp_H1_ATRPeriod      = 14;
-input double Inp_H1_ATRMultSL      = 2.0;
-input double Inp_H1_TargetVol      = 0.10;
-input double Inp_H1_MaxLeverage    = 3.0;
-input int    Inp_H1_SlippageBps    = 12;       // 12 bps H1 (entre TS daily 10
-                                              // et MR M1 15 bps)
+// === Sleeve 3 - RSI Daily ==========================================
+input string Inp_RSI_Pairs          = "EURUSD,GBPUSD,USDCAD";
+input int    Inp_RSI_Period         = 14;
+input double Inp_RSI_Oversold       = 25.0;
+input double Inp_RSI_Overbought     = 75.0;
+input double Inp_RSI_ExitMid        = 50.0;
+input int    Inp_RSI_SlippageBps    = 10;       // daily slippage (bps per side)
+input int    Inp_RSI_TimeStopDays   = 21;       // 0 = disabled
 
-// === Phase M.7 — Commission modelling (2026-05-05) ===
-// Per-side commission in basis points. Typical OANDA Standard / IC Markets
-// Raw spread ECN: 0.5-1.0 USD per micro lot per side ≈ 1-2 bps on EUR/USD.
-// Applied as additional slippage shift on SL/TP in all 3 sleeves.
-// Default 2 bps = conservative (high-end retail ECN broker).
-input double Inp_CommissionBpsPerSide = 2.0;
+// === Sleeve 4 - H1 Momentum (optional) =============================
+input string Inp_H1_Pairs           = "EURUSD,GBPUSD,USDJPY";
+input int    Inp_H1_FastEMA         = 20;
+input int    Inp_H1_SlowEMA         = 50;
+input int    Inp_H1_RSIPeriod       = 7;
+input int    Inp_H1_RSILow           = 40;
+input int    Inp_H1_RSIHigh          = 60;
+input int    Inp_H1_ATRPeriod       = 14;
+input double Inp_H1_ATRMultSL       = 2.0;
+input double Inp_H1_TargetVol       = 0.10;
+input double Inp_H1_MaxLeverage     = 3.0;
+input int    Inp_H1_SlippageBps     = 12;
 
-// === Operational ===
-input string Inp_SymbolSuffix      = ".c";    // Broker-specific (ECN/Raw uses ".c"; change for other brokers)
-input int    Inp_MagicMR           = 831;
-input int    Inp_MagicTS           = 832;
-input int    Inp_MagicRSI          = 833;
-input int    Inp_MagicH1           = 834;     // Phase D
-input bool   Inp_LogVerbose        = false;
-input bool   Inp_LogToFile         = true;
-input bool   Inp_ExportDeals       = false;   // Dump per-deal CSV in OnTester
-                                              // → deals_<ts>.csv en FILE_COMMON.
-                                              // Phase B trade inspection (Plan CAGR).
-input string Inp_MacroCacheFile    = "macro_cache.csv";
-input bool   Inp_MacroUseCommon    = true;     // FILE_COMMON ou MQL5/Files
-input int    Inp_MacroMaxAgeHours  = 168;      // LaTeX § 13.1 — freshness 7 jours
-input int    Inp_DailyRecomputeHr  = 21;       // heure UTC de recompute daily
+// === Execution costs ===============================================
+// Per-side commission in basis points. Calibrate to the live broker:
+//   * Spread-only (e.g. OANDA Standard): 0.0
+//   * Raw-spread + commission (e.g. OANDA Core, IC Markets Raw,
+//     Pepperstone Razor): typically 3.0 - 5.0 on EUR/USD.
+input double Inp_CommissionBpsPerSide = 5.0;
 
-// === Macro source mode ===
-//   FILE    : lit macro_cache.csv (bridge/fx_macro_bridge.py, 1 ligne live)
-//   NATIVE  : Calendar MT5 (chômage US) + WebRequest FRED (spread 10Y-2Y) — live only
-//   HYBRID  : essaie NATIVE, fallback FILE
-//   HISTORY : lit macro_history.csv (bridge/fx_macro_history.py, time-indexed) — backtest
-//   AUTO    : recommandé. MQLInfoInteger(MQL_TESTER) → HISTORY en tester, NATIVE en live
-// Pré-requis NATIVE : URL FRED whitelistée dans Outils → Options → EA →
-//   "Allow WebRequest for listed URL" → https://api.stlouisfed.org
-//   Et un fichier `fred_api_key.txt` dans Common/Files contenant la clé.
-// Pré-requis HISTORY/AUTO-en-tester : `macro_history.csv` généré au préalable
-//   via `python src/mt5/bridge/fx_macro_history.py` (couvre la période de backtest).
-input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_AUTO;  // dispatch tester vs live
+// Per-night swap drag in basis points, applied to overnight holdings
+// (TS Momentum and RSI Daily). Models the cumulative funding cost the
+// strategy tester does not always reproduce when historical swap data
+// is missing or outdated.
+input double Inp_SwapBpsPerNight     = 0.5;
+
+// === Operational ===================================================
+input string Inp_SymbolSuffix       = ".c";    // broker-specific symbol suffix
+input int    Inp_MagicMR            = 831;
+input int    Inp_MagicTS            = 832;
+input int    Inp_MagicRSI           = 833;
+input int    Inp_MagicH1            = 834;
+input bool   Inp_LogVerbose         = false;
+input bool   Inp_LogToFile          = true;
+input bool   Inp_ExportDeals        = false;   // dump per-deal CSV in OnTester
+input string Inp_MacroCacheFile     = "macro_cache.csv";
+input bool   Inp_MacroUseCommon     = true;
+input int    Inp_MacroMaxAgeHours   = 168;     // freshness window for cached macro state
+input int    Inp_DailyRecomputeHr   = 21;      // UTC hour for daily portfolio recompute
+
+// === Macro source mode =============================================
+//   FILE    : single-row CSV produced by an external bridge (legacy).
+//   NATIVE  : MT5 calendar + FRED API via WebRequest (live only).
+//   HYBRID  : NATIVE first, fallback to FILE on failure.
+//   HISTORY : multi-row CSV pre-indexed by release date (tester only).
+//   AUTO    : recommended; HISTORY in the tester, NATIVE when live.
+//
+// Prerequisites for NATIVE mode:
+//   * Whitelist https://api.stlouisfed.org under
+//     Tools -> Options -> Expert Advisors -> "Allow WebRequest".
+//   * Place an API key in the file referenced by Inp_FREDApiKeyFile
+//     (default: <Common>/Files/fred_api_key.txt).
+//
+// Prerequisites for HISTORY (and AUTO inside the tester):
+//   * Generate macro_history.csv covering the backtest window via the
+//     companion bridge script.
+input EMacroSourceMode Inp_MacroSourceMode      = MACRO_SOURCE_AUTO;
 input string           Inp_FREDApiKeyFile       = "fred_api_key.txt";
 input bool             Inp_FREDKeyUseCommon     = true;
 input string           Inp_FREDSeriesId         = "T10Y2Y";
@@ -147,7 +148,6 @@ input bool             Inp_MacroHistoryUseCommon = true;
 
 //============================================================ INCLUDES
 
-// FxCommon est déjà inclus en haut du fichier (avant les inputs).
 #include "..\Include\FxLogger.mqh"
 #include "..\Include\FxRiskManager.mqh"
 #include "..\Include\FxMacroFilter.mqh"
@@ -166,11 +166,10 @@ CSleeveTSMomentum  g_sleeve_ts;
 CSleeveRSIDaily    g_sleeve_rsi;
 CSleeveH1Momentum  g_sleeve_h1;
 
-datetime           g_last_d1_bar     = 0;
+datetime           g_last_d1_bar         = 0;
 datetime           g_last_macro_age_warn = 0;
 datetime           g_last_margin_check   = 0;
-datetime           g_session_start   = 0;     // Captured at OnInit() to compute years
-                                              // window in OnTester() (robust to 0-deal runs)
+datetime           g_session_start       = 0;  // captured at OnInit, used for OnTester window length
 
 //============================================================ ON INIT
 
@@ -178,9 +177,8 @@ int OnInit()
 {
     g_logger.Init(Inp_LogVerbose, Inp_LogToFile);
     g_logger.Info("INIT", StringFormat("FxMultiSleeve start build %s", __DATE__));
-    g_session_start = TimeCurrent();   // tester start_date in backtest, live time otherwise
+    g_session_start = TimeCurrent();
 
-    // Validation des allocations
     if(!g_risk.Init(Inp_AllocMRMacro, Inp_AllocTSMomentum, Inp_AllocRSIDaily,
                     Inp_GlobalTargetVol, Inp_GlobalMaxLeverage, Inp_GlobalVolFloor,
                     Inp_EnableDDCap, Inp_DDCap, Inp_ResetDDState,
@@ -196,24 +194,26 @@ int OnInit()
                  Inp_MR_SpreadThresh,
                  Inp_FREDApiKeyFile, Inp_FREDKeyUseCommon,
                  Inp_MacroHistoryFile, Inp_MacroHistoryUseCommon,
-                 Inp_FREDSeriesId, Inp_MR_DisableMacroFilter);
+                 Inp_FREDSeriesId, Inp_MR_DisableMacroFilter,
+                 Inp_MR_NewsFilterEnabled);
 
-    // Explicit diagnostic so the user can verify the actual input mode (vs the
-    // mode that AUTO resolves to). MQL_TESTER=1 inside Strategy Tester, 0 live.
+    // Diagnostic: surface the actual macro mode resolved at runtime.
     g_logger.Info("INIT",
         StringFormat("MacroSource: input=%s resolved=%s tester=%d",
                      EnumToString(Inp_MacroSourceMode),
                      EnumToString(g_macro.ResolveEffectiveMode()),
                      (int)MQLInfoInteger(MQL_TESTER)));
     g_logger.Info("INIT",
-        StringFormat("Inputs: SymbolSuffix='%s' Alloc=%.2f/%.2f/%.2f TargetVol=%.2f MaxLev=%.1f",
+        StringFormat("Inputs: SymbolSuffix='%s' Alloc=%.2f/%.2f/%.2f "
+                     "TargetVol=%.2f MaxLev=%.1f",
                      Inp_SymbolSuffix,
                      Inp_AllocMRMacro, Inp_AllocTSMomentum, Inp_AllocRSIDaily,
                      Inp_GlobalTargetVol, Inp_GlobalMaxLeverage));
 
     if(!g_macro.Refresh())
         g_logger.Warn("INIT",
-            StringFormat("Macro initial load failed (mode=%s); sleeve 1 disabled until refresh",
+            StringFormat("Macro initial load failed (mode=%s); MR sleeve "
+                         "disabled until next refresh",
                          EnumToString(Inp_MacroSourceMode)));
     else
         g_logger.Info("INIT",
@@ -242,7 +242,8 @@ int OnInit()
         return INIT_FAILED;
     }
 
-    // Timer 1 minute (refresh macro, monitoring DD, déclenche daily)
+    // 60-second timer drives macro refresh, drawdown monitoring, and
+    // the daily portfolio recompute trigger.
     EventSetTimer(60);
     g_logger.Info("INIT", "EA ready");
     return INIT_SUCCEEDED;
@@ -265,11 +266,12 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-    // Circuit-breaker DD à chaque tick
+    // Drawdown breaker is rate-limited internally (1 Hz) so calling it
+    // here on every tick stays cheap.
     g_risk.CheckDDCircuitBreaker(g_logger);
     if(g_risk.IsDDLocked()) return;
 
-    // Cap marge : check max toutes les 30s pour éviter le spam de log
+    // Margin usage check is throttled to once per 30 seconds.
     datetime now = TimeGMT();
     if(now - g_last_margin_check >= 30)
     {
@@ -277,15 +279,14 @@ void OnTick()
         g_last_margin_check = now;
     }
 
-    // NewBar M1 multi-pair : le sleeve MR Macro itère sur ses 4 paires
-    // et détecte ses propres nouvelles bars (EA peut être attaché à
-    // n'importe quel chart).
+    // Multi-pair new-bar detection happens inside the sleeve so the EA
+    // can be attached to any chart symbol/timeframe.
     g_sleeve_mr.OnNewBarM1(g_macro, g_risk);
 
-    // Time-stops intraday + close forcé 21h UTC (vérif fréquente)
+    // Time stops and the daily forced close run on every tick to stay
+    // responsive to the deadline crossing.
     g_sleeve_mr.CheckIntradayExits();
 
-    // H1 momentum (Phase D) : détection new H1 bar en multi-pair.
     if(Inp_AllocH1Momentum > 0.0)
         g_sleeve_h1.OnNewBarH1Multi(g_risk);
 }
@@ -294,32 +295,32 @@ void OnTick()
 
 void OnTimer()
 {
-    // Refresh macro cache (toutes les minutes)
     g_macro.Refresh();
     if(!g_macro.IsValid())
     {
-        // Politique : fermer sleeve 1 si cache > 24h
+        // Cache stale: close MR Macro positions until the source returns
+        // a fresh value. Throttle the warning to one per hour to keep
+        // the log readable during long outages.
         datetime now = TimeGMT();
         if(now - g_last_macro_age_warn > 3600)
         {
             g_logger.Warn("MACRO",
-                StringFormat("Cache stale (age=%ds) — closing MR Macro positions",
+                StringFormat("Cache stale (age=%ds) - closing MR Macro positions",
                              g_macro.AgeSeconds()));
             g_last_macro_age_warn = now;
         }
         g_sleeve_mr.CloseAll("macro cache stale");
     }
 
-    // Détecte le passage à un nouveau jour UTC après l'heure de recompute
+    // Detect the UTC day rollover past the recompute hour and trigger
+    // the daily portfolio update + daily sleeves.
     datetime now = TimeGMT();
     datetime today = FloorToDayUTC(now);
     int hour_utc = (int)((now / 3600) % 24);
 
     if(today != g_last_d1_bar && hour_utc >= Inp_DailyRecomputeHr)
     {
-        // Recompute le levier global (vol-targeting)
         g_risk.RecomputeGlobalLeverage(g_logger);
-        // Déclenche les sleeves daily
         g_sleeve_ts.OnNewBarD1(g_risk);
         g_sleeve_rsi.OnNewBarD1(g_risk);
         g_last_d1_bar = today;
@@ -336,7 +337,6 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
 {
     if(trans.type == TRADE_TRANSACTION_DEAL_ADD)
     {
-        // Optionnel : logger les deals pour audit
         if(Inp_LogVerbose)
         {
             string sym = trans.symbol;
@@ -350,22 +350,22 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
 
 //============================================================ ON TESTER
 //
-// Custom optimization metric : computes CAGR over the test window and
-// emits a structured `[OPTIM]` log line with all key inputs + metrics.
-// MT5 distributes optimization runs across local agents (parallel cores)
-// and each agent's log accumulates these lines — `scripts/optimization/
-// run_optimization_cli.py` parses them post-run to rebuild the surface.
+// Custom optimization metric. Computes a CAGR from initial deposit and
+// final equity, plus a structured "[OPTIM]" log line summarising the
+// run. The strategy tester aggregates this output across optimisation
+// agents; downstream tooling parses the log lines and the optional
+// CSV dump to rebuild the parameter surface.
 //
-// Returned value drives `OptimizationCriterion=6` (Custom max).
+// The returned value drives OptimizationCriterion=6 (custom maximum).
 double OnTester()
 {
     double initial = TesterStatistics(STAT_INITIAL_DEPOSIT);
     double net     = TesterStatistics(STAT_PROFIT);
     double dd_pct  = TesterStatistics(STAT_EQUITY_DDREL_PERCENT);
-    // Note: STAT_SHARPE_RATIO is capped at -5.00 by MT5 when the underlying
-    // equity-curve Sharpe is -inf or below floor (configs that wipe equity
-    // very fast). Treat sharpe == -5.0 as a sentinel "config plante" rather
-    // than a real metric. Sortino/Calmar can complement if needed.
+
+    // STAT_SHARPE_RATIO is clamped at -5.0 by MT5 when the equity-curve
+    // Sharpe is undefined or below the floor (catastrophic configs).
+    // Treat -5.0 as a sentinel rather than a real metric downstream.
     double sharpe  = TesterStatistics(STAT_SHARPE_RATIO);
     double pf      = TesterStatistics(STAT_PROFIT_FACTOR);
     double rf      = TesterStatistics(STAT_RECOVERY_FACTOR);
@@ -373,16 +373,14 @@ double OnTester()
 
     double final_eq = initial + net;
 
-    // Window in years computed from session timestamps captured at OnInit()
-    // (= tester start_date in backtest) and TimeCurrent() at OnTester
-    // (= tester end_date). Robust to 0-deal runs and avoids drift when only
-    // a few deals fire near edges of the window.
+    // Window length in years from the OnInit timestamp to OnTester. In
+    // backtest these correspond to the configured FromDate / ToDate.
     double years = 1.0;
     if(g_session_start > 0)
     {
         datetime now = TimeCurrent();
         if(now > g_session_start)
-            years = (double)(now - g_session_start) / 31557600.0;  // s/an
+            years = (double)(now - g_session_start) / 31557600.0;
     }
     if(years <= 0.01) years = 1.0;
 
@@ -396,16 +394,15 @@ double OnTester()
                 Inp_GlobalTargetVol, Inp_GlobalMaxLeverage, Inp_GlobalVolFloor,
                 cagr, dd_pct, sharpe, pf, rf, trades, net, years);
 
-    // En mode optimization MT5 filtre les Print() côté agents → fallback sur
-    // une écriture CSV en FILE_COMMON. Chaque agent ajoute une ligne ; le
-    // FILE_SHARE_WRITE + le lock interne MT5 sérialisent les writes.
+    // Optimisation runs filter Print() output across agents, so mirror
+    // each result to a shared CSV for offline aggregation. Each agent
+    // appends one row; FILE_SHARE_WRITE serialises concurrent writes.
     int h = FileOpen("optim_results.csv",
         FILE_READ | FILE_WRITE | FILE_COMMON | FILE_TXT | FILE_SHARE_READ |
         FILE_SHARE_WRITE, ',', CP_UTF8);
     if(h != INVALID_HANDLE)
     {
         FileSeek(h, 0, SEEK_END);
-        // Header automatique si fichier vide
         if(FileTell(h) == 0)
             FileWrite(h, "ts_utc", "target_vol", "max_lev", "vol_floor",
                       "cagr", "equity_dd_pct", "sharpe", "profit_factor",
@@ -426,9 +423,9 @@ double OnTester()
         FileClose(h);
     }
 
-    // Per-deal CSV export (Phase B trade inspection). Disabled by default to
-    // avoid overhead during optimization sweeps where only aggregate metrics
-    // matter. Enable via --input Inp_ExportDeals=true on a single backtest run.
+    // Optional per-deal CSV dump for trade-level inspection. Disabled
+    // by default to avoid overhead during sweeps where only aggregate
+    // metrics matter; enable on a single run via the input override.
     if(Inp_ExportDeals)
     {
         string ts_run = TimeToString(TimeGMT(), TIME_DATE | TIME_MINUTES);
@@ -484,7 +481,7 @@ double OnTester()
                 }
             }
             FileClose(hd);
-            PrintFormat("[OPTIM] deals exported → %s", deals_file);
+            PrintFormat("[OPTIM] deals exported -> %s", deals_file);
         }
     }
 

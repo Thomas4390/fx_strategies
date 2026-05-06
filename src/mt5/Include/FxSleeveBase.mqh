@@ -1,6 +1,10 @@
 //+------------------------------------------------------------------+
 //| FxSleeveBase.mqh                                                 |
-//| Classe abstraite commune aux trois sleeves.                      |
+//|                                                                  |
+//| Abstract base class shared by all trading sleeves. Provides a    |
+//| uniform lifecycle (Init/Shutdown), event hooks (new bar M1/D1),  |
+//| and a forced-close entry point. Concrete sleeves override the    |
+//| relevant methods.                                                |
 //+------------------------------------------------------------------+
 #ifndef __FX_SLEEVE_BASE_MQH__
 #define __FX_SLEEVE_BASE_MQH__
@@ -8,17 +12,16 @@
 #include "FxCommon.mqh"
 #include "FxLogger.mqh"
 
-//--- Forward decls (pour briser les dépendances circulaires)
+// Forward declarations to break circular dependencies.
 class CMacroFilter;
 class CRiskManager;
 
 //+------------------------------------------------------------------+
-//| CSleeveBase : interface commune.                                 |
+//| CSleeveBase: shared interface for MR, TS, and RSI sleeves.       |
 //|                                                                  |
-//| Les méthodes virtuelles doivent être surchargées par les classes |
-//| concrètes (CSleeveMRMacro, CSleeveTSMomentum, CSleeveRSIDaily).  |
-//| Note MQL5 : pas de "= 0" pour méthode pure ; on utilise un       |
-//| corps vide par défaut.                                            |
+//| MQL5 does not support pure virtual ("= 0") declarations so the   |
+//| default implementations are empty bodies that derived classes    |
+//| override as needed.                                              |
 //+------------------------------------------------------------------+
 class CSleeveBase
 {
@@ -32,16 +35,16 @@ public:
     int    Magic() const { return m_magic; }
     string Name()  const { return m_name; }
 
-    //--- Cycle de vie
+    // Lifecycle
     virtual bool Init() { return true; }
     virtual void Shutdown() {}
 
-    //--- Hooks par fréquence
+    // Event hooks (one per timeframe / responsibility)
     virtual void OnNewBarM1(CMacroFilter &macro, CRiskManager &risk) {}
     virtual void OnNewBarD1(CRiskManager &risk) {}
     virtual void CheckIntradayExits() {}
 
-    //--- Fermeture forcée
+    // Forced shutdown (drawdown breaker, margin breaker, manual override).
     virtual int  CloseAll(string reason) { return 0; }
 };
 

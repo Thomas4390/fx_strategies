@@ -1,12 +1,16 @@
 //+------------------------------------------------------------------+
 //| FxLogger.mqh                                                     |
-//| Logging unifié vers Print + fichier CSV optionnel.               |
+//|                                                                  |
+//| Unified logging facade: writes every entry to Print() and        |
+//| optionally to a tagged CSV file. Levels: INFO / WARN / ERROR /   |
+//| DEBUG. Debug entries are suppressed unless verbose mode is on.   |
 //+------------------------------------------------------------------+
 #ifndef __FX_LOGGER_MQH__
 #define __FX_LOGGER_MQH__
 
 //+------------------------------------------------------------------+
-//| Logger simple. Tag chaque ligne avec [SLEEVE] ou [GLOBAL].       |
+//| Lightweight logger. Each line is tagged with the originating     |
+//| component name (e.g. "INIT", "RISK", "MR_Macro").                |
 //+------------------------------------------------------------------+
 class CFxLogger
 {
@@ -45,21 +49,9 @@ public:
         }
     }
 
-    void Info(string tag, string msg)
-    {
-        Write("INFO", tag, msg);
-    }
-
-    void Warn(string tag, string msg)
-    {
-        Write("WARN", tag, msg);
-    }
-
-    void Error(string tag, string msg)
-    {
-        Write("ERROR", tag, msg);
-    }
-
+    void Info(string tag, string msg)  { Write("INFO",  tag, msg); }
+    void Warn(string tag, string msg)  { Write("WARN",  tag, msg); }
+    void Error(string tag, string msg) { Write("ERROR", tag, msg); }
     void Debug(string tag, string msg)
     {
         if(!m_verbose) return;
@@ -81,7 +73,7 @@ private:
     }
 };
 
-//--- Logger global (instancié dans l'EA principal)
+//--- Singleton logger consumed by every component.
 CFxLogger g_logger;
 
 #endif // __FX_LOGGER_MQH__

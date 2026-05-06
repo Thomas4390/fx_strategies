@@ -1,6 +1,8 @@
 //+------------------------------------------------------------------+
 //| FxTradeHelpers.mqh                                               |
-//| Wrappers CTrade + sanity checks (lot normalization, stops level).|
+//|                                                                  |
+//| Lot normalization, stops-level enforcement, risk-based position  |
+//| sizing, and bulk position closing utilities used by every sleeve.|
 //+------------------------------------------------------------------+
 #ifndef __FX_TRADE_HELPERS_MQH__
 #define __FX_TRADE_HELPERS_MQH__
@@ -9,7 +11,8 @@
 #include "FxCommon.mqh"
 
 //+------------------------------------------------------------------+
-//| Normalise un volume au step broker, bornée à [min, max].          |
+//| Normalize a raw lot size to the broker volume step, clamped to   |
+//| the [SYMBOL_VOLUME_MIN, SYMBOL_VOLUME_MAX] interval.             |
 //+------------------------------------------------------------------+
 double NormalizeLots(string symbol, double raw_lots)
 {
@@ -24,8 +27,11 @@ double NormalizeLots(string symbol, double raw_lots)
 }
 
 //+------------------------------------------------------------------+
-//| S'assure que SL/TP respectent SYMBOL_TRADE_STOPS_LEVEL.          |
-//| Retourne le SL ajusté.                                           |
+//| Clamp a stop level so it respects SYMBOL_TRADE_STOPS_LEVEL plus  |
+//| a safety cushion, then normalize to the symbol's price digits.   |
+//|                                                                  |
+//| Some brokers raise SYMBOL_TRADE_STOPS_LEVEL during news events.  |
+//| The cushion absorbs that change without rejecting the order.     |
 //+------------------------------------------------------------------+
 double EnforceStopLevel(string symbol, double price, double stop,
                         ENUM_ORDER_TYPE type, bool is_sl)
@@ -33,24 +39,23 @@ double EnforceStopLevel(string symbol, double price, double stop,
     double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
     long stops_level = SymbolInfoInteger(symbol, SYMBOL_TRADE_STOPS_LEVEL);
     double min_dist = stops_level * point;
-    if(min_dist <= 0.0) return stop;
+    if(min_dist <= 0.0) min_dist = FX_STOPS_SAFETY_POINTS * point;
+    else                min_dist += FX_STOPS_SAFETY_POINTS * point;
 
     if(type == ORDER_TYPE_BUY)
     {
         if(is_sl)
         {
-            // SL doit être < price - min_dist
             double max_sl = price - min_dist - point;
             if(stop > max_sl) stop = max_sl;
         }
         else
         {
-            // TP doit être > price + min_dist
             double min_tp = price + min_dist + point;
             if(stop < min_tp) stop = min_tp;
         }
     }
-    else // SELL
+    else
     {
         if(is_sl)
         {
@@ -68,10 +73,10 @@ double EnforceStopLevel(string symbol, double price, double stop,
 }
 
 //+------------------------------------------------------------------+
-//| Calcule la taille en lots pour un risque monétaire donné.        |
+//| Translate a monetary risk budget into a normalized lot size.     |
 //|                                                                  |
-//| risk_money       : montant à risquer (devise compte)             |
-//| sl_distance_price: distance prix-SL en unités de prix             |
+//|   risk_money        : risk budget in account currency            |
+//|   sl_distance_price : stop distance in price units (e.g. 0.0050) |
 //+------------------------------------------------------------------+
 double LotsForRisk(string symbol, double risk_money, double sl_distance_price)
 {
@@ -85,7 +90,9 @@ double LotsForRisk(string symbol, double risk_money, double sl_distance_price)
 }
 
 //+------------------------------------------------------------------+
-//| Ferme toutes les positions portant un magic donné.               |
+//| Close every open position carrying the given magic number.      |
+//| Iterates in reverse order so the index remains valid as          |
+//| positions disappear from the list.                               |
 //+------------------------------------------------------------------+
 int CloseAllByMagic(int magic, string reason = "")
 {
@@ -106,6 +113,46 @@ int CloseAllByMagic(int magic, string reason = "")
         PrintFormat("CloseAllByMagic(%d): closed %d positions (%s)",
                     magic, closed, reason);
     return closed;
+}
+
+//+------------------------------------------------------------------+
+//| Find the open position for (magic, symbol). Returns 0 if none.  |
+//+------------------------------------------------------------------+
+ulong FindPositionByMagicSymbol(int magic, string symbol)
+{
+    int total = PositionsTotal();
+    for(int i = 0; i < total; i++)
+    {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket == 0) continue;
+        if(PositionGetInteger(POSITION_MAGIC) != magic) continue;
+        if(PositionGetString(POSITION_SYMBOL) != symbol) continue;
+        return ticket;
+    }
+    return 0;
+}
+
+//+------------------------------------------------------------------+
+//| Convert per-side basis points to a fractional price shift.       |
+//|     (slip_bps + commission_bps) / 10000.                         |
+//+------------------------------------------------------------------+
+double SlippageFraction(int slip_bps, double commission_bps)
+{
+    return ((double)slip_bps + commission_bps) / 10000.0;
+}
+
+//+------------------------------------------------------------------+
+//| Apply round-trip slippage and (optional) overnight swap drag to  |
+//| a sizing multiplier. Used by sleeves to pre-pay execution costs  |
+//| that the strategy tester does not deduct on non-SL/TP exits.     |
+//+------------------------------------------------------------------+
+double SizingDrag(double slip_pct, double swap_bps_per_night,
+                  double avg_nights_held)
+{
+    double swap_drag_pct = (swap_bps_per_night * avg_nights_held) / 10000.0;
+    double drag = 1.0 - 2.0 * slip_pct - swap_drag_pct;
+    if(drag < FX_HEALTH_FLOOR_DRAG) drag = FX_HEALTH_FLOOR_DRAG;
+    return drag;
 }
 
 #endif // __FX_TRADE_HELPERS_MQH__

@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
 //| FxSleeveTSMomentum.mqh                                           |
-//| Sleeve 2 — Time-Series Momentum daily multi-paires.              |
 //|                                                                  |
-//| Source de vérité : src/strategies/daily_momentum.py              |
-//|   fast_ema=20, slow_ema=50, rsi_period=7                          |
-//|   LONG : EMA20 > EMA50 AND RSI(7) < 60                            |
-//|   SHORT : EMA20 < EMA50 AND RSI(7) > 40                           |
-//|   Sortie : inversion du critère                                   |
-//|   Vol target par paire : lev = min(0.10 / max(σ21, 0.01), 3.0)    |
-//|   Paires : EURUSD, GBPUSD, USDJPY (3 paires equal-weight)         |
+//| Sleeve 2: daily time-series momentum across multiple FX majors.  |
+//|                                                                  |
+//| Specification:                                                   |
+//|   * Universe        : 3 majors equal-weighted                    |
+//|   * Long signal     : EMA(fast) > EMA(slow) AND RSI < RSIHigh    |
+//|   * Short signal    : EMA(fast) < EMA(slow) AND RSI > RSILow     |
+//|   * Exit            : signal flip                                |
+//|   * Per-pair vol-target leverage : min(target / sigma21, max)    |
 //+------------------------------------------------------------------+
 #ifndef __FX_SLEEVE_TS_MOMENTUM_MQH__
 #define __FX_SLEEVE_TS_MOMENTUM_MQH__
@@ -18,8 +18,6 @@
 #include "FxCommon.mqh"
 #include "FxRiskManager.mqh"
 #include "FxTradeHelpers.mqh"
-
-//--- Inputs accessibles via #include textuel depuis l'EA principal.
 
 #define FX_TS_MAX_PAIRS 8
 
@@ -43,12 +41,13 @@ public:
         int n = SplitCsv(Inp_TS_Pairs, raw);
         if(n <= 0 || n > FX_TS_MAX_PAIRS)
         {
-            g_logger.Error(m_name, StringFormat("invalid Inp_TS_Pairs=%s", Inp_TS_Pairs));
+            g_logger.Error(m_name, StringFormat("invalid Inp_TS_Pairs=%s",
+                                                Inp_TS_Pairs));
             return false;
         }
-        // Pack valid pairs into [0..valid_n-1]. Skip pairs without any D1
-        // history so adding e.g. EURJPY (broker D1 starts 2022-11) on a
-        // 2020-2026 window doesn't disable the entire sleeve.
+        // Pack valid pairs into [0..valid_n-1]; skip pairs without any
+        // D1 history so adding a pair that started later than the
+        // backtest window does not disable the entire sleeve.
         int valid_n = 0;
         for(int i = 0; i < n; i++)
         {
@@ -59,20 +58,19 @@ public:
                     "%s: skipped (symbol not selectable on broker)", pair));
                 continue;
             }
-            // Try ideal 250 D1 bars, gracefully accept any history >= 1.
-            // Below 1 bar there is no D1 data at all -> skip this pair only
-            // (was hard-fail before 2026-05-04).
+            // Aim for 250 D1 bars; gracefully accept any history >= 1.
             if(!EnsureHistory(pair, PERIOD_D1, 250))
             {
                 if(!EnsureHistory(pair, PERIOD_D1, 1))
                 {
                     g_logger.Warn(m_name, StringFormat(
-                        "%s: skipped (no D1 history available on broker)", pair));
+                        "%s: skipped (no D1 history available on broker)",
+                        pair));
                     continue;
                 }
                 g_logger.Warn(m_name, StringFormat(
-                    "%s: %d/250 D1 bars; iMA(%d)/iRSI(%d) warm up as bars accumulate",
-                    pair, (int)Bars(pair, PERIOD_D1),
+                    "%s: %d/250 D1 bars; iMA(%d)/iRSI(%d) warm up as "
+                    "bars accumulate", pair, (int)Bars(pair, PERIOD_D1),
                     Inp_TS_SlowEMA, Inp_TS_RSIPeriod));
             }
             int h_fast = iMA(pair, PERIOD_D1, Inp_TS_FastEMA,
@@ -95,12 +93,13 @@ public:
         }
         if(valid_n == 0)
         {
-            g_logger.Error(m_name, "no valid pairs after filtering; sleeve disabled");
+            g_logger.Error(m_name,
+                "no valid pairs after filtering; sleeve disabled");
             return false;
         }
         m_n_pairs = valid_n;
         m_trade.SetExpertMagicNumber(m_magic);
-        m_trade.SetDeviationInPoints(20);
+        m_trade.SetDeviationInPoints(FX_DEFAULT_DEVIATION);
         g_logger.Info(m_name, StringFormat(
             "Init OK %d/%d pairs (skipped %d for missing D1/symbol)",
             valid_n, n, n - valid_n));
@@ -111,13 +110,16 @@ public:
     {
         for(int i = 0; i < m_n_pairs; i++)
         {
-            if(m_h_ema_fast[i] != INVALID_HANDLE) IndicatorRelease(m_h_ema_fast[i]);
-            if(m_h_ema_slow[i] != INVALID_HANDLE) IndicatorRelease(m_h_ema_slow[i]);
-            if(m_h_rsi[i]      != INVALID_HANDLE) IndicatorRelease(m_h_rsi[i]);
+            if(m_h_ema_fast[i] != INVALID_HANDLE)
+                IndicatorRelease(m_h_ema_fast[i]);
+            if(m_h_ema_slow[i] != INVALID_HANDLE)
+                IndicatorRelease(m_h_ema_slow[i]);
+            if(m_h_rsi[i]      != INVALID_HANDLE)
+                IndicatorRelease(m_h_rsi[i]);
         }
     }
 
-    //--- Hook NewBar D1 (déclenché par OnTimer après le close UTC).
+    //--- Daily processing hook (triggered after the UTC close).
     void OnNewBarD1(CRiskManager &risk) override
     {
         if(risk.IsDDLocked()) return;
@@ -141,32 +143,33 @@ private:
         bool long_signal  = (ema_fast > ema_slow) && (rsi < Inp_TS_RSIHigh);
         bool short_signal = (ema_fast < ema_slow) && (rsi > Inp_TS_RSILow);
 
-        // Vol-target par paire : σ21 sur returns daily de la paire
+        // Per-pair vol target leverage based on rolling 21-day sigma.
         double sigma21 = ComputePairSigma21(m_pairs[i]);
         double lev_pair = MathMin(Inp_TS_TargetVol / MathMax(sigma21, 0.01),
                                    Inp_TS_MaxLeverage);
 
-        // Trouver la position existante sur cette paire
-        ulong existing = FindOpenPosition(m_pairs[i]);
+        ulong existing = FindPositionByMagicSymbol(m_magic, m_pairs[i]);
         long pos_type = -1;
         if(existing != 0) pos_type = PositionGetInteger(POSITION_TYPE);
 
-        // Sortie : inversion du critère (cf. daily_momentum.py)
+        // Exit on signal flip.
         if(pos_type == (long)POSITION_TYPE_BUY && !long_signal)
         {
             m_trade.PositionClose(existing);
-            g_logger.Info(m_name, StringFormat("Exit LONG %s (signal flip)", m_pairs[i]));
+            g_logger.Info(m_name, StringFormat("Exit LONG %s (signal flip)",
+                                                m_pairs[i]));
         }
         else if(pos_type == (long)POSITION_TYPE_SELL && !short_signal)
         {
             m_trade.PositionClose(existing);
-            g_logger.Info(m_name, StringFormat("Exit SHORT %s (signal flip)", m_pairs[i]));
+            g_logger.Info(m_name, StringFormat("Exit SHORT %s (signal flip)",
+                                                m_pairs[i]));
         }
 
-        // Entrée si pas de position
+        // Entry only if no position currently held on this pair.
         if(existing == 0)
         {
-            if(long_signal)  OpenPosition(m_pairs[i], ORDER_TYPE_BUY, lev_pair, risk);
+            if(long_signal)       OpenPosition(m_pairs[i], ORDER_TYPE_BUY,  lev_pair, risk);
             else if(short_signal) OpenPosition(m_pairs[i], ORDER_TYPE_SELL, lev_pair, risk);
         }
     }
@@ -179,11 +182,13 @@ private:
         return true;
     }
 
+    //--- Annualised standard deviation of log returns over the last 21 D1
+    //--- bars. Falls back to the target volatility when history is short.
     double ComputePairSigma21(string symbol)
     {
         double closes[22];
         int copied = CopyClose(symbol, PERIOD_D1, 1, 22, closes);
-        if(copied < 22) return 0.10;  // fallback : suppose 10% (cible)
+        if(copied < 22) return 0.10;
         double rets[21];
         for(int i = 0; i < 21; i++)
         {
@@ -197,27 +202,11 @@ private:
         return MathSqrt(MathMax(var, 0.0)) * MathSqrt(252.0);
     }
 
-    ulong FindOpenPosition(string symbol)
-    {
-        for(int i = 0; i < PositionsTotal(); i++)
-        {
-            ulong tk = PositionGetTicket(i);
-            if(tk == 0) continue;
-            if(PositionGetInteger(POSITION_MAGIC) != m_magic) continue;
-            if(PositionGetString(POSITION_SYMBOL) != symbol) continue;
-            return tk;
-        }
-        return 0;
-    }
-
-    //--- Slippage Inp_TS_SlippageBps (Phase M.4 fix, 2026-05-05) :
-    //--- AVANT : slip uniquement dans tolérance + sizing majoration → coût
-    //--- réel non soustrait du P&L. Sharpe surestimé.
-    //--- APRÈS : SL safety shift de slip_pct ET dampened risk_money pour
-    //--- absorber drag attendu round-trip. Comme TS sort sur signal flip
-    //--- (pas sur SL/TP), le shift SL safety reste rarement déclenché ;
-    //--- le drag effectif provient majoritairement du dampening risk_money
-    //--- proportionnel à 2× slip_pct (entry + exit cost approximation).
+    //--- Submit a market entry. Sizing combines per-pair vol-target
+    //--- leverage with the sleeve sub-equity; the global leverage is
+    //--- already applied via SubEquity() inside CRiskManager. Slippage
+    //--- + commission + an empirical overnight swap drag are pre-paid
+    //--- via SizingDrag() so non-SL/TP exits do not undercount costs.
     void OpenPosition(string symbol, ENUM_ORDER_TYPE type, double lev_pair,
                       CRiskManager &risk)
     {
@@ -226,46 +215,42 @@ private:
                        : SymbolInfoDouble(symbol, SYMBOL_BID);
         if(price <= 0.0) return;
 
-        double slip_pct = (Inp_TS_SlippageBps + Inp_CommissionBpsPerSide) / 10000.0;
+        double slip_pct = SlippageFraction(Inp_TS_SlippageBps,
+                                           Inp_CommissionBpsPerSide);
 
-        // SL safety 5% shifted by slip_pct (rarely hit, but consistent
-        // with vbt convention of slippage-on-signal-entry).
-        double sl_dist_safety = price * (0.05 + slip_pct);
+        // Wide safety SL (configured fraction of price). The sleeve
+        // ordinarily exits on signal flip, so this is a tail-risk hedge
+        // against an overnight gap rather than a regular stop.
+        double sl_dist_safety = price * (0.02 + slip_pct);
         double sl = (type == ORDER_TYPE_BUY) ? price - sl_dist_safety
                                              : price + sl_dist_safety;
         sl = EnforceStopLevel(symbol, price, sl, type, true);
 
-        double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
-        double slip_price = slip_pct * price;
-        int slip_pts = (point > 0.0) ? (int)MathCeil(slip_price / point) : 20;
-        m_trade.SetDeviationInPoints(MathMax(slip_pts, 5));
+        m_trade.SetDeviationInPoints(FX_DEVIATION_POINTS);
 
-        // Sizing : Phase M.4 dampened risk_money by (1 - 2*slip_pct) to
-        // pre-pay round-trip slippage drag on signal-flip exits. This
-        // reduces position size proportional to expected slip cost.
         double sub_eq = risk.SubEquity(SLEEVE_TS_MOMENTUM) / m_n_pairs;
-        double slip_drag = 1.0 - 2.0 * slip_pct;  // entry + exit
-        double risk_money = sub_eq * 0.05 * lev_pair * risk.GlobalLeverage()
-                            * slip_drag;
+        double slip_drag = SizingDrag(slip_pct, Inp_SwapBpsPerNight,
+                                      FX_TS_AVG_NIGHTS_HELD);
+        double risk_money = sub_eq * FX_RISK_PCT_TS_MOMENTUM
+                            * lev_pair * slip_drag;
         double lots = LotsForRisk(symbol, risk_money, sl_dist_safety);
         if(lots <= 0.0) return;
 
-        bool ok = false;
-        if(type == ORDER_TYPE_BUY)
-            ok = m_trade.Buy(lots, symbol, price, sl, 0.0, "TS Momentum long");
-        else
-            ok = m_trade.Sell(lots, symbol, price, sl, 0.0, "TS Momentum short");
+        bool ok = (type == ORDER_TYPE_BUY)
+                  ? m_trade.Buy(lots, symbol, price, sl, 0.0, "TS Momentum long")
+                  : m_trade.Sell(lots, symbol, price, sl, 0.0, "TS Momentum short");
 
         if(!ok || m_trade.ResultRetcode() != TRADE_RETCODE_DONE)
         {
             g_logger.Error(m_name,
-                StringFormat("Entry %s failed: retcode=%d", symbol, m_trade.ResultRetcode()));
+                StringFormat("Entry %s failed: retcode=%d",
+                             symbol, m_trade.ResultRetcode()));
             return;
         }
         g_logger.Info(m_name,
-            StringFormat("Entry %s %s lots=%.2f price=%.5f lev_pair=%.2f slip_pts=%d",
+            StringFormat("Entry %s %s lots=%.2f price=%.5f lev_pair=%.2f",
                          (type == ORDER_TYPE_BUY ? "LONG" : "SHORT"),
-                         symbol, lots, price, lev_pair, slip_pts));
+                         symbol, lots, price, lev_pair));
     }
 };
 

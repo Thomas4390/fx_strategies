@@ -1,33 +1,37 @@
 //+------------------------------------------------------------------+
 //| FxMacroFilter.mqh                                                |
-//| Filtre macro 2-étages utilisé par le sleeve MR Macro.            |
 //|                                                                  |
-//| Cinq modes de récupération via `EMacroSourceMode` :              |
+//| Two-stage macro regime filter consumed by the MR Macro sleeve.   |
 //|                                                                  |
-//|  - MACRO_SOURCE_FILE    : lit `macro_cache.csv` (bridge Python,  |
-//|                           1 ligne live)                          |
-//|  - MACRO_SOURCE_NATIVE  : Calendar MT5 + WebRequest FRED         |
-//|                           (live uniquement)                      |
-//|  - MACRO_SOURCE_HYBRID  : tente NATIVE, fallback FILE            |
-//|  - MACRO_SOURCE_HISTORY : lit `macro_history.csv` (multi-lignes  |
-//|                           time-indexed, pour le backtest)        |
-//|  - MACRO_SOURCE_AUTO    : recommandé. MQLInfoInteger(MQL_TESTER) |
-//|                           => HISTORY en tester, NATIVE en live.  |
+//|   Stage 1: 10Y-2Y Treasury spread below configurable threshold.  |
+//|   Stage 2: US unemployment rate not in a 3-month uptrend.        |
 //|                                                                  |
-//| Format CSV (FILE & HISTORY identiques) :                         |
-//|   timestamp_utc,spread_10y2y,unemp_rising,spread_threshold,      |
-//|   macro_ok                                                       |
-//|   2026-04-24T18:00:00Z,0.3520,0,0.50,1                           |
+//| Macro state can be sourced from five backends through            |
+//| EMacroSourceMode (FILE / NATIVE / HYBRID / HISTORY / AUTO).      |
+//| AUTO is the recommended setting: HISTORY is selected when the    |
+//| EA runs inside the Strategy Tester (WebRequest is unavailable    |
+//| there) and NATIVE when running live.                             |
+//|                                                                  |
+//| The filter additionally hosts a news-window guard that blocks    |
+//| entries during ±15 minutes around scheduled high-impact USD      |
+//| releases (NFP, CPI, FOMC, etc.) where typical Forex spreads can  |
+//| widen by an order of magnitude.                                  |
+//|                                                                  |
+//| Common CSV schema (FILE & HISTORY):                              |
+//|     timestamp_utc,spread_10y2y,unemp_rising,spread_threshold,    |
+//|     macro_ok                                                     |
+//|     2026-04-24T18:00:00Z,0.3520,0,0.50,1                         |
 //+------------------------------------------------------------------+
 #ifndef __FX_MACRO_FILTER_MQH__
 #define __FX_MACRO_FILTER_MQH__
 
-#include "FxCommon.mqh"             // EMacroSourceMode défini ici
+#include "FxCommon.mqh"
 #include "FxMacroSourceNative.mqh"
 #include "FxMacroSourceHistory.mqh"
+#include "FxNewsFilter.mqh"
 
 //+------------------------------------------------------------------+
-//| CMacroFilter : refresh, validité, accesseurs.                    |
+//| CMacroFilter: source dispatcher, validity check, accessors.      |
 //+------------------------------------------------------------------+
 class CMacroFilter
 {
@@ -36,13 +40,12 @@ private:
     string   m_filename;
     int      m_max_age_seconds;
     bool     m_use_common;
-    double   m_user_threshold;     // seuil spread fixé par l'EA
-    string   m_fred_api_key_file;  // nom du fichier contenant la clé FRED
+    double   m_user_threshold;
+    string   m_fred_api_key_file;
     bool     m_fred_key_use_common;
     string   m_history_filename;
     bool     m_history_use_common;
-    bool     m_disable_filter;     // Phase B.4 — bypass macro_ok pour mesurer
-                                   // l'impact du filtre (force MacroOk()=true).
+    bool     m_disable_filter;       // diagnostic bypass that forces MacroOk()=true
 
     datetime m_last_refresh;
     datetime m_last_read_at;
@@ -51,11 +54,12 @@ private:
     double   m_spread_threshold;
     bool     m_macro_ok;
     bool     m_loaded;
-    string   m_last_source;        // "file" / "native" / "history"
+    string   m_last_source;          // "file" / "native" / "history"
 
     CMacroSourceCalendar m_cal;
     CMacroSourceFRED     m_fred;
     CMacroSourceHistory  m_history;
+    CFxNewsFilter        m_news;
 
 public:
     CMacroFilter() : m_mode(MACRO_SOURCE_AUTO),
@@ -80,7 +84,8 @@ public:
               string history_filename = "macro_history.csv",
               bool   history_use_common = true,
               string fred_series_id = "T10Y2Y",
-              bool   disable_filter = false)
+              bool   disable_filter = false,
+              bool   news_filter_enabled = true)
     {
         m_mode = mode;
         m_filename = filename;
@@ -96,11 +101,11 @@ public:
         m_cal.Init("US", "Unemployment Rate");
         m_fred.Init(fred_series_id, ReadFREDKey());
         m_history.Init(history_filename, history_use_common);
+        m_news.Init("US", news_filter_enabled);
     }
 
-    //--- Refresh : selon le mode, dispatche vers la bonne source.
-    //--- AUTO : detect Strategy Tester via MQLInfoInteger(MQL_TESTER) and
-    //--- pick HISTORY in tester (only thing that works there) or NATIVE in live.
+    //--- Refresh the macro state. Dispatches to the active source.
+    //--- AUTO mode picks HISTORY in the tester or NATIVE in live.
     bool Refresh()
     {
         EMacroSourceMode effective = ResolveEffectiveMode();
@@ -120,8 +125,8 @@ public:
         return false;
     }
 
-    //--- Resolve AUTO -> concrete mode based on runtime context. Exposed for
-    //--- logging/preflight purposes; idempotent.
+    //--- Resolve AUTO to a concrete mode based on runtime context. The
+    //--- result is idempotent and exposed for logging / preflight.
     EMacroSourceMode ResolveEffectiveMode() const
     {
         if(m_mode != MACRO_SOURCE_AUTO) return m_mode;
@@ -138,22 +143,33 @@ public:
 
     bool   MacroOk() const
     {
-        if(m_disable_filter) return true;   // Phase B.4 bypass for impact tests
+        if(m_disable_filter) return true;   // bypass for filter-impact tests
         return m_loaded && m_macro_ok;
     }
-    double Spread() const { return m_spread; }
-    bool   UnempRising() const { return m_unemp_rising; }
-    double SpreadThreshold() const { return m_spread_threshold; }
-    datetime LastRefresh() const { return m_last_refresh; }
-    string LastSource() const { return m_last_source; }
+    double Spread() const             { return m_spread; }
+    bool   UnempRising() const        { return m_unemp_rising; }
+    double SpreadThreshold() const    { return m_spread_threshold; }
+    datetime LastRefresh() const      { return m_last_refresh; }
+    string LastSource() const         { return m_last_source; }
     int    AgeSeconds() const
     {
         if(!m_loaded || m_last_refresh == 0) return 999999;
         return (int)(TimeGMT() - m_last_refresh);
     }
 
+    //--- News-window helper: true if 't' is within ±15 minutes of a
+    //--- scheduled high-impact USD event. Refresh of the underlying
+    //--- cache is idempotent and rate-limited internally.
+    bool IsInNewsWindow(datetime t)
+    {
+        m_news.Refresh(t);
+        return m_news.IsInNewsWindow(t);
+    }
+
+    bool NewsFilterEnabled() const { return m_news.Enabled(); }
+
 private:
-    //--- Mode FILE : lit macro_cache.csv (compat existante).
+    //--- Read a single-row CSV (legacy bridge format).
     bool RefreshFromFile()
     {
         int flags = FILE_READ | FILE_CSV | FILE_ANSI;
@@ -186,7 +202,7 @@ private:
         return true;
     }
 
-    //--- Mode NATIVE : Calendar (chômage) + FRED (spread).
+    //--- Pull macro state from MT5 calendar + FRED API.
     bool RefreshFromNative()
     {
         bool unemp_rising = false;
@@ -210,15 +226,15 @@ private:
         m_last_read_at = m_last_refresh;
         m_loaded = true;
         m_last_source = "native";
-        PrintFormat("CMacroFilter::NATIVE OK: spread=%.4f unemp_rising=%d → macro_ok=%d",
-                    m_spread, (int)m_unemp_rising, (int)m_macro_ok);
+        PrintFormat("CMacroFilter::NATIVE OK: spread=%.4f unemp_rising=%d "
+                    "macro_ok=%d", m_spread, (int)m_unemp_rising,
+                    (int)m_macro_ok);
         return true;
     }
 
-    //--- Mode HISTORY : lookup time-indexed dans macro_history.csv.
-    //--- Lazy-load au premier appel, puis binary search par TimeCurrent().
-    //--- En tester : TimeCurrent() est le temps simulé.
-    //--- En live   : TimeCurrent() est le temps réel (la dernière ligne sera retournée).
+    //--- Time-indexed lookup in the historical CSV. Lazy-loaded on the
+    //--- first call. TimeCurrent() is the simulated time in tester and
+    //--- the real wall-clock in live mode.
     bool RefreshFromHistory()
     {
         if(!m_history.IsLoaded())
@@ -250,7 +266,8 @@ private:
         return true;
     }
 
-    //--- Lit la clé API FRED depuis un fichier sandbox (jamais en input visible).
+    //--- Read the FRED API key from a sandbox-local file. The key is
+    //--- kept out of inputs and out of the source tree.
     string ReadFREDKey()
     {
         int flags = FILE_READ | FILE_TXT | FILE_ANSI;
@@ -259,7 +276,6 @@ private:
         if(h == INVALID_HANDLE) return "";
         string key = FileReadString(h);
         FileClose(h);
-        // Trim whitespace
         StringTrimLeft(key);
         StringTrimRight(key);
         return key;

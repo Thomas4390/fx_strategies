@@ -62,16 +62,24 @@ DEFAULT_FROM = "2020.11.23"
 DEFAULT_TO = "2026.04.30"
 DEFAULT_SYMBOL = "EURUSD.c"
 DEFAULT_PERIOD = "M1"
-DEFAULT_MODEL = 1   # 1 = 1-min OHLC (équilibre vitesse / fidélité)
+DEFAULT_MODEL = 4   # "every tick based on real ticks" — most rigorous mode.
+                    # Other modes (per MT5 documentation):
+                    #   0 = every tick (simulated, monotonic-bias risk)
+                    #   1 = 1-minute OHLC (interpolated fills, optimistic Sharpe)
+                    #   2 = open prices only (rough estimation)
+                    #   3 = math calculations (no market data)
+                    #   4 = every tick based on real ticks (recommended)
+                    # Mode 4 is ~10x slower than mode 1 but reproduces broker
+                    # tick order and floating spread at sub-minute resolution.
 DEFAULT_REPORT_NAME = "fx_full_backtest_report"
 DEFAULT_DEPOSIT = 10000
 DEFAULT_LEVERAGE = "1:100"
 DEFAULT_CURRENCY = "USD"
 DEFAULT_TIMEOUT = 1800  # 30 min — large pour un run M1 sur 5.4 ans
 
-# Inputs par défaut écrits dans [TesterInputs]. Aligné sur les défauts compilés
-# du `.mq5` (lignes 27-100). Mode AUTO=4 → l'EA bascule HISTORY automatiquement
-# en tester via MQLInfoInteger(MQL_TESTER).
+# Default tester inputs written into the [TesterInputs] section. Aligns
+# with the EA's compiled defaults; AUTO mode (=4) makes the macro
+# filter switch to HISTORY automatically inside the strategy tester.
 DEFAULT_TESTER_INPUTS: dict[str, str] = {
     "Inp_SymbolSuffix": ".c",
     "Inp_MacroSourceMode": "4",
@@ -198,6 +206,12 @@ def build_tester_ini(
         f"Symbol={symbol}",
         f"Period={period}",
         f"Model={model}",
+        # Spread=0 instructs the strategy tester to use the historical
+        # floating spread embedded in the ticks (Model=4) or in each
+        # bar (Model=1). Without this line MT5 defaults to "current
+        # spread", freezing the live terminal spread across the full
+        # backtest window which is unrealistic for multi-year runs.
+        "Spread=0",
         f"FromDate={from_date}",
         f"ToDate={to_date}",
         f"Deposit={deposit}",
@@ -437,7 +451,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--symbol", default=DEFAULT_SYMBOL)
     p.add_argument("--period", default=DEFAULT_PERIOD)
     p.add_argument("--model", type=int, default=DEFAULT_MODEL,
-                   help="0=Every tick, 1=1-min OHLC, 2=Open prices, 4=Real ticks")
+                   help="0=Every tick (simulated), 1=1-min OHLC (interpolation, "
+                        "surestime), 2=Open prices only, 3=Math calc, "
+                        "4=Real ticks (recommandé, rigoureux)")
     p.add_argument("--deposit", type=int, default=DEFAULT_DEPOSIT)
     p.add_argument("--leverage", default=DEFAULT_LEVERAGE)
     p.add_argument("--currency", default=DEFAULT_CURRENCY)
