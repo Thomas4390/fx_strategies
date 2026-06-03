@@ -167,11 +167,13 @@ private:
     string m_series_id;
     string m_api_key;
     string m_base_url;
+    string m_last_error;   // human-readable reason for the last fetch failure
 
 public:
     CMacroSourceFRED() : m_series_id("T10Y2Y"),
                          m_api_key(""),
-                         m_base_url("https://api.stlouisfed.org") {}
+                         m_base_url("https://api.stlouisfed.org"),
+                         m_last_error("") {}
 
     void Init(string series_id, string api_key)
     {
@@ -181,6 +183,10 @@ public:
 
     bool HasApiKey() const { return StringLen(m_api_key) > 0; }
 
+    //--- Human-readable reason for the last failed FetchLatest, intended
+    //--- for a user-facing alert. Empty after a successful fetch.
+    string LastError() const { return m_last_error; }
+
     //--- Retrieve the latest observation. Performs up to
     //--- FX_FRED_MAX_RETRIES attempts with FX_FRED_RETRY_BACKOFF ms
     //--- between attempts to absorb transient timeouts.
@@ -188,6 +194,7 @@ public:
     {
         if(!HasApiKey())
         {
+            m_last_error = "Aucune cle API FRED (fred_api_key.txt absent ou vide)";
             Print("CMacroSourceFRED: no API key configured");
             return false;
         }
@@ -210,18 +217,37 @@ public:
             if(code == 200)
             {
                 string body = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
-                return ParseLatestObservation(body, out_value, out_obs_date);
+                if(ParseLatestObservation(body, out_value, out_obs_date))
+                {
+                    m_last_error = "";
+                    return true;
+                }
+                m_last_error = "Reponse FRED illisible (parse JSON echoue)";
+                return false;
             }
 
             if(code == -1)
             {
+                int err = GetLastError();
+                // 4014 = ERR_FUNCTION_NOT_ALLOWED: the URL is not in the
+                // MT5 WebRequest whitelist. This is by far the most common
+                // setup mistake, so spell out the exact fix.
+                if(err == 4014)
+                    m_last_error = "WebRequest bloque (err 4014) : ajouter "
+                                   + m_base_url + " dans Outils->Options->"
+                                   "Expert Advisors->Allow WebRequest for listed URL";
+                else
+                    m_last_error = StringFormat("WebRequest echec reseau (err=%d)",
+                                                err);
                 PrintFormat("CMacroSourceFRED::WebRequest err=%d "
                             "(check URL whitelist for %s) attempt=%d/%d",
-                            GetLastError(), m_base_url,
+                            err, m_base_url,
                             attempt, FX_FRED_MAX_RETRIES);
             }
             else
             {
+                m_last_error = StringFormat("FRED HTTP %d (cle API invalide "
+                                            "ou quota depasse ?)", code);
                 PrintFormat("CMacroSourceFRED::WebRequest HTTP %d attempt=%d/%d",
                             code, attempt, FX_FRED_MAX_RETRIES);
             }

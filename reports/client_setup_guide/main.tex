@@ -352,9 +352,18 @@ sleeve~1 pendant les régimes de fin de cycle défavorables.
 Créer le fichier \code{Common\textbackslash Files\textbackslash fred\_api\_key.txt} avec votre clé
 en une seule ligne, sans espace ni saut de ligne. Encodage~UTF-8.
 
-Autoriser MT5 à appeler FRED~: \code{Outils $\rightarrow$ Options $\rightarrow$
-Expert Advisors $\rightarrow$ Allow~WebRequest~for~listed~URL}, ajouter
-\code{https://api.stlouisfed.org}.
+\begin{warningbox}
+\textbf{Étape critique en \emph{live} --- la plus souvent oubliée.} En plus de la
+clé, vous \textbf{devez} autoriser MT5 à contacter FRED~:
+\code{Outils $\rightarrow$ Options $\rightarrow$ Expert Advisors $\rightarrow$
+Allow~WebRequest~for~listed~URL}, puis ajouter \emph{exactement}
+\code{https://api.stlouisfed.org} (sans \code{/} ni chemin final).
+\textbf{Fermez puis relancez MT5} et ré-attachez l'EA au graphique~: la liste
+blanche n'est relue qu'au redémarrage. Sans cette étape, le journal affiche
+\code{WebRequest err=4014} en boucle et le sleeve~MR~Macro reste désactivé.
+Clé et whitelist ne servent qu'en \emph{live} (mode~NATIVE)~: en backtest, l'EA lit
+\code{macro\_history.csv} et n'a besoin d'aucune des deux.
+\end{warningbox}
 
 \subsection*{4.3 Vérifier ou régénérer \code{macro\_history.csv}}
 
@@ -772,6 +781,12 @@ souriant} (icône \enquote{:-)}), et dans le \emph{Journal} la ligne~:
 \midrule
 \code{cannot add EURUSD} (err~4305) & Mauvais suffixe broker &
 Modifier \code{Inp\_SymbolSuffix} (cf.~3.4) et recompiler. \\
+\addlinespace
+\code{WebRequest err=4014} en boucle / \code{FRED fetch failed}, sleeve~MR off &
+URL \code{https://api.stlouisfed.org} absente de la liste blanche (\emph{Allow
+WebRequest for listed URL}) --- \emph{pas} un problème de clé &
+L'ajouter (cf.~4.2), relancer MT5, ré-attacher l'EA. Si ensuite
+\code{HTTP~400/403}~: \emph{là} c'est la clé API (regénérer). \\
 \addlinespace
 \code{cannot open macro\_history.csv} (err~5004) & Fichier absent du
 \code{Common\textbackslash Files} & Recopier depuis l'archive ou

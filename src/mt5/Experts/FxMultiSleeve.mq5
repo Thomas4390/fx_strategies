@@ -211,10 +211,20 @@ int OnInit()
                      Inp_GlobalTargetVol, Inp_GlobalMaxLeverage));
 
     if(!g_macro.Refresh())
+    {
         g_logger.Warn("INIT",
             StringFormat("Macro initial load failed (mode=%s); MR sleeve "
                          "disabled until next refresh",
                          EnumToString(Inp_MacroSourceMode)));
+        // Live (NATIVE) only: raise a visible popup so the operator notices
+        // the macro outage without scanning the Experts log. Alert() is a
+        // no-op in the Strategy Tester. The message carries the precise
+        // cause (e.g. the WebRequest 4014 whitelist hint from CMacroSourceFRED).
+        if(g_macro.ResolveEffectiveMode() == MACRO_SOURCE_NATIVE)
+            Alert(StringFormat("FxMultiSleeve : macro FRED indisponible - %s. "
+                               "Sleeve MR Macro desactive jusqu'au prochain refresh.",
+                               g_macro.LastError()));
+    }
     else
         g_logger.Info("INIT",
             StringFormat("Macro source=%s spread=%.4f unemp_rising=%d macro_ok=%d",

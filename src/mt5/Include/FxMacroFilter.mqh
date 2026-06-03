@@ -55,6 +55,7 @@ private:
     bool     m_macro_ok;
     bool     m_loaded;
     string   m_last_source;          // "file" / "native" / "history"
+    string   m_last_native_error;    // reason the last NATIVE refresh failed
 
     CMacroSourceCalendar m_cal;
     CMacroSourceFRED     m_fred;
@@ -75,7 +76,8 @@ public:
                      m_last_refresh(0), m_last_read_at(0),
                      m_spread(0.0), m_unemp_rising(false),
                      m_spread_threshold(0.5), m_macro_ok(false),
-                     m_loaded(false), m_last_source("none") {}
+                     m_loaded(false), m_last_source("none"),
+                     m_last_native_error("") {}
 
     void Init(EMacroSourceMode mode,
               string filename, int max_age_hours, bool use_common,
@@ -151,6 +153,11 @@ public:
     double SpreadThreshold() const    { return m_spread_threshold; }
     datetime LastRefresh() const      { return m_last_refresh; }
     string LastSource() const         { return m_last_source; }
+
+    //--- Reason the last NATIVE (live) refresh failed, for a user-facing
+    //--- alert. Empty after a successful refresh. Only meaningful when the
+    //--- effective mode is NATIVE.
+    string LastError() const          { return m_last_native_error; }
     int    AgeSeconds() const
     {
         if(!m_loaded || m_last_refresh == 0) return 999999;
@@ -208,6 +215,7 @@ private:
         bool unemp_rising = false;
         if(!m_cal.ComputeUnempRising(unemp_rising))
         {
+            m_last_native_error = "Calendar MT5 : lecture du chomage US echouee";
             Print("CMacroFilter::NATIVE: calendar unemployment failed");
             return false;
         }
@@ -215,6 +223,7 @@ private:
         datetime obs_date = 0;
         if(!m_fred.FetchLatest(spread, obs_date))
         {
+            m_last_native_error = m_fred.LastError();
             Print("CMacroFilter::NATIVE: FRED fetch failed");
             return false;
         }
@@ -226,6 +235,7 @@ private:
         m_last_read_at = m_last_refresh;
         m_loaded = true;
         m_last_source = "native";
+        m_last_native_error = "";
         PrintFormat("CMacroFilter::NATIVE OK: spread=%.4f unemp_rising=%d "
                     "macro_ok=%d", m_spread, (int)m_unemp_rising,
                     (int)m_macro_ok);
