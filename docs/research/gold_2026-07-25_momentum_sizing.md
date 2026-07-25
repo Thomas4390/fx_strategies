@@ -149,14 +149,40 @@ The deep single-level grid, the one shape with a prior from the tail data
 (post-capitulation rebound beyond −1.5%), came out **identical to flat**.
 Hypothesis not confirmed.
 
-### 4.2 Holdout (2025-07 → 2026-07, 333 sessions), natural exposure
+### 4.2 Holdout (2025-07 → 2026-07), re-read on correct sessions
 
-> ⚠️ **Figures below are stale — computed on the wrong session boundary — and
-> they have deliberately NOT been recomputed.** The holdout has already been
-> read once. Re-running it after changing the specification would spend it a
-> second time on a decision it was frozen to arbitrate, which is the exact
-> failure `HOLDOUT_POLICY.md` exists to prevent. Whether to spend it is a
-> methodological call for the project owner, not a step to take in passing.
+> ⚠️ **Second read, on the project owner's explicit instruction (2026-07-25).**
+> This window has now been used twice. It can no longer arbitrate any further
+> sizing question — a third read would be selection on the holdout in all but
+> name. Any future overlay proposal needs a genuinely fresh slice.
+
+Risk-matched to 25% vol, so the comparison is on distribution shape rather than
+on who happened to run more leverage:
+
+| regime | ann | SR | maxDD | MAR | skew | P(loss>50%) |
+|---|---|---|---|---|---|---|
+| martingale m=1.5 n=3 | 39.0% | **1.558** | −18.4% | 2.11 | −1.08 | 0.00% |
+| martingale m=2.0 n=3 | 38.6% | 1.543 | −18.4% | 2.10 | −1.08 | 0.00% |
+| combo m=2.0 | 38.6% | 1.543 | −18.4% | 2.10 | −1.08 | 0.00% |
+| **flat (control)** | 35.5% | **1.421** | −19.1% | 1.86 | −1.16 | 0.00% |
+| grid k=2.0 | 35.5% | 1.421 | −19.1% | 1.86 | −1.16 | 0.00% |
+| **anti-martingale m=1.5** | 33.8% | **1.350** | −18.6% | 1.81 | −1.08 | 0.00% |
+| grid k=0.5 | 33.7% | 1.348 | −18.7% | 1.80 | −1.08 | 0.00% |
+
+**The ranking inverts almost exactly.** Anti-martingale, first in selection at
+SR 0.81, lands 6th here — *below* flat. Martingale, last in selection at 0.38,
+comes 2nd. Flat sits mid-table in both.
+
+That inversion is the finding. A ranking that reverses between two adjacent
+windows is not measuring a property of the sizing rule; it is measuring which
+sequence each window happened to contain.
+
+**And the holdout cannot arbitrate on risk at all.** Across all 24 regimes it
+reports `P(loss>50%) = 0.0000`, `P(ruin) = 0.0000`, and a maxDD spread of
+**0.7 pp**. The window — a gold bull run with no stress episode — is blind to
+precisely the axis on which the martingale was rejected (4.70% P(loss>50%) and
+−59.96% maxDD in selection). Reading its ranking as a verdict on the martingale
+would mean choosing on the one axis this period cannot see.
 
 | regime | ann | SR | maxDD | MAR | mean exposure | DD p95 | P(loss>50%) |
 |---|---|---|---|---|---|---|---|
@@ -168,6 +194,39 @@ Hypothesis not confirmed.
 | *buy and hold* | *17.08%* | *0.72* | *−28.58%* | *0.60* | *100%* | — | — |
 
 ## 5. Conclusions
+
+### 5.0 Verdict on sizing — **flat**, settled 2026-07-25
+
+The session-boundary fix reopened this question by promoting anti-martingale to
+first place in selection. The holdout re-read closes it, and **not in favour of
+the new winner**:
+
+| regime | selection SR | rank | holdout SR | rank |
+|---|---|---|---|---|
+| anti-martingale m=1.5 | 0.81 | **1st** | 1.350 | **6th** |
+| flat | 0.60 | 7th | 1.421 | **4th** |
+| martingale m=2.0 | 0.38 | last | 1.543 | **2nd** |
+
+Three reasons flat stands, in order of weight:
+
+1. **No overlay is stable.** The ranking inverts between two adjacent windows.
+   Whatever the overlays are measuring, it is not a property that persists.
+2. **The holdout is blind to the risk that matters.** `P(loss>50%) = 0.0000` for
+   all 24 regimes, maxDD spread 0.7 pp. It ranks on return over a window with no
+   stress episode. Promoting the martingale on that basis would be choosing on
+   the one axis this period cannot resolve — and the martingale's selection-period
+   tail (4.70% P(loss>50%), −59.96% maxDD) is exactly what disqualified it.
+3. **Flat has no surface to fit.** No multiplier, no level count, no threshold.
+   It cannot be tuned, so it cannot be overfit, and it ranks mid-table in both
+   windows rather than winning one and losing the other.
+
+The anti-martingale case was real and worth testing — it was the only regime to
+fix the distribution shape in selection (skew +0.01 against −0.57). It simply
+does not survive contact with a second period.
+
+⚠️ **This window is now spent.** It has been read twice; a third read would be
+selection on the holdout in all but name. Any future sizing proposal needs a
+genuinely fresh slice, not this one.
 
 **5.1 The momentum signal is validated.** Flat sizing beat buy and hold on the
 blind period: SR 0.98 vs 0.72 and maxDD −21.78% vs −28.58%. The trend filter

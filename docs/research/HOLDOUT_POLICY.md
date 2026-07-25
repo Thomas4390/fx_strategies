@@ -167,6 +167,35 @@ All four sit within 16 bps of each other on the in-sample WF Sharpe.
 The DSR retrofit (Phase 21) will quantify how much of that spread is
 statistically distinguishable from selection bias.
 
+## Consumption log — which blind slices have been spent
+
+A holdout is a budget, not a resource. Every read costs part of its power to
+arbitrate, so reads are recorded here rather than left to memory.
+
+| slice | scope | reads | last read | status |
+|---|---|---|---|---|
+| `2025-07-01 → 2026-07` | gold sizing regimes (`sweep_gold_sizing.py --holdout`) | **2** | 2026-07-25 | **spent** |
+
+**Gold sizing, read #1** (2026-07-25, initial study) — arbitrated flat vs grid vs
+martingale. Verdict: flat.
+
+**Gold sizing, read #2** (2026-07-25, on the owner's explicit instruction) — the
+session-boundary fix had promoted anti-martingale to first place in selection,
+which reopened the question. The re-read did **not** confirm the new winner:
+anti-martingale ranked 6th, below flat. Verdict: flat, confirmed. See
+`docs/research/gold_2026-07-25_momentum_sizing.md` §5.0.
+
+⚠️ **This slice can no longer arbitrate a sizing question.** Two reads on the
+same decision is already at the edge; a third would be selection on the holdout
+under another name. Any further overlay proposal needs a genuinely fresh slice —
+the natural candidate being data past 2026-07 as it accumulates.
+
+Worth recording about read #2: the window reports `P(loss>50%) = 0.0000` for all
+24 regimes and a maxDD spread of 0.7 pp. It ranks on return but is **blind to
+tail risk**, which is the axis the martingale was rejected on. A holdout can be
+uninformative on the very question being asked, and saying so is part of reading
+it honestly.
+
 ## References
 
 - Bailey, Borwein, Lopez de Prado, Zhu (2015). *The Probability of
