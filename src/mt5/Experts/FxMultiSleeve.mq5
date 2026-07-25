@@ -34,6 +34,7 @@ input double Inp_AllocMRMacro       = 0.80;     // sum across all sleeves must e
 input double Inp_AllocTSMomentum    = 0.10;
 input double Inp_AllocRSIDaily      = 0.10;
 input double Inp_AllocH1Momentum    = 0.0;      // optional sleeve, off by default
+input double Inp_AllocGoldMomentum  = 0.0;      // Sleeve 5 — Gold momentum, off by default
 
 // Tail-risk protections. Both breakers are active by default and
 // required when running with elevated leverage targets.
@@ -96,6 +97,20 @@ input double Inp_H1_TargetVol       = 0.10;
 input double Inp_H1_MaxLeverage     = 3.0;
 input int    Inp_H1_SlippageBps     = 12;
 
+//--- Sleeve 5: Gold Momentum (daily TS momentum on XAUUSD) --------
+// The four lookbacks are averaged, not selected. Do NOT grid-search them:
+// the averaging is what keeps this signal from being an overfit.
+input string Inp_Gold_Symbol        = "XAUUSD";
+input int    Inp_Gold_LookbackA     = 40;
+input int    Inp_Gold_LookbackB     = 60;
+input int    Inp_Gold_LookbackC     = 120;
+input int    Inp_Gold_LookbackD     = 250;
+input bool   Inp_Gold_AllowShort    = false;   // gold has a structural long drift
+input double Inp_Gold_TargetVol     = 0.25;
+input double Inp_Gold_MaxLeverage   = 3.0;
+input double Inp_Gold_SafetySL      = 0.04;    // gold is ~2x FX volatility
+input int    Inp_Gold_SlippageBps   = 2;       // XAUUSD CFD spread + commission
+
 // === Execution costs ===============================================
 // Per-side commission in basis points. Calibrate to the live broker:
 //   * Spread-only (e.g. OANDA Standard): 0.0
@@ -115,6 +130,7 @@ input int    Inp_MagicMR            = 831;
 input int    Inp_MagicTS            = 832;
 input int    Inp_MagicRSI           = 833;
 input int    Inp_MagicH1            = 834;
+input int    Inp_MagicGold          = 835;
 input bool   Inp_LogVerbose         = false;
 input bool   Inp_LogToFile          = true;
 input bool   Inp_ExportDeals        = false;   // dump per-deal CSV in OnTester
@@ -156,6 +172,7 @@ input bool             Inp_MacroHistoryUseCommon = true;
 #include "..\Include\FxSleeveTSMomentum.mqh"
 #include "..\Include\FxSleeveRSIDaily.mqh"
 #include "..\Include\FxSleeveH1Momentum.mqh"
+#include "..\Include\FxSleeveGoldMomentum.mqh"
 
 //============================================================ STATE
 
@@ -165,6 +182,7 @@ CSleeveMRMacro     g_sleeve_mr;
 CSleeveTSMomentum  g_sleeve_ts;
 CSleeveRSIDaily    g_sleeve_rsi;
 CSleeveH1Momentum  g_sleeve_h1;
+CSleeveGoldMomentum g_sleeve_gold;
 
 datetime           g_last_d1_bar         = 0;
 datetime           g_last_macro_age_warn = 0;
@@ -183,7 +201,7 @@ int OnInit()
                     Inp_GlobalTargetVol, Inp_GlobalMaxLeverage, Inp_GlobalVolFloor,
                     Inp_EnableDDCap, Inp_DDCap, Inp_ResetDDState,
                     Inp_EnableMarginCap, Inp_MarginCapPct,
-                    Inp_AllocH1Momentum))
+                    Inp_AllocH1Momentum, Inp_AllocGoldMomentum))
     {
         g_logger.Error("INIT", "RiskManager init failed");
         return INIT_PARAMETERS_INCORRECT;
@@ -246,6 +264,8 @@ int OnInit()
         g_logger.Error("INIT", "Sleeve RSI Daily init failed");
         return INIT_FAILED;
     }
+    if(Inp_AllocGoldMomentum > 0.0 && !g_sleeve_gold.Init())
+        return INIT_FAILED;
     if(Inp_AllocH1Momentum > 0.0 && !g_sleeve_h1.Init())
     {
         g_logger.Error("INIT", "Sleeve H1 Momentum init failed");
@@ -268,6 +288,7 @@ void OnDeinit(const int reason)
     g_sleeve_ts.Shutdown();
     g_sleeve_rsi.Shutdown();
     if(Inp_AllocH1Momentum > 0.0) g_sleeve_h1.Shutdown();
+    if(Inp_AllocGoldMomentum > 0.0) g_sleeve_gold.Shutdown();
     g_logger.Info("DEINIT", StringFormat("EA stopped reason=%d", reason));
     g_logger.Shutdown();
 }
@@ -333,6 +354,8 @@ void OnTimer()
         g_risk.RecomputeGlobalLeverage(g_logger);
         g_sleeve_ts.OnNewBarD1(g_risk);
         g_sleeve_rsi.OnNewBarD1(g_risk);
+        if(Inp_AllocGoldMomentum > 0.0)
+            g_sleeve_gold.OnNewBarD1(g_risk);
         g_last_d1_bar = today;
         g_logger.Info("DAILY",
             StringFormat("Daily recompute done at hour=%d UTC", hour_utc));

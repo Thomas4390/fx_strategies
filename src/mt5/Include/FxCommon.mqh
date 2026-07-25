@@ -15,6 +15,7 @@
 #define MAGIC_TS_MOMENTUM  832
 #define MAGIC_RSI_DAILY    833
 #define MAGIC_H1_MOMENTUM  834   // reserved for hourly momentum sleeve
+#define MAGIC_GOLD_MOMENTUM 835  // daily TS momentum on gold
 
 //+------------------------------------------------------------------+
 //| Sleeve identifiers                                               |
@@ -24,7 +25,8 @@ enum ESleeveID
     SLEEVE_MR_MACRO    = 0,
     SLEEVE_TS_MOMENTUM = 1,
     SLEEVE_RSI_DAILY   = 2,
-    SLEEVE_H1_MOMENTUM = 3
+    SLEEVE_H1_MOMENTUM = 3,
+    SLEEVE_GOLD_MOMENTUM = 4
 };
 
 //+------------------------------------------------------------------+
@@ -65,6 +67,7 @@ enum EMacroSourceMode
 #define FX_RISK_PCT_MR_MACRO     0.01    // intraday MR sleeve (4 pairs)
 #define FX_RISK_PCT_TS_MOMENTUM  0.05    // daily TS sleeve (3 pairs)
 #define FX_RISK_PCT_RSI_DAILY    0.05    // daily RSI sleeve (3-4 pairs)
+#define FX_RISK_PCT_GOLD_MOMENTUM 0.05  // daily gold sleeve (single symbol)
 
 //+------------------------------------------------------------------+
 //| Execution constants.                                             |
@@ -79,6 +82,9 @@ enum EMacroSourceMode
 //+------------------------------------------------------------------+
 #define FX_TS_AVG_NIGHTS_HELD    10.0    // TS Momentum median holding
 #define FX_RSI_AVG_NIGHTS_HELD   7.0     // RSI Daily median holding
+#define FX_GOLD_AVG_NIGHTS_HELD  35.0    // Gold Momentum median holding
+                                         // (43 trades over 6.5y in the
+                                         //  Python study => ~5 weeks)
 
 //+------------------------------------------------------------------+
 //| Stops-level safety extra cushion (in points).                    |

@@ -26,6 +26,7 @@ private:
     double m_alloc_ts;
     double m_alloc_rsi;
     double m_alloc_h1;
+    double m_alloc_gold;
     double m_target_vol;
     double m_max_leverage;
     double m_vol_floor;
@@ -39,7 +40,7 @@ private:
 
 public:
     CRiskManager() : m_alloc_mr(0.80), m_alloc_ts(0.10), m_alloc_rsi(0.10),
-                     m_alloc_h1(0.0),
+                     m_alloc_h1(0.0), m_alloc_gold(0.0),
                      m_target_vol(FX_VOL_TARGET_GLOBAL),
                      m_max_leverage(FX_MAX_LEVERAGE_GLOBAL),
                      m_vol_floor(FX_MIN_VOL_FLOOR),
@@ -54,21 +55,24 @@ public:
               bool dd_cap_enabled, double dd_cap, bool reset_dd_state,
               bool margin_cap_enabled = true,
               double margin_cap_pct = FX_MARGIN_CAP_DEFAULT,
-              double alloc_h1 = 0.0)
+              double alloc_h1 = 0.0,
+              double alloc_gold = 0.0)
     {
-        // Allocations must sum exactly to 1.0 across the four sleeves.
-        double sum = alloc_mr + alloc_ts + alloc_rsi + alloc_h1;
+        // Allocations must sum exactly to 1.0 across all sleeves.
+        double sum = alloc_mr + alloc_ts + alloc_rsi + alloc_h1 + alloc_gold;
         if(MathAbs(sum - 1.0) > 1e-6)
         {
             PrintFormat("CRiskManager::Init: allocations sum=%.4f != 1.0 "
-                        "(mr=%.2f ts=%.2f rsi=%.2f h1=%.2f)",
-                        sum, alloc_mr, alloc_ts, alloc_rsi, alloc_h1);
+                        "(mr=%.2f ts=%.2f rsi=%.2f h1=%.2f gold=%.2f)",
+                        sum, alloc_mr, alloc_ts, alloc_rsi, alloc_h1,
+                        alloc_gold);
             return false;
         }
         m_alloc_mr  = alloc_mr;
         m_alloc_ts  = alloc_ts;
         m_alloc_rsi = alloc_rsi;
         m_alloc_h1  = alloc_h1;
+        m_alloc_gold = alloc_gold;
         m_target_vol = target_vol;
         m_max_leverage = max_leverage;
         m_vol_floor = vol_floor;
@@ -100,6 +104,7 @@ public:
             case SLEEVE_TS_MOMENTUM: return equity * m_alloc_ts;
             case SLEEVE_RSI_DAILY:   return equity * m_alloc_rsi;
             case SLEEVE_H1_MOMENTUM: return equity * m_alloc_h1;
+            case SLEEVE_GOLD_MOMENTUM: return equity * m_alloc_gold;
         }
         return 0.0;
     }
@@ -270,10 +275,14 @@ public:
                     StringFormat("DD circuit-breaker FIRED: dd=%.2f%% "
                                  "(cap=%.2f%%) — closing all",
                                  dd * 100, m_dd_cap * 100));
-                CloseAllByMagic(MAGIC_MR_MACRO,    "DD breaker");
-                CloseAllByMagic(MAGIC_TS_MOMENTUM, "DD breaker");
-                CloseAllByMagic(MAGIC_RSI_DAILY,   "DD breaker");
-                CloseAllByMagic(MAGIC_H1_MOMENTUM, "DD breaker");
+                // These close by #define, not by the Inp_Magic* inputs.
+                // Any new sleeve MUST be added here or it escapes the
+                // breaker entirely.
+                CloseAllByMagic(MAGIC_MR_MACRO,      "DD breaker");
+                CloseAllByMagic(MAGIC_TS_MOMENTUM,   "DD breaker");
+                CloseAllByMagic(MAGIC_RSI_DAILY,     "DD breaker");
+                CloseAllByMagic(MAGIC_H1_MOMENTUM,   "DD breaker");
+                CloseAllByMagic(MAGIC_GOLD_MOMENTUM, "DD breaker");
                 GlobalVariableSet(GV_DD_TRIGGERED, 1.0);
                 Alert("FX DD circuit-breaker triggered");
             }
@@ -307,10 +316,11 @@ public:
                 StringFormat("Margin usage critical %.1f%% — force-closing all "
                              "(cap=%.1f%%)",
                              usage * 100, m_margin_cap_pct * 100));
-            CloseAllByMagic(MAGIC_MR_MACRO,    "margin critical");
-            CloseAllByMagic(MAGIC_TS_MOMENTUM, "margin critical");
-            CloseAllByMagic(MAGIC_RSI_DAILY,   "margin critical");
-            CloseAllByMagic(MAGIC_H1_MOMENTUM, "margin critical");
+            CloseAllByMagic(MAGIC_MR_MACRO,      "margin critical");
+            CloseAllByMagic(MAGIC_TS_MOMENTUM,   "margin critical");
+            CloseAllByMagic(MAGIC_RSI_DAILY,     "margin critical");
+            CloseAllByMagic(MAGIC_H1_MOMENTUM,   "margin critical");
+            CloseAllByMagic(MAGIC_GOLD_MOMENTUM, "margin critical");
             return true;
         }
         if(usage >= m_margin_cap_pct)

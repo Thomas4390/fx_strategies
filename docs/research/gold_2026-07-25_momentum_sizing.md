@@ -220,7 +220,58 @@ Not yet done: rerunning `scripts/sweep_fourth_sleeve.py` with `Gold_Momentum`
 injected, and bumping `_SLEEVES_VERSION` in `src/framework/data_cache.py` once
 the sleeve is added to `_compute_strategy_daily_returns()`.
 
-## 7. Reproduce
+## 7. Cross-validation on QuantConnect — and what it found
+
+QC project `34489845` (`GoldMomentumSizing_Validation`), LEAN 2.5.0.0.17941,
+XAUUSD OANDA CFD daily, 2019-01-01 → 2026-07-24, same signal, same
+`target_vol=0.25 / max_leverage=3.0`, 1 bp slippage per side.
+
+| | vbt | QC (edge-triggered) | QC (daily rebalance) |
+|---|---|---|---|
+| trades / orders | 50 | 128 orders | 1215 orders |
+| CAGR | 8.44% | 20.17% | 26.73% |
+| Sharpe | 0.726 | 0.575 | 0.797 |
+| ann. volatility | **12.19%** | **23.3%** | 21.7% |
+| max drawdown | −23.31% | −51.9% | −50.1% |
+
+**The Sharpe agrees to within about 0.15 across two independent engines and two
+independent data sources, which validates the signal.** The volatility does not,
+and that gap is a defect in the vbt sleeve, not in the port.
+
+Root cause: `pipeline()` passes `size=1.0, size_type="percent"` with a per-bar
+`leverage` array. `percent` means *percent of available cash*, so VBT caps the
+order at the cash balance and the leverage array cannot lift it the way a
+target-weight order would. Measured mean gross exposure is **52.7%**, and
+realized volatility comes out at 12.19% against a 25% target — the vol-target
+layer is delivering roughly half of what it asks for. QC's `set_holdings(weight)`
+sets the portfolio weight directly and lands at 23.3%, which is what the stated
+configuration should produce.
+
+Two consequences, and they differ in severity:
+
+- **The sizing-regime comparison stands.** Every regime in §4 shares the same
+  base plumbing, so the under-exposure is common-mode and the *relative* ranking
+  — and the risk-matched comparison in particular, which normalises volatility
+  explicitly — is unaffected.
+- **The absolute figures for the gold sleeve understate the configuration.**
+  CAGR 8.44% at 12.19% volatility is roughly half the intended exposure. The
+  §6 portfolio weights were derived from these understated returns and should be
+  recomputed once the sizing is fixed.
+
+Fix to apply: replace `size_type="percent"` + `leverage` with
+`size_type="targetpercent"` and the vol-target weight as the size, following
+`daily_momentum.py:224-233` and `composite_fx_alpha.py:389-398`. Then rerun §4
+and §6 and check the realized volatility lands near the 25% target.
+
+Two porting traps worth recording:
+
+1. XAUUSD on QC is an **OANDA CFD, not a forex pair**: it delivers `QuoteBar`s
+   and carries no volume, so reading `data.bars` (TradeBars) silently returns
+   nothing. First backtest: 0 orders, no error.
+2. Naming the symbol `self.symbol` shadows a `QCAlgorithm` method. The compiler
+   only warns.
+
+## 8. Reproduce
 
 ```bash
 python scripts/sweep_gold_sizing.py --smoke        # 3 regimes, fast
@@ -231,7 +282,7 @@ pytest tests/test_sizing_nb.py -v                  # 13 kernel tests
 
 Artifacts land in `results/gold_sizing/sizing_{selection,holdout}_<stamp>.{csv,json}`.
 
-## 8. Notes for whoever picks this up
+## 9. Notes for whoever picks this up
 
 - **Rust backend**: `vectorbtpro-rust==2026.6.27` is now installed (built from
   the `rust/` subdirectory of the vectorbt.pro repo, ~12 min with LTO). Measured
