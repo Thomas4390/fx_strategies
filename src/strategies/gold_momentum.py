@@ -29,6 +29,7 @@ Three entry points, matching the other sleeves:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -237,6 +238,111 @@ def pipeline(
         leverage=lev_ts.rename("leverage"),
     )
     return pf, indicator
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 1b. RECONCILIATION TRACE — the cross-engine contract
+# ═══════════════════════════════════════════════════════════════════════
+
+# Column order and rounding are a contract shared with the QuantConnect and
+# MQL5 ports. Changing either breaks the diff, so they live here as constants
+# rather than inline. Spec: docs/specs/gold_momentum_spec.md §9.
+TRACE_COLUMNS: tuple[str, ...] = (
+    "date",
+    "close",
+    "score",
+    "target_weight",
+    "position_units",
+    "equity",
+)
+_TRACE_DECIMALS: dict[str, int] = {
+    "close": 6,
+    "score": 6,
+    "target_weight": 6,
+    "position_units": 6,
+    "equity": 2,
+}
+
+
+def emit_daily_trace(
+    pf: vbt.Portfolio,
+    indicator: GoldMomentumIndicator,
+    path: str | Path | None = None,
+    *,
+    allow_short: bool = False,
+) -> pd.DataFrame:
+    """Emit the daily reconciliation trace, one row per usable session.
+
+    The trace is the unit of comparison between vbt, QuantConnect and MT5:
+    each engine emits these six columns and they are diffed rung by rung, so a
+    divergence lands on a named quantity rather than on an aggregate. Comparing
+    Sharpe ratios is the weakest available test — two implementations can agree
+    on Sharpe through offsetting errors.
+
+    Rows before the momentum score is defined (the 250-session warmup) are
+    dropped rather than zero-filled: a score of 0.0 means "the horizons
+    disagree", which is not the same statement as "no score yet".
+
+    ``allow_short`` must match the value passed to ``pipeline``. It cannot be
+    recovered from ``pf`` — an ``allow_short=True`` run that never happened to
+    go short is indistinguishable from a long-only one — and it is needed to
+    know whether a negative score targets a short or targets flat.
+
+    Parameters
+    ----------
+    pf
+        Portfolio returned by ``pipeline``.
+    indicator
+        The ``GoldMomentumIndicator`` returned alongside it, which carries the
+        score and the vol-target leverage.
+    path
+        Destination CSV. When None the frame is returned without being written.
+    allow_short
+        Whether the short side was enabled in the run being traced.
+
+    Returns
+    -------
+    The trace as a DataFrame, already rounded to the contract's precision so
+    that the file and the returned frame agree value for value.
+    """
+    score = indicator.score
+    close = indicator.close
+    leverage = indicator.leverage
+
+    if not pf.wrapper.index.equals(close.index):
+        raise ValueError(
+            "portfolio and indicator are not aligned on the same index; "
+            "pass the (pf, indicator) pair returned by a single pipeline() call"
+        )
+
+    # Target weight is what the sleeve aims to hold, not what it holds: flat
+    # whenever the score does not call for a position.
+    direction = pd.Series(0.0, index=score.index)
+    direction[score > 0.0] = 1.0
+    if allow_short:
+        direction[score < 0.0] = -1.0
+    target_weight = leverage * direction
+
+    trace = pd.DataFrame(
+        {
+            "date": close.index,
+            "close": close.to_numpy(dtype=float),
+            "score": score.to_numpy(dtype=float),
+            "target_weight": target_weight.to_numpy(dtype=float),
+            "position_units": np.asarray(pf.assets, dtype=float),
+            "equity": np.asarray(pf.value, dtype=float),
+        }
+    )
+    trace = trace[score.notna().to_numpy()].reset_index(drop=True)
+    trace["date"] = pd.to_datetime(trace["date"]).dt.strftime("%Y-%m-%d")
+    for column, decimals in _TRACE_DECIMALS.items():
+        trace[column] = trace[column].round(decimals)
+
+    if path is not None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        trace.to_csv(path, index=False, columns=list(TRACE_COLUMNS))
+    return trace
 
 
 # ═══════════════════════════════════════════════════════════════════════
