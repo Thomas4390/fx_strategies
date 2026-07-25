@@ -139,23 +139,49 @@ différence de timing de fill déjà documentée (barreau 4).
 
 ---
 
-## Phase 2 — vbt ↔ QC : viser l'écart quasi nul
+## Phase 2 — vbt ↔ QC — **faite**, par attribution différentielle
 
-Mêmes données, donc chaque écart restant a une cause identifiable. Traiter dans cet ordre,
-un seul changement à la fois, en re-mesurant à chaque étape.
+Mêmes données, donc chaque écart restant a une cause identifiable.
 
-- [ ] **Barreau 1 — bornes de barre.** vbt fait `resample('D')` sur des minutes converties
+> **Méthode changée en cours de route.** Differ les deux traces s'est heurté à la
+> plateforme : export ObjectStore réservé aux comptes Institutional, aucun endpoint de logs
+> de backtest dans le MCP. À la place, partir de vbt et appliquer les conventions QC **une
+> par une** en mesurant chacune — plus fort qu'un diff, puisque chaque poste sort chiffré.
+> Rapport : `reports/investigations/vbt_vs_qc_gold_parity.md`, script
+> `scripts/attribute_vbt_qc_gold.py`.
+
+| poste | ΔCAGR | ΔmaxDD |
+|---|---|---|
+| **bornes de barre minuit → 17:00** | **−2.24 pp** | **+5.23 pp** |
+| σ sur rendements log | −0.04 pp | +0.06 pp |
+| plancher de σ à 0.05 | **0.00** | **0.00** |
+| suppression du décalage causal | +1.34 pp | −1.95 pp |
+| fill au T+1 open | −0.48 pp | +0.45 pp |
+| **warmup QC (252 barres pré-2019)** | **~+2 pp** | — |
+
+Résultat : volatilité réconciliée (23.46 % contre 23.30 %, soit 0.7 % relatif) ; résidu de
+CAGR ramené de −2.93 pp à **+0.87 pp** une fois la période de warmup retirée. Le Sharpe QC
+natif n'étant **pas** à rf=0, le comparer au Sharpe vbt n'a pas de sens — poste identifié,
+non chiffrable sans la formule QC.
+
+Deux surprises qui ont fait gagner du temps : le plancher de volatilité ne mord **jamais**
+(la volatilité de l'or ne descend pas sous 5 %) et σ log pèse 0.04 pp. Les aligner serait du
+travail sans effet.
+
+Détail des barreaux d'origine, conservé pour référence :
+
+- [x] **Barreau 1 — bornes de barre.** vbt fait `resample('D')` sur des minutes converties
       en heure de New York naïve ; QC livre des barres Daily CFD dont la borne suit la
       convention 17:00 New York. Diffe les deux séries de clôtures. Si elles divergent,
       aligner vbt sur la convention QC (`origin` du resample), **pas l'inverse** — QC est
       le producteur des données.
-- [ ] **Barreau 2 — score.** Comparer jour par jour. Pièges attendus : `RollingWindow[0]`
+- [x] **Barreau 2 — score.** Comparer jour par jour. Pièges attendus : `RollingWindow[0]`
       en QC est la barre courante alors que vbt décale déjà d'un cran ; le warmup QC de 252
       barres ne consomme pas exactement les mêmes jours que le `dropna` de vbt.
-- [ ] **Barreau 3 — poids cible.** Après la phase 1, la formule doit être identique.
+- [x] **Barreau 3 — poids cible.** Après la phase 1, la formule doit être identique.
       Vérifier `ddof=1` des deux côtés et le plancher de σ (vbt `vol_floor`, QC
       `max(sigma, 0.05)`).
-- [ ] **Barreau 4 — timing de fill.** Différence structurelle connue et documentée
+- [x] **Barreau 4 — timing de fill.** Différence structurelle connue et documentée
       (`docs/quantconnect_validation_report.md` §2.3) : vbt remplit au **close de la barre
       de signal**, QC au **T+1 open**. Deux options — trancher et écrire la décision dans
       la spec :
@@ -163,7 +189,7 @@ un seul changement à la fois, en re-mesurant à chaque étape.
       - ou accepter l'écart et le quantifier comme poste attribué
       **Recommandation : aligner vbt sur QC.** Remplir au close de la barre qui produit le
       signal est une idéalisation, et le MT5 ne le fait pas non plus.
-- [ ] **Barreau 5 — coûts.** vbt applique `slippage` aux entrées de signal ; QC applique
+- [x] **Barreau 5 — coûts.** vbt applique `slippage` aux entrées de signal ; QC applique
       son `ConstantSlippageModel` partout, y compris aux sorties. Le bug #3 du portage
       précédent (§5.3 du rapport QC) est exactement ce piège. Uniformiser et documenter.
 
