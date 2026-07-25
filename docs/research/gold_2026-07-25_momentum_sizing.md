@@ -235,33 +235,60 @@ XAUUSD OANDA CFD daily, 2019-01-01 → 2026-07-24, same signal, same
 | max drawdown | −23.31% | −51.9% | −50.1% |
 
 **The Sharpe agrees to within about 0.15 across two independent engines and two
-independent data sources, which validates the signal.** The volatility does not,
-and that gap is a defect in the vbt sleeve, not in the port.
+independent data sources, which validates the signal.**
 
-Root cause: `pipeline()` passes `size=1.0, size_type="percent"` with a per-bar
-`leverage` array. `percent` means *percent of available cash*, so VBT caps the
-order at the cash balance and the leverage array cannot lift it the way a
-target-weight order would. Measured mean gross exposure is **52.7%**, and
-realized volatility comes out at 12.19% against a 25% target — the vol-target
-layer is delivering roughly half of what it asks for. QC's `set_holdings(weight)`
-sets the portfolio weight directly and lands at 23.3%, which is what the stated
-configuration should produce.
+> **Correction, 2026-07-25 (later session).** The vbt column above was measured
+> with the vol-target layer inactive, and the "sizing defect" diagnosed from it
+> does not exist. Everything below the table supersedes the original reading;
+> the table's vbt column is kept only as the record of the faulty measurement.
 
-Two consequences, and they differ in severity:
+Re-measured with `pipeline(data)` at its documented defaults — `target_vol=0.25`,
+`max_leverage=3.0`, the same window:
 
-- **The sizing-regime comparison stands.** Every regime in §4 shares the same
-  base plumbing, so the under-exposure is common-mode and the *relative* ranking
-  — and the risk-matched comparison in particular, which normalises volatility
-  explicitly — is unaffected.
-- **The absolute figures for the gold sleeve understate the configuration.**
-  CAGR 8.44% at 12.19% volatility is roughly half the intended exposure. The
-  §6 portfolio weights were derived from these understated returns and should be
-  recomputed once the sizing is fixed.
+| | vbt (as published above) | vbt (re-measured) | QC (edge-triggered) |
+|---|---|---|---|
+| CAGR | 8.44% | **18.65%** | 20.17% |
+| Sharpe | 0.726 | 0.700 | 0.575 |
+| ann. volatility | 12.19% | **23.74%** | 23.3% |
+| max drawdown | −23.31% | **−46.51%** | −51.9% |
+| trades | 50 | 50 | 128 orders |
 
-Fix to apply: replace `size_type="percent"` + `leverage` with
-`size_type="targetpercent"` and the vol-target weight as the size, following
-`daily_momentum.py:224-233` and `composite_fx_alpha.py:389-398`. Then rerun §4
-and §6 and check the realized volatility lands near the 25% target.
+The volatility gap that motivated the whole diagnosis is largely gone: 23.74%
+against QC's 23.3%, for a 25% target. Volatility was cross-checked three ways
+(`std(rets)·√252`, `returns_acc.annualized_volatility`, log-returns) — 23.74 /
+23.74 / 23.86%.
+
+**Why the original figures were wrong.** Passing `target_vol=None`, which sizes
+flat at 1×, reproduces them: 12.46% volatility, −24.47% drawdown, 54.13% mean
+gross exposure — against the 12.19% / −23.31% / 52.7% published above. The vbt
+column was a 1× run compared against a 25% target.
+
+The exposure arithmetic closes the case. Mean gross exposure is 102.66% across
+all bars, but the sleeve is in position only 54.1% of the time; **while in
+position it averages 189.67%**, against a median vol-target leverage of 2.007.
+`size_type="percent"` is not capping anything. The published 52.7% is simply
+100% × 54.1% — a flat run measured over all bars.
+
+Consequences:
+
+- **The sizing-regime comparison in §4 stands**, as it did before — every regime
+  shares the same plumbing, and the risk-matched comparison normalises volatility
+  explicitly.
+- **§6 portfolio weights need no correction on this account.** They were derived
+  from sleeve returns that are internally consistent; what was wrong was the
+  cross-engine reading, not the sleeve.
+- **No sizing fix is to be applied.** The previously prescribed change —
+  `size_type="targetpercent"` — is not merely unnecessary, it is **rejected by
+  the engine**: `from_signals` raises `ValueError: Target size types are not
+  supported`. The two patterns cited as precedent (`daily_momentum.py:224-233`,
+  `composite_fx_alpha.py:389-398`) both use `from_orders`, which does support
+  target sizing. The gold sleeve needs `from_signals` for its edge-triggered
+  entries/exits, its `sl_stop`, and the `signal_func_nb` seam the sizing overlays
+  plug into, so the two are not interchangeable.
+
+What remains genuinely open for vbt ↔ QC is the drawdown (−46.51% vs −51.9%) and
+CAGR (18.65% vs 20.17%), both consistent with the known fill-timing difference —
+vbt fills at the signal bar's close, QC at the T+1 open.
 
 Two porting traps worth recording:
 
@@ -288,13 +315,20 @@ Artifacts land in `results/gold_sizing/sizing_{selection,holdout}_<stamp>.{csv,j
   the `rust/` subdirectory of the vectorbt.pro repo, ~12 min with LTO). Measured
   on 2.7M bars it is **not faster** for this workload: rolling_std 0.81×,
   ewm_mean 0.89×, rolling_mean 0.88×, pct_change 1.35×. Numba stays the default.
-- **Pre-existing breakage, unrelated to this work**: `utils.apply_vbt_settings()`
-  sets `plotting.pre_show_func`, a key vbt 2026.6.27 renamed to `pre_render_func`.
-  The config is frozen, so it raises `KeyError` and takes down all 16
-  `tests/test_pipeline_equivalence.py` cases at fixture setup. Verified pre-existing
-  by stashing this branch's `src/utils.py` and re-running. Not fixed here because
-  the rename may carry different semantics and the function is imported by every
-  strategy module.
+- **Pre-existing breakage — fixed on 2026-07-25 (commit `c3f1809`).**
+  `utils.apply_vbt_settings()` set `plotting.pre_show_func`, a key vbt 2026.6.27
+  renamed to `pre_render_func`; the frozen config raised `KeyError` and took down
+  all 17 `tests/test_pipeline_equivalence.py` cases at fixture setup. The key is
+  now selected from the installed version.
+
+  Worth knowing what it hid: the `KeyError` fired on the line *before*
+  `vbt.settings.returns.year_freq = 252 days`, so that setting never applied — any
+  annualised metric read in an affected session used vbt's 365-day default. It also
+  masked 9 stale snapshots, re-baselined in `23c02e3`. The environment had drifted
+  from `uv.lock` on 18 of 35 packages, pandas 2.3.3 → 3.0.5 among them, and
+  `vectorbtpro` is not covered by the lock at all. **Pin the environment before
+  trusting any cross-engine comparison** — a backtest that is not reproducible
+  month to month cannot be reconciled against anything.
 - A bug worth remembering: an early version of `sweep_gold_sizing.py` sliced
   prices to the holdout *before* computing the signal, stranding the 250-session
   lookback with no history and scoring 250 of 333 blind sessions on a signal

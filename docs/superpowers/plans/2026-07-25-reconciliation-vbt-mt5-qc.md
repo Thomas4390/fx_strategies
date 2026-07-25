@@ -18,12 +18,18 @@ broker, pas qu'on a réconcilié quoi que ce soit.
 
 **État de départ** — commits `3928ad6` et `6035e15` sur `main`.
 
-| | vbt | QC | MT5 |
-|---|---|---|---|
-| Sharpe | 0.726 | 0.575 – 0.797 | non mesuré |
-| Vol ann. | **12.19%** | **23.3%** | non mesuré |
-| maxDD | −23.31% | −51.9% | non mesuré |
-| trades | 50 | 128 ordres | — |
+> **Révision du 2026-07-25 (session d'exécution).** La colonne vbt d'origine avait
+> été mesurée avec le vol-targeting inactif. Re-mesurée aux défauts documentés
+> (`target_vol=0.25`, `max_leverage=3.0`), elle change tout le diagnostic : l'écart
+> de volatilité vbt ↔ QC, qui motivait la phase 1, n'existe pas.
+
+| | vbt (publié) | vbt (re-mesuré) | QC | MT5 |
+|---|---|---|---|---|
+| Sharpe | 0.726 | 0.700 | 0.575 – 0.797 | non mesuré |
+| Vol ann. | 12.19% | **23.74%** | **23.3%** | non mesuré |
+| CAGR | 8.44% | **18.65%** | 20.17% | non mesuré |
+| maxDD | −23.31% | **−46.51%** | −51.9% | non mesuré |
+| trades | 50 | 50 | 128 ordres | — |
 
 ---
 
@@ -80,33 +86,41 @@ premier barreau cassé.
 
 ---
 
-## Phase 1 — Corriger le défaut de sizing vbt (bloquant)
+## Phase 1 — ~~Corriger le défaut de sizing vbt~~ — SANS OBJET (vérifié le 2026-07-25)
 
-Défaut identifié par la validation QC : `gold_momentum.pipeline()` passe
-`size_type="percent"` avec un tableau `leverage`. Or `percent` désigne un pourcentage du
-**cash disponible** — VBT plafonne l'ordre et le levier ne peut pas le relever.
-Exposition brute moyenne mesurée **52.7%**, volatilité réalisée **12.19%** pour une cible
-de 25% : la couche de vol-targeting ne délivre que la moitié de ce qu'elle demande.
+**Le défaut n'existe pas, et le correctif prescrit est rejeté par le moteur.** Cette phase
+est close sans action ; ce qui suit est le constat, à conserver pour ne pas la rouvrir.
 
-- [ ] Remplacer par `size_type="targetpercent"` avec le poids vol-cible comme `size`.
-      Patron exact : `daily_momentum.py:224-233` et `composite_fx_alpha.py:389-398`.
-- [ ] Vérifier que le seam `signal_func_nb` de `framework/sizing_nb.py` reste fonctionnel :
-      le kernel écrit `SizeType.ValuePercent`, cohérent avec `targetpercent`. Relancer
-      `pytest tests/test_sizing_nb.py -v` — les 13 tests doivent rester verts.
-- [ ] Contrôle de bon sens : la volatilité réalisée doit atterrir à **25% ± 3 pp** et
-      l'exposition brute moyenne doit être cohérente avec le levier médian (~2.0×).
-- [ ] Relancer `scripts/sweep_gold_sizing.py` (sélection **et** holdout) et **réécrire les
-      sections 4 et 6** de `docs/research/gold_2026-07-25_momentum_sizing.md`.
+Le diagnostic d'origine — `size_type="percent"` plafonnerait l'ordre au cash disponible,
+empêchant le tableau `leverage` de relever l'exposition — a été démenti par la mesure :
 
-**Attention méthodologique** : le classement des régimes de sizing devrait survivre (le
-biais était commun à tous, et la comparaison à risque égal normalise la volatilité). S'il
-change, c'est une information de premier ordre — le documenter explicitement plutôt que de
-le lisser.
+| mesure aux défauts (`target_vol=0.25`) | valeur | ce que le plan annonçait |
+|---|---|---|
+| volatilité réalisée | **23.74%** (cible 25%) | 12.19% |
+| exposition brute, en position | **189.67%** (levier médian 2.007) | — |
+| exposition brute, toutes barres | 102.66% | 52.7% |
 
-- [ ] Recalculer les poids portefeuille de la section 6 : ils dérivaient de rendements
-      sous-estimés.
+Volatilité recoupée par trois méthodes indépendantes : 23.74 / 23.74 / 23.86%. La vol
+réalisée est donc **déjà dans la tolérance 25% ± 3 pp** que cette phase visait comme
+critère d'acceptation, et `percent` ne plafonne rien.
 
-**Acceptation** : vol réalisée dans 25% ± 3 pp ; 13 tests verts ; sections 4 et 6 à jour.
+**D'où venaient les chiffres publiés** : `target_vol=None` (sizing plat à 1×) les
+reproduit — 12.46% de vol, −24.47% de DD, 54.13% d'exposition. La colonne vbt de la §7 du
+rapport de recherche était un run à levier 1× comparé à une cible de 25%. L'arithmétique
+le confirme : 52.7% ≈ 100% × 54.1% de temps passé en position.
+
+**Le correctif prescrit est impossible tel quel** : `from_signals` lève
+`ValueError: Target size types are not supported`. Les deux patrons cités en référence
+(`daily_momentum.py:224-233`, `composite_fx_alpha.py:389-398`) utilisent `from_orders`,
+qui supporte le sizing en cible. La sleeve or a besoin de `from_signals` pour ses
+transitions edge-triggered, son `sl_stop` et le seam `signal_func_nb` où se branchent les
+overlays de sizing — les deux API ne sont pas interchangeables. Y migrer serait une refonte,
+pas un changement d'une ligne, et rien ne la justifie.
+
+**Conséquence pour la phase 2** : elle part d'une situation bien meilleure qu'annoncé.
+vbt et QC concordent déjà sur la volatilité (23.74% vs 23.3%) et le Sharpe. Restent le
+maxDD (−46.51% vs −51.9%) et le CAGR (18.65% vs 20.17%), tous deux cohérents avec la
+différence de timing de fill déjà documentée (barreau 4).
 
 ---
 
@@ -230,11 +244,24 @@ de la phase, pas un résultat.
 
 ## Dette préexistante à traiter au passage
 
-- [ ] **`utils.apply_vbt_settings()` casse les 16 tests de `test_pipeline_equivalence.py`.**
-      Il écrit `plotting.pre_show_func`, clé renommée `pre_render_func` dans vbt 2026.6.27 ;
-      la config étant gelée, cela lève un `KeyError` au setup de la fixture. Vérifié
-      préexistant. **À corriger en premier** : sans ces tests, aucune non-régression n'est
-      possible sur les trois sleeves FX.
+- [x] **`utils.apply_vbt_settings()` casse les tests de `test_pipeline_equivalence.py`.**
+      Fait (`c3f1809`). La clé est choisie selon la version installée. Deux effets de bord
+      que le plan n'anticipait pas : le `KeyError` se déclenchait *avant* la ligne
+      `year_freq = 252 jours`, qui n'était donc jamais appliquée (métriques annualisées
+      lues sur le défaut vbt de 365 jours) ; et il masquait 9 snapshots périmés,
+      réétalonnés dans `23c02e3`. 17/17 verts.
+
+- [ ] **Épingler l'environnement — nouveau prérequis, découvert en exécutant ce plan.**
+      Le venv a dérivé de `uv.lock` sur **18 des 35 paquets** : pandas 2.3.3 → 3.0.5
+      (montée majeure), pyarrow 23.0.1 → 25.0.0, numpy, numba. `vectorbtpro` n'est pas
+      couvert par le lock du tout. C'est ce qui a périmé les snapshots, et c'est
+      rédhibitoire ici : **on ne peut pas réconcilier trois moteurs si l'un d'eux ne
+      redonne pas le même résultat d'un mois sur l'autre.** À traiter avant la phase 2,
+      et avant toute republication de chiffres.
+      Attention : `uv sync` ramènerait pandas 2.3.3 et invaliderait les snapshots qu'on
+      vient de réétalonner — trancher explicitement le sens de la convergence (regénérer
+      le lock sur l'environnement courant, ou revenir au lock) plutôt que de lancer la
+      commande.
 - [ ] `assert_manifest_fresh()` (`scripts/update_data_manifest.py:175`) n'a aucun appelant
       alors que sa docstring affirme le contraire. Le brancher au démarrage des scripts de
       sweep.
@@ -246,16 +273,18 @@ de la phase, pas un résultat.
 ## Ordre d'exécution et parallélisme
 
 ```
+Dette : pre_show_func [FAIT] ──> épinglage de l'environnement [À FAIRE]
+   │
 Phase 0 (spec + harnais)
-   ├─> Phase 1 (fix sizing vbt)  ──> Phase 2 (vbt ↔ QC)  ─┐
-   └─> Phase 3 (débloquer MT5)   ──> Phase 4 (vbt ↔ MT5) ─┴─> Phase 5 (verrouiller)
+   ├─> Phase 1 (fix sizing) [SANS OBJET] ──> Phase 2 (vbt ↔ QC)  ─┐
+   └─> Phase 3 (débloquer MT5)            ──> Phase 4 (vbt ↔ MT5) ─┴─> Phase 5 (verrouiller)
 ```
 
-Les phases 1-2 et 3 sont **indépendantes** et peuvent avancer en parallèle : la première
-est du Python, la seconde du diagnostic d'environnement. La phase 4 dépend des deux.
+Les phases 2 et 3 sont **indépendantes** et peuvent avancer en parallèle : la première est
+du Python, la seconde du diagnostic d'environnement. La phase 4 dépend des deux.
 
-La dette préexistante (`pre_show_func`) est à traiter avant toute revendication de
-non-régression.
+L'épinglage de l'environnement conditionne toute revendication de reproductibilité, donc
+les phases 2, 4 et 5.
 
 ## Ce qui ferait échouer ce plan
 
@@ -266,3 +295,11 @@ non-régression.
   broker — le contraire du but recherché.
 - **Réconcilier sur les métriques finales.** Sans les traces journalières de la phase 0,
   chaque écart devient une conjecture. La phase 0 n'est pas optionnelle.
+- **Réconcilier sur un environnement non épinglé.** Ajouté après coup, et c'est le piège
+  qui s'est effectivement refermé : un moteur qui ne redonne pas le même résultat d'un mois
+  sur l'autre n'est pas réconciliable. Il l'a d'abord fait silencieusement, les tests qui
+  auraient dû le signaler étant hors service.
+- **Bâtir sur une mesure qu'on n'a pas refaite soi-même.** La phase 1 de ce plan visait un
+  défaut qui n'existait pas, déduit d'une colonne de tableau mesurée sans vol-targeting.
+  Trente secondes de re-mesure l'auraient évité. Avant de corriger un écart, reproduire
+  l'écart.
