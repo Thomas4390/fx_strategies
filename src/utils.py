@@ -123,6 +123,141 @@ def load_fx_data(
     return raw, data
 
 
+# Gold (XAUUSD) — QuantConnect export, OANDA CFD.
+# Differs from the FX parquets: timestamp lives in a tz-aware UTC index named
+# "time" (not a "date" column), and there is no volume column.
+GOLD_SYMBOL = "XAU-USD"
+GOLD_DATA_PATH = "data/XAU-USD_minute_qc.parquet"
+
+# The gold signal is anchored on US session clock times (10:00 / 15:30 / 16:00).
+# Those boundaries move in UTC across DST, so the index is converted to New York
+# time and then made naive, keeping the repo-wide "naive index" convention while
+# letting `index.hour` mean exactly what the strategy means.
+GOLD_TZ = "America/New_York"
+
+
+def validate_ohlc_frame(
+    df: pd.DataFrame,
+    *,
+    name: str,
+    min_rows: int = 1000,
+) -> None:
+    """Fail fast on a malformed OHLC frame.
+
+    Checks the invariants no other loader in this repo verifies: a strictly
+    increasing index, no duplicate timestamps, no NaN, and OHLC coherence
+    (high is the bar maximum, low the bar minimum, all prices strictly
+    positive). Raises rather than silently repairing — a silent fix on price
+    data produces a backtest that cannot be trusted.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Frame with lowercase open/high/low/close columns and a DatetimeIndex.
+    name : str
+        Dataset name, used in error messages.
+    min_rows : int
+        Minimum acceptable row count.
+
+    Raises
+    ------
+    ValueError
+        On any violated invariant, with a message naming the first offenders.
+    """
+    if len(df) < min_rows:
+        raise ValueError(f"{name}: only {len(df)} rows, expected >= {min_rows}")
+
+    missing = [c for c in ("open", "high", "low", "close") if c not in df.columns]
+    if missing:
+        raise ValueError(f"{name}: missing OHLC columns {missing}")
+
+    if not isinstance(df.index, pd.DatetimeIndex):
+        raise ValueError(f"{name}: index is {type(df.index).__name__}, expected DatetimeIndex")
+
+    n_dup = int(df.index.duplicated().sum())
+    if n_dup:
+        dups = df.index[df.index.duplicated()][:5].tolist()
+        raise ValueError(f"{name}: {n_dup} duplicate timestamps, first {dups}")
+
+    if not df.index.is_monotonic_increasing:
+        raise ValueError(f"{name}: index is not monotonically increasing")
+
+    ohlc = df[["open", "high", "low", "close"]]
+    n_nan = int(ohlc.isna().to_numpy().sum())
+    if n_nan:
+        raise ValueError(f"{name}: {n_nan} NaN values in OHLC")
+
+    if bool((ohlc <= 0).to_numpy().any()):
+        raise ValueError(f"{name}: non-positive prices found")
+
+    body_high = ohlc[["open", "close"]].max(axis=1)
+    body_low = ohlc[["open", "close"]].min(axis=1)
+    bad = (ohlc["high"] < body_high) | (ohlc["low"] > body_low) | (ohlc["high"] < ohlc["low"])
+    n_bad = int(bad.sum())
+    if n_bad:
+        raise ValueError(
+            f"{name}: {n_bad} bars violate OHLC coherence, first {df.index[bad][:5].tolist()}"
+        )
+
+
+def load_gold_data(
+    path: str = GOLD_DATA_PATH,
+    tz: str = GOLD_TZ,
+    validate: bool = True,
+) -> tuple[pd.DataFrame, vbt.Data]:
+    """Load the XAUUSD minute parquet, indexed on naive New York time.
+
+    Mirrors `load_fx_data` (raw lowercase frame for Numba kernels, capitalized
+    `vbt.Data` for native VBT functions) but handles the two ways the gold
+    export differs from the FX parquets: a tz-aware UTC index named "time"
+    rather than a "date" column, and no volume column.
+
+    Parameters
+    ----------
+    path : str
+        Path to the gold parquet, relative to the project root or absolute.
+    tz : str
+        Target timezone. The index is converted to it and then made naive.
+    validate : bool
+        Run `validate_ohlc_frame` on the loaded frame.
+
+    Returns
+    -------
+    raw : pd.DataFrame
+        OHLCV with lowercase columns, naive index in `tz` (for Numba kernels).
+    data : vbt.Data
+        VBT Data wrapper with capitalized columns (for native VBT functions).
+    """
+    resolved = Path(path)
+    if not resolved.is_absolute():
+        resolved = _PROJECT_ROOT / path
+
+    data_raw = vbt.Data.from_parquet(str(resolved))
+    df = data_raw.data[data_raw.symbols[0]].sort_index()
+
+    if df.index.tz is None:
+        raise ValueError(
+            f"{path}: index is tz-naive; expected tz-aware UTC. Its timezone would "
+            "have to be guessed, and a wrong guess silently shifts every session boundary."
+        )
+    df.index = df.index.tz_convert(tz).tz_localize(None)
+
+    raw = df.copy()
+    raw.columns = [c.lower() for c in raw.columns]
+
+    if validate:
+        validate_ohlc_frame(raw, name=GOLD_SYMBOL)
+
+    # No volume on the OANDA gold CFD; VWAP-style indicators need the column present.
+    if "volume" not in raw.columns:
+        raw["volume"] = 1.0
+
+    df_cap = raw.copy()
+    df_cap.columns = [c.capitalize() for c in df_cap.columns]
+    data = vbt.Data.from_data({GOLD_SYMBOL: df_cap}, tz_localize=False, tz_convert=False)
+    return raw, data
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # TIME UTILITIES
 # ═══════════════════════════════════════════════════════════════════════

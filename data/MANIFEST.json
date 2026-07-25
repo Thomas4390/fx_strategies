@@ -1,58 +1,431 @@
 {
-  "generated_at": "2026-04-14T01:45:07.699455+00:00",
+  "generated_at": "2026-07-25T16:22:54.371012+00:00",
   "project_root": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies",
   "files": {
-    "CPI_CORE_monthly.parquet": {
-      "sha256": "58a990fda314413b4785f71a5262a036141ecea0158ffc8ba5537bdba9a346dc",
-      "size_bytes": 3461,
-      "size_mb": 0.003,
-      "row_count": 97,
+    "AAA10Y_daily.parquet": {
+      "sha256": "64028775fd82a0bd14a99c54af8ae9c004edd2a739a4302028100b57dc79e9a4",
+      "size_bytes": 114024,
+      "size_mb": 0.109,
+      "row_count": 10829,
       "column_count": 2,
       "columns": [
         "date",
-        "core_cpi"
+        "aaa10y"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-02-02 00:00:00"
+      "index_start": "1983-01-03 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "AHETPI_monthly.parquet": {
+      "sha256": "d75c6a96dd627ff123ba066d3c28916c08b9a1850fbe97970bdf2834e1ca5de8",
+      "size_bytes": 12748,
+      "size_mb": 0.012,
+      "row_count": 747,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "ahetpi"
+      ],
+      "index_start": "1964-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "AUD-USD_daily_mt5.parquet": {
+      "sha256": "47586bd3efb9802d3ec76a9e1174a717c5fed292914fd55c4df21f69ba2f3891",
+      "size_bytes": 90636,
+      "size_mb": 0.086,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "AUD-USD_minute_mt5.parquet": {
+      "sha256": "250a3c5098b511df2de1614f833511f77d88cf62dbf4ebfd1fe7760e75956b15",
+      "size_bytes": 1718020,
+      "size_mb": 1.638,
+      "row_count": 97315,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 10:10:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "BAA10Y_daily.parquet": {
+      "sha256": "e8a9151d44c49ff6631a3706e15006ba1555194a20b0f8d05cca85762dd8545a",
+      "size_bytes": 106716,
+      "size_mb": 0.102,
+      "row_count": 10082,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "baa10y"
+      ],
+      "index_start": "1986-01-02 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "BREAKEVEN_10Y_daily.parquet": {
+      "sha256": "727d42ca8f7f9f0757b7be301f9e2345d9e393470e7a990099c8678043ca1c74",
+      "size_bytes": 61313,
+      "size_mb": 0.058,
+      "row_count": 5837,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "breakeven_10y"
+      ],
+      "index_start": "2003-01-02 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "BREAKEVEN_5Y5Y_daily.parquet": {
+      "sha256": "ebbe94732faaacc4c72ab69398d3b00f7600623b1ea55e2906b7835849117462",
+      "size_bytes": 61096,
+      "size_mb": 0.058,
+      "row_count": 5837,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "breakeven_5y5y"
+      ],
+      "index_start": "2003-01-02 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "BREAKEVEN_5Y_daily.parquet": {
+      "sha256": "e1bd95ca9362fd43e4de3e2a6bb9e37fa49469bb75ed609ba8bcb2a0e5fe6d55",
+      "size_bytes": 62449,
+      "size_mb": 0.06,
+      "row_count": 5837,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "breakeven_5y"
+      ],
+      "index_start": "2003-01-02 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "BRENT_daily.parquet": {
+      "sha256": "39046159041f70051788a156e4f4946d4256a37161e92ba6cc4fd67b1d0803c8",
+      "size_bytes": 131976,
+      "size_mb": 0.126,
+      "row_count": 9879,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "brent"
+      ],
+      "index_start": "1987-05-20 00:00:00",
+      "index_end": "2026-04-27 00:00:00"
+    },
+    "CIVPART_monthly.parquet": {
+      "sha256": "586b691b4428e22102f61bae15b4a885949939d58be9c038a8c808002f9c0059",
+      "size_bytes": 11702,
+      "size_mb": 0.011,
+      "row_count": 938,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "civpart"
+      ],
+      "index_start": "1948-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "CPI_CORE_monthly.parquet": {
+      "sha256": "8a80bc2109f0698539c5449b516d933b052072b3dfce3cb460004e965bba08b6",
+      "size_bytes": 14189,
+      "size_mb": 0.014,
+      "row_count": 830,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "cpi_core"
+      ],
+      "index_start": "1957-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
     },
     "CPI_monthly.parquet": {
-      "sha256": "924db590ba77503fe555a7f8d37ec27cf0559245633a97d27fe0891774774eb7",
-      "size_bytes": 3406,
-      "size_mb": 0.003,
-      "row_count": 97,
+      "sha256": "fdd4d88195121fa6f1db68e0ce6ab44d474ff524af69e9399b33c9d27e9c8d31",
+      "size_bytes": 15956,
+      "size_mb": 0.015,
+      "row_count": 950,
       "column_count": 2,
       "columns": [
         "date",
         "cpi"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-02-02 00:00:00"
+      "index_start": "1947-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "DEXCAUS_daily.parquet": {
+      "sha256": "f8a8a141507fcf9dde47513e153e4b57517d252d9d22676027bc3a70ba14a35b",
+      "size_bytes": 176284,
+      "size_mb": 0.168,
+      "row_count": 13876,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dexcaus"
+      ],
+      "index_start": "1971-01-04 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "DEXCHUS_daily.parquet": {
+      "sha256": "3c9d03dd7b02f27f9a4a56be4b55eee676fe10c6df8253a9b02741b3a5de35b4",
+      "size_bytes": 148971,
+      "size_mb": 0.142,
+      "row_count": 11310,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dexchus"
+      ],
+      "index_start": "1981-01-02 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "DEXJPUS_daily.parquet": {
+      "sha256": "170866fd493c23d8a94ced50e1c956eb623712737d6f9eb0bc87536cbfdbd1dd",
+      "size_bytes": 179903,
+      "size_mb": 0.172,
+      "row_count": 13864,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dexjpus"
+      ],
+      "index_start": "1971-01-04 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "DEXUSEU_daily.parquet": {
+      "sha256": "147c85b168946eed7e94df637471983e781ae428c4c07598b09f3ec2d4fbff9e",
+      "size_bytes": 93193,
+      "size_mb": 0.089,
+      "row_count": 6849,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dexuseu"
+      ],
+      "index_start": "1999-01-04 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "DEXUSUK_daily.parquet": {
+      "sha256": "75d3f015845e42c58e157f3cb04c8629147a89a63189b84f26e81ad9e1cf99db",
+      "size_bytes": 184484,
+      "size_mb": 0.176,
+      "row_count": 13870,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dexusuk"
+      ],
+      "index_start": "1971-01-04 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
     },
     "DGS10_daily.parquet": {
-      "sha256": "3e142af9b2a0bd1e82f8545398cff4cd160a986b8ee708dd9fd69601b8c45ac7",
-      "size_bytes": 24046,
-      "size_mb": 0.023,
-      "row_count": 2060,
+      "sha256": "b3fe80bd4775c4a7b970358401b163cb254ecf5cc93b4d899d5ce9926a04b3a6",
+      "size_bytes": 175865,
+      "size_mb": 0.168,
+      "row_count": 16067,
       "column_count": 2,
       "columns": [
         "date",
         "dgs10"
       ],
-      "index_start": "2018-01-03 00:00:00",
-      "index_end": "2026-04-01 00:00:00"
+      "index_start": "1962-01-02 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
     },
     "DGS2_daily.parquet": {
-      "sha256": "2a0857940373cef24bf0e654e752617f57e58f9e3c39caab5e63807f737953cc",
-      "size_bytes": 24186,
-      "size_mb": 0.023,
-      "row_count": 2060,
+      "sha256": "bddd557c415d45bd6a4db1ce24da0ba31cd4950f5eee4e28cbafabb4327fc9cb",
+      "size_bytes": 138765,
+      "size_mb": 0.132,
+      "row_count": 12475,
       "column_count": 2,
       "columns": [
         "date",
         "dgs2"
       ],
-      "index_start": "2018-01-03 00:00:00",
-      "index_end": "2026-04-01 00:00:00"
+      "index_start": "1976-06-01 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "DGS30_daily.parquet": {
+      "sha256": "da8b83d40ffecb79bc27485bf91dc913034442618602f6c8c4a3cae3ccb7fa10",
+      "size_bytes": 136145,
+      "size_mb": 0.13,
+      "row_count": 12297,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dgs30"
+      ],
+      "index_start": "1977-02-15 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "DGS3MO_daily.parquet": {
+      "sha256": "38b78e8f145bb23e14d72a6f793709e20d9c6509b8e579390ece27715a6afac1",
+      "size_bytes": 123777,
+      "size_mb": 0.118,
+      "row_count": 11165,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dgs3mo"
+      ],
+      "index_start": "1981-09-01 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "DGS5_daily.parquet": {
+      "sha256": "458b27438de3957902e98489e3b47464faf7d73055bb99238cea16bfdc68657a",
+      "size_bytes": 176126,
+      "size_mb": 0.168,
+      "row_count": 16067,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dgs5"
+      ],
+      "index_start": "1962-01-02 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "DTWEXBGS_daily.parquet": {
+      "sha256": "ff1ba69460a79577d430ed45ce1d0e3da05729922312f4241e78552df6486439",
+      "size_bytes": 87369,
+      "size_mb": 0.083,
+      "row_count": 5092,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "dtwexbgs"
+      ],
+      "index_start": "2006-01-02 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "ECB_DFR_daily.parquet": {
+      "sha256": "e2e181ee28838e34712ecdfc4743b2242985bbefa3a8117f718bfde8ea510da8",
+      "size_bytes": 92550,
+      "size_mb": 0.088,
+      "row_count": 9986,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "ecb_dfr"
+      ],
+      "index_start": "1999-01-01 00:00:00",
+      "index_end": "2026-05-04 00:00:00"
+    },
+    "EFFR_daily.parquet": {
+      "sha256": "18d7bf5719901d69ff06dbd0cf7bf3124cebe7a95762a7d9bcbd1136694c0fbb",
+      "size_bytes": 67574,
+      "size_mb": 0.064,
+      "row_count": 6485,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "effr"
+      ],
+      "index_start": "2000-07-03 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "EUR-GBP_daily_mt5.parquet": {
+      "sha256": "585684a64d4d6e123f2571a5e7b90e0d542c5ccb29b9c98afab333c7e28f78ac",
+      "size_bytes": 58748,
+      "size_mb": 0.056,
+      "row_count": 1088,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "EUR-GBP_minute_mt5.parquet": {
+      "sha256": "5e278ec7e16db9266db31ef0fe938f4b810b4f90e04f6b112f6d7f8020af25f4",
+      "size_bytes": 1626504,
+      "size_mb": 1.551,
+      "row_count": 97284,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 12:54:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "EUR-JPY_daily_mt5.parquet": {
+      "sha256": "10c5b308e813e06460a1727ce6e856ba74874063c77698435d9fe1dbeb9b7bc8",
+      "size_bytes": 49737,
+      "size_mb": 0.047,
+      "row_count": 1088,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "EUR-JPY_minute_mt5.parquet": {
+      "sha256": "67d1d1238f84fab16c2a91d8d375a2dd180ac875ede24cd9614a6e1f2c29e773",
+      "size_bytes": 1793032,
+      "size_mb": 1.71,
+      "row_count": 97285,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 13:17:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "EUR-USD_daily_mt5.parquet": {
+      "sha256": "b16e876415dfe22bcf193a4967e8f4f6d85e78fa51cd893ebf36d4871efe73fb",
+      "size_bytes": 91592,
+      "size_mb": 0.087,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
     },
     "EUR-USD_minute.parquet": {
       "sha256": "bdb8c5ce0d8263380f297a7d8b280c3a17c6a6364b7901ad82441ba60dcd12a8",
@@ -70,18 +443,90 @@
       "index_start": "2018-01-01 19:01:00",
       "index_end": "2026-04-01 00:00:00"
     },
+    "EUR-USD_minute_mt5.parquet": {
+      "sha256": "41e53b596f82a01f989722edb8b06d9bc86e7fd33d188b31cf4a5e3de8a6153a",
+      "size_bytes": 1827216,
+      "size_mb": 1.743,
+      "row_count": 97446,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 08:16:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
     "FED_FUNDS_monthly.parquet": {
-      "sha256": "89f66396d4d448a946e5d345e5a693b16cf02cae41c6d86bea8f16b192c33970",
-      "size_bytes": 3057,
-      "size_mb": 0.003,
-      "row_count": 99,
+      "sha256": "c6f19538540af26965ab38b0e63a6f837dc828cc9a22c1b338c43d0f81e34714",
+      "size_bytes": 12945,
+      "size_mb": 0.012,
+      "row_count": 862,
       "column_count": 2,
       "columns": [
         "date",
         "fed_funds"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-03-02 00:00:00"
+      "index_start": "1954-07-01 00:00:00",
+      "index_end": "2026-04-01 00:00:00"
+    },
+    "GBP-JPY_daily_mt5.parquet": {
+      "sha256": "fa30355968cf3a079307a1fef3326a9f6f0db6880b1b3a746d1003dde2c7272d",
+      "size_bytes": 73996,
+      "size_mb": 0.071,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "GBP-JPY_minute_mt5.parquet": {
+      "sha256": "15843d772619c0dd083cdee59a1ffdf569313a1ee87a601367cd4eecd371cc70",
+      "size_bytes": 1862833,
+      "size_mb": 1.777,
+      "row_count": 97277,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 13:25:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "GBP-USD_daily_mt5.parquet": {
+      "sha256": "363dfe1fbeef274ec95d2b62815f81add80bc9063d226301a0bd15cda0482194",
+      "size_bytes": 92290,
+      "size_mb": 0.088,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
     },
     "GBP-USD_minute.parquet": {
       "sha256": "80f774db927c2d215edcbe595cb533314a74aea02d8946ce358f80426fc8df49",
@@ -99,57 +544,322 @@
       "index_start": "2018-01-01 19:01:00",
       "index_end": "2026-04-01 00:00:00"
     },
+    "GBP-USD_minute_mt5.parquet": {
+      "sha256": "5ad4c42b39175907d43f636632ce17f55ed1f640ebcc5df6c9ad67daf92a1262",
+      "size_bytes": 1860633,
+      "size_mb": 1.774,
+      "row_count": 97446,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 08:49:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "GBP_LT_monthly.parquet": {
+      "sha256": "3b98ca564b651a0a8bcdda67f650383d7611163d03261faa411dcbdc49dd8225",
+      "size_bytes": 14469,
+      "size_mb": 0.014,
+      "row_count": 795,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "gbp_lt"
+      ],
+      "index_start": "1960-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "GDPC1_quarterly.parquet": {
+      "sha256": "52b35ff6ad17e72d69ab244e03acedad23f5c7149103ee371e30d2474d4a13d1",
+      "size_bytes": 7152,
+      "size_mb": 0.007,
+      "row_count": 317,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "gdpc1"
+      ],
+      "index_start": "1947-01-01 00:00:00",
+      "index_end": "2026-01-01 00:00:00"
+    },
+    "HOUST_monthly.parquet": {
+      "sha256": "7699b133d4cf8d1f2c4b368853b3a05395e08c366121a370a833e322a6a7ab30",
+      "size_bytes": 12709,
+      "size_mb": 0.012,
+      "row_count": 807,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "houst"
+      ],
+      "index_start": "1959-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "ICSA_weekly.parquet": {
+      "sha256": "02085611924cde05766569fbbf7a85c6069fa2a2ffa50d4d13e853ca95d5726e",
+      "size_bytes": 37105,
+      "size_mb": 0.035,
+      "row_count": 3095,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "icsa"
+      ],
+      "index_start": "1967-01-07 00:00:00",
+      "index_end": "2026-04-25 00:00:00"
+    },
+    "INDPRO_monthly.parquet": {
+      "sha256": "df71de27affdcf68002cdeb61319682ad1c9e598144e6543786fac246495c62b",
+      "size_bytes": 24505,
+      "size_mb": 0.023,
+      "row_count": 1287,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "indpro"
+      ],
+      "index_start": "1919-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "JPY_LT_monthly.parquet": {
+      "sha256": "99c5a7667ca6872c97ba147b3fa00f3dcd69fae18338a4e006ecd2ec037232af",
+      "size_bytes": 8405,
+      "size_mb": 0.008,
+      "row_count": 447,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "jpy_lt"
+      ],
+      "index_start": "1989-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "M2_monthly.parquet": {
+      "sha256": "c42fd834900a89a17ba3b1fe14547c1204adc1f6b9356b47dcc50e7d270b321c",
+      "size_bytes": 14053,
+      "size_mb": 0.013,
+      "row_count": 807,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "m2"
+      ],
+      "index_start": "1959-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "MORTGAGE30_weekly.parquet": {
+      "sha256": "f9bb5ac4685d21e311f38226c00ee9de0183cbf3456395223077ef4e58a6b1cf",
+      "size_bytes": 36789,
+      "size_mb": 0.035,
+      "row_count": 2875,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "mortgage30"
+      ],
+      "index_start": "1971-04-02 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "NFCI_weekly.parquet": {
+      "sha256": "f13a1d24b50ee0be3ece1f93127c714d8be46a063af8acef1de60e70b7f09db7",
+      "size_bytes": 40173,
+      "size_mb": 0.038,
+      "row_count": 2886,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "nfci"
+      ],
+      "index_start": "1971-01-08 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
     "NFP_monthly.parquet": {
-      "sha256": "b19ed24298af8dd91b4f3554b3a209e8611637b9ba7d8c5b69f98e514066e58a",
-      "size_bytes": 3227,
-      "size_mb": 0.003,
-      "row_count": 99,
+      "sha256": "d1038c76d4620441838a3e780700918f5c50d8a02bb94b7356adc5d7d3f1d08d",
+      "size_bytes": 18101,
+      "size_mb": 0.017,
+      "row_count": 1047,
       "column_count": 2,
       "columns": [
         "date",
         "nfp"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-03-02 00:00:00"
+      "index_start": "1939-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "NZD-USD_daily_mt5.parquet": {
+      "sha256": "c083f9f318e6f0197c28280d2872f3386bda7446a945bd47b2415259a7a7651f",
+      "size_bytes": 91017,
+      "size_mb": 0.087,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "NZD-USD_minute_mt5.parquet": {
+      "sha256": "e16c1ca0221378a28978894df00cdb9e017a1453079f4676d7da0871981672b5",
+      "size_bytes": 1733637,
+      "size_mb": 1.653,
+      "row_count": 97293,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 07:35:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "PCE_CORE_monthly.parquet": {
+      "sha256": "dd62dc924fc94cee865d76cd15743e6623ef3140e20f30cccbeb030c830be7f1",
+      "size_bytes": 14655,
+      "size_mb": 0.014,
+      "row_count": 807,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "pce_core"
+      ],
+      "index_start": "1959-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
     },
     "PCE_monthly.parquet": {
-      "sha256": "87fc1526f11f87367ddb8b72839ea6c713327cdd79857a6d2797d97c5ab255a6",
-      "size_bytes": 3438,
-      "size_mb": 0.003,
-      "row_count": 98,
+      "sha256": "4b305068b946b7c40375298b6765ae9c6e6d696bcfefdd6b33812d6545225a05",
+      "size_bytes": 14572,
+      "size_mb": 0.014,
+      "row_count": 807,
       "column_count": 2,
       "columns": [
         "date",
         "pce"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-02-02 00:00:00"
+      "index_start": "1959-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "RSAFS_monthly.parquet": {
+      "sha256": "fdb9764c759c6504ba887ae35d4ef5f45c4d523badd94beaa2cffd2c2745525f",
+      "size_bytes": 8084,
+      "size_mb": 0.008,
+      "row_count": 411,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "rsafs"
+      ],
+      "index_start": "1992-01-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
+    },
+    "SOFR_daily.parquet": {
+      "sha256": "75a7f711be40f1f76960a6afb63d8c2732920132c075d5df9b38b33cfa167224",
+      "size_bytes": 22160,
+      "size_mb": 0.021,
+      "row_count": 2018,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "sofr"
+      ],
+      "index_start": "2018-04-03 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
     },
     "SPREAD_10Y2Y_daily.parquet": {
-      "sha256": "0db293c10147f514cb847df506266effdeff70ca0e8a5a996fd21aca8694e197",
-      "size_bytes": 23317,
-      "size_mb": 0.022,
-      "row_count": 2060,
+      "sha256": "3f7083c3fe81e33589b83b17847b658c1a6219a81fcfd342e57eb313952b0e2f",
+      "size_bytes": 16972,
+      "size_mb": 0.016,
+      "row_count": 1400,
+      "column_count": 1,
+      "columns": [
+        "T10Y2Y"
+      ],
+      "index_start": "2020-09-23 00:00:00",
+      "index_end": "2026-04-30 00:00:00"
+    },
+    "SPREAD_10Y3M_daily.parquet": {
+      "sha256": "6a789ceb05023c0391f0c48c3165a6668026c25000ea658e81ecd410eb184979",
+      "size_bytes": 119262,
+      "size_mb": 0.114,
+      "row_count": 11085,
       "column_count": 2,
       "columns": [
         "date",
-        "spread_10y2y"
+        "spread_10y3m"
       ],
-      "index_start": "2018-01-03 00:00:00",
-      "index_end": "2026-04-01 00:00:00"
+      "index_start": "1982-01-04 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "STLFSI_weekly.parquet": {
+      "sha256": "c78d25c4434717864bd39c866120bd40f2604eacb130a3dd83af055e50e88f7f",
+      "size_bytes": 29883,
+      "size_mb": 0.028,
+      "row_count": 1687,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "stlfsi"
+      ],
+      "index_start": "1993-12-31 00:00:00",
+      "index_end": "2026-04-24 00:00:00"
+    },
+    "UMCSENT_monthly.parquet": {
+      "sha256": "9deda1925daa6c23dafc044f20c6e7cf8fcf4b1981166756baec932d48cd89bb",
+      "size_bytes": 10263,
+      "size_mb": 0.01,
+      "row_count": 671,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "umcsent"
+      ],
+      "index_start": "1952-11-01 00:00:00",
+      "index_end": "2026-03-01 00:00:00"
     },
     "UNEMPLOYMENT_monthly.parquet": {
-      "sha256": "beabe7c07424b851af72c1816b73745a1c8b3316169b8abfb7c320d025851abe",
-      "size_bytes": 2889,
+      "sha256": "a9c0f9483c894698ab53023dd515640bd6ae15fc898389c67b3e12887557dec0",
+      "size_bytes": 2929,
       "size_mb": 0.003,
-      "row_count": 98,
-      "column_count": 2,
+      "row_count": 76,
+      "column_count": 1,
       "columns": [
-        "date",
-        "unemployment"
+        "UNRATE"
       ],
-      "index_start": "2018-01-02 00:00:00",
-      "index_end": "2026-03-02 00:00:00"
+      "index_start": "2019-12-06 00:00:00",
+      "index_end": "2026-04-03 00:00:00"
+    },
+    "USD-CAD_daily_mt5.parquet": {
+      "sha256": "90fb759b1f21fdee9c39cdef9014f46e0342a74b319812657890c5029ba335a7",
+      "size_bytes": 91571,
+      "size_mb": 0.087,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
     },
     "USD-CAD_minute.parquet": {
       "sha256": "512f93e544d2d69646ece4ef6a9b806dd20a130d1d61f235b1e1ee522aa50fce",
@@ -167,6 +877,78 @@
       "index_start": "2018-01-01 19:01:00",
       "index_end": "2026-04-01 00:00:00"
     },
+    "USD-CAD_minute_mt5.parquet": {
+      "sha256": "d58c8a50f70b9ad9b5b3e07c96e776a670d171e490d20b918c404a7edb96e578",
+      "size_bytes": 1787053,
+      "size_mb": 1.704,
+      "row_count": 97447,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 08:11:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "USD-CHF_daily_mt5.parquet": {
+      "sha256": "2100e787404ae81485a8d04f6587722ef7cbbf61c144839f4560f60affd445b2",
+      "size_bytes": 90980,
+      "size_mb": 0.087,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "USD-CHF_minute_mt5.parquet": {
+      "sha256": "9934c515aee843d790e0517fcaf5b4616c62833724a289c3cc8fb3c20a34e7c4",
+      "size_bytes": 1737356,
+      "size_mb": 1.657,
+      "row_count": 97283,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 09:22:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "USD-JPY_daily_mt5.parquet": {
+      "sha256": "c08c683c96105362ece0c464c042a6d2a481219bf483dd791aa25d6d253ba27d",
+      "size_bytes": 73040,
+      "size_mb": 0.07,
+      "row_count": 1697,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2020-11-22 00:00:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
     "USD-JPY_minute.parquet": {
       "sha256": "cf653395e6b0b361d44d7afe2cf25066965c30ba9ea1bdeefccb79ea305b65a8",
       "size_bytes": 48076017,
@@ -182,7 +964,66 @@
       ],
       "index_start": "2018-01-01 19:01:00",
       "index_end": "2026-04-01 00:00:00"
+    },
+    "USD-JPY_minute_mt5.parquet": {
+      "sha256": "ae66cd8bd7fe161cb887ceb4290c3cf727ab240f58e7f47d217c4b4e0fa57ecf",
+      "size_bytes": 1795919,
+      "size_mb": 1.713,
+      "row_count": 97446,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-01-26 08:16:00+00:00",
+      "index_end": "2026-05-01 00:00:00+00:00"
+    },
+    "VIX_daily.parquet": {
+      "sha256": "673acca3f947fbc0273206fda535e0e9822416658e697e4d8d7c0902e5e87b09",
+      "size_bytes": 110115,
+      "size_mb": 0.105,
+      "row_count": 9177,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "vix"
+      ],
+      "index_start": "1990-01-02 00:00:00",
+      "index_end": "2026-05-01 00:00:00"
+    },
+    "WTI_daily.parquet": {
+      "sha256": "a2f0d92f0e5cd43528fc547321c99c07af391e18365fb150d1fea6f674879ccb",
+      "size_bytes": 135508,
+      "size_mb": 0.129,
+      "row_count": 10148,
+      "column_count": 2,
+      "columns": [
+        "date",
+        "wti"
+      ],
+      "index_start": "1986-01-02 00:00:00",
+      "index_end": "2026-04-27 00:00:00"
+    },
+    "XAU-USD_minute_qc.parquet": {
+      "sha256": "7c272f08796172e90927cfe6c138a4eda40c071376efa6c712384eeccf95c6c8",
+      "size_bytes": 62005803,
+      "size_mb": 59.133,
+      "row_count": 2703484,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2019-01-01 23:04:00+00:00",
+      "index_end": "2026-07-24 03:59:00+00:00"
     }
   },
-  "combined_fingerprint": "666917fda857f7148d8f8c6eb9beeeb9e05554fcb3885d2c249178aa90514daf"
+  "combined_fingerprint": "50ba28bb1e6be3d1424d9474c5d0d4e25502c3bd372d40d7addedb9c1408e33e"
 }
