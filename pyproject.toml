@@ -4,14 +4,22 @@ version = "0.1.0"
 description = "Composite FX Alpha: Multi-Signal Currency Strategy"
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.0,<3",
-    "pyarrow",
-    "numpy",
-    "numba",
-    "plotly",
-    "pandas-stubs~=2.3.3",
+    # pandas 3 : l'environnement y est passé et les baselines de tests ont été
+    # réétalonnées dessus (2026-07-25). La borne `<3` d'origine ne décrivait plus
+    # ce qui tourne réellement, ce qui rendait `uv.lock` incapable de refléter
+    # l'environnement — la dérive qui a périmé les snapshots en silence.
+    "pandas>=3.0,<4",
+    "pyarrow>=25.0",
+    "numpy>=2.4",
+    "numba>=0.66",
+    "plotly>=6.9",
+    "pandas-stubs>=2.3.3",
     "scipy>=1.11",
     "arch>=6.0",
+    # Épinglé au commit exact : c'est le moteur de backtest, et une révision
+    # flottante (`develop`) rend les résultats non reproductibles d'un mois sur
+    # l'autre — voir docs/research/gold_2026-07-25_momentum_sizing.md §9.
+    "vectorbtpro @ git+https://github.com/polakowo/vectorbt.pro@f0de7dcbac47acc50bec48029a544f46d900329f",
 ]
 
 [project.optional-dependencies]
