@@ -59,7 +59,13 @@ def apply_vbt_settings() -> None:
     print(f"  Parallelization: {n_cores} cores available")
     print(f"  Numba threads: {get_num_threads()}")
 
-    vbt.settings.set("plotting.pre_show_func", configure_figure_for_fullscreen)
+    # vbt 2026.6.27 a renomme `plotting.pre_show_func` en `plotting.pre_render_func`.
+    hook_key = (
+        "pre_render_func"
+        if "pre_render_func" in vbt.settings["plotting"]
+        else "pre_show_func"
+    )
+    vbt.settings.set(f"plotting.{hook_key}", configure_figure_for_fullscreen)
     vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252
 
 

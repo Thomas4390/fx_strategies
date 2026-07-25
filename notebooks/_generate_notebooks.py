@@ -74,7 +74,9 @@ def _fullscreen(fig):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
     return fig
 
-vbt.settings.set("plotting.pre_show_func", _fullscreen)
+# vbt 2026.6.27 a renomme `plotting.pre_show_func` en `plotting.pre_render_func`.
+_hook_key = "pre_render_func" if "pre_render_func" in vbt.settings["plotting"] else "pre_show_func"
+vbt.settings.set(f"plotting.{_hook_key}", _fullscreen)
 vbt.settings.returns.year_freq = pd.Timedelta(hours=24) * 252"""
 
 LOAD_DATA_INTRADAY = """\
