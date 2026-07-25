@@ -89,20 +89,53 @@ Prior statistical tests on the trade sequence, before any backtest:
 
 ## 4. Results
 
-### 4.1 Selection (2019-01 → 2025-06, 2030 sessions), risk-matched to 25% vol
+### 4.1 Selection (2019-01 → 2025-06), risk-matched to 25% vol
 
 Risk-matching is mandatory: at natural exposure the martingale "wins" only by
 being more levered on average.
 
+> **Superseded on 2026-07-25 — the session boundary was wrong, and the ranking
+> moves.** Sessions were cut at midnight instead of the 17:00 New York CFD
+> close, which turned every Sunday evening into a session of its own: 392 of
+> them, ~356 minutes each against 1375 for a real one. Session count was
+> inflated 20% (2363 vs 1971) and every lookback shortened by the same
+> proportion. Details in `docs/specs/gold_momentum_spec.md` §2.
+>
+> This matters more here than anywhere else in the study, because **every
+> overlay in this table is path-dependent**: martingale sizes on the previous
+> trade's outcome, the grid on adverse excursions. Feeding them a run of
+> six-hour pseudo-sessions corrupts precisely the sequence they key on.
+
+Re-run on correct sessions:
+
 | regime | ann | SR | maxDD | MAR | skew | kurt | P(loss>50%) | DD p95 |
 |---|---|---|---|---|---|---|---|---|
-| grid k=0.5 | **18.73%** | 0.75 | −42.70% | **0.44** | −0.63 | 9.6 | 0.05% | 52.0% |
-| grid k=1.0 | 17.67% | 0.71 | −44.70% | 0.40 | −0.63 | 9.7 | 0.10% | 53.8% |
-| **flat (control)** | 17.08% | 0.68 | −48.18% | 0.35 | −0.66 | 10.6 | 0.10% | 54.8% |
-| grid deep k=3, 1 level | 17.01% | 0.68 | −47.94% | 0.35 | −0.66 | 9.9 | 0.05% | 54.8% |
-| anti-martingale m=2 | 16.37% | 0.65 | −46.66% | 0.35 | −0.34 | 15.4 | 0.25% | 54.7% |
-| combo m=2 | 16.04% | 0.64 | −50.07% | 0.32 | −0.66 | 16.2 | 0.60% | 58.9% |
-| **martingale m=2 n=3** | **13.13%** | 0.53 | −52.13% | **0.25** | **−1.15** | **19.4** | **1.40%** | **62.8%** |
+| **anti-martingale m=1.5** | **20.25%** | **0.81** | −46.00% | **0.44** | **+0.01** | 10.4 | 0.25% | 49.5% |
+| anti-martingale m=2.0 | 19.46% | 0.78 | −48.41% | 0.40 | −0.07 | 10.6 | 0.25% | 51.7% |
+| grid k=2.0 | 16.15% | 0.65 | −48.11% | 0.34 | −0.53 | 6.1 | 0.30% | 54.3% |
+| grid k=0.5 | 15.66% | 0.63 | −47.84% | 0.33 | −0.53 | 5.5 | 0.45% | 56.1% |
+| grid deep k=3, 1 level | 15.37% | 0.61 | −52.98% | 0.29 | −0.55 | 7.1 | 0.55% | 56.5% |
+| **flat (control)** | 15.06% | 0.60 | −54.25% | 0.28 | −0.57 | 7.3 | 0.60% | 57.1% |
+| **martingale m=2 n=3** | 9.49% | 0.38 | −59.96% | 0.16 | −0.80 | 7.5 | **4.70%** | 69.2% |
+| combo m=2 k=1.0 | 7.34% | 0.29 | −63.07% | 0.12 | −0.84 | 6.9 | **8.05%** | 72.7% |
+
+**What changed, and it is not a detail.** Anti-martingale goes from 5th (SR
+0.65) to **1st (0.81)**; flat falls from 3rd (0.68) to **7th (0.60)**; grid
+k=0.5, the previous winner at 0.75, drops to 0.63.
+
+The direction is mechanically sensible rather than lucky. Anti-martingale adds
+after a win and cuts after a loss, which is the same bet the momentum signal is
+already making — it only works if "the previous trade" means something, and a
+Sunday-evening stub is not a trade. It is also the only regime that fixes the
+distribution shape: **skew +0.01 against −0.57 for flat**, which was the stated
+theoretical case for it all along.
+
+What did *not* change is the verdict on martingale, which degrades further:
+P(loss>50%) rises from 1.40% to **4.70%**, and combo to 8.05%. The one
+conclusion that survives untouched is the one that mattered most.
+
+⚠️ **This is in-sample selection over 24 regimes.** It reopens the "flat sizing"
+decision, it does not settle it — see §5.
 
 Year-by-year ranking over 7 years (mean rank, 1 = best): grid k=0.5 **2.00**,
 martingale 3.86, grid k=1.0 3.64, combo 4.00, flat 4.64, anti-martingale 5.07.
@@ -117,6 +150,13 @@ The deep single-level grid, the one shape with a prior from the tail data
 Hypothesis not confirmed.
 
 ### 4.2 Holdout (2025-07 → 2026-07, 333 sessions), natural exposure
+
+> ⚠️ **Figures below are stale — computed on the wrong session boundary — and
+> they have deliberately NOT been recomputed.** The holdout has already been
+> read once. Re-running it after changing the specification would spend it a
+> second time on a decision it was frozen to arbitrate, which is the exact
+> failure `HOLDOUT_POLICY.md` exists to prevent. Whether to spend it is a
+> methodological call for the project owner, not a step to take in passing.
 
 | regime | ann | SR | maxDD | MAR | mean exposure | DD p95 | P(loss>50%) |
 |---|---|---|---|---|---|---|---|

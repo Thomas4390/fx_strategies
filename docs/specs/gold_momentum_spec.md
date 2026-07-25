@@ -27,24 +27,32 @@ Le pseudo-code est volontairement neutre : pas d'API de moteur, indices explicit
 vbt et QC partagent donc les mêmes données ; MT5 non. Cette asymétrie fixe deux cibles
 de réconciliation distinctes — voir §9.
 
-## 2. Borne de journée et fuseau — **point de divergence n°1**
+## 2. Borne de journée et fuseau
 
 ```
 REFERENCE_TZ  := America/New_York, horloge locale, sans information de fuseau
-DAY_BOUNDARY  := minuit dans REFERENCE_TZ
-close[t]      := dernier prix observé dans [minuit_t, minuit_{t+1})
+DAY_BOUNDARY  := 17:00 dans REFERENCE_TZ
+close[t]      := dernier prix observé dans (17:00_{t-1}, 17:00_t]
 ```
 
-L'implémentation vbt convertit l'index minute en heure de New York **naïve**, puis agrège
-par jour calendaire (`resample "1D"`, agrégat `last`). Les séances sans observation sont
-supprimées (`dropna`) : il n'y a **pas** de barre week-end.
+L'or se traite du dimanche 18:00 au vendredi 17:00 New York, et la barre journalière CFD
+clôt à 17:00. `gold_momentum.session_dates()` est le **seul** endroit qui exprime cette
+borne ; tout consommateur (sleeve, sweep de sizing) doit passer par lui.
 
-⚠️ **QuantConnect ne borne pas ainsi.** Les barres Daily d'un CFD OANDA suivent la
-convention 17:00 New York. Une séance QC datée `d` ne couvre donc pas le même intervalle
-qu'une séance vbt datée `d`. C'est le barreau 1 de la réconciliation, et il doit être
-mesuré avant toute analyse des barreaux suivants.
+> **Corrigé le 2026-07-25 — vbt bornait à minuit.** Découpé au jour calendaire, chaque
+> dimanche soir devenait une séance à part entière : **392 sur 2019-2026**, d'environ 356
+> minutes contre 1375 pour une vraie. Le compte de séances était gonflé de 20 % (2363 au
+> lieu de 1971) et **tous les lookbacks raccourcis d'autant** — un lookback de 250 séances
+> n'en couvrait réellement que ~208. Le sweep de sizing avait sa propre agrégation, à
+> minuit elle aussi, donc les deux ne scoraient déjà pas les mêmes séances.
+>
+> Effet mesuré sur la sleeve : maxDD −46.51 % → **−51.74 %** contre −51.90 % chez QC, et
+> volatilité 23.74 % → 23.54 % contre 23.30 %. L'alignement rapproche des deux côtés.
+> Effet sur le classement des régimes de sizing : voir
+> `docs/research/gold_2026-07-25_momentum_sizing.md` §4 — il change, et pas à la marge.
 
-⚠️ **MT5 borne en heure serveur du broker**, distincte des deux précédentes.
+⚠️ **MT5 borne en heure serveur du broker**, distincte de la convention New York. C'est un
+poste d'écart de la phase 4, à mesurer et non à annuler.
 
 ## 3. Score de momentum
 

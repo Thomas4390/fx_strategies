@@ -46,7 +46,7 @@ from framework.sizing_nb import (  # noqa: E402
     build_overlay_kwargs,
     make_params,
 )
-from strategies.gold_momentum import pipeline  # noqa: E402
+from strategies.gold_momentum import pipeline, session_dates  # noqa: E402
 from utils import load_gold_data  # noqa: E402
 
 # Adapted from docs/research/HOLDOUT_POLICY.md. The repo locks 2026-01-01; this
@@ -118,13 +118,19 @@ def load_daily() -> tuple[pd.DataFrame, np.ndarray]:
     afterwards. Slicing the prices first would strand the longest momentum
     lookback (250 sessions) with no history, so most of a 333-session holdout
     would be scored on a signal that does not exist yet.
+
+    Sessions are cut at 17:00 New York via ``gold_momentum.session_dates``, the
+    same boundary the sleeve uses. Resampling on the calendar day here — as this
+    did until 2026-07-25 — gave the sweep 2363 sessions against the sleeve's
+    1971, so the two were silently scoring different lookbacks.
     """
     raw, _ = load_gold_data()
+    sessions = session_dates(raw.index)
     daily = pd.DataFrame(
         {
-            "high": raw.high.resample("D").max(),
-            "low": raw.low.resample("D").min(),
-            "close": raw.close.resample("D").last(),
+            "high": raw.high.groupby(sessions).max(),
+            "low": raw.low.groupby(sessions).min(),
+            "close": raw.close.groupby(sessions).last(),
         }
     ).dropna()
     atr = (

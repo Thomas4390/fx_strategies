@@ -59,15 +59,51 @@ VOL_WINDOW: int = 21
 SESSION_CLOSE = "16:00"
 FIRST_HALF_HOUR_END = "10:00"
 
+# Hour that closes a daily session, New York. 17:00 is the CFD convention and
+# the boundary QuantConnect uses for its daily gold bars. See ``_daily_close``.
+SESSION_CLOSE_HOUR: int = 17
+
 
 def _daily_close(data: Any) -> pd.Series:
-    """Daily close series from a vbt.Data, DataFrame or Series of any frequency."""
+    """Daily close series from a vbt.Data, DataFrame or Series of any frequency.
+
+    Sessions close at 17:00 New York, not at midnight. Gold trades from Sunday
+    18:00 to Friday 17:00, so aggregating on the calendar day carves every
+    Sunday evening out as a session of its own — 392 of them over 2019-2026,
+    each about 356 minutes long against 1375 for a real one. That inflates the
+    session count by 20% and shortens every lookback by the same proportion: a
+    250-session lookback was really spanning ~208 market sessions.
+
+    The 17:00 boundary is also the convention of the QuantConnect daily CFD bar,
+    which matters because the local parquet was exported from QuantConnect —
+    aligning here is aligning on the data's producer.
+    """
     close = data.close if hasattr(data, "close") else data
     if isinstance(close, pd.DataFrame):
         close = close.iloc[:, 0]
-    if isinstance(close.index, pd.DatetimeIndex) and close.index.freq != "D":
-        close = close.vbt.resample_apply("1D", "last").dropna()
-    return close
+    if not isinstance(close.index, pd.DatetimeIndex):
+        return close
+
+    steps = close.index.to_series().diff().dropna()
+    if len(steps) and steps.median() >= pd.Timedelta(days=1):
+        return close  # already daily or coarser — nothing to aggregate
+
+    return close.groupby(session_dates(close.index)).last().dropna()
+
+
+def session_dates(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Session date each timestamp belongs to, under a 17:00 New York close.
+
+    Shifting by the distance to midnight turns "which session does this bar
+    close in?" into a plain calendar-day question: 16:59 stays on day J,
+    17:01 moves to J+1. Expressing the boundary once, here, is what keeps the
+    sleeve and the sizing sweep on the same sessions — they disagreed before,
+    and nothing in either output said so.
+
+    The index must be tz-naive New York (``utils.load_gold_data``): the boundary
+    is a wall-clock hour, so a UTC index would drift by one hour across DST.
+    """
+    return (index + pd.Timedelta(hours=24 - SESSION_CLOSE_HOUR)).normalize()
 
 
 def momentum_ensemble(
