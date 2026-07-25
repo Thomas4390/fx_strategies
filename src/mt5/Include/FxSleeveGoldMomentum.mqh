@@ -43,12 +43,14 @@ private:
     string m_symbol;
     int    m_lookbacks[FX_GOLD_N_LOOKBACKS];
     CTrade m_trade;
+    bool   m_trace_warned;   // warn once, not once per session
 
 public:
     bool Init() override
     {
         m_magic = Inp_MagicGold;
         m_name  = "Gold_Momentum";
+        m_trace_warned = false;
 
         m_lookbacks[0] = Inp_Gold_LookbackA;
         m_lookbacks[1] = Inp_Gold_LookbackB;
@@ -154,6 +156,70 @@ private:
             if(long_signal)       OpenPosition(ORDER_TYPE_BUY,  lev, score, risk);
             else if(short_signal) OpenPosition(ORDER_TYPE_SELL, lev, score, risk);
         }
+
+        if(Inp_Gold_Trace)
+            WriteTraceRow(score, lev, long_signal, short_signal, risk);
+    }
+
+    //--- Append one row of the cross-engine reconciliation trace.
+    //--- Contract and column order: docs/specs/gold_momentum_spec.md §9.
+    //--- Off by default: this writes to disk on every session and is a
+    //--- diagnostic, not a production behaviour.
+    void WriteTraceRow(double score, double lev, bool long_signal,
+                       bool short_signal, CRiskManager &risk)
+    {
+        double direction     = long_signal ? 1.0 : (short_signal ? -1.0 : 0.0);
+        double target_weight = lev * direction;
+
+        //--- Position in units (ounces), not lots, so the column means the
+        //--- same thing as the vbt one.
+        double units  = 0.0;
+        ulong  ticket = FindPositionByMagicSymbol(m_magic, m_symbol);
+        if(ticket != 0 && PositionSelectByTicket(ticket))
+        {
+            double vol = PositionGetDouble(POSITION_VOLUME)
+                         * SymbolInfoDouble(m_symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+            units = (PositionGetInteger(POSITION_TYPE) == (long)POSITION_TYPE_SELL)
+                    ? -vol : vol;
+        }
+
+        //--- The row is stamped with the session whose close produced the
+        //--- score (shift 1), NOT the session the order is sent in. Stamping
+        //--- it with the execution day would shift the whole trace one bar
+        //--- against vbt and break rung 2 for a reason unrelated to the signal.
+        datetime bar_time = iTime(m_symbol, PERIOD_D1, 1);
+        double   close_px = iClose(m_symbol, PERIOD_D1, 1);
+        if(bar_time == 0 || close_px <= 0.0) return;
+
+        MqlDateTime dt;
+        TimeToStruct(bar_time, dt);
+
+        //--- Sleeve-attributable equity, not account equity: the EA runs
+        //--- several sleeves and the account figure would not be comparable.
+        double equity = risk.SubEquity(SLEEVE_GOLD_MOMENTUM);
+
+        int handle = FileOpen(Inp_Gold_TraceFile,
+                              FILE_READ | FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON);
+        if(handle == INVALID_HANDLE)
+        {
+            if(!m_trace_warned)
+            {
+                m_trace_warned = true;
+                g_logger.Warn(m_name, StringFormat(
+                    "cannot open trace file %s (err=%d); tracing disabled for this run",
+                    Inp_Gold_TraceFile, GetLastError()));
+            }
+            return;
+        }
+        if(FileSize(handle) == 0)
+            FileWriteString(handle,
+                "date,close,score,target_weight,position_units,equity\n");
+        FileSeek(handle, 0, SEEK_END);
+        FileWriteString(handle, StringFormat(
+            "%04d-%02d-%02d,%.6f,%.6f,%.6f,%.6f,%.2f\n",
+            dt.year, dt.mon, dt.day,
+            close_px, score, target_weight, units, equity));
+        FileClose(handle);
     }
 
     //--- Mean of sign(return over N) across the configured lookbacks.

@@ -110,6 +110,8 @@ input double Inp_Gold_TargetVol     = 0.25;
 input double Inp_Gold_MaxLeverage   = 3.0;
 input double Inp_Gold_SafetySL      = 0.04;    // gold is ~2x FX volatility
 input int    Inp_Gold_SlippageBps   = 2;       // XAUUSD CFD spread + commission
+input bool   Inp_Gold_Trace         = false;   // daily reconciliation trace — diagnostic only
+input string Inp_Gold_TraceFile     = "gold_trace.csv";  // in Common\Files
 
 // === Execution costs ===============================================
 // Per-side commission in basis points. Calibrate to the live broker:
