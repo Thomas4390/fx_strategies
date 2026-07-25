@@ -1,0 +1,32 @@
+{
+  "run_id": "20260504T231423Z",
+  "exit_code": 0,
+  "duration_sec": 8.025036575003469,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/p3_V5_combined.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/p3_V5_combined.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2020.11.23 - 2026.04.30)",
+    "initial_deposit": "0.00",
+    "total_net_profit": "0.00",
+    "profit_factor": "0.00",
+    "recovery_factor": "0.00",
+    "sharpe_ratio": "0.00",
+    "total_trades": "0",
+    "balance_dd_max": "0.00 (0.00%)",
+    "equity_dd_max": "0.00 (0.00%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260504.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] Sleeve MR Macro init failed",
+      "[INIT][ERROR] Sleeve TS Momentum init failed",
+      "[INIT][ERROR] Sleeve TS Momentum init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "NL\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:12   [MR_Macro][WARN] AUDUSD.c: 113/1500 M1 bars; BB warmup degraded, signals improve as bars accumulate\nHL\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:12   CVWAPDaily::Warmup: no bars for AUDUSD.c since midnight UTC\nEM\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:12   [MR_Macro][WARN] VWAP warmup empty for AUDUSD.c; will rebuild as bars arrive\nRS\t0\t19:14:20.978\tCore 01\tNZDUSD.c: symbol to be synchronized\nPG\t0\t19:14:20.978\tCore 01\tNZDUSD.c: symbol synchronized, 4120 bytes of symbol info received\nPK\t0\t19:14:20.978\tCore 01\tNZDUSD.c: load 31 bytes of history data to synchronize in 0:00:00.202\nHL\t0\t19:14:20.978\tCore 01\tNZDUSD.c: history synchronized from 2020.11.22 to 2026.04.30\nLJ\t0\t19:14:20.978\tCore 01\tNZDUSD.c,M1: history cache allocated for 2040790 bars and contains 104 bars from 2020.11.22 22:05 to 2020.11.22 23:59\nKM\t0\t19:14:20.978\tCore 01\tNZDUSD.c,M1: history begins from 2020.11.22 22:05\nEJ\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:15   EnsureHistory: NZDUSD.c PERIOD_M1 only 104/1500 bars\nOO\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:15   [MR_Macro][WARN] NZDUSD.c: 104/1500 M1 bars; BB warmup degraded, signals improve as bars accumulate\nCI\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:15   CVWAPDaily::Warmup: no bars for NZDUSD.c since midnight UTC\nNI\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:15   [MR_Macro][WARN] VWAP warmup empty for NZDUSD.c; will rebuild as bars arrive\nRP\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:15   [MR_Macro][INFO] Init OK 6 pairs (EURUSD,GBPUSD,USDJPY,USDCAD,AUDUSD,NZDUSD)\nMR\t0\t19:14:20.978\tCore 01\tEURUSD.c,Daily: history cache allocated for 1418 bars and contains 1 bars from 2020.11.22 00:00 to 2020.11.22 00:00\nMF\t0\t19:14:20.978\tCore 01\tEURUSD.c,Daily: history begins from 2020.11.22 00:00\nMP\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:17   EnsureHistory: EURUSD.c PERIOD_D1 only 1/250 bars\nED\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:17   [TS_Momentum][WARN] EURUSD.c: 1/250 D1 bars; iMA(50)/iRSI(7) warm up as bars accumulate\nNL\t0\t19:14:20.978\tCore 01\tGBPUSD.c,Daily: history cache allocated for 1418 bars and contains 1 bars from 2020.11.22 00:00 to 2020.11.22 00:00\nJL\t0\t19:14:20.978\tCore 01\tGBPUSD.c,Daily: history begins from 2020.11.22 00:00\nFF\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:20   EnsureHistory: GBPUSD.c PERIOD_D1 only 1/250 bars\nRK\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:20   [TS_Momentum][WARN] GBPUSD.c: 1/250 D1 bars; iMA(50)/iRSI(7) warm up as bars accumulate\nJG\t0\t19:14:20.978\tCore 01\tUSDJPY.c,Daily: history cache allocated for 1418 bars and contains 1 bars from 2020.11.22 00:00 to 2020.11.22 00:00\nRK\t0\t19:14:20.978\tCore 01\tUSDJPY.c,Daily: history begins from 2020.11.22 00:00\nMM\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:22   EnsureHistory: USDJPY.c PERIOD_D1 only 2/250 bars\nEQ\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:22   [TS_Momentum][WARN] USDJPY.c: 2/250 D1 bars; iMA(50)/iRSI(7) warm up as bars accumulate\nOM\t0\t19:14:20.978\tCore 01\tEURJPY.c: symbol to be synchronized\nQI\t0\t19:14:20.978\tCore 01\tEURJPY.c: symbol synchronized, 4120 bytes of symbol info received\nQM\t0\t19:14:20.978\tCore 01\tEURJPY.c: load 31 bytes of history data to synchronize in 0:00:00.202\nCR\t0\t19:14:20.978\tCore 01\tEURJPY.c: history synchronized from 2022.11.04 to 2026.04.30\nHG\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:25   EnsureHistory: EURJPY.c PERIOD_D1 only -1/250 bars\nLK\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:27   EnsureHistory: EURJPY.c PERIOD_D1 only -1/1 bars\nNN\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:27   [TS_Momentum][ERROR] EURJPY.c: no D1 history at all; sleeve disabled\nGR\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:27   [INIT][ERROR] Sleeve TS Momentum init failed\nDL\t0\t19:14:20.978\tCore 01\t2020.11.23 00:00:27   [DEINIT][INFO] EA stopped reason=8\nIG\t2\t19:14:20.978\tCore 01\ttester stopped because OnInit returns non-zero code 1\nNL\t0\t19:14:20.985\tTester\tautomatical testing finished\nJE\t2\t19:14:20.987\tCore 01\tdisconnected\nCP\t0\t19:14:20.987\tCore 01\tconnection closed\nRM\t0\t19:14:20.989\tTester\tautomatical testing finished"
+  }
+}

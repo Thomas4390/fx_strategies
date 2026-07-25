@@ -1,0 +1,30 @@
+{
+  "run_id": "20260504T230507Z",
+  "exit_code": 0,
+  "duration_sec": 70.54940248299681,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/pair_MR_EURJPY.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/pair_MR_EURJPY.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2022.11.05 - 2026.04.30)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "-647.48",
+    "profit_factor": "0.35",
+    "recovery_factor": "-0.90",
+    "sharpe_ratio": "-5.00",
+    "total_trades": "29",
+    "balance_dd_max": "687.03 (6.84%)",
+    "equity_dd_max": "720.69 (7.15%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260504.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] Sleeve MR Macro init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "KE\t0\t19:05:04.868\tCore 01\t2026.04.17 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nGM\t0\t19:05:04.868\tCore 01\t2026.04.18 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nRJ\t0\t19:05:04.868\tCore 01\t2026.04.18 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nPI\t0\t19:05:04.868\tCore 01\t2026.04.19 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nIN\t0\t19:05:04.868\tCore 01\t2026.04.19 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nRD\t0\t19:05:04.868\tCore 01\t2026.04.20 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nGS\t0\t19:05:04.868\tCore 01\t2026.04.20 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nIP\t0\t19:05:04.868\tCore 01\t2026.04.21 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nPG\t0\t19:05:04.868\tCore 01\t2026.04.21 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nPS\t0\t19:05:04.868\tCore 01\t2026.04.22 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nID\t0\t19:05:04.868\tCore 01\t2026.04.22 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nGO\t0\t19:05:04.868\tCore 01\t2026.04.23 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nRH\t0\t19:05:04.868\tCore 01\t2026.04.23 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nNJ\t0\t19:05:04.868\tCore 01\t2026.04.24 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nCM\t0\t19:05:04.868\tCore 01\t2026.04.24 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nEF\t0\t19:05:04.868\tCore 01\t2026.04.25 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nLQ\t0\t19:05:04.868\tCore 01\t2026.04.25 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLQ\t0\t19:05:04.868\tCore 01\t2026.04.26 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nEF\t0\t19:05:04.868\tCore 01\t2026.04.26 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nCM\t0\t19:05:04.868\tCore 01\t2026.04.27 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nNJ\t0\t19:05:04.868\tCore 01\t2026.04.27 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nJH\t0\t19:05:04.868\tCore 01\t2026.04.28 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nOO\t0\t19:05:04.868\tCore 01\t2026.04.28 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQD\t0\t19:05:04.868\tCore 01\t2026.04.29 21:00:02   [RISK][INFO] Daily recompute: σ21=0.0000 σ63=0.0000 realized=0.0200 → lev=1.000\nHS\t0\t19:05:04.868\tCore 01\t2026.04.29 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nPO\t0\t19:05:04.868\tCore 01\t2026.04.29 23:59:59   [OPTIM] vt=1.0000 maxlev=1.0000 volfloor=0.0200 cagr=-0.028469 dd=7.1545 sharpe=-5.0000 pf=0.3485 rf=-0.8984 trades=29 net=-647.48 years=2.318\nQD\t0\t19:05:04.868\tCore 01\tfinal balance 9352.52 USD\nIF\t0\t19:05:04.868\tCore 01\tOnTester result -0.02846851607400702\nCS\t0\t19:05:04.868\tCore 01\t2026.04.29 23:59:59   [DEINIT][INFO] EA stopped reason=1\nJN\t0\t19:05:04.868\tCore 01\tEURUSD.c,M1: 5037222 ticks, 1279597 bars generated. Test passed in 0:01:05.346 (including ticks preprocessing 0:00:00.598).\nGP\t0\t19:05:04.868\tCore 01\t25259037 total ticks for all symbols\nCK\t0\t19:05:04.868\tCore 01\tEURJPY.c: generate 5104714 ticks in 0:00:00.123, passed to tester 5104714 ticks\nHF\t0\t19:05:04.868\tCore 01\tEURUSD.c: generate 5037222 ticks in 0:00:00.121, passed to tester 5037222 ticks\nEP\t0\t19:05:04.868\tCore 01\tGBPUSD.c: generate 5043293 ticks in 0:00:00.118, passed to tester 5043293 ticks\nES\t0\t19:05:04.868\tCore 01\tUSDCAD.c: generate 5010884 ticks in 0:00:00.115, passed to tester 5010884 ticks\nMN\t0\t19:05:04.868\tCore 01\tUSDJPY.c: generate 5062924 ticks in 0:00:00.121, passed to tester 5062924 ticks\nME\t0\t19:05:04.868\tCore 01\t772 Mb memory used including 191 Mb of history data, 512 Mb of tick data\nRE\t0\t19:05:04.868\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3000\\logs\\20260504.log\" written\nEH\t0\t19:05:04.883\tTester\tautomatical testing finished\nOS\t0\t19:05:04.884\tCore 01\tconnection closed"
+  }
+}

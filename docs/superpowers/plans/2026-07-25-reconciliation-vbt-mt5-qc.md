@@ -183,24 +183,32 @@ que le `.ini` UTF-16 contient bien `[Tester] Symbol=XAUUSD.c`. Aucun log n'appar
 
 Hypothèses à tester dans cet ordre (de la moins à la plus invasive) :
 
-- [ ] **Le symbole n'existe pas chez le broker.** Aucun historique or dans
-      `Bases/SquaredFinancialSC-MT5 Demo/history/` (que du FX). Lancer
-      `src/mt5/Scripts/FxPreflight.mq5` ou un script listant `SymbolsTotal(false)` pour
-      obtenir le nom exact. Candidats : `XAUUSD`, `XAUUSD.c`, `GOLD`, `GOLD.c`.
-      **Si le broker n'offre pas l'or, tout le reste de cette phase est sans objet** — le
-      dire immédiatement plutôt que de continuer à déboguer.
-- [ ] **État de session sauvegardé qui prime sur `/config:`.** MT5 restaure le dernier
-      profil. Tester avec `Config/` vidé de ses `.ini` persistants, ou avec un
-      `[StartUp]` explicite.
-- [ ] **Build 5836 et `/config:`.** Vérifier qu'un backtest FX connu (celui de mai, qui
-      fonctionnait : `reports/mt5/run_20260506T174130Z.json`) repasse aujourd'hui à
-      l'identique. **Si le run FX échoue aussi, la régression n'a rien à voir avec l'or**
-      et c'est l'environnement Wine/MT5 qu'il faut traiter.
-- [ ] Vérifier que le chemin `/config:` reste sans espace (`C:\fxgold.ini`) et que l'INI
-      est bien **UTF-16 LE avec BOM et CRLF** — `run_backtest_cli.py:95-105`.
+- [x] ~~**Le symbole n'existe pas chez le broker.**~~ **Infirmé.** `XAUUSD.c` existe et
+      porte des données : `XAUUSD.c,M1: 229815 ticks, 57565 bars generated`. L'absence
+      d'historique dans `Bases/` signalait un cache local vide, pas un symbole manquant —
+      le dossier `History/` du broker est vide **pour tous les symboles**, FX compris.
+- [x] **Le run FX échoue aussi** — donc la panne n'avait rien à voir avec l'or, comme ce
+      plan le prévoyait. C'est ce test qui a payé.
+- [x] **Cause racine : le modèle de simulation.** `DEFAULT_MODEL = 4` (« every tick based
+      on real ticks ») exige des ticks que le terminal en `/config:` ne parvient pas à
+      télécharger — `preliminary downloading of history ticks canceled`, puis
+      `no history data, stop testing`. Ni l'état de session, ni le chemin `/config:`, ni
+      l'encodage de l'INI n'étaient en cause.
+- [x] **Correctif : `--model 1`** (OHLC M1). ⚠️ Contrepartie assumée : les fills sont
+      interpolés et le Sharpe flatté ; tout chiffre MT5 obtenu ainsi est un **majorant**.
+- [x] **Obstacle secondaire** : `Inp_AllocGoldMomentum = 0.0` par défaut — la sleeve or ne
+      trade jamais en configuration de production. Les runs de réconciliation doivent
+      l'isoler (allocation 1.0, les autres à 0).
 
-**Acceptation** : un `run_*.json` frais dans `reports/mt5/` avec `exit_code=0` et une
-ligne `[OPTIM]` exploitable.
+**Acceptation — atteinte.** `reports/mt5/run_20260725T200546Z.json`, `exit_code=0`,
+5.3 ans simulés, sleeve or seule : 35 trades, Sharpe 0.73, profit net +173.8 %.
+
+- [ ] **Reste ouvert : la trace journalière MT5 n'est pas produite.** `Inp_Gold_Trace=true`
+      est bien écrit dans `[TesterInputs]` et l'allocation passée par le même mécanisme est
+      honorée, mais `WriteTraceRow` n'est jamais atteint — pas même son avertissement
+      d'échec d'ouverture. Preset `.set` caché et régénération du preset par défaut :
+      écartés par test. Le journal du tester porte en attendant score, levier, lots et prix
+      par trade, donc l'attribution reste faisable par parsing.
 
 ---
 

@@ -1,0 +1,28 @@
+{
+  "run_id": "20260505T171743Z",
+  "exit_code": 0,
+  "duration_sec": 7.860459720000108,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/fx_full_backtest.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/fx_stress_C1_W2_banking_2023.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2023.03.01 - 2023.04.15)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "-22.15",
+    "profit_factor": "0.82",
+    "recovery_factor": "-0.25",
+    "sharpe_ratio": "-0.98",
+    "total_trades": "33",
+    "balance_dd_max": "81.56 (0.81%)",
+    "equity_dd_max": "86.92 (0.87%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260505.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "GN\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   market buy 0.01 GBPUSD.c, close #62 (1.25274 / 1.25287 / 1.25274)\nCE\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   deal #64 buy 0.01 GBPUSD.c at 1.25287 done (based on order #64)\nMK\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   deal performed [#64 buy 0.01 GBPUSD.c at 1.25287]\nFF\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   order performed buy 0.01 at 1.25287 [#64 buy 0.01 GBPUSD.c at 1.25287]\nME\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   CTrade::OrderSend: market buy 0.01 position #62 GBPUSD.c [done at 1.25287]\nKJ\t0\t13:17:41.415\tCore 01\t2023.04.13 18:31:20   [MR_Macro][INFO] td_stop close ticket=62 sym=GBPUSD.c age=6h\nCI\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   [RISK][INFO] Daily recompute: σ21=0.0155 σ63=2.0028 realized=2.0028 → lev=0.374\nRO\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   market sell 0.01 EURUSD.c, close #51 (1.10458 / 1.10478 / 1.10461)\nDP\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   deal #65 sell 0.01 EURUSD.c at 1.10458 done (based on order #65)\nGS\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   deal performed [#65 sell 0.01 EURUSD.c at 1.10458]\nHJ\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   order performed sell 0.01 at 1.10458 [#65 sell 0.01 EURUSD.c at 1.10458]\nFD\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   CTrade::OrderSend: market sell 0.01 position #51 EURUSD.c [done at 1.10458]\nJE\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   [TS_Momentum][INFO] Exit LONG EURUSD.c (signal flip)\nKK\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   market sell 0.01 GBPUSD.c, close #52 (1.25226 / 1.25240 / 1.25226)\nPD\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   deal #66 sell 0.01 GBPUSD.c at 1.25226 done (based on order #66)\nNI\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   deal performed [#66 sell 0.01 GBPUSD.c at 1.25226]\nFP\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   order performed sell 0.01 at 1.25226 [#66 sell 0.01 GBPUSD.c at 1.25226]\nOP\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   CTrade::OrderSend: market sell 0.01 position #52 GBPUSD.c [done at 1.25226]\nQQ\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   [TS_Momentum][INFO] Exit LONG GBPUSD.c (signal flip)\nPP\t0\t13:17:41.415\tCore 01\t2023.04.13 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQS\t0\t13:17:41.415\tCore 01\t2023.04.14 21:00:00   [RISK][INFO] Daily recompute: σ21=0.0127 σ63=2.0045 realized=2.0045 → lev=0.374\nED\t0\t13:17:41.415\tCore 01\t2023.04.14 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nDF\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   position closed due end of test at 133.757 [#50 sell 0.01 USDJPY.c 132.173 sl: 138.782]\nCI\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   deal #67 buy 0.01 USDJPY.c at 133.757 done (based on order #67)\nPG\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   deal performed [#67 buy 0.01 USDJPY.c at 133.757]\nRQ\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   order performed buy 0.01 at 133.757 [#67 buy 0.01 USDJPY.c at 133.757]\nOL\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   [OPTIM] vt=0.7500 maxlev=64.0000 volfloor=0.0200 cagr=-0.017888 dd=0.8670 sharpe=-0.9771 pf=0.8188 rf=-0.2548 trades=33 net=-22.15 years=0.123\nPG\t0\t13:17:41.415\tCore 01\tfinal balance 9977.85 USD\nGQ\t0\t13:17:41.415\tCore 01\tOnTester result -0.0178879695637314\nDG\t0\t13:17:41.415\tCore 01\t2023.04.14 23:59:00   [DEINIT][INFO] EA stopped reason=1\nRP\t0\t13:17:41.415\tCore 01\tEURUSD.c,M1: 183133 ticks, 46750 bars generated. Test passed in 0:00:01.969 (including ticks preprocessing 0:00:00.017).\nCS\t0\t13:17:41.415\tCore 01\t731437 total ticks for all symbols\nGI\t0\t13:17:41.415\tCore 01\tEURUSD.c: generate 183133 ticks in 0:00:00.005, passed to tester 183133 ticks\nOJ\t0\t13:17:41.415\tCore 01\tGBPUSD.c: generate 182421 ticks in 0:00:00.004, passed to tester 182421 ticks\nPF\t0\t13:17:41.415\tCore 01\tUSDCAD.c: generate 181810 ticks in 0:00:00.004, passed to tester 181810 ticks\nQQ\t0\t13:17:41.415\tCore 01\tUSDJPY.c: generate 184073 ticks in 0:00:00.004, passed to tester 184073 ticks\nKS\t0\t13:17:41.415\tCore 01\t209 Mb memory used including 110 Mb of history data, 64 Mb of tick data\nNI\t0\t13:17:41.415\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260505.log\" written\nHE\t0\t13:17:41.446\tTester\tautomatical testing finished\nCO\t0\t13:17:41.446\tCore 01\tconnection closed"
+  }
+}

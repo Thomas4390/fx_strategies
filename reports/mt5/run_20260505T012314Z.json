@@ -1,0 +1,32 @@
+{
+  "run_id": "20260505T012314Z",
+  "exit_code": 0,
+  "duration_sec": 71.28989752999769,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/fx_full_backtest.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/e2n5_ts_14_50_fold2_oos.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2022.11.01 - 2023.10.31)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "537.79",
+    "profit_factor": "1.28",
+    "recovery_factor": "1.06",
+    "sharpe_ratio": "0.99",
+    "total_trades": "197",
+    "balance_dd_max": "371.88 (3.66%)",
+    "equity_dd_max": "508.85 (4.99%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260504.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] Sleeve MR Macro init failed",
+      "[INIT][ERROR] Sleeve TS Momentum init failed",
+      "[INIT][ERROR] Sleeve TS Momentum init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "IL\t0\t21:23:11.265\tCore 01\t2023.10.27 21:00:00   [TS_Momentum][INFO] Entry SHORT GBPUSD.c lots=0.04 price=1.21204 lev_pair=1.43 slip_pts=122\nNM\t0\t21:23:11.265\tCore 01\t2023.10.27 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLE\t0\t21:23:11.265\tCore 01\t2023.10.28 21:00:00   [RISK][INFO] Daily recompute: σ21=0.0208 σ63=0.0227 realized=0.0227 → lev=12.000\nQQ\t0\t21:23:11.265\tCore 01\t2023.10.28 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nIR\t0\t21:23:11.265\tCore 01\t2023.10.29 21:00:00   [RISK][INFO] Daily recompute: σ21=0.0208 σ63=0.0227 realized=0.0227 → lev=12.000\nLF\t0\t21:23:11.265\tCore 01\t2023.10.29 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHN\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   [RISK][INFO] Daily recompute: σ21=0.0209 σ63=0.0228 realized=0.0228 → lev=12.000\nJJ\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   market buy 0.09 USDJPY.c sl: 141.613 (149.046 / 149.066 / 149.046)\nJJ\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   deal #392 buy 0.09 USDJPY.c at 149.066 done (based on order #392)\nRD\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   deal performed [#392 buy 0.09 USDJPY.c at 149.066]\nNR\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   order performed buy 0.09 at 149.066 [#392 buy 0.09 USDJPY.c at 149.066]\nCM\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   CTrade::OrderSend: market buy 0.09 USDJPY.c sl: 141.613 [done at 149.066]\nHP\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   [TS_Momentum][INFO] Entry LONG USDJPY.c lots=0.09 price=149.06600 lev_pair=2.36 slip_pts=150\nHL\t0\t21:23:11.265\tCore 01\t2023.10.30 21:00:00   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMR\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   position closed due end of test at 149.087 [#392 buy 0.09 USDJPY.c 149.066 sl: 141.613]\nON\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal #393 sell 0.09 USDJPY.c at 149.087 done (based on order #393)\nJS\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal performed [#393 sell 0.09 USDJPY.c at 149.087]\nIK\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   order performed sell 0.09 at 149.087 [#393 sell 0.09 USDJPY.c at 149.087]\nKI\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   position closed due end of test at 1.21643 [#391 sell 0.04 GBPUSD.c 1.21204 sl: 1.27264]\nND\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal #394 buy 0.04 GBPUSD.c at 1.21643 done (based on order #394)\nLI\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal performed [#394 buy 0.04 GBPUSD.c at 1.21643]\nRG\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   order performed buy 0.04 at 1.21643 [#394 buy 0.04 GBPUSD.c at 1.21643]\nID\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   position closed due end of test at 1.06149 [#381 sell 0.04 EURUSD.c 1.05825 sl: 1.11116]\nCJ\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal #395 buy 0.04 EURUSD.c at 1.06149 done (based on order #395)\nNS\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   deal performed [#395 buy 0.04 EURUSD.c at 1.06149]\nHR\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   order performed buy 0.04 at 1.06149 [#395 buy 0.04 EURUSD.c at 1.06149]\nML\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   [OPTIM] vt=0.2800 maxlev=12.0000 volfloor=0.0200 cagr=0.053969 dd=4.9884 sharpe=0.9881 pf=1.2759 rf=1.0569 trades=197 net=537.79 years=0.997\nID\t0\t21:23:11.265\tCore 01\tfinal balance 10537.79 USD\nIS\t0\t21:23:11.265\tCore 01\tOnTester result 0.05396857871138172\nGD\t0\t21:23:11.265\tCore 01\t2023.10.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nGP\t0\t21:23:11.265\tCore 01\tEURUSD.c,M1: 1437073 ticks, 366330 bars generated. Test passed in 0:01:05.835 (including ticks preprocessing 0:00:00.142).\nDQ\t0\t21:23:11.265\tCore 01\t5743935 total ticks for all symbols\nGI\t0\t21:23:11.265\tCore 01\tEURUSD.c: generate 1437073 ticks in 0:00:00.036, passed to tester 1437073 ticks\nPJ\t0\t21:23:11.265\tCore 01\tGBPUSD.c: generate 1437471 ticks in 0:00:00.036, passed to tester 1437471 ticks\nGF\t0\t21:23:11.265\tCore 01\tUSDCAD.c: generate 1424805 ticks in 0:00:00.036, passed to tester 1424805 ticks\nHQ\t0\t21:23:11.265\tCore 01\tUSDJPY.c: generate 1444586 ticks in 0:00:00.034, passed to tester 1444586 ticks\nQO\t0\t21:23:11.265\tCore 01\t441 Mb memory used including 243 Mb of history data, 128 Mb of tick data\nNN\t0\t21:23:11.265\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3002\\logs\\20260504.log\" written\nPR\t0\t21:23:11.296\tTester\tautomatical testing finished\nIL\t0\t21:23:11.298\tCore 01\tconnection closed"
+  }
+}

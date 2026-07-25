@@ -1,0 +1,30 @@
+{
+  "run_id": "20260504T230154Z",
+  "exit_code": 0,
+  "duration_sec": 73.02136882500054,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/pair_TS_NZDUSD.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/pair_TS_NZDUSD.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2020.11.23 - 2026.04.30)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "-3 111.31",
+    "profit_factor": "0.63",
+    "recovery_factor": "-0.85",
+    "sharpe_ratio": "-0.98",
+    "total_trades": "150",
+    "balance_dd_max": "3 515.08 (34.85%)",
+    "equity_dd_max": "3 639.27 (35.92%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260504.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] Sleeve MR Macro init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "GN\t0\t19:01:51.782\tCore 01\t2026.04.25 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLD\t0\t19:01:51.782\tCore 01\t2026.04.26 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0168 σ63=0.0449 realized=0.0449 → lev=1.000\nRS\t0\t19:01:51.782\tCore 01\t2026.04.26 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nCP\t0\t19:01:51.782\tCore 01\t2026.04.27 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0168 σ63=0.0447 realized=0.0447 → lev=1.000\nIG\t0\t19:01:51.782\tCore 01\t2026.04.27 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nJS\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0168 σ63=0.0449 realized=0.0449 → lev=1.000\nNG\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   market sell 0.11 NZDUSD.c, close #298 (0.58843 / 0.58859 / 0.58843)\nJG\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   deal #299 sell 0.11 NZDUSD.c at 0.58843 done (based on order #299)\nJK\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   deal performed [#299 sell 0.11 NZDUSD.c at 0.58843]\nQR\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   order performed sell 0.11 at 0.58843 [#299 sell 0.11 NZDUSD.c at 0.58843]\nMM\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   CTrade::OrderSend: market sell 0.11 position #298 NZDUSD.c [done at 0.58843]\nDO\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   [TS_Momentum][INFO] Exit LONG NZDUSD.c (signal flip)\nRQ\t0\t19:01:51.782\tCore 01\t2026.04.28 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHQ\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0169 σ63=0.0449 realized=0.0449 → lev=1.000\nQF\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   market buy 0.12 NZDUSD.c sl: 0.55390 (0.58286 / 0.58305 / 0.58286)\nGF\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   deal #300 buy 0.12 NZDUSD.c at 0.58305 done (based on order #300)\nFF\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   deal performed [#300 buy 0.12 NZDUSD.c at 0.58305]\nMP\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   order performed buy 0.12 at 0.58305 [#300 buy 0.12 NZDUSD.c at 0.58305]\nLQ\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   CTrade::OrderSend: market buy 0.12 NZDUSD.c sl: 0.55390 [done at 0.58305]\nKO\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   [TS_Momentum][INFO] Entry LONG NZDUSD.c lots=0.12 price=0.58305 lev_pair=1.04 slip_pts=59\nMO\t0\t19:01:51.782\tCore 01\t2026.04.29 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nNQ\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   position closed due end of test at 0.58373 [#300 buy 0.12 NZDUSD.c 0.58305 sl: 0.55390]\nFP\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   deal #301 sell 0.12 NZDUSD.c at 0.58373 done (based on order #301)\nFQ\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   deal performed [#301 sell 0.12 NZDUSD.c at 0.58373]\nDO\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   order performed sell 0.12 at 0.58373 [#301 sell 0.12 NZDUSD.c at 0.58373]\nFK\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   [OPTIM] vt=1.0000 maxlev=1.0000 volfloor=0.0200 cagr=-0.066313 dd=35.9184 sharpe=-0.9822 pf=0.6310 rf=-0.8549 trades=150 net=-3111.31 years=5.432\nGS\t0\t19:01:51.782\tCore 01\tfinal balance 6888.69 USD\nOF\t0\t19:01:51.782\tCore 01\tOnTester result -0.06631299476267261\nPS\t0\t19:01:51.782\tCore 01\t2026.04.29 23:59:59   [DEINIT][INFO] EA stopped reason=1\nDN\t0\t19:01:51.782\tCore 01\tEURUSD.c,M1: 7862131 ticks, 2001902 bars generated. Test passed in 0:01:07.834 (including ticks preprocessing 0:00:00.969).\nRO\t0\t19:01:51.782\tCore 01\t39259470 total ticks for all symbols\nOD\t0\t19:01:51.782\tCore 01\tEURUSD.c: generate 7862131 ticks in 0:00:00.194, passed to tester 7862131 ticks\nPG\t0\t19:01:51.782\tCore 01\tGBPUSD.c: generate 7868812 ticks in 0:00:00.201, passed to tester 7868811 ticks\nPP\t0\t19:01:51.782\tCore 01\tNZDUSD.c: generate 7823771 ticks in 0:00:00.183, passed to tester 7823770 ticks\nCS\t0\t19:01:51.782\tCore 01\tUSDCAD.c: generate 7822385 ticks in 0:00:00.193, passed to tester 7822384 ticks\nKN\t0\t19:01:51.782\tCore 01\tUSDJPY.c: generate 7882375 ticks in 0:00:00.198, passed to tester 7882374 ticks\nGF\t0\t19:01:51.782\tCore 01\t1316 Mb memory used including 471 Mb of history data, 768 Mb of tick data\nCE\t0\t19:01:51.782\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3000\\logs\\20260504.log\" written\nOH\t0\t19:01:51.801\tTester\tautomatical testing finished\nHS\t0\t19:01:51.801\tCore 01\tconnection closed"
+  }
+}

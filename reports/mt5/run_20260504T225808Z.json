@@ -1,0 +1,30 @@
+{
+  "run_id": "20260504T225808Z",
+  "exit_code": 0,
+  "duration_sec": 20.3968303080037,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/pair_TS_AUDUSD.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/pair_TS_AUDUSD.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2020.11.23 - 2026.04.30)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "-112.14",
+    "profit_factor": "0.99",
+    "recovery_factor": "-0.05",
+    "sharpe_ratio": "-0.03",
+    "total_trades": "164",
+    "balance_dd_max": "2 225.15 (20.13%)",
+    "equity_dd_max": "2 331.91 (20.98%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260504.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] Sleeve MR Macro init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1584 rows from macro_history.csv [2020.01.02 ... 2026.05.01]",
+    "raw_tail": "GL\t0\t18:58:05.898\tCore 01\t2026.04.23 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nJG\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0472 σ63=0.0414 realized=0.0472 → lev=1.000\nOP\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   market buy 0.12 AUDUSD.c sl: 0.67965 (0.71514 / 0.71542 / 0.71514)\nJE\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   deal #328 buy 0.12 AUDUSD.c at 0.71542 done (based on order #328)\nMH\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   deal performed [#328 buy 0.12 AUDUSD.c at 0.71542]\nPE\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   order performed buy 0.12 at 0.71542 [#328 buy 0.12 AUDUSD.c at 0.71542]\nNF\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   CTrade::OrderSend: market buy 0.12 AUDUSD.c sl: 0.67965 [done at 0.71542]\nQI\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   [TS_Momentum][INFO] Entry LONG AUDUSD.c lots=0.12 price=0.71542 lev_pair=0.90 slip_pts=72\nJJ\t0\t18:58:05.898\tCore 01\t2026.04.24 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMI\t0\t18:58:05.898\tCore 01\t2026.04.25 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0473 σ63=0.0414 realized=0.0473 → lev=1.000\nQN\t0\t18:58:05.898\tCore 01\t2026.04.25 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nDE\t0\t18:58:05.898\tCore 01\t2026.04.26 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0473 σ63=0.0414 realized=0.0473 → lev=1.000\nHS\t0\t18:58:05.898\tCore 01\t2026.04.26 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nRP\t0\t18:58:05.898\tCore 01\t2026.04.27 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0471 σ63=0.0413 realized=0.0471 → lev=1.000\nOG\t0\t18:58:05.898\tCore 01\t2026.04.27 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKL\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0469 σ63=0.0413 realized=0.0469 → lev=1.000\nMG\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   market sell 0.12 AUDUSD.c, close #328 (0.71813 / 0.71827 / 0.71813)\nGG\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   deal #329 sell 0.12 AUDUSD.c at 0.71813 done (based on order #329)\nQK\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   deal performed [#329 sell 0.12 AUDUSD.c at 0.71813]\nQR\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   order performed sell 0.12 at 0.71813 [#329 sell 0.12 AUDUSD.c at 0.71813]\nFM\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   CTrade::OrderSend: market sell 0.12 position #328 AUDUSD.c [done at 0.71813]\nJN\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   [TS_Momentum][INFO] Exit LONG AUDUSD.c (signal flip)\nDQ\t0\t18:58:05.898\tCore 01\t2026.04.28 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nOQ\t0\t18:58:05.898\tCore 01\t2026.04.29 21:00:22   [RISK][INFO] Daily recompute: σ21=0.0486 σ63=0.0418 realized=0.0486 → lev=1.000\nKF\t0\t18:58:05.898\tCore 01\t2026.04.29 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLE\t0\t18:58:05.898\tCore 01\t2026.04.29 23:59:59   [OPTIM] vt=1.0000 maxlev=1.0000 volfloor=0.0200 cagr=-0.002075 dd=20.9800 sharpe=-0.0302 pf=0.9877 rf=-0.0481 trades=164 net=-112.14 years=5.429\nRN\t0\t18:58:05.898\tCore 01\tfinal balance 9887.86 USD\nFJ\t0\t18:58:05.898\tCore 01\tOnTester result -0.002075156824482338\nHL\t0\t18:58:05.898\tCore 01\t2026.04.29 23:59:59   [DEINIT][INFO] EA stopped reason=1\nHK\t0\t18:58:05.898\tCore 01\tEURUSD.c,M1: 7862131 ticks, 2001902 bars generated. Test passed in 0:00:08.241 (including ticks preprocessing 0:00:00.927).\nIJ\t0\t18:58:05.898\tCore 01\t39294751 total ticks for all symbols\nDP\t0\t18:58:05.898\tCore 01\tAUDUSD.c: generate 7859052 ticks in 0:00:00.181, passed to tester 7859051 ticks\nPS\t0\t18:58:05.898\tCore 01\tEURUSD.c: generate 7862131 ticks in 0:00:00.179, passed to tester 7862131 ticks\nKO\t0\t18:58:05.898\tCore 01\tGBPUSD.c: generate 7868812 ticks in 0:00:00.189, passed to tester 7868811 ticks\nNH\t0\t18:58:05.898\tCore 01\tUSDCAD.c: generate 7822385 ticks in 0:00:00.190, passed to tester 7822384 ticks\nDK\t0\t18:58:05.898\tCore 01\tUSDJPY.c: generate 7882375 ticks in 0:00:00.188, passed to tester 7882374 ticks\nFI\t0\t18:58:05.898\tCore 01\t1319 Mb memory used including 471 Mb of history data, 768 Mb of tick data\nKP\t0\t18:58:05.898\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3000\\logs\\20260504.log\" written\nJO\t0\t18:58:05.916\tTester\tautomatical testing finished\nCF\t0\t18:58:05.918\tCore 01\tconnection closed"
+  }
+}

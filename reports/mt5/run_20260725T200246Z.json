@@ -1,0 +1,28 @@
+{
+  "run_id": "20260725T200246Z",
+  "exit_code": 0,
+  "duration_sec": 9.871066399999108,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/fx_full_backtest.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/fx_full_backtest_report.htm",
+    "symbol": null,
+    "period": "M0 (1970.01.01 - 1970.01.01)",
+    "initial_deposit": "0",
+    "total_net_profit": "0",
+    "profit_factor": "0.00",
+    "recovery_factor": "0.00",
+    "sharpe_ratio": "0.00",
+    "total_trades": "0",
+    "balance_dd_max": "0 (0%)",
+    "equity_dd_max": "0 (0%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260725.log",
+    "init_ok": false,
+    "init_errors": [],
+    "macro_source_resolved": null,
+    "raw_tail": "IL\t0\t16:02:38.007\tTester\tCloud servers switched off\nLO\t0\t16:02:39.795\tTester\t\"fx_strategies\\FxMultiSleeve.ex5\" X64\nCF\t0\t16:02:39.923\tTester\tEURUSD.c: history data begins from 2020.11.22 00:00\nHD\t0\t16:02:39.958\tTester\tEURUSD.c: preliminary downloading of history ticks started, it may take quite a long time\nQR\t0\t16:02:39.958\tTester\tEURUSD.c: \"bases\\SquaredFinancialSC-MT5 Demo\\ticks\\EURUSD.c\\202607.tkc\" download\nQQ\t0\t16:02:40.958\tTester\tEURUSD.c: preliminary downloading of history ticks canceled\nFG\t3\t16:02:40.958\tTester\tno history data, stop testing\nOL\t0\t16:02:40.962\tTester\tautomatical testing finished"
+  }
+}
