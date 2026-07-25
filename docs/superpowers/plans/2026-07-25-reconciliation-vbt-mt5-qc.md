@@ -63,26 +63,41 @@ un écart de Sharpe avant que les barreaux 1 à 4 soient verts.
 
 Sans spécification unique écrite, les trois implémentations dérivent à chaque correctif.
 
-- [ ] Écrire `docs/specs/gold_momentum_spec.md` : **la** source de vérité, en pseudo-code
-      neutre, indépendante de tout moteur. Doit fixer sans ambiguïté :
-      - la borne de journée (quel instant clôt une barre D1) et le fuseau de référence
-      - l'indexation exacte du lookback (`close[t-1] / close[t-1-N]`, jamais `close[t]`)
-      - la fenêtre et le ddof de σ21, le facteur d'annualisation (252)
-      - la formule du poids cible et son plafond
-      - l'instant de décision et l'instant de fill (et leur écart)
-      - le modèle de coût, en bps de notionnel par côté
-- [ ] Ajouter à `src/strategies/gold_momentum.py` un `emit_daily_trace(pf, path)` qui
-      écrit le CSV à 6 colonnes ci-dessus.
-- [ ] Ajouter la même trace au projet QC `34489845` via `self.object_store` ou un
-      `self.log()` structuré récupérable par `read_backtest_logs`.
-- [ ] Ajouter la même trace au MQL5 : `CSleeveGoldMomentum` écrit une ligne par jour dans
-      `Common/Files/gold_trace.csv`, gardée par un `Inp_Gold_Trace` à `false` par défaut.
-- [ ] Écrire `scripts/reconcile_three_way.py` — charge les trois traces, les aligne sur
-      la date, et sort un tableau par barreau avec le **premier jour de divergence** et
-      l'amplitude. Reprendre le style de sortie de `scripts/compare_vbt_vs_mt5_c1.py:167`.
+- [x] `docs/specs/gold_momentum_spec.md` — écrite. Une correction par rapport à l'énoncé :
+      le lookback est bien indexé sur `close[t]`, **pas** `close[t-1]` comme ce plan le
+      supposait. C'est l'implémentation de référence qui fait foi, et l'idéalisation
+      qui en découle (décider et exécuter au même close) est documentée au §6 comme poste
+      d'attribution plutôt que corrigée en douce.
+- [x] `gold_momentum.emit_daily_trace()` — signature `(pf, indicator, path)` et non
+      `(pf, path)` : le score n'est pas récupérable depuis le portefeuille. 2113 lignes
+      émises, soit 2363 séances moins 250 de warmup.
+- [x] Trace QC (projet `34489845`) — compile (`BuildSuccess`), backtest relancé, métriques
+      **inchangées** (128 ordres, Sharpe 0.575, DD 51.9%), donc la trace n'a pas altéré le
+      trading. ⚠️ `read_backtest_logs` que ce plan citait **n'existe pas** dans le serveur
+      MCP, et l'export ObjectStore est réservé aux comptes Institutional : la récupération
+      est **manuelle** par l'interface web. D'où la double émission (ObjectStore + log
+      préfixé `TRACE,`). Voir spec §9.
+- [x] Trace MQL5 — `Inp_Gold_Trace` à `false` par défaut, compile sous Wine/MetaEditor
+      (0 erreur, 0 warning). Non exécutée : le tester est bloqué, c'est la phase 3.
+- [x] `scripts/reconcile_three_way.py` — descend l'échelle, s'arrête au premier barreau
+      cassé et marque les suivants ininterprétables. Deux profils de tolérance selon la
+      paire. Sortie non nulle en cas de dépassement.
 
-**Acceptation** : le script tourne sur des traces partielles et nomme correctement le
-premier barreau cassé.
+**Acceptation — atteinte.** Vérifié sur trois cas fabriqués : traces identiques (exit 0) ;
+défaut injecté au barreau `score` (nommé correctement, barreaux supérieurs marqués
+ininterprétables, exit 1) ; calendrier partiel avec défaut au seul barreau `equity`
+(2013 séances communes sur 2113, barreaux 1-4 verts, exit 1).
+
+**Écarts relevés à la lecture des trois portages, à traiter en phases 2 et 4** — la phase 0
+outille, elle ne répare pas :
+
+| | vbt | QC | MT5 |
+|---|---|---|---|
+| rendements de σ21 | arithmétiques | **log** | **log** |
+| plancher de σ | 0.01 | **0.05** | **0.05** |
+| décalage causal du levier | **oui, 1 séance** | non | non |
+| repli si historique court | levier 1.0 | pas de position | **σ = 0.16** |
+| capital initial | 1 000 000 | 100 000 | sub-equity de la sleeve |
 
 ---
 

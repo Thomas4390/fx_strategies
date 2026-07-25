@@ -222,6 +222,27 @@ barreau *N* rend tous les barreaux au-delà ininterprétables.
 Viser l'égalité avec MT5 serait le signe qu'on a idéalisé le backtest broker, pas qu'on a
 réconcilié quoi que ce soit.
 
+### Où chaque moteur écrit sa trace, et comment la récupérer
+
+| moteur | production | récupération |
+|---|---|---|
+| vbt | `gold_momentum.emit_daily_trace(pf, ind, path)` | directe, chemin local |
+| QC | projet `34489845`, ObjectStore `gold_trace_qc.csv` **et** log préfixé `TRACE,` | **manuelle** — voir ci-dessous |
+| MT5 | `Inp_Gold_Trace=true` → `Common\Files\gold_trace.csv` | directe, fichier local |
+
+⚠️ **La trace QC ne se récupère pas par API depuis ce compte**, et il vaut mieux le savoir
+avant d'essayer :
+
+- l'export de l'ObjectStore est réservé aux comptes **Institutional** (l'API répond une
+  erreur de licence de données) ;
+- le serveur MCP QuantConnect n'expose aucun point d'entrée pour les logs de *backtest* —
+  `read_live_logs` ne couvre que le live.
+
+D'où la double émission côté QC. En pratique, récupérer par l'interface web : soit
+télécharger `gold_trace_qc.csv` depuis l'Object Store, soit copier les lignes `TRACE,` du
+journal du backtest, en retirant le préfixe. Le fichier obtenu se passe tel quel à
+`scripts/reconcile_three_way.py --qc`.
+
 ## 10. Environnement
 
 Les résultats ne sont reproductibles qu'à environnement fixé. Le lock du dépôt épingle
