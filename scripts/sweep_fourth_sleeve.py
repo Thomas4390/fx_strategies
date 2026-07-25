@@ -227,6 +227,41 @@ def build_fourth_sleeve_grid() -> list[SweepConfig]:
                 )
             )
 
+    # ─── Block GOLD ─────────────────────────────────────────────────
+    # The one candidate on a different asset class, which is the whole reason
+    # to test it: the other three sleeves are all FX and share a dollar factor.
+    #
+    # The weight grid deliberately stops at 30%. The in-sample optimum sits at
+    # the boundary — the sample simply likes gold, 2019-2026 being a bull run —
+    # so a wider grid would report an optimum that is an artefact of the window.
+    # A defensible prior is 10-15%, in line with the two minor FX sleeves.
+    for mr, ts, rsi in _BASE_SPLITS_3:
+        for w_extra in _W_EXTRA_CORE:
+            w = _make_weights_4(mr, ts, rsi, w_extra, "Gold_Momentum")
+            tag = _weight_tag_4(mr, ts, rsi, w_extra, "G")
+            cfgs.append(
+                SweepConfig(
+                    id=f"SLV-g{tag}",
+                    block="GOLD",
+                    name=(
+                        f"+Gold_Momentum {int(w_extra * 100)}% "
+                        f"/ base={int(mr * 100)}-{int(ts * 100)}-{int(rsi * 100)} "
+                        f"/ tv=0.25 ml=14 DDoff"
+                    ),
+                    sleeves=(
+                        "MR_Macro",
+                        "TS_Momentum_3p",
+                        "RSI_Daily_3p",
+                        "Gold_Momentum",
+                    ),
+                    allocation="custom",
+                    target_vol=_PLATEAU_TV,
+                    max_leverage=_PLATEAU_ML,
+                    dd_cap_enabled=_PLATEAU_DD,
+                    custom_weights=w,
+                )
+            )
+
     # ─── Block XS_REVISIT — 12 configs ──────────────────────────────
     XS_BASE_SPLITS = [
         (0.80, 0.10, 0.10),
@@ -532,7 +567,16 @@ def main() -> None:
 
     print("Loading base 3 sleeves (production trio)…")
     sleeves = get_strategy_daily_returns()
-    base_keys = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p", "XS_Momentum")
+    # Gold_Momentum comes from the cached sleeve set like the trio, not from a
+    # helper below: it lives in _compute_strategy_daily_returns() so the cache
+    # and _SLEEVES_VERSION cover it.
+    base_keys = (
+        "MR_Macro",
+        "TS_Momentum_3p",
+        "RSI_Daily_3p",
+        "XS_Momentum",
+        "Gold_Momentum",
+    )
     sleeves_all: dict[str, pd.Series] = {k: sleeves[k] for k in base_keys}
 
     print("Loading extra sleeves…")
@@ -547,7 +591,7 @@ def main() -> None:
         idx = s.dropna().index
         common_idx = idx if common_idx is None else common_idx.intersection(idx)
     correlations: dict[str, Any] = {}
-    for extra in ("Composite_FX_Alpha", "OU_MR", "XS_Momentum"):
+    for extra in ("Composite_FX_Alpha", "OU_MR", "XS_Momentum", "Gold_Momentum"):
         corr_row: dict[str, float] = {}
         for base in ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"):
             a = sleeves_all[extra].loc[common_idx]
@@ -568,6 +612,7 @@ def main() -> None:
             "SLV-c80-10-10-C10",
             "SLV-o80-10-10-O10",
             "SLV-x80-10-10-X10",
+            "SLV-g80-10-10-G10",
             "BL-weight-top",
         }
         grid = [c for c in grid if c.id in smoke_ids]

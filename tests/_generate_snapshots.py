@@ -69,10 +69,24 @@ def _load_gbpusd_daily_close() -> Any:
     return data.close.resample("1D").last().dropna()
 
 
+def _load_gold_minute() -> Any:
+    """Load the XAUUSD minute export (used by the gold momentum sleeve).
+
+    Kept as minute data rather than pre-aggregated: the sleeve cuts its own
+    sessions at 17:00 New York, and handing it daily bars would bypass exactly
+    the step this snapshot is meant to lock down.
+    """
+    from utils import load_gold_data
+
+    _, data = load_gold_data()
+    return data
+
+
 _DATA_LOADERS: dict[str, Callable[[], Any]] = {
     "eurusd_minute": _load_eurusd_minute,
     "multi_pair_daily_closes": _load_multi_pair_daily_closes,
     "gbpusd_daily_close": _load_gbpusd_daily_close,
+    "gold_minute": _load_gold_minute,
 }
 
 
@@ -170,6 +184,27 @@ SNAPSHOT_CASES: list[dict[str, Any]] = [
         strat="ou_mr", label="high_vol",
         module="strategies.ou_mean_reversion", callable="backtest_ou_mr",
         params=dict(bb_window=120, bb_alpha=6.0, sigma_target=0.20, max_leverage=2.0),
+    ),
+    # ── Gold momentum ────────────────────────────────────────────────
+    # Locks the 17:00 New York session boundary as much as the signal: a
+    # regression to calendar-day bars would change every figure below.
+    dict(
+        strat="gold_momentum", label="default",
+        module="strategies.gold_momentum", callable="backtest_gold_momentum",
+        params=dict(),
+        data_loader="gold_minute",
+    ),
+    dict(
+        strat="gold_momentum", label="no_vol_target",
+        module="strategies.gold_momentum", callable="backtest_gold_momentum",
+        params=dict(target_vol=None),
+        data_loader="gold_minute",
+    ),
+    dict(
+        strat="gold_momentum", label="short_enabled",
+        module="strategies.gold_momentum", callable="backtest_gold_momentum",
+        params=dict(allow_short=True),
+        data_loader="gold_minute",
     ),
     # ── Phase 6: composite_fx_alpha ──────────────────────────────────
 ]

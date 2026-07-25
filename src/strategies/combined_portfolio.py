@@ -34,9 +34,10 @@ from strategies.daily_momentum import (
     backtest_xs_momentum,
     load_daily_closes,
 )
+from strategies.gold_momentum import pipeline as gold_momentum_pipeline
 from strategies.mr_macro import backtest_mr_macro, load_all_fx_data
 from strategies.rsi_daily import pipeline as rsi_daily_pipeline
-from utils import apply_vbt_settings, load_fx_data
+from utils import apply_vbt_settings, load_fx_data, load_gold_data
 
 RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-CAD")  # Phase E.3 (no USDJPY, drag -295 USD over 5.4y)
 
@@ -147,12 +148,26 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     print("  Running RSI Daily 3-pair (no USDJPY, Phase E.3) × MT5_LEV_AVG...")
     rsi_daily_3p = backtest_rsi_daily_portfolio() * MT5_LEV_AVG
 
+    # Gold Momentum — a fourth sleeve on a different asset class, which is
+    # where its value is: near-orthogonal to all three FX sleeves.
+    #
+    # NOT scaled by MT5_LEV_AVG, unlike TS and RSI above. Those are unleveraged
+    # daily backtests that need lifting to MT5's global leverage; this sleeve
+    # carries its own vol-target layer (25% target, 3x cap) and already sizes
+    # itself. Multiplying again would stack two leverage layers — the Phase L
+    # mistake Phase M.1 was written to undo.
+    print("  Running Gold Momentum (own vol-target, no MT5_LEV_AVG scaling)...")
+    _, gold_data = load_gold_data()
+    pf_gold, _ = gold_momentum_pipeline(gold_data)
+    gold_rets = pf_gold.returns
+
     return {
         "MR_Macro": mr_rets,
         "XS_Momentum": xs_rets,
         "TS_Momentum_RSI": ts_rets,
         "TS_Momentum_3p": ts_rets_3p,
         "RSI_Daily_3p": rsi_daily_3p,
+        "Gold_Momentum": gold_rets,
     }
 
 

@@ -63,7 +63,10 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 # v5c-phase-m : scale TS/RSI returns × 10 (uniform MT5 lev)
 # v5d-phase-m : leverage=15 partout (better calibration)
 # v5e-phase-m : leverage=12 partout (= MT5 max_lev pre-Phase I, optimal calibration)
-_SLEEVES_VERSION = "v5e-phase-m"
+# v6-gold     : ajout de la sleeve Gold_Momentum + bornes de séance à 17:00 NY
+#               (les 392 séances dominicales parasites changeaient tous les
+#               lookbacks — voir docs/specs/gold_momentum_spec.md §2)
+_SLEEVES_VERSION = "v6-gold"
 
 
 # ═══════════════════════════════════════════════════════════════════════

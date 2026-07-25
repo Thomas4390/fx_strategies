@@ -248,20 +248,40 @@ de la phase, pas un résultat.
 
 ---
 
-## Phase 5 — Verrouiller
+## Phase 5 — Verrouiller — **faite**
 
-- [ ] `scripts/compare_vbt_vs_mt5_gold.py` sur le patron de `compare_vbt_vs_mt5_c1.py`.
-- [ ] `tests/test_gold_momentum.py` : snapshot de `pipeline().stats()` à `rtol=1e-10`,
-      contrat de `tests/test_pipeline_equivalence.py`. Générer via
-      `tests/_generate_snapshots.py`.
-- [ ] Figer les tolérances trois-voies dans la spec de la phase 0 et les faire vérifier
-      par le script de réconciliation, en sortie non nulle si dépassement.
-- [ ] Ajouter `Gold_Momentum` à `_compute_strategy_daily_returns()`
-      (`combined_portfolio.py:88-156`) **et bumper `_SLEEVES_VERSION`**
-      (`src/framework/data_cache.py:66`) — sans ce bump le cache sert silencieusement du
-      périmé. Relancer `scripts/sweep_fourth_sleeve.py`.
-      Poids conseillé **10-15%** : l'optimum d'échantillon est à la borne (30%), ce qui
-      signale un biais de période et non un optimum.
+- [x] `scripts/compare_vbt_vs_mt5_gold.py`, sur le patron de `compare_vbt_vs_mt5_c1.py`,
+      tolérances du repo et sortie non nulle. Il avertit aussi quand le run lu ne porte pas
+      sur l'or — le piège `Inp_AllocGoldMomentum=0.0` est trop facile à rejouer.
+- [x] `tests/test_gold_momentum.py` — 6 tests. Trois snapshots à `rtol=1e-10` (défaut,
+      `target_vol=None`, `allow_short=True`) **plus** un verrou explicite sur la borne de
+      séance : zéro dimanche, 1971 séances, et le comportement de `session_dates` autour de
+      17:00. Le défaut des 392 dimanches n'apparaissait dans aucune sortie — il lui fallait
+      un test, pas un commentaire.
+- [x] Tolérances figées dans la spec §9, avec le script qui les vérifie en regard.
+- [x] `Gold_Momentum` ajouté à `_compute_strategy_daily_returns()`, `_SLEEVES_VERSION`
+      bumpé en `v6-gold` — l'invalidation du cache a été **vérifiée**, pas supposée
+      (`[cache] miss key=4333d2ad4e… — rebuilding`).
+      ⚠️ La sleeve n'est **pas** multipliée par `MT5_LEV_AVG` comme TS et RSI : elle porte
+      déjà sa propre couche de vol-targeting, et l'empiler serait l'erreur de la phase L
+      que la phase M.1 a été écrite pour défaire.
+- [x] `scripts/sweep_fourth_sleeve.py` relancé, bloc `GOLD` ajouté.
+
+**Résultat du sweep — les 14 configurations GOLD occupent les 14 premières places**, devant
+la baseline (Sharpe 0.802) :
+
+| poids or | Sharpe | CAGR | maxDD |
+|---|---|---|---|
+| 5 % | 0.83 – 0.90 | 20.4 – 22.1 % | −36 à −38 % |
+| 10 % | 0.93 – 0.98 | 23.7 – 25.2 % | −34 à −38 % |
+| 15 % | 1.00 – **1.05** | 26.2 – 27.5 % | −34 à −38 % |
+| *baseline sans or* | *0.802* | *19.01 %* | *−38.63 %* |
+
+⚠️ **Le Sharpe croît monotonement avec le poids et l'optimum est à la borne du grid.** C'est
+le signal d'un biais de période, pas d'un optimum : 2019-2026 est un marché haussier de
+l'or. Le grid s'arrête volontairement à 15 % pour ne pas rapporter un optimum qui serait un
+artefact de la fenêtre. **10-15 % reste le prior défendable**, cohérent avec les deux
+sleeves FX mineures — ne pas lire 15 % comme une recommandation.
 
 ---
 

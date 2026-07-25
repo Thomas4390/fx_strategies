@@ -220,15 +220,27 @@ barreau *N* rend tous les barreaux au-delà ininterprétables.
 | 4 | `position_units` | timing de fill, arrondi de lots, marge (§6) |
 | 5 | `equity` | coûts, spread, swap (§8) |
 
-**Tolérances.** Elles diffèrent selon la paire de moteurs, et c'est le point central :
+**Tolérances — figées ici, vérifiées par les scripts.** Elles diffèrent selon la paire de
+moteurs, et c'est le point central :
 
-| paire | données | barreaux 1-3 | barreaux 4-5 |
-|---|---|---|---|
-| vbt ↔ QC | identiques | écart relatif ≤ 1e-6 | ≤ 2 % sur CAGR/vol/maxDD, ≤ 0.05 sur le Sharpe |
-| vbt ↔ MT5 | différentes | écart **borné et attribué**, jamais nul | idem, chaque poste chiffré |
+| paire | données | barreaux 1-3 | métriques finales | vérifié par |
+|---|---|---|---|---|
+| vbt ↔ QC | identiques | écart relatif ≤ **1e-6** | ≤ **2 %** sur CAGR/vol/maxDD, ≤ **0.05** sur le Sharpe | `reconcile_three_way.py` |
+| vbt ↔ MT5 | différentes | écart **borné et attribué**, jamais nul | Sharpe ±**0.10**, maxDD ±**2 pp**, trades ±**10 %** | `compare_vbt_vs_mt5_gold.py` |
+
+Les deux scripts **sortent en code non nul** quand une tolérance est dépassée, donc ils
+peuvent servir de garde en CI.
 
 Viser l'égalité avec MT5 serait le signe qu'on a idéalisé le backtest broker, pas qu'on a
-réconcilié quoi que ce soit.
+réconcilié quoi que ce soit. Un dépassement côté MT5 n'est pas un échec en soi — il le
+devient s'il reste **inexpliqué**. Chaque écart doit être attribué nommément à un poste
+(spread, stop de sécurité, arrondi de lots, swap), et un résidu inexpliqué supérieur à 20 %
+de l'écart total compte comme un échec.
+
+⚠️ Deux conditions à vérifier avant de lire un run MT5 : la sleeve doit être **isolée**
+(`Inp_AllocGoldMomentum=1.0`, les autres à 0 — sa valeur de production est **0.0**, donc un
+run par défaut ne trade aucun or) et le modèle de simulation doit être connu (`--model 1`
+interpole les fills et flatte le Sharpe ; ces chiffres sont un majorant).
 
 ### Où chaque moteur écrit sa trace, et comment la récupérer
 

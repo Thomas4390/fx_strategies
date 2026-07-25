@@ -1,0 +1,41 @@
+{
+  "strat": "gold_momentum",
+  "label": "short_enabled",
+  "module": "strategies.gold_momentum",
+  "callable": "backtest_gold_momentum",
+  "params": {
+    "allow_short": true
+  },
+  "data_loader": "gold_minute",
+  "stats": {
+    "Start Index": "2019-01-02 00:00:00",
+    "End Index": "2026-07-24 00:00:00",
+    "Total Duration": "1971 days 00:00:00",
+    "Start Value": 1000000.0,
+    "Min Value": 555938.0714400603,
+    "Max Value": 3252206.4908061074,
+    "End Value": 2875752.590074716,
+    "Total Return [%]": 187.5752590074716,
+    "Benchmark Return [%]": 213.72303226745862,
+    "Position Coverage [%]": 73.00862506341959,
+    "Max Gross Exposure [%]": 305.33268518637453,
+    "Max Drawdown [%]": 60.00057714626623,
+    "Max Drawdown Duration": "1316 days 00:00:00",
+    "Total Orders": 142.0,
+    "Total Fees Paid": 0.0,
+    "Total Trades": 76.0,
+    "Win Rate [%]": 40.0,
+    "Best Trade [%]": 35.655298954768014,
+    "Worst Trade [%]": -4.842931589079125,
+    "Avg Winning Trade [%]": 4.654230300525567,
+    "Avg Losing Trade [%]": -1.2634657004328402,
+    "Avg Winning Trade Duration": "36 days 15:12:00",
+    "Avg Losing Trade Duration": "6 days 18:08:00",
+    "Profit Factor": 2.5474419625805957,
+    "Expectancy": 21510.19324062881,
+    "Sharpe Ratio": 0.6509302247608613,
+    "Calmar Ratio": 0.24099513746365656,
+    "Omega Ratio": 1.1474901360365535,
+    "Sortino Ratio": 0.9045549473468576
+  }
+}

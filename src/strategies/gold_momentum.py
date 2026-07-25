@@ -100,10 +100,18 @@ def session_dates(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
     sleeve and the sizing sweep on the same sessions — they disagreed before,
     and nothing in either output said so.
 
+    The interval is closed on the right — ``(17:00 of J-1, 17:00 of J]`` — so a
+    stamp at exactly 17:00 closes session J rather than opening J+1. Hence the
+    one-nanosecond nudge. The gold export never carries a 17:00 bar (its last
+    is 16:58), so this changes nothing here; it is spelled out because the spec
+    is shared with two other engines and an ambiguous boundary is how ports
+    drift apart.
+
     The index must be tz-naive New York (``utils.load_gold_data``): the boundary
     is a wall-clock hour, so a UTC index would drift by one hour across DST.
     """
-    return (index + pd.Timedelta(hours=24 - SESSION_CLOSE_HOUR)).normalize()
+    offset = pd.Timedelta(hours=24 - SESSION_CLOSE_HOUR) - pd.Timedelta(nanoseconds=1)
+    return (index + offset).normalize()
 
 
 def momentum_ensemble(
