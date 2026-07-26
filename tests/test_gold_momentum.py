@@ -133,7 +133,12 @@ def test_session_dates_maps_around_the_boundary():
 
 def test_daily_trace_contract(gold_data, tmp_path):
     """The six-column trace the three engines are diffed on."""
-    from strategies.gold_momentum import TRACE_COLUMNS, emit_daily_trace, pipeline
+    from strategies.gold_momentum import (
+        DEFAULT_LOOKBACKS,
+        TRACE_COLUMNS,
+        emit_daily_trace,
+        pipeline,
+    )
 
     pf, indicator = pipeline(gold_data)
     out = tmp_path / "trace.csv"
@@ -148,7 +153,10 @@ def test_daily_trace_contract(gold_data, tmp_path):
     # Warmup rows are dropped, not zero-filled: a 0.0 score means "the horizons
     # disagree", which is a different statement from "no score yet".
     assert trace["score"].notna().all()
-    assert len(trace) == _EXPECTED_SESSIONS - 250
+    # The warmup is exactly the longest lookback, read from the sleeve rather
+    # than hardcoded — retuning the lookbacks must not silently redefine what
+    # this test checks.
+    assert len(trace) == _EXPECTED_SESSIONS - max(DEFAULT_LOOKBACKS)
 
     # Flat whenever the signal does not call for a position.
     assert ((trace["target_weight"] == 0.0) == (trace["score"] <= 0.0)).all()

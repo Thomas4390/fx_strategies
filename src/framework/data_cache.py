@@ -74,7 +74,12 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 # v8-ts-unstack-4p : même correction appliquée à TS_Momentum_RSI (variante
 #               4 paires), pour que les deux variantes TS partagent la même
 #               convention de sizing.
-_SLEEVES_VERSION = "v8-ts-unstack-4p"
+# v9-gold-cagr : sleeve or retunée sous mandat de CAGR — lookbacks
+#               (40,60,120,250) -> (15,30,60), target_vol 0.25 -> 0.45,
+#               max_leverage 3.0 -> 5.4. CAGR 16,4% -> 40,6%, maxDD -51,7%
+#               -> -48,4%. Paramètres SÉLECTIONNÉS sur données : voir
+#               l'avertissement dans gold_momentum.DEFAULT_LOOKBACKS.
+_SLEEVES_VERSION = "v9-gold-cagr"
 
 
 # ═══════════════════════════════════════════════════════════════════════
