@@ -175,6 +175,22 @@ arbitrate, so reads are recorded here rather than left to memory.
 | slice | scope | reads | last read | status |
 |---|---|---|---|---|
 | `2025-07-01 → 2026-07` | gold sizing regimes (`sweep_gold_sizing.py --holdout`) | **2** | 2026-07-25 | **spent** |
+| `2026-01-01 → 2026-07` | gold lookback retune (CAGR mandate) | **1** | 2026-07-26 | at risk |
+
+**Gold lookback retune, read #1** (2026-07-26) — `FROZEN_OOS_RESULT`, single inference
+pass, no re-selection. Under an explicit CAGR mandate the sleeve was retuned to
+`lookbacks=(15,30,60)`, `target_vol=0.45`, `max_leverage=5.4`. **Selection ran on the
+calibration window only, closing 2025-12-31**; the frozen tail was then read once to
+check the retune did not fall apart out of sample.
+
+| window | CAGR | vol | maxDD | Sharpe |
+|---|---|---|---|---|
+| calibration (≤ 2025-12-31) | 40,58 % | 39,41 % | −48,44 % | 1,034 |
+| frozen tail (2026-01 →) | 33,27 % | 46,10 % | −25,00 % | 0,830 |
+
+The degradation is what selection bias predicts, not a collapse. ⚠️ One read is spent:
+this slice can still arbitrate *a different* question, but a second read on the gold
+lookbacks would be selection on the holdout under another name.
 
 **Gold sizing, read #1** (2026-07-25, initial study) — arbitrated flat vs grid vs
 martingale. Verdict: flat.
