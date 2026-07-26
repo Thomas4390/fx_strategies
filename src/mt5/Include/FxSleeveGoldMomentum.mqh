@@ -6,7 +6,7 @@
 //| Specification (mirrors src/strategies/gold_momentum.py):         |
 //|   * Universe        : one metal symbol (XAUUSD)                  |
 //|   * Score           : mean of sign(return over N) for N in       |
-//|                       {40, 60, 120, 250} D1 bars, in [-1, +1]    |
+//|                       {15, 30, 60} D1 bars, in [-1, +1]          |
 //|   * Long signal     : score > 0                                  |
 //|   * Short signal    : score < 0, disabled by default             |
 //|   * Exit            : signal flip                                |
@@ -15,9 +15,21 @@
 //|                       risk; read the research note first.        |
 //|   * Vol target      : min(target / sigma21, max leverage)        |
 //|                                                                  |
-//| The lookbacks are averaged rather than selected: replacing a     |
-//| fitted choice with an aggregate is what keeps this signal from   |
-//| being an overfit. Do NOT grid-search them.                       |
+//| The lookbacks are averaged rather than selected, which is what   |
+//| normally keeps this signal from being an overfit.                |
+//|                                                                  |
+//| ⚠ 2026-07-26: that property no longer holds. Under an explicit   |
+//| CAGR mandate the grid was retuned from {40,60,120,250} to        |
+//| {15,30,60} by comparing 5 candidate grids on data ending         |
+//| 2025-12-31 — i.e. it IS now a fitted choice, and it carries a    |
+//| selection bias the 2019-2025 numbers do not price. Robustness    |
+//| evidence and the single frozen-tail read are recorded in         |
+//| docs/research/HOLDOUT_POLICY.md. Do not grid-search them again   |
+//| without spending a genuinely fresh slice.                        |
+//|                                                                  |
+//| A lookback slot set to 0 is disabled, so the count is variable   |
+//| (1..4) and combinations can be tested from the Strategy Tester   |
+//| without recompiling.                                             |
 //|                                                                  |
 //| Long-only is the default because gold carries a structural       |
 //| positive drift; enabling shorts cost 3.8 pp of return and        |
@@ -32,16 +44,20 @@
 #include "FxRiskManager.mqh"
 #include "FxTradeHelpers.mqh"
 
-//--- Longest lookback plus the shift-1 offset and one spare bar.
-#define FX_GOLD_N_LOOKBACKS  4
+//--- Input slots available; a slot set to 0 is skipped, so the effective
+//--- count is m_n_lookbacks and the history need is derived from the
+//--- longest ACTIVE lookback rather than from the hard cap.
+#define FX_GOLD_N_SLOTS      4
 #define FX_GOLD_MAX_LOOKBACK 250
-#define FX_GOLD_HISTORY_BARS (FX_GOLD_MAX_LOOKBACK + 2)
+#define FX_GOLD_HISTORY_CAP  (FX_GOLD_MAX_LOOKBACK + 2)
 
 class CSleeveGoldMomentum : public CSleeveBase
 {
 private:
     string m_symbol;
-    int    m_lookbacks[FX_GOLD_N_LOOKBACKS];
+    int    m_lookbacks[FX_GOLD_N_SLOTS];
+    int    m_n_lookbacks;    // active slots (those left > 0)
+    int    m_history_bars;   // longest active lookback + 2
     CTrade m_trade;
     bool   m_trace_warned;   // warn once, not once per session
 
@@ -52,20 +68,37 @@ public:
         m_name  = "Gold_Momentum";
         m_trace_warned = false;
 
-        m_lookbacks[0] = Inp_Gold_LookbackA;
-        m_lookbacks[1] = Inp_Gold_LookbackB;
-        m_lookbacks[2] = Inp_Gold_LookbackC;
-        m_lookbacks[3] = Inp_Gold_LookbackD;
-        for(int i = 0; i < FX_GOLD_N_LOOKBACKS; i++)
+        // A slot at 0 is "unused", not "invalid": it lets the tester sweep
+        // 3-lookback and 4-lookback grids off the same compiled EA. Anything
+        // else out of range is still a hard error.
+        int slots[FX_GOLD_N_SLOTS];
+        slots[0] = Inp_Gold_LookbackA;
+        slots[1] = Inp_Gold_LookbackB;
+        slots[2] = Inp_Gold_LookbackC;
+        slots[3] = Inp_Gold_LookbackD;
+
+        m_n_lookbacks = 0;
+        int longest = 0;
+        for(int i = 0; i < FX_GOLD_N_SLOTS; i++)
         {
-            if(m_lookbacks[i] <= 0 || m_lookbacks[i] > FX_GOLD_MAX_LOOKBACK)
+            if(slots[i] == 0) continue;
+            if(slots[i] < 0 || slots[i] > FX_GOLD_MAX_LOOKBACK)
             {
                 g_logger.Error(m_name, StringFormat(
-                    "invalid lookback[%d]=%d (expected 1..%d)",
-                    i, m_lookbacks[i], FX_GOLD_MAX_LOOKBACK));
+                    "invalid lookback[%d]=%d (expected 0 to disable, or 1..%d)",
+                    i, slots[i], FX_GOLD_MAX_LOOKBACK));
                 return false;
             }
+            m_lookbacks[m_n_lookbacks++] = slots[i];
+            if(slots[i] > longest) longest = slots[i];
         }
+        if(m_n_lookbacks == 0)
+        {
+            g_logger.Error(m_name,
+                "every lookback slot is 0; the sleeve has no signal");
+            return false;
+        }
+        m_history_bars = longest + 2;
 
         m_symbol = MakeSymbolWithSuffix(Inp_Gold_Symbol, Inp_SymbolSuffix);
         if(!EnsureSymbolSelected(m_symbol))
@@ -83,7 +116,7 @@ public:
             }
         }
 
-        if(!EnsureHistory(m_symbol, PERIOD_D1, FX_GOLD_HISTORY_BARS))
+        if(!EnsureHistory(m_symbol, PERIOD_D1, m_history_bars))
         {
             if(!EnsureHistory(m_symbol, PERIOD_D1, 1))
             {
@@ -92,17 +125,21 @@ public:
                 return false;
             }
             g_logger.Warn(m_name, StringFormat(
-                "%s: %d/%d D1 bars; the 250-bar lookback stays flat until "
-                "history accumulates", m_symbol,
-                (int)Bars(m_symbol, PERIOD_D1), FX_GOLD_HISTORY_BARS));
+                "%s: %d/%d D1 bars; the sleeve stays flat until history "
+                "accumulates", m_symbol,
+                (int)Bars(m_symbol, PERIOD_D1), m_history_bars));
         }
+
+        string lb_desc = "";
+        for(int i = 0; i < m_n_lookbacks; i++)
+            lb_desc += StringFormat("%s%d", (i > 0 ? "/" : ""), m_lookbacks[i]);
 
         m_trade.SetExpertMagicNumber(m_magic);
         m_trade.SetDeviationInPoints(FX_DEFAULT_DEVIATION);
         g_logger.Info(m_name, StringFormat(
-            "Init OK symbol=%s lookbacks=%d/%d/%d/%d short=%s",
-            m_symbol, m_lookbacks[0], m_lookbacks[1], m_lookbacks[2],
-            m_lookbacks[3], (Inp_Gold_AllowShort ? "on" : "off")));
+            "Init OK symbol=%s lookbacks=%s (n=%d, warmup=%d) short=%s",
+            m_symbol, lb_desc, m_n_lookbacks, m_history_bars,
+            (Inp_Gold_AllowShort ? "on" : "off")));
         return true;
     }
 
@@ -228,12 +265,12 @@ private:
     {
         double closes[];
         int copied = CopyClose(m_symbol, PERIOD_D1, 1,
-                               FX_GOLD_HISTORY_BARS, closes);
-        if(copied < FX_GOLD_HISTORY_BARS)
+                               m_history_bars, closes);
+        if(copied < m_history_bars)
         {
             g_logger.Warn(m_name, StringFormat(
                 "%s: only %d/%d D1 bars copied; skipping this session",
-                m_symbol, copied, FX_GOLD_HISTORY_BARS));
+                m_symbol, copied, m_history_bars));
             return false;
         }
         // closes[] is oldest-first, so the most recent completed bar is last.
@@ -242,7 +279,7 @@ private:
         if(newest <= 0.0) return false;
 
         double sum = 0.0;
-        for(int i = 0; i < FX_GOLD_N_LOOKBACKS; i++)
+        for(int i = 0; i < m_n_lookbacks; i++)
         {
             int idx = last - m_lookbacks[i];
             if(idx < 0) return false;
@@ -251,7 +288,7 @@ private:
             double ret = newest / past - 1.0;
             sum += (ret > 0.0) ? 1.0 : ((ret < 0.0) ? -1.0 : 0.0);
         }
-        score = sum / (double)FX_GOLD_N_LOOKBACKS;
+        score = sum / (double)m_n_lookbacks;
         return true;
     }
 

@@ -57,18 +57,28 @@ poste d'écart de la phase 4, à mesurer et non à annuler.
 ## 3. Score de momentum
 
 ```
-LOOKBACKS := [40, 60, 120, 250]        # séances
+LOOKBACKS := [15, 30, 60]              # séances — retunés le 2026-07-26
 score[t]  := moyenne sur N dans LOOKBACKS de  sign( close[t] / close[t-N] - 1 )
 ```
+
+⚠️ **Ces horizons sont issus d'une sélection sur données** (5 grilles comparées, fenêtre
+close au 2025-12-31), sous mandat explicite de CAGR ~40 %. La version antérieure
+`[40, 60, 120, 250]` tenait sa robustesse de l'absence de sélection ; cette propriété
+n'est plus disponible et le biais n'est pas provisionné par les chiffres 2019-2025.
+Éléments de robustesse et lecture unique de la tranche gelée :
+`docs/research/HOLDOUT_POLICY.md`.
 
 Propriétés à respecter :
 
 - `sign(0) = 0`. Une variation exactement nulle ne vote ni pour ni contre.
-- Chaque horizon pèse **1/4**, sans pondération ni sélection. Le score vit dans
-  `[-1, +1]` et vaut `+1` quand les quatre horizons s'accordent à la hausse.
-- `score[t]` est **indéfini** tant que `t < 250` : la moyenne n'est calculable que
-  lorsque les quatre horizons le sont. Les séances antérieures sont exclues du backtest,
-  elles ne valent pas 0.
+- Chaque horizon pèse **1/N**, sans pondération. Le score vit dans `[-1, +1]` et vaut
+  `+1` quand tous les horizons s'accordent à la hausse.
+- `score[t]` est **indéfini** tant que `t < max(LOOKBACKS)` : la moyenne n'est calculable
+  que lorsque tous les horizons le sont. Les séances antérieures sont exclues du backtest,
+  elles ne valent pas 0. Le warmup suit donc les horizons — 60 séances ici, contre 250
+  avant le retune.
+- Côté MQL5, un slot de lookback à `0` est **désactivé** : le nombre d'horizons est
+  variable (1 à 4) et se règle depuis le Strategy Tester sans recompiler.
 - Le score utilise `close[t]`, **pas** `close[t-1]`. C'est un choix assumé, et il n'est
   pas neutre : combiné au §6 il produit une exécution idéalisée. Voir §6.
 
@@ -77,8 +87,8 @@ Propriétés à respecter :
 ```
 VOL_WINDOW   := 21                     # séances
 ANN_FACTOR   := 252
-TARGET_VOL   := 0.25
-MAX_LEVERAGE := 3.0
+TARGET_VOL   := 0.45                   # retuné le 2026-07-26 (était 0.25)
+MAX_LEVERAGE := 5.4                    # retuné le 2026-07-26 (était 3.0)
 VOL_FLOOR    := 0.01
 ret[t]       := close[t] / close[t-1] - 1
 sigma[t]     := ecart_type( ret[t-20 .. t], ddof=1 ) * racine(ANN_FACTOR)
