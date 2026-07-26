@@ -102,14 +102,17 @@ def build_production_portfolio(
 ) -> dict[str, Any]:
     """Build the recommended production combined portfolio in one call.
 
-    Thin wrapper around :func:`build_combined_portfolio_v2` that pins
-    the recipe to the production allocation (MR 80% / TS3p 10% / RSI 10%),
-    static weights, ``dd_cap_enabled=False`` and the pair
-    ``target_vol=0.28`` / ``max_leverage=12.0`` that passes every IS,
-    OOS and bootstrap gate. Intended as the canonical entry point for
-    reproduction scripts and the pedagogical report — callers that
-    need to tweak the config should call
-    ``build_combined_portfolio_v2`` directly.
+    Thin wrapper around :func:`build_combined_portfolio_v2` that pins the
+    recipe to ``PRODUCTION_WEIGHTS``, static weights, ``dd_cap_enabled=False``
+    and the pair ``PRODUCTION_TARGET_VOL`` / ``PRODUCTION_MAX_LEVERAGE``
+    defined above. Intended as the canonical entry point for reproduction
+    scripts and the pedagogical report — callers that need to tweak the config
+    should call ``build_combined_portfolio_v2`` directly.
+
+    Les valeurs ne sont volontairement pas répétées ici : cette docstring a
+    annoncé « MR 80% / TS3p 10% / RSI 10% » et « target_vol=0.28 /
+    max_leverage=12.0 » pendant que les constantes situées juste au-dessus
+    disaient 72/9/9/10 et 0.37 / 31.0.
 
     Parameters
     ----------

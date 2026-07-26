@@ -43,7 +43,54 @@ TBL_DIR.mkdir(parents=True, exist_ok=True)
 STRESS_JSON = (
     _PROJECT_ROOT / "results" / "production_report" / "stress_test_report.json"
 )
+MT5_JSON = (
+    _PROJECT_ROOT / "results" / "production_report" / "mt5_reference.json"
+)
 OOS_SPLIT = pd.Timestamp("2025-04-01")
+
+# La configuration de production est lue, jamais recopiée. Les valeurs figées à
+# la main dans ce script ont décrit pendant trois mois une allocation qui
+# n'était plus celle du portefeuille — 80/10/10 à tv=0.28 contre 72/9/9/10 à
+# tv=0.37 — et le rapport client a publié des tables et des légendes construites
+# sur cet écart sans que rien ne le signale.
+from strategies.combined_portfolio_v2 import (  # noqa: E402
+    PRODUCTION_MAX_LEVERAGE,
+    PRODUCTION_TARGET_VOL,
+    PRODUCTION_WEIGHTS,
+)
+
+# Libellés publiés et couleur de tracé, une entrée par sleeve de production.
+# L'or manquait : il n'entrait dans aucune figure alors qu'il pèse 10 % du
+# portefeuille et porte l'essentiel du résultat côté MT5.
+SLEEVE_DISPLAY: dict[str, str] = {
+    "MR_Macro": "MR Macro",
+    "TS_Momentum_3p": "TS Momentum 3p",
+    "RSI_Daily_3p": "RSI Daily 3p",
+    "Gold_Momentum": "Gold Momentum",
+}
+SLEEVE_COLOR_KEY: dict[str, str] = {
+    "MR_Macro": "mr",
+    "TS_Momentum_3p": "ts",
+    "RSI_Daily_3p": "rsi",
+    "Gold_Momentum": "gold",
+}
+
+
+def sleeve_label_tex(key: str) -> str:
+    """« MR Macro (72\\,\\%) » — le poids vient de la config, pas d'un littéral."""
+    weight = PRODUCTION_WEIGHTS[key]
+    return f"{SLEEVE_DISPLAY.get(key, key)} ({weight * 100:.0f}\\,\\%)"
+
+
+def sleeve_label_plain(key: str) -> str:
+    """Même libellé, sans balisage LaTeX : les figures matplotlib le rendraient tel quel."""
+    weight = PRODUCTION_WEIGHTS[key]
+    return f"{SLEEVE_DISPLAY.get(key, key)} ({weight * 100:.0f} %)"
+
+
+def weights_str(sep: str = "/") -> str:
+    """« 72/9/9/10 » — la signature de l'allocation, pour titres et légendes."""
+    return sep.join(f"{w * 100:.0f}" for w in PRODUCTION_WEIGHTS.values())
 
 # ────────────────────────────────────────────────────────────────────────
 # Design palette (matches LaTeX report)
@@ -54,6 +101,7 @@ PALETTE = {
     "mr": "#1F5582",  # MR Macro blue
     "ts": "#CC6B2F",  # TS Momentum orange
     "rsi": "#2E8B57",  # RSI Daily green
+    "gold": "#B8860B",  # Gold Momentum dark goldenrod
     "combined": "#8E1616",  # combined burgundy
     "bg_grid": "#E6E8EB",
     "text": "#1A1A1A",
@@ -145,23 +193,21 @@ def main() -> None:
     print("  Apogee Quantitative Report --- LaTeX Assets Builder")
     print("═" * 70)
 
-    print("\n[1/5] Running build_production_portfolio() (this takes ~60s)...")
+    print("\n[1/6] Running build_production_portfolio() (this takes ~60s)...")
     from strategies.combined_portfolio_v2 import build_production_portfolio
     from strategies.combined_portfolio import get_strategy_daily_returns
 
     strat_rets = get_strategy_daily_returns()
     result = build_production_portfolio(strategy_returns=strat_rets)
 
-    result["component_returns"]
     port_rets: pd.Series = result["portfolio_returns"]
     corr: pd.DataFrame = result["correlation"]
     leverage_ts: pd.Series = result["leverage_ts"]
     wf_sharpes: list[float] = result["wf_sharpes"]
 
+    # Une sleeve de production absente d'ici est absente de toutes les figures.
     sleeve_rets = {
-        "MR_Macro": strat_rets["MR_Macro"].fillna(0.0),
-        "TS_Momentum_3p": strat_rets["TS_Momentum_3p"].fillna(0.0),
-        "RSI_Daily_3p": strat_rets["RSI_Daily_3p"].fillna(0.0),
+        key: strat_rets[key].fillna(0.0) for key in PRODUCTION_WEIGHTS
     }
 
     print("\n[2/6] Generating figures...")
@@ -197,10 +243,8 @@ def build_figures(
         ax.plot(
             cum.index,
             cum.values,
-            label=name.replace("_", " "),
-            color=PALETTE[
-                {"MR_Macro": "mr", "TS_Momentum_3p": "ts", "RSI_Daily_3p": "rsi"}[name]
-            ],
+            label=SLEEVE_DISPLAY.get(name, name.replace("_", " ")),
+            color=PALETTE[SLEEVE_COLOR_KEY[name]],
             linewidth=1.3,
             alpha=0.85,
         )
@@ -247,8 +291,10 @@ def build_figures(
 
     # ── 2b. Leverage trajectory through time ────────────────────────
     # Visualises the effective leverage applied by the vol-targeting
-    # overlay, so the reader sees when the 12× cap is saturating vs when
-    # the realised volatility lifts high enough to pull leverage down.
+    # overlay, so the reader sees when the cap is saturating vs when the
+    # realised volatility lifts high enough to pull leverage down. Le
+    # plafond et l'échelle suivent la config : tracés à 12× en dur, ils
+    # auraient tronqué la courbe dès que la production est passée à 31×.
     if leverage_ts is not None and not leverage_ts.empty:
         lev = leverage_ts.dropna()
         fig, ax = plt.subplots(figsize=(9.5, 3.6))
@@ -261,11 +307,11 @@ def build_figures(
         )
         ax.plot(lev.index, lev.values, color=PALETTE["combined"], linewidth=1.0)
         ax.axhline(
-            12.0,
+            PRODUCTION_MAX_LEVERAGE,
             color=PALETTE["accent"],
             linestyle="--",
             linewidth=0.8,
-            label=r"Plafond 12$\times$",
+            label=f"Plafond {PRODUCTION_MAX_LEVERAGE:.0f}$\\times$",
         )
         mean_lev = float(lev.mean())
         ax.axhline(
@@ -276,7 +322,7 @@ def build_figures(
             label=f"Moyenne {mean_lev:.1f}$\\times$",
         )
         ax.axvline(OOS_SPLIT, color="#707070", linestyle="--", linewidth=0.9)
-        ax.set_ylim(0, 13.5)
+        ax.set_ylim(0, max(PRODUCTION_MAX_LEVERAGE, float(lev.max())) * 1.08)
         ax.set_title(
             "Trajectoire du levier appliqué (ciblage de volatilité)",
             color=PALETTE["primary"],
@@ -412,19 +458,16 @@ def build_figures(
             for name, rets in sleeve_rets.items()
         }
     )
-    weights = {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10}
-    contrib = df_m * pd.Series(weights) * 100
+    contrib = df_m * pd.Series(PRODUCTION_WEIGHTS) * 100
     fig, ax = plt.subplots(figsize=(9.5, 4.5))
     dates = contrib.index
     bar_w = 20
     bottom_pos = np.zeros(len(dates))
     bottom_neg = np.zeros(len(dates))
     colors = {
-        "MR_Macro": PALETTE["mr"],
-        "TS_Momentum_3p": PALETTE["ts"],
-        "RSI_Daily_3p": PALETTE["rsi"],
+        key: PALETTE[SLEEVE_COLOR_KEY[key]] for key in PRODUCTION_WEIGHTS
     }
-    for col in ["MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p"]:
+    for col in PRODUCTION_WEIGHTS:
         vals = contrib[col].values
         pos_vals = np.where(vals >= 0, vals, 0)
         neg_vals = np.where(vals < 0, vals, 0)
@@ -434,7 +477,7 @@ def build_figures(
             width=bar_w,
             bottom=bottom_pos,
             color=colors[col],
-            label=col.replace("_", " "),
+            label=sleeve_label_plain(col),
             edgecolor="white",
             linewidth=0.2,
         )
@@ -451,7 +494,7 @@ def build_figures(
         bottom_neg += neg_vals
     ax.axhline(0, color="#1A1A1A", linewidth=0.7)
     ax.set_title(
-        "Contribution mensuelle par sleeve (pondérée 80/10/10)",
+        f"Contribution mensuelle par sleeve (pondérée {weights_str()})",
         color=PALETTE["primary"],
     )
     ax.set_xlabel("Date")
@@ -489,32 +532,31 @@ def build_figures(
         alpha=0.55,
         edgecolors="none",
     )
-    # mark real IS point
-    ax.scatter(
-        [-17.93],
-        [13.33],
-        color=PALETTE["primary"],
-        s=180,
-        marker="*",
-        edgecolor="white",
-        linewidth=1.5,
-        zorder=10,
-        label="Observé IS",
-    )
-    ax.scatter(
-        [-6.27],
-        [11.52],
-        color=PALETTE["accent"],
-        s=180,
-        marker="*",
-        edgecolor="white",
-        linewidth=1.5,
-        zorder=10,
-        label="Observé OOS",
-    )
-    ax.axhline(10, color="#707070", linewidth=0.8, linestyle="--")
-    ax.axhline(15, color="#707070", linewidth=0.8, linestyle="--")
-    ax.axvline(-35, color=PALETTE["combined"], linewidth=0.9, linestyle=":")
+    # Les points observés viennent du même JSON que le nuage. Figés à
+    # (-17.93 ; 13.33) et (-6.27 ; 11.52), ils plaçaient l'étoile « observé »
+    # d'une autre configuration au milieu du nuage de celle-ci.
+    for key, color, label in (
+        ("in_sample", PALETTE["primary"], "Observé IS"),
+        ("out_of_sample", PALETTE["accent"], "Observé OOS"),
+    ):
+        point = stress["is_oos"][key]
+        ax.scatter(
+            [point["max_dd"] * 100],
+            [point["cagr"] * 100],
+            color=color,
+            s=180,
+            marker="*",
+            edgecolor="white",
+            linewidth=1.5,
+            zorder=10,
+            label=label,
+        )
+    # Bande de CAGR visée par le mandat en vigueur ; le plafond de drawdown a
+    # été retiré de la configuration, il n'a plus de ligne à tracer.
+    band = stress.get("target_cagr_band")
+    if band:
+        for level in band:
+            ax.axhline(level * 100, color="#707070", linewidth=0.8, linestyle="--")
     ax.set_title(
         "Bootstrap 1000 paths — nuage CAGR × Max Drawdown", color=PALETTE["primary"]
     )
@@ -658,27 +700,70 @@ def build_metric_tables(
     vol_p5_disp = -vol_boot["ci_high"]
     vol_p95_disp = -vol_boot["ci_low"]
 
+    # Toutes les colonnes viennent de ``stress``, jamais de littéraux.
+    #
+    # Elles ont été codées en dur jusqu'au 2026-07-26, si bien que relancer ce
+    # script réécrivait les mêmes chiffres quoi qu'ait fait le code : le rapport
+    # recopiait au lieu de mesurer. Pire, ces littéraux décrivaient une autre
+    # configuration que les trois tables voisines, qui lisent ce JSON — le
+    # rapport se contredisait d'une page à l'autre. Lire la même source partout
+    # est ce qui rend cette incohérence impossible.
+    is_m = stress["is_oos"]["in_sample"]
+    oos_m = stress["is_oos"]["out_of_sample"]
+    bs = stress["bootstrap"]
+    wf_pos = sum(1 for s in (wf_sharpes or []) if s > 0)
+    wf_n = len(wf_sharpes or [])
+
+    def _pair(lo: float, hi: float) -> str:
+        return f"{fmt_pct(lo, 2)} / {fmt_pct(hi, 2)}"
+
     rows = [
-        r"CAGR & 13.33\,\% & \textbf{11.52\,\%} & 13.28\,\% & 5.54\,\% / 21.64\,\% \\",
         (
-            r"Volatilité ann. & 14.36\,\% & 7.78\,\% & "
+            f"CAGR & {fmt_pct(is_m['cagr'], 2)} & "
+            f"\\textbf{{{fmt_pct(oos_m['cagr'], 2)}}} & "
+            f"{fmt_pct(bs['cagr_mean'], 2)} & {_pair(bs['cagr_p05'], bs['cagr_p95'])} \\\\"
+        ),
+        (
+            f"Volatilité ann. & {fmt_pct(is_m['vol'], 2)} & {fmt_pct(oos_m['vol'], 2)} & "
             f"{fmt_pct(vol_mean_disp, 2)} & "
             f"{fmt_pct(vol_p5_disp, 2)} / {fmt_pct(vol_p95_disp, 2)} \\\\"
         ),
-        r"Max Drawdown & -17.93\,\% & \textbf{-6.27\,\%} & -19.90\,\% & -30.68\,\% / -12.39\,\% \\",
-        r"Sharpe Ratio & 0.94 & \textbf{1.44} $\star$ & 0.96 & 0.47 / 1.47 \\",
-        r"Positive years / runs & 6/7 & -- & 99.8\,\% & -- \\",
+        (
+            f"Max Drawdown & {fmt_pct(is_m['max_dd'], 2)} & "
+            f"\\textbf{{{fmt_pct(oos_m['max_dd'], 2)}}} & "
+            f"{fmt_pct(bs['max_dd_mean'], 2)} & "
+            f"{_pair(bs['max_dd_p05'], bs['max_dd_p95'])} \\\\"
+        ),
+        (
+            f"Sharpe Ratio & {fmt_num(is_m['sharpe'], 2)} & "
+            f"\\textbf{{{fmt_num(oos_m['sharpe'], 2)}}} & "
+            f"{fmt_num(bs['sharpe_mean'], 2)} & "
+            f"{fmt_num(bs['sharpe_p05'], 2)} / {fmt_num(bs['sharpe_p95'], 2)} \\\\"
+        ),
+        (
+            f"Années / runs positifs & {wf_pos}/{wf_n} & -- & "
+            f"{fmt_pct(bs['pos_fraction'], 1)} & -- \\\\"
+        ),
     ]
     content = tex_table_wrap(
         header=r"Métrique & In-sample & Out-of-sample & Bootstrap moyenne & Bootstrap P5 / P95 \\",
         rows=rows,
-        caption=r"Métriques clés du portefeuille Apogée Invest sur les trois régimes d'évaluation. Les colonnes Bootstrap rapportent les percentiles P5/P95 d'un \emph{block bootstrap} stationnaire sur la période in-sample. La colonne OOS démontre un Sharpe supérieur à l'IS, ce qui réfute empiriquement l'hypothèse d'overfitting majeur.",
+        caption=(
+            r"Métriques clés du portefeuille sur les trois régimes d'évaluation. "
+            r"Les colonnes Bootstrap rapportent moyenne et percentiles P5/P95 d'un "
+            r"\emph{block bootstrap} stationnaire sur la période in-sample. "
+            r"Chiffres issus d'un \textbf{backtest \texttt{vectorbtpro}} : voir la "
+            r"section dédiée pour les résultats de l'exécution MetaTrader~5, qui "
+            r"font foi pour le compte réel."
+        ),
         label="tab:metrics_summary",
         col_spec="lrrrr",
     )
     save_tex("metrics_summary", content)
 
     # ── 2. Sleeve standalone ────────────────────────────────────────
+    first_date = min(rets.index[0] for rets in sleeve_rets.values())
+    last_date = max(rets.index[-1] for rets in sleeve_rets.values())
     sleeve_stats = []
     for name, rets in sleeve_rets.items():
         cum = (1 + rets).cumprod()
@@ -692,20 +777,23 @@ def build_metric_tables(
         sleeve_stats.append((name, total, cagr, vol, sharpe, maxdd))
 
     rows = []
-    label_map = {
-        "MR_Macro": r"MR Macro (80\,\%)",
-        "TS_Momentum_3p": r"TS Momentum 3p (10\,\%)",
-        "RSI_Daily_3p": r"RSI Daily 4p (10\,\%)",
-    }
     for name, tot, cagr, vol, sr, dd in sleeve_stats:
         rows.append(
-            f"{label_map[name]} & {fmt_pct(tot, 1)} & {fmt_pct(cagr, 2)} & "
+            f"{sleeve_label_tex(name)} & {fmt_pct(tot, 1)} & {fmt_pct(cagr, 2)} & "
             f"{fmt_pct(vol, 2)} & {fmt_num(sr, 2)} & {fmt_pct(dd, 2)} \\\\"
         )
+    # La période était annoncée « 2019-2026 » en dur, et le libellé « RSI Daily
+    # 4p » désignait une sleeve remplacée par sa version 3 paires.
+    span = f"{first_date.year}--{last_date.year}"
     content = tex_table_wrap(
         header=r"Sleeve & Rendement total & CAGR & Vol ann. & Sharpe & Max DD \\",
         rows=rows,
-        caption=r"Performance standalone (non pondérée) des trois sleeves sur la période complète 2019-2026. Les chiffres sont non-leveragés et non-allocés.",
+        caption=(
+            f"Performance standalone (non pondérée) des {len(sleeve_stats)} "
+            f"sleeves sur la période complète {span}. Les chiffres sont "
+            r"non-leveragés et non-allocés~; le poids indiqué entre parenthèses "
+            r"est celui que la sleeve reçoit dans le portefeuille."
+        ),
         label="tab:sleeve_standalone",
         col_spec="lrrrrr",
     )
@@ -730,20 +818,24 @@ def build_metric_tables(
         dd_val = ((cum / run_max) - 1).min()
         return cagr_val, vol_val, sharpe_val, dd_val
 
-    port_no_lev = (
-        0.80 * sleeve_rets["MR_Macro"].fillna(0)
-        + 0.10 * sleeve_rets["TS_Momentum_3p"].fillna(0)
-        + 0.10 * sleeve_rets["RSI_Daily_3p"].fillna(0)
+    # Contrefactuel non levié : la même allocation que le portefeuille levié,
+    # sinon les deux lignes ne se comparent pas. Bâti sur 80/10/10 sans or, il
+    # décrivait un portefeuille qui n'existe nulle part.
+    port_no_lev = sum(
+        weight * sleeve_rets[key].fillna(0)
+        for key, weight in PRODUCTION_WEIGHTS.items()
     )
     no_lev_cagr, no_lev_vol, no_lev_sharpe, no_lev_dd = _stats(port_no_lev)
     lev_cagr, lev_vol, lev_sharpe, lev_dd = _stats(port_rets)
     avg_scale = lev_vol / no_lev_vol if no_lev_vol > 0 else float("nan")
 
+    alloc = weights_str()
     rows = [
-        f"Pondéré $80/10/10$ \\emph{{sans levier}} & {fmt_pct(no_lev_cagr, 2)} & "
+        f"Pondéré ${alloc}$ \\emph{{sans levier}} & {fmt_pct(no_lev_cagr, 2)} & "
         f"{fmt_pct(no_lev_vol, 2)} & {fmt_num(no_lev_sharpe, 2)} & "
         f"{fmt_pct(no_lev_dd, 2)} \\\\",
-        f"Pondéré $80/10/10$ \\emph{{avec}} ciblage vol $0.28$ / cap $12\\times$ & "
+        f"Pondéré ${alloc}$ \\emph{{avec}} ciblage vol "
+        f"${PRODUCTION_TARGET_VOL:.2f}$ / cap ${PRODUCTION_MAX_LEVERAGE:.0f}\\times$ & "
         f"{fmt_pct(lev_cagr, 2)} & {fmt_pct(lev_vol, 2)} & {fmt_num(lev_sharpe, 2)} & "
         f"{fmt_pct(lev_dd, 2)} \\\\",
         f"Multiplicateur effectif moyen & \\multicolumn{{4}}{{c}}"
@@ -762,8 +854,8 @@ def build_metric_tables(
             r"d'edge statistique ; la ligne leveragée reflète l'expression "
             r"opérationnelle de cet edge aux contraintes de volatilité du client. "
             r"Le multiplicateur effectif moyen (rapport des volatilités réalisées) "
-            r"est inférieur au plafond $12\times$ car le levier s'abaisse pendant "
-            r"les périodes de volatilité élevée."
+            f"est inférieur au plafond ${PRODUCTION_MAX_LEVERAGE:.0f}\\times$ car le "
+            r"levier s'abaisse pendant les périodes de volatilité élevée."
         ),
         label="tab:leverage_impact",
         col_spec="lrrrr",
@@ -771,17 +863,37 @@ def build_metric_tables(
     save_tex("leverage_impact", content)
 
     # ── 3. Walk-forward per year ─────────────────────────────────────
+    # `is_oos_summary` n'existe pas dans le JSON — la clé est `is_oos`, et elle
+    # ne porte pas de wf_sharpes. Ce fallback rendait une liste vide, donc une
+    # table vide, sans rien signaler.
     if wf_sharpes is None:
-        wf_sharpes = stress.get("is_oos_summary", {}).get("wf_sharpes", [])
-    years = list(range(2019, 2019 + len(wf_sharpes)))
+        raise ValueError(
+            "wf_sharpes manquant : il vient de build_production_portfolio(), "
+            "pas du JSON de stress test."
+        )
+    years = list(range(first_date.year, first_date.year + len(wf_sharpes)))
     rows = [
         f"{y} & {fmt_num(s, 2)} & {'positive' if s > 0 else 'négative'} \\\\"
         for y, s in zip(years, wf_sharpes)
     ]
+    # Le décompte est recalculé : « six années sur sept » était écrit en dur et
+    # attribuait à 2019 une année négative que la configuration actuelle ne
+    # produit plus.
+    n_pos = sum(1 for s in wf_sharpes if s > 0)
+    negatives = [str(y) for y, s in zip(years, wf_sharpes) if s <= 0]
+    negatives_txt = (
+        "toutes les années sont positives"
+        if not negatives
+        else f"année(s) négative(s)~: {', '.join(negatives)}"
+    )
     content = tex_table_wrap(
         header=r"Année & Sharpe WF & Statut \\",
         rows=rows,
-        caption=r"Walk-forward Sharpe par année. Six années sur sept sont positives — seule 2019 reste marginalement négative (régime late-cycle range-bound défavorable à la mean reversion).",
+        caption=(
+            f"Sharpe walk-forward par année sur la fenêtre glissante. "
+            f"{n_pos} années sur {len(wf_sharpes)} sont positives~; "
+            f"{negatives_txt}."
+        ),
         label="tab:walkforward_yearly",
         col_spec="lrl",
     )
@@ -802,7 +914,17 @@ def build_metric_tables(
     content = tex_table_wrap(
         header=r"Métrique & Moyenne & P5 & P50 & P95 \\",
         rows=rows,
-        caption=r"Résultats du bootstrap à blocs mobiles sur la période historique. P5 du Max Drawdown strictement inférieur au cap utilisateur de 35\,\%, avec $\approx$4\,pp de marge.",
+        # La légende affirmait « P5 du Max Drawdown strictement inférieur au cap
+        # utilisateur de 35 %, avec ~4 pp de marge » au-dessus d'une table qui
+        # imprimait -47,46 %. Elle avait été écrite pour d'autres chiffres que
+        # ceux que le script publiait. Une légende ne doit rien affirmer que le
+        # tableau ne montre : le commentaire est donc devenu descriptif.
+        caption=(
+            r"Résultats du \emph{block bootstrap} stationnaire sur la période "
+            r"in-sample : moyenne et percentiles P5/P50/P95 de chaque métrique. "
+            r"La ligne « Cible atteinte » donne la fraction des tirages dont le "
+            r"CAGR tombe dans la bande visée."
+        ),
         label="tab:bootstrap_percentiles",
         col_spec="lrrrr",
     )
@@ -826,10 +948,27 @@ def build_metric_tables(
             f"{fmt_pct(sc['cagr'], 2)} & {fmt_pct(sc['max_dd'], 2)} & "
             f"{fmt_num(sc['sharpe'], 2)} \\\\"
         )
+    # La légende affirmait « résistance validée pour Covid 2020, crise GBP 2022
+    # et 2024, seule 2019 reste structurellement faible » — quatre affirmations
+    # que le tableau contredisait ligne à ligne : 2019 y est la meilleure année
+    # (Sharpe +1.77) et Covid 2020 la pire (−2.00). Elle est maintenant dérivée
+    # des chiffres qu'elle commente.
+    best = max(scenarios, key=lambda s: s["sharpe"])
+    worst = min(scenarios, key=lambda s: s["sharpe"])
+    n_neg = sum(1 for s in scenarios if s["sharpe"] < 0)
     content = tex_table_wrap(
         header=r"Scénario & N bars & Rend. total & CAGR & Max DD & Sharpe \\",
         rows=rows,
-        caption=r"Rejeu de scénarios historiques — résistance validée pour Covid 2020, crise GBP 2022 et 2024. Seule 2019 reste structurellement faible.",
+        caption=(
+            r"Rejeu de scénarios historiques, chacun mesuré sur sa propre "
+            r"fenêtre. "
+            f"{n_neg} des {len(scenarios)} épisodes ressortent avec un Sharpe "
+            f"négatif~; le plus favorable est "
+            f"« {scen_labels.get(best['scenario'], best['scenario'])} » "
+            f"({fmt_num(best['sharpe'], 2)}), le plus défavorable "
+            f"« {scen_labels.get(worst['scenario'], worst['scenario'])} » "
+            f"({fmt_num(worst['sharpe'], 2)})."
+        ),
         label="tab:scenarios",
         col_spec="lrrrrr",
     )
@@ -854,10 +993,36 @@ def build_metric_tables(
             else:
                 cells.append("--")
         rows.append(f"tv={tv:.2f} & " + " & ".join(cells) + r" \\")
+    # La légende désignait « le plateau autour de 0.97 » et « le choix
+    # (0.28, 12×) » — un niveau de Sharpe absent de la table et une colonne de
+    # levier qui n'y figure plus. Le point de production et le meilleur point du
+    # balayage sont maintenant lus dans la grille.
+    prod_entry = next(
+        (
+            s for s in sens
+            if s["target_vol"] == PRODUCTION_TARGET_VOL
+            and s["max_leverage"] == PRODUCTION_MAX_LEVERAGE
+        ),
+        None,
+    )
+    best_entry = max(sens, key=lambda s: s["sharpe"])
+    prod_txt = (
+        f"Le point de production "
+        f"(${PRODUCTION_TARGET_VOL:.2f}$, ${PRODUCTION_MAX_LEVERAGE:.0f}\\times$) "
+        f"y rend un Sharpe de {prod_entry['sharpe']:.3f}"
+        if prod_entry
+        else "Le point de production ne figure pas dans cette grille"
+    )
     content = tex_table_wrap(
         header=f"Config & {header_cols} \\\\",
         rows=rows,
-        caption=r"Sensibilité du Sharpe à (\texttt{target\_vol}, \texttt{max\_leverage}). Le plateau autour de 0.97 confirme la robustesse du choix (0.28, 12$\times$).",
+        caption=(
+            r"Sensibilité du Sharpe à (\texttt{target\_vol}, "
+            r"\texttt{max\_leverage}). "
+            f"{prod_txt}, contre {best_entry['sharpe']:.3f} au meilleur point "
+            f"de la grille (${best_entry['target_vol']:.2f}$, "
+            f"${best_entry['max_leverage']:.0f}\\times$)."
+        ),
         label="tab:sensitivity",
         col_spec="l" + "r" * len(ml_values),
     )
@@ -926,7 +1091,14 @@ def build_trade_examples(sleeve_rets: dict) -> None:
         content = tex_table_wrap(
             header=(r"Entrée & Sortie & Sens & Durée & Rendement & P\&L \\"),
             rows=rows,
-            caption=r"Exemples de trades MR Macro sur EUR-USD — deux meilleurs, un médian, deux pires. Les trades sont de très courte durée (< 6\,h) conformément au design intraday.",
+            # « < 6 h » était une affirmation en dur qu'aucune colonne ne
+            # vérifiait ; la durée est dans le tableau, la légende s'en tient
+            # au design.
+            caption=(
+                r"Exemples de trades MR Macro sur EUR-USD — deux meilleurs, "
+                r"un médian, deux pires. La colonne Durée illustre le design "
+                r"intraday~: la position est dénouée dans la séance."
+            ),
             label="tab:trades_mr_macro",
             col_spec="llcrrr",
         )
@@ -957,14 +1129,31 @@ def build_trade_examples(sleeve_rets: dict) -> None:
     _build_episode_table(
         sleeve_rets["RSI_Daily_3p"],
         name="rsi_daily",
-        label_fr="RSI Daily 4-pair",
+        label_fr="RSI Daily 3-pair",
         caption=(
-            r"Épisodes représentatifs du sleeve RSI Daily 4-pair. Les épisodes courts "
+            r"Épisodes représentatifs du sleeve RSI Daily 3-pair. Les épisodes courts "
             r"typiques (2-10 jours) reflètent les retours rapides après sur-achat/sur-vente "
             r"capturés par RSI(14)."
         ),
         filename="trade_examples_rsi_daily",
         table_label="tab:trades_rsi_daily",
+    )
+
+    # ── Gold Momentum ───────────────────────────────────────────────
+    # La sleeve n'avait aucune table : elle est entrée en production après la
+    # dernière génération d'assets.
+    _build_episode_table(
+        sleeve_rets["Gold_Momentum"],
+        name="gold_momentum",
+        label_fr="Gold Momentum",
+        caption=(
+            r"Épisodes représentatifs du sleeve Gold Momentum sur XAU-USD. "
+            r"Les épisodes longs correspondent aux tendances de l'or captées "
+            r"par le croisement de moyennes~; leur amplitude explique que la "
+            r"sleeve porte l'essentiel du résultat malgré 10\,\% du poids."
+        ),
+        filename="trade_examples_gold_momentum",
+        table_label="tab:trades_gold_momentum",
     )
 
 
@@ -1090,7 +1279,7 @@ def build_robustness_assets(pf, strat_rets: dict, port_rets: pd.Series) -> None:
     )
 
     _build_robustness_figures(report, port_rets)
-    _build_robustness_tables(report)
+    _build_robustness_tables(report, backtest_years=len(port_rets) / 252.0)
 
 
 def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
@@ -1366,8 +1555,12 @@ def _build_robustness_figures(report: dict, port_rets: pd.Series) -> None:
     save_fig(fig, "robustness_rolling_stability")
 
 
-def _build_robustness_tables(report: dict) -> None:
-    """Render the 4 advanced-robustness LaTeX table fragments."""
+def _build_robustness_tables(report: dict, backtest_years: float) -> None:
+    """Render the 4 advanced-robustness LaTeX table fragments.
+
+    ``backtest_years`` sert au test MinBTL, dont la longueur de référence était
+    écrite « 7 ans » en dur.
+    """
 
     bootstrap_df = report["bootstrap_df"]
 
@@ -1580,49 +1773,79 @@ def _build_robustness_tables(report: dict) -> None:
     # ── D. Consolidated verdict ─────────────────────────────────────
     sharpe_row = bootstrap_df.loc["sharpe_ratio"]
     maxdd_row = bootstrap_df.loc["max_drawdown"]
-    rows = [
-        r"Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & "
-        f"$[{sharpe_row['ci_low']:.3f},\\ {sharpe_row['ci_high']:.3f}]$ & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\",
-        f"Probabilité Sharpe vrai $> 0$ & $> 0.95$ & "
-        f"{fmt_num(psr.get('psr', float('nan')), 4)} & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
-        if psr
-        else "",
-        f"Sharpe corrigé pour biais de sélection & $> 0.95$ & "
-        f"{fmt_num(dsr.get('dsr', float('nan')), 4)} & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
-        if dsr
-        else "",
-        f"Ratio de survie après tests multiples & $> 50\\,\\%$ & "
-        f"{fmt_pct(haircut.get('haircut_ratio', float('nan')), 2)} & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
-        if haircut
-        else "",
-        f"Longueur backtest $>$ minimum statistique & $<$ longueur observée & "
-        f"{fmt_num(minbtl.get('years', float('nan')), 2)}~ans $<$ 7~ans & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
-        if minbtl
-        else "",
-        f"Probabilité de sur-ajustement & $< 0.5$ & "
-        f"{fmt_num(pbo.get('pbo', float('nan')), 3)} & "
-        r"\textcolor{rsiGreen}{\textbf{PASSÉ}} \\"
-        if pbo
-        else "",
-        f"Bootstrap P95 MaxDD & $<$ cap 35\\,\\% & "
-        f"{fmt_pct(maxdd_row['ci_high'], 2)} & "
-        r"\textcolor{tsOrange}{\textbf{MARGE FINE}} \\",
+
+    # Chaque verdict est désormais la conclusion d'une comparaison, pas une
+    # constante. Les six lignes affichaient « PASSÉ » en dur : le tableau
+    # aurait annoncé un test réussi même en le mettant en échec.
+    checks: list[tuple[str, str, str, bool | None]] = [
+        (
+            r"Intervalle de confiance 95\,\% Sharpe",
+            r"Borne basse $> 0$",
+            f"$[{sharpe_row['ci_low']:.3f},\\ {sharpe_row['ci_high']:.3f}]$",
+            bool(sharpe_row["ci_low"] > 0),
+        ),
     ]
-    rows = [r for r in rows if r]
+    if psr:
+        value = psr.get("psr", float("nan"))
+        checks.append((
+            r"Probabilité Sharpe vrai $> 0$", r"$> 0.95$",
+            fmt_num(value, 4), bool(value > 0.95),
+        ))
+    if dsr:
+        value = dsr.get("dsr", float("nan"))
+        checks.append((
+            r"Sharpe corrigé pour biais de sélection", r"$> 0.95$",
+            fmt_num(value, 4), bool(value > 0.95),
+        ))
+    if haircut:
+        value = haircut.get("haircut_ratio", float("nan"))
+        checks.append((
+            r"Ratio de survie après tests multiples", r"$> 50\,\%$",
+            fmt_pct(value, 2), bool(value > 0.50),
+        ))
+    if minbtl:
+        value = minbtl.get("years", float("nan"))
+        checks.append((
+            r"Longueur backtest $>$ minimum statistique",
+            r"$<$ longueur observée",
+            f"{fmt_num(value, 2)}~ans $<$ {backtest_years:.1f}~ans",
+            bool(value < backtest_years),
+        ))
+    if pbo:
+        value = pbo.get("pbo", float("nan"))
+        checks.append((
+            r"Probabilité de sur-ajustement", r"$< 0.5$",
+            fmt_num(value, 3), bool(value < 0.5),
+        ))
+    # Le plafond de drawdown a été retiré de la configuration de production :
+    # cette ligne mesure, elle ne sanctionne plus. Le signe est rétabli comme
+    # dans la table des intervalles de confiance — publiée telle quelle, la
+    # valeur brute affichait un drawdown positif de 70 %.
+    checks.append((
+        r"Bootstrap --- pire drawdown à 95\,\%", r"aucun plafond actif",
+        fmt_pct(-maxdd_row["ci_high"], 2), None,
+    ))
+
+    verdict_tex = {
+        True: r"\textcolor{rsiGreen}{\textbf{PASSÉ}}",
+        False: r"\textcolor{tsOrange}{\textbf{ÉCHEC}}",
+        None: r"\emph{mesure}",
+    }
+    rows = [
+        f"{label} & {threshold} & {value} & {verdict_tex[passed]} \\\\"
+        for label, threshold, value, passed in checks
+    ]
+    n_tested = sum(1 for *_, passed in checks if passed is not None)
+    n_passed = sum(1 for *_, passed in checks if passed is True)
     content = tex_table_wrap(
         header=r"Test & Seuil & Résultat & Verdict \\",
         rows=rows,
         caption=(
-            r"Verdict consolidé sur les tests de robustesse statistique. "
-            r"Six tests passent sans réserve~; un test (P95 du Max Drawdown "
-            r"bootstrap) est proche de la limite utilisateur avec environ "
-            r"2~pp de marge, déjà mitigé par la réserve cash 30\,\% "
-            r"recommandée en section d'analyse des risques."
+            r"Verdict consolidé sur les tests de robustesse statistique~: "
+            f"{n_passed} test(s) sur {n_tested} franchissent leur seuil. "
+            r"La dernière ligne est reportée sans verdict~: le plafond de "
+            r"drawdown ayant été retiré de la configuration de production, "
+            r"elle ne répond plus à une contrainte."
         ),
         label="tab:robustness_verdict_summary",
         col_spec="llrl",

@@ -5,9 +5,16 @@ Sweeps the allocation (w_mr, w_ts, w_rsi) across:
   2. A 1D line sweep on w_mr with w_ts = w_rsi
   3. A 2D simplex grid (231 valid points, step 0.05)
 
-Risk layers are pinned to the production config (target_vol=0.28,
-max_leverage=12, dd_cap_enabled=False) so only the weight effect is
-isolated.
+Ce que le simplexe fait varier, c'est la **répartition interne du trio FX** ;
+la sleeve or reste à son poids de production. C'est la sémantique de
+``PRODUCTION_WEIGHTS`` (« 0.80 x 0.90, le trio garde ses ratios internes ») :
+72/9/9/10 est le 80/10/10 du trio, ramené à 90 %. Un simplexe à quatre
+composantes ne se trace pas en ternaire, et l'or n'est pas un arbitrage
+d'allocation ouvert — son poids a été tranché à part.
+
+La couche de risque est lue dans ``combined_portfolio_v2`` et non recopiée :
+figée à target_vol=0.28 / max_leverage=12, elle a fait publier une annexe
+entière — légendes comprises — sous un régime de risque qui n'existait plus.
 
 Outputs:
   reports/latex_report/figures/weight_sensitivity_named_bars.png
@@ -49,11 +56,18 @@ TBL_DIR = _PROJECT_ROOT / "reports" / "latex_report" / "tables"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 TBL_DIR.mkdir(parents=True, exist_ok=True)
 
-# Production risk layer — fixed across the entire sweep.
-TARGET_VOL: float = 0.28
-MAX_LEVERAGE: float = 12.0
+# Production risk layer — fixed across the entire sweep, lue à la source.
+from strategies.combined_portfolio_v2 import (  # noqa: E402
+    PRODUCTION_MAX_LEVERAGE as MAX_LEVERAGE,
+    PRODUCTION_TARGET_VOL as TARGET_VOL,
+    PRODUCTION_WEIGHTS,
+)
 
-# Sleeves in canonical order.
+# Sleeve hors simplexe : son poids est fixé, il n'est pas balayé.
+FIXED_KEY = "Gold_Momentum"
+FIXED_WEIGHT: float = PRODUCTION_WEIGHTS[FIXED_KEY]
+
+# Sleeves in canonical order — celles dont la répartition est balayée.
 SLEEVE_KEYS: tuple[str, str, str] = ("MR_Macro", "TS_Momentum_3p", "RSI_Daily_3p")
 SLEEVE_LABELS: dict[str, str] = {
     "MR_Macro": "MR",
@@ -120,13 +134,20 @@ class WeightPoint:
 
 
 def make_weights(w_mr: float, w_ts: float, w_rsi: float) -> dict[str, float]:
+    """Poids du portefeuille complet à partir d'un point du simplexe FX.
+
+    Les trois arguments décrivent la répartition *interne* du trio ; ils sont
+    normalisés puis ramenés à la part que le trio occupe une fois l'or servi.
+    """
     total = w_mr + w_ts + w_rsi
     if total <= 0:
         raise ValueError("Weights must sum to a positive number.")
+    fx_share = 1.0 - FIXED_WEIGHT
     return {
-        "MR_Macro": w_mr / total,
-        "TS_Momentum_3p": w_ts / total,
-        "RSI_Daily_3p": w_rsi / total,
+        "MR_Macro": w_mr / total * fx_share,
+        "TS_Momentum_3p": w_ts / total * fx_share,
+        "RSI_Daily_3p": w_rsi / total * fx_share,
+        FIXED_KEY: FIXED_WEIGHT,
     }
 
 
@@ -143,7 +164,7 @@ def compute_metrics(
 ) -> WeightPoint:
     """Run one v2 portfolio and extract the 5 metrics."""
     result = build_fn(
-        {k: sleeves[k] for k in SLEEVE_KEYS},
+        {k: sleeves[k] for k in weights},
         allocation="custom",
         custom_weights=weights,
         target_vol=TARGET_VOL,
@@ -155,11 +176,14 @@ def compute_metrics(
     vol = float(result["annual_vol"])
     max_dd = float(result["max_drawdown"])
     calmar = cagr / abs(max_dd) if max_dd != 0 else np.nan
+    # Les coordonnées gardées sont les parts *internes* au trio : c'est ce que
+    # le diagramme ternaire peut représenter, et elles somment à 1.
+    fx_total = sum(weights[k] for k in SLEEVE_KEYS)
     return WeightPoint(
         label=label,
-        w_mr=weights["MR_Macro"],
-        w_ts=weights["TS_Momentum_3p"],
-        w_rsi=weights["RSI_Daily_3p"],
+        w_mr=weights["MR_Macro"] / fx_total,
+        w_ts=weights["TS_Momentum_3p"] / fx_total,
+        w_rsi=weights["RSI_Daily_3p"] / fx_total,
         sharpe=sharpe,
         cagr=cagr,
         vol=vol,
@@ -173,8 +197,13 @@ def run_named_allocations(
     build_fn,
 ) -> list[WeightPoint]:
     """Run the 8 named allocations — production, extremes, equal, risk-parity."""
+    # Le point de production est lu dans la config et ramené à la part du trio :
+    # 72/9/9/10 est le 80/10/10 du trio une fois l'or servi.
+    fx_share = 1.0 - FIXED_WEIGHT
+    prod = tuple(PRODUCTION_WEIGHTS[k] / fx_share for k in SLEEVE_KEYS)
+    prod_label = " / ".join(f"{w * 100:.0f}" for w in prod) + " (production)"
     named = [
-        ("80 / 10 / 10 (production)", 0.80, 0.10, 0.10),
+        (prod_label, *prod),
         ("100 / 0 / 0 (pur MR)", 1.00, 0.00, 0.00),
         ("0 / 50 / 50 (sans MR)", 0.00, 0.50, 0.50),
         ("70 / 15 / 15", 0.70, 0.15, 0.15),
@@ -197,7 +226,7 @@ def run_named_allocations(
     print("  • risk-parity (inverse-vol)…", end="", flush=True)
     t0 = time.perf_counter()
     result = build_fn(
-        {k: sleeves[k] for k in SLEEVE_KEYS},
+        {k: sleeves[k] for k in (*SLEEVE_KEYS, FIXED_KEY)},
         allocation="risk_parity",
         target_vol=TARGET_VOL,
         max_leverage=MAX_LEVERAGE,
@@ -622,9 +651,11 @@ def write_named_table(points: list[WeightPoint]) -> None:
     tex = (
         "\\begin{table}[H]\n"
         "\\centering\n"
-        "\\caption{Comparaison de 8 allocations nommées sous le régime de risque "
-        "production ($\\mathrm{tv}=0.28$, $\\mathrm{ml}=12$, DD-cap désactivé). "
-        "Sharpe WF = moyenne sur les 7~fenêtres annuelles 2019--2025.}\n"
+        "\\caption{Comparaison de 8 répartitions nommées du trio FX sous le "
+        f"régime de risque production ($\\mathrm{{tv}}={TARGET_VOL:.2f}$, "
+        f"$\\mathrm{{ml}}={MAX_LEVERAGE:.0f}$, DD-cap désactivé), la sleeve or "
+        f"restant à {FIXED_WEIGHT * 100:.0f}\\,\\%. "
+        "Sharpe WF = moyenne sur les fenêtres annuelles glissantes.}\n"
         "\\label{tbl:weight_sensitivity_named}\n"
         "\\begin{tabular}{lrrrrr}\n"
         "\\toprule\n"
@@ -661,13 +692,19 @@ def write_extremes_table(points: list[WeightPoint]) -> None:
     top_rows = "\n".join(_row(p) for p in top3)
     bot_rows = "\n".join(_row(p) for p in bot3)
 
+    # Le nombre de points et la lecture du classement sont dérivés : « 231
+    # allocations », « zone MR-lourde » et « sans exposition MR » étaient des
+    # affirmations en dur qu'aucun recalcul ne rafraîchissait.
+    mr_top = sum(p.w_mr for p in top3) / len(top3)
+    mr_bot = sum(p.w_mr for p in bot3) / len(bot3)
     tex = (
         "\\begin{table}[H]\n"
         "\\centering\n"
-        "\\caption{Top-3 et bottom-3 des 231 allocations du simplex "
-        "(pas de 0.05), classées par Sharpe WF. Le top-3 est serré "
-        "autour de la zone MR-lourde ; le bottom-3 correspond aux "
-        "allocations sans exposition MR.}\n"
+        f"\\caption{{Top-3 et bottom-3 des {len(points)} répartitions du "
+        "simplex FX (pas de 0.05), classées par Sharpe WF, la sleeve or "
+        f"restant à {FIXED_WEIGHT * 100:.0f}\\,\\%. La part moyenne de MR y "
+        f"passe de {mr_top * 100:.0f}\\,\\% en tête à {mr_bot * 100:.0f}\\,\\% "
+        "en queue de classement.}\n"
         "\\label{tbl:weight_sensitivity_extremes}\n"
         "\\begin{tabular}{lrrrrr}\n"
         "\\toprule\n"

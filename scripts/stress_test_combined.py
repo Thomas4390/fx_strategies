@@ -44,6 +44,12 @@ _SRC = _PROJECT_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from strategies.combined_portfolio_v2 import (  # noqa: E402
+    PRODUCTION_MAX_LEVERAGE as _PRODUCTION_MAX_LEVERAGE,
+    PRODUCTION_TARGET_VOL as _PRODUCTION_TARGET_VOL,
+    PRODUCTION_WEIGHTS as _PRODUCTION_WEIGHTS,
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # Recommended configuration (from Phase 18)
@@ -63,20 +69,28 @@ if str(_SRC) not in sys.path:
 # vs Phase 17 (MR90/TS3p10) adding RSI lifts OOS Sharpe from 1.24 to
 # 1.44 (+16%), pulls the bootstrap P5 Max DD from -33.98% to -30.68%,
 # and adds 2019/2023 alpha (RSI Daily is positive in those years).
+# Dérivé de combined_portfolio_v2 plutôt que recopié : la version figée ici a
+# décrit pendant trois mois une allocation qui n'était plus celle de production
+# (80/10/10 tv=0.28 contre 72/9/9/10 tv=0.37), et le rapport client a publié
+# des tables construites sur cet écart sans que rien ne le signale.
 RECOMMENDED_CONFIG: dict[str, Any] = {
     "allocation": "custom",
-    "custom_weights": {
-        "MR_Macro": 0.80,
-        "TS_Momentum_3p": 0.10,
-        "RSI_Daily_3p": 0.10,
-    },
-    "target_vol": 0.28,
-    "max_leverage": 12.0,
+    "custom_weights": dict(_PRODUCTION_WEIGHTS),
+    "target_vol": _PRODUCTION_TARGET_VOL,
+    "max_leverage": _PRODUCTION_MAX_LEVERAGE,
     "dd_cap_enabled": False,
 }
 
 
 OOS_SPLIT_DATE = "2025-04-01"
+
+# Bande de CAGR visée, celle du mandat en vigueur. Elle valait [10 %, 15 %] avec
+# un drawdown plafonné à 35 % — le mandat d'avant le 2026-07-26, qui visait la
+# régularité. Depuis, l'objectif est un CAGR d'environ 40 % et le plafond de
+# drawdown a été retiré : laissée en l'état, la ligne « cible atteinte » du
+# rapport client affichait 0,0 % en mesurant le portefeuille contre un mandat
+# auquel il n'obéit plus.
+TARGET_CAGR_BAND: tuple[float, float] = (0.35, 0.45)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -177,7 +191,8 @@ def run_block_bootstrap(
     dd_arr = np.asarray(max_dds)
     sharpe_arr = np.asarray(sharpes)
 
-    target_hit = (cagr_arr >= 0.10) & (cagr_arr <= 0.15) & (dd_arr > -0.35)
+    lo, hi = TARGET_CAGR_BAND
+    target_hit = (cagr_arr >= lo) & (cagr_arr <= hi)
 
     return BootstrapStats(
         n_runs=len(cagrs),
@@ -296,9 +311,13 @@ def run_parameter_sensitivity(
     """Sweep target_vol × max_leverage around the recommended config."""
     from strategies.combined_portfolio_v2 import build_combined_portfolio_v2
 
+    # Grille centrée sur la config de production courante. L'ancienne balayait
+    # 0.15-0.28 x 10/15/20, qui n'encadrait plus rien depuis que la production
+    # est à tv=0.37 / ml=31 — la table publiée ne contenait même pas la colonne
+    # du levier réellement utilisé.
     sweeps: list[dict[str, Any]] = []
-    for target_vol in (0.15, 0.18, 0.20, 0.22, 0.25, 0.28):
-        for max_lev in (10.0, 15.0, 20.0):
+    for target_vol in (0.20, 0.28, 0.33, 0.37, 0.42, 0.50):
+        for max_lev in (20.0, 31.0, 45.0):
             config = {**RECOMMENDED_CONFIG, "target_vol": target_vol, "max_leverage": max_lev}
             res = build_combined_portfolio_v2(strategy_returns, **config)
             sweeps.append({
@@ -417,6 +436,10 @@ def run_stress_tests(
         "custom_weights": RECOMMENDED_CONFIG["custom_weights"],
         "n_bootstrap": n_bootstrap,
         "block_size": block_size,
+        # Publiée pour que les légendes du rapport parlent du mandat qui a
+        # réellement servi au calcul, au lieu d'en affirmer un autre.
+        "target_cagr_band": list(TARGET_CAGR_BAND),
+        "oos_split_date": OOS_SPLIT_DATE,
     }
 
     print(f"\nRunning block-bootstrap ({n_bootstrap} resamples, block={block_size})...")
@@ -449,8 +472,12 @@ def run_stress_tests(
 
 
 if __name__ == "__main__":
+    # Écrit là où le générateur d'assets LaTeX le lit. Ce script sortait dans
+    # results/combined_v2/ pendant que build_latex_report_assets.py lisait
+    # results/production_report/ : relancer le stress test ne mettait donc rien
+    # à jour dans le rapport, et les deux copies ont divergé de trois mois.
     run_stress_tests(
         n_bootstrap=1000,
         block_size=20,
-        save_json="results/combined_v2/stress_test_report.json",
+        save_json="results/production_report/stress_test_report.json",
     )
