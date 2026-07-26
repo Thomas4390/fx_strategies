@@ -179,6 +179,7 @@ Et au fil du backtest, chaque refresh log : `Macro source=history spread=… mac
 
 | Code | Constante | Symptôme typique | Fix |
 |---|---|---|---|
+| **4014** | `ERR_FUNCTION_NOT_ALLOWED` | `WebRequest bloqué (err 4014) … Sleeve MR Macro désactivé jusqu'au prochain refresh` | URL non autorisée. GUI : `Outils → Options → Expert Advisors → Allow WebRequest for listed URL`. En CLI/Wine, terminal **fermé**, éditer `Config/common.ini` (UTF-16 LE) : `WebRequest=1` et `WebRequestUrl=https://api.stlouisfed.org` sous `[Experts]` — les deux étaient à `0` / vide |
 | **4305** | `ERR_MARKET_SELECT_ERROR` | `EnsureSymbolSelected: cannot add EURUSD` | Définir `Inp_SymbolSuffix` au bon suffixe broker |
 | **5004** | `ERR_CANNOT_OPEN_FILE` | `cannot open macro_cache.csv` | Soit générer le CSV via bridge Python, soit passer en `MACRO_SOURCE_NATIVE` |
 | **reason=8** | `REASON_INITFAILED` | `[DEINIT][INFO] EA stopped reason=8` | OnInit() a retourné non-zéro — remonter dans les logs pour la cause précise |

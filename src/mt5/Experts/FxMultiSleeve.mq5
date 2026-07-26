@@ -58,6 +58,36 @@ input double Inp_MarginCapPct       = 0.50;     // margin / equity threshold
 // seul plafonnait à 31,66% quel que soit le levier.
 input double Inp_GlobalTargetVol    = 0.37;
 input double Inp_GlobalMaxLeverage  = 31.0;
+
+// Échelle commune des budgets de risque par trade (FX_RISK_PCT_* dans
+// FxCommon.mqh), 1.0 = valeurs historiques.
+//
+// Pourquoi ce réglage existe — mesuré le 2026-07-26. vbt atteint sa cible de
+// vol (36,60% pour 37% visés), MT5 non (~10%). La cause n'est pas la cible mais
+// le sizing de BASE : MT5 ouvre un notionnel de risk_pct/distance_au_stop fois
+// la sous-équité, et son levier global est plafonné à target_vol/vol_floor =
+// 18,5. Même au plafond, ce notionnel ne porte pas la vol du compte à 37% —
+// relever Inp_GlobalTargetVol ne change donc rien, seul le sizing de base agit.
+//
+// Calibré à 4.5 pour délivrer le mandat de ~40% de CAGR SUR CE MOTEUR, mesuré
+// (EURUSD.c, 2021-01 → 2025-12, model=1, 4 sleeves) :
+//
+//   scale   CAGR     maxDD    Sharpe   trades
+//   1.0    12,19%    9,39%    1,219      812
+//   2.0    21,03%   15,83%    1,134      812
+//   3.5    33,41%   24,55%    1,089      812
+//   4.5    40,45%   30,82%    1,062      812     <- retenu
+//   5.0    44,35%   33,86%    1,057      812
+//
+// Le CAGR répond quasi linéairement et le nombre de trades ne bouge pas : ce
+// paramètre dimensionne, il ne change aucun signal. Le Sharpe s'érode
+// lentement (1,219 -> 1,062), les coûts de transaction pesant plus lourd à
+// mesure que la taille monte.
+//
+// ⚠️ Ce paramètre multiplie le risque réellement pris, dans la proportion exacte
+// où il multiplie le rendement attendu. Le monter est une décision de risque,
+// pas un réglage de calibration.
+input double Inp_RiskScale          = 4.5;
 input double Inp_GlobalVolFloor     = 0.02;
 
 // === Sleeve 1 - MR Macro ===========================================

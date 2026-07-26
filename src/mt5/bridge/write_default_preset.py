@@ -53,6 +53,8 @@ PRESET_LINES: list[str] = [
     f"Inp_GlobalTargetVol={_ext(0.37, 0.037000, 3.700000)}",
     f"Inp_GlobalMaxLeverage={_ext(31.0, 3.100000, 310.000000)}",
     f"Inp_GlobalVolFloor={_ext(0.02, 0.002000, 0.200000)}",
+    "; Échelle des budgets de risque — 4.5 délivre ~40% de CAGR sur ce moteur.",
+    f"Inp_RiskScale={_ext(4.5, 0.450000, 45.000000)}",
     "; --- Sleeve 1 — MR Macro ---",
     "Inp_MR_Pairs=EURUSD,GBPUSD,USDJPY,USDCAD",
     f"Inp_MR_BBWindow={_ext(80, 1, 800)}",

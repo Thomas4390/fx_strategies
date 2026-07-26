@@ -257,7 +257,7 @@ private:
         double lots = risk.LotsFor(SLEEVE_MR_MACRO, sym,
                                    FX_RISK_PCT_MR_MACRO,
                                    sl_distance,
-                                   per_pair_alloc * slip_drag);
+                                   per_pair_alloc * slip_drag * Inp_RiskScale);
         if(lots <= 0.0)
         {
             g_logger.Warn(m_name, StringFormat("lots=0 on %s, skipping entry",

@@ -205,7 +205,7 @@ private:
         double slip_drag = SizingDrag(slip_pct, Inp_SwapBpsPerNight,
                                       FX_RSI_AVG_NIGHTS_HELD);
         double risk_money = sub_eq * FX_RISK_PCT_RSI_DAILY
-                            * risk.GlobalLeverage() * slip_drag;
+                            * risk.GlobalLeverage() * slip_drag * Inp_RiskScale;
         double lots = LotsForRisk(symbol, risk_money, sl_dist);
         if(lots <= 0.0) return;
 

@@ -341,7 +341,7 @@ private:
         double slip_drag = SizingDrag(slip_pct, Inp_SwapBpsPerNight,
                                       FX_GOLD_AVG_NIGHTS_HELD);
         double risk_money = sub_eq * FX_RISK_PCT_GOLD_MOMENTUM
-                            * lev * slip_drag;
+                            * lev * slip_drag * Inp_RiskScale;
         double lots = LotsForRisk(m_symbol, risk_money, sl_dist);
         if(lots <= 0.0)
         {
