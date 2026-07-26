@@ -125,10 +125,25 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
 
     print("  Running TS Momentum + RSI...")
     # Phase M.1 : scale returns × MT5_LEV_AVG ≈ 10 pour matcher MT5
-    # GlobalLeverage applied uniformly to all sleeves (TS/RSI returns are
-    # unleveraged daily backtest returns, MT5 lev typical ~10x avg).
+    # GlobalLeverage applied to the sleeves whose MQL5 counterpart reads it
+    # from CRiskManager, i.e. those returning *unleveraged* daily backtest
+    # returns (MT5 lev typical ~10x avg).
+    #
+    # This is NOT the case for every sleeve — check before scaling one:
+    #   - RSI Daily  : backtest_rsi_daily_portfolio() calls the pipeline with
+    #                  leverage=None, and FxSleeveRSIDaily.mqh:208 sizes on
+    #                  risk.GlobalLeverage(). Scaling is correct.
+    #   - TS Momentum: daily_momentum.py:140 already applies
+    #                  vol_target_leverage(target=0.10, cap=3.0), and
+    #                  FxSleeveTSMomentum.mqh:234 sizes on that same per-pair
+    #                  lev_pair — never on GlobalLeverage. Scaling it stacked a
+    #                  second leverage layer with no MT5 counterpart, which is
+    #                  the Phase L mistake Phase M.1 undid for gold only.
     MT5_LEV_AVG = 12.0
-    ts_rets = backtest_ts_momentum_portfolio(closes) * MT5_LEV_AVG
+    # Same reasoning as the 3-pair variant below: no scaling, the sleeve is
+    # already vol-targeted. Kept aligned so the two TS variants never diverge
+    # on their sizing convention.
+    ts_rets = backtest_ts_momentum_portfolio(closes)
 
     # Phase 17: TS Momentum restricted to 3 pairs (drop USD-CAD).
     # Per-year decomposition showed USD-CAD is consistently the worst
@@ -136,8 +151,11 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     # in 2022, -5.72% in 2023, -0.83% in 2026 YTD. Removing it lifts
     # the full-period Sharpe from 0.44 to 0.57 (+30%) and restores
     # 2023 to positive in the combined v2 walk-forward.
+    # No MT5_LEV_AVG scaling: this sleeve carries its own vol-target layer
+    # (see the note above). Stacking made a 10%-weight sleeve targeting 10%
+    # vol realize 67% instead, taking 55% of the portfolio risk budget.
     closes_3p = closes[["EUR-USD", "GBP-USD", "USD-JPY"]]
-    ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p) * MT5_LEV_AVG
+    ts_rets_3p = backtest_ts_momentum_portfolio(closes_3p)
 
     # Phase 18: RSI Daily 4-pair as a third orthogonal sleeve.
     # Near-zero correlation with MR Macro (+0.056) and slightly

@@ -66,7 +66,15 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 # v6-gold     : ajout de la sleeve Gold_Momentum + bornes de séance à 17:00 NY
 #               (les 392 séances dominicales parasites changeaient tous les
 #               lookbacks — voir docs/specs/gold_momentum_spec.md §2)
-_SLEEVES_VERSION = "v6-gold"
+# v7-ts-unstack : TS_Momentum_3p n'est plus multiplié par MT5_LEV_AVG. La sleeve
+#               porte déjà vol_target_leverage(target=0.10, cap=3.0) et son
+#               portage MQL5 dimensionne sur ce lev_pair, jamais sur
+#               GlobalLeverage — le facteur 12 empilait un second levier sans
+#               contrepartie MT5.
+# v8-ts-unstack-4p : même correction appliquée à TS_Momentum_RSI (variante
+#               4 paires), pour que les deux variantes TS partagent la même
+#               convention de sizing.
+_SLEEVES_VERSION = "v8-ts-unstack-4p"
 
 
 # ═══════════════════════════════════════════════════════════════════════
