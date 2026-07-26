@@ -90,7 +90,7 @@ Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSource
 
 | Fichier | Mode(s) | Statut local |
 |---|---|---|
-| `Common\Files\fred_api_key.txt` | NATIVE / HYBRID / AUTO-live | ✅ déployé |
+| `Common\Files\fred_api_key.txt` | NATIVE / HYBRID / AUTO-live | ✅ déployé — ⚠️ voir le piège de chemin ci-dessous |
 | `Common\Files\macro_cache.csv` | FILE / HYBRID-fallback | non requis (NATIVE par défaut) |
 | `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ généré pour 2019-2026 (1833 lignes) |
 | URL whitelist `https://api.stlouisfed.org` | NATIVE / HYBRID / AUTO-live | ✅ activé dans MT5 |
@@ -145,6 +145,31 @@ Et au fil du backtest, chaque refresh log : `Macro source=history spread=… mac
 |---|---|---|
 | `<repo-root>/.env` | Source de vérité Python/dev — `FRED_API_KEY=…` | gitignoré (`.gitignore` ligne 30) |
 | `C:\…\Terminal\Common\Files\fred_api_key.txt` | Lu par MT5 via `FileOpen(…, FILE_COMMON)` | hors du repo |
+
+> ⚠️ **Piège de chemin `FILE_COMMON` en mode portable — diagnostiqué le 2026-07-26.**
+> Symptôme : le journal live répète `CMacroSourceFRED: no API key configured` puis
+> `CMacroFilter::NATIVE: FRED fetch failed`, une fois par minute, indéfiniment. Le message
+> se lit comme une clé expirée ; **il signifie fichier introuvable**. La clé, elle, était
+> valide (HTTP 200 sur `T10Y2Y`).
+>
+> Sous Wine avec `/portable`, `FILE_COMMON` ne résout PAS vers la racine portable
+> `…/MetaTrader 5/Common/Files/` mais vers :
+>
+> ```
+> ~/.mt5/drive_c/users/thomas/AppData/Roaming/MetaQuotes/Terminal/Common/Files/
+> ```
+>
+> C'est le même piège que celui déjà documenté pour `macro_history.csv`, jamais appliqué à
+> la clé : elle n'existait que dans la racine portable. Vérification rapide — le répertoire
+> ACTIF est celui où l'EA écrit ses propres sorties (`deals_*.csv`, `optim_results.csv`) :
+>
+> ```bash
+> ls ~/.mt5/drive_c/users/thomas/AppData/Roaming/MetaQuotes/Terminal/Common/Files/
+> ```
+>
+> Tout fichier lu via `FILE_COMMON` doit être déposé **là**, pas dans la racine portable.
+> N'affecte que le live : en tester, `MACRO_SOURCE_AUTO` bascule sur `HISTORY` et n'appelle
+> jamais FRED — ce qui explique que les backtests n'aient jamais rien signalé.
 
 **Pour récupérer la clé en future session Claude** : `Read C:\Users\vaude\Documents\Coding_Project\.env` (le fichier est local, jamais committé).
 
