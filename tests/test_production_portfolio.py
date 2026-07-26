@@ -24,23 +24,24 @@ if str(_SRC) not in sys.path:
 
 @pytest.fixture(scope="module")
 def synthetic_production_rets() -> dict[str, pd.Series]:
-    """Synthetic 3-sleeve return set matching the production trio keys.
+    """Synthetic return set matching the production sleeve keys.
 
     Uses the same generator as ``test_combined_portfolio_v2`` so the
     fixture is reproducible; only the strategy names differ to match
-    the production sleeves (MR_Macro / TS_Momentum_3p / RSI_Daily_3p).
+    the production sleeves. Built from ``PRODUCTION_WEIGHTS`` so adding or
+    removing a sleeve there cannot leave this fixture silently short of a
+    key — the helper would raise instead of being exercised.
     """
+    from strategies.combined_portfolio_v2 import PRODUCTION_WEIGHTS
+
     rng = np.random.default_rng(20260413)
     n = 2500
     idx = pd.bdate_range("2016-01-04", periods=n, freq="B")
+    # Distinct (drift, vol) per sleeve so the mix is not degenerate.
+    profiles = [(0.0004, 0.006), (0.0003, 0.009), (0.0002, 0.005), (0.0006, 0.012)]
     return {
-        "MR_Macro": pd.Series(rng.normal(0.0004, 0.006, n), index=idx, name="MR_Macro"),
-        "TS_Momentum_3p": pd.Series(
-            rng.normal(0.0003, 0.009, n), index=idx, name="TS_Momentum_3p"
-        ),
-        "RSI_Daily_3p": pd.Series(
-            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_3p"
-        ),
+        name: pd.Series(rng.normal(mu, sigma, n), index=idx, name=name)
+        for name, (mu, sigma) in zip(PRODUCTION_WEIGHTS, profiles)
     }
 
 

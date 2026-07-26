@@ -30,23 +30,34 @@
 //============================================================ INPUTS
 
 // === Allocation & Risk =============================================
-input double Inp_AllocMRMacro       = 0.80;     // sum across all sleeves must equal 1.0
-input double Inp_AllocTSMomentum    = 0.10;
-input double Inp_AllocRSIDaily      = 0.10;
+input double Inp_AllocMRMacro       = 0.72;     // sum across all sleeves must equal 1.0
+input double Inp_AllocTSMomentum    = 0.09;
+input double Inp_AllocRSIDaily      = 0.09;
 input double Inp_AllocH1Momentum    = 0.0;      // optional sleeve, off by default
-input double Inp_AllocGoldMomentum  = 0.0;      // Sleeve 5 — Gold momentum, off by default
+input double Inp_AllocGoldMomentum  = 0.10;     // Sleeve 5 — in production since 2026-07-26
 
-// Tail-risk protections. Both breakers are active by default and
-// required when running with elevated leverage targets.
-input bool   Inp_EnableDDCap        = true;
+// Tail-risk protections.
+//
+// ⚠️ 2026-07-26 — the drawdown breaker is DISABLED by owner decision, under a
+// CAGR mandate that declared risk non-binding. It is not a dead knob: at the
+// current sizing the sleeves draw down well past the old 20% threshold (gold
+// alone reaches -76% in the tester), so the breaker would have fired early and
+// stayed latched, since it persists in a GlobalVariable and needs
+// Inp_ResetDDState to clear. Re-enabling it without re-tuning the vol targets
+// would flatten the account instead of protecting it.
+input bool   Inp_EnableDDCap        = false;
 input double Inp_DDCap              = 0.20;     // peak-equity drawdown threshold
 input bool   Inp_ResetDDState       = false;    // wipe persisted DD state on init
 input bool   Inp_EnableMarginCap    = true;
 input double Inp_MarginCapPct       = 0.50;     // margin / equity threshold
 
 // === Global vol-targeting overlay ==================================
-input double Inp_GlobalTargetVol    = 0.75;
-input double Inp_GlobalMaxLeverage  = 64.0;
+// Retunés 2026-07-26 avec l'entrée de la sleeve or : la cible BAISSE (0.75 ->
+// 0.37) alors que le CAGR MONTE (31,66% -> 40,49% en vbt), parce que l'or
+// quasi orthogonal porte le Sharpe du combiné de 0,661 à 1,084. Le trio FX
+// seul plafonnait à 31,66% quel que soit le levier.
+input double Inp_GlobalTargetVol    = 0.37;
+input double Inp_GlobalMaxLeverage  = 31.0;
 input double Inp_GlobalVolFloor     = 0.02;
 
 // === Sleeve 1 - MR Macro ===========================================

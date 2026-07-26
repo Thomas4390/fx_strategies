@@ -67,12 +67,32 @@ from strategies.combined_portfolio import (
 # near-orthogonal diversifiers whose 2019/2023 alpha plugs the two
 # weak years of the MR Macro standalone.
 PRODUCTION_WEIGHTS: dict[str, float] = {
-    "MR_Macro": 0.80,
-    "TS_Momentum_3p": 0.10,
-    "RSI_Daily_3p": 0.10,    # Phase E.3 retire USDJPY (was RSI_Daily_4p)
+    "MR_Macro": 0.72,        # 0.80 x 0.90, le trio garde ses ratios internes
+    "TS_Momentum_3p": 0.09,
+    "RSI_Daily_3p": 0.09,    # Phase E.3 retire USDJPY (was RSI_Daily_4p)
+    "Gold_Momentum": 0.10,   # 2026-07-26 : la sleeve or entre en production
 }
-PRODUCTION_TARGET_VOL: float = 0.75    # Phase I 2026-05-05 (was 0.28)
-PRODUCTION_MAX_LEVERAGE: float = 64.0  # Phase I 2026-05-05 (was 12.0)
+
+# 2026-07-26 — retunés sous mandat de CAGR 40% sur le portefeuille combiné.
+#
+# Les trois sleeves FX seules ne peuvent pas y arriver : leur combinaison non
+# leviérée rend 2,18% pour une vol de 5,77% (Sharpe 0,403), et le vol targeting
+# plafonne à **31,66%** de CAGR vers target_vol=0.75 avant que le drag de
+# variance ne la fasse retomber (28,89% à 0.90, 16,35% à 1.15, 4,24% à 1.30).
+# Pousser le levier au-delà détruit du rendement, il n'en crée pas.
+#
+# La sleeve or lève la contrainte parce qu'elle est quasi orthogonale au trio :
+# à 10% de poids elle porte le Sharpe du combiné de 0,661 à 1,084, ce qui
+# déplace le plafond bien au-dessus de la cible. La cible devient donc
+# atteignable à un niveau de risque PLUS BAS qu'avant :
+#
+#   config                       CAGR      maxDD    Sharpe
+#   trio seul, tv=0.75          31,66%    -86,37%    0,661
+#   +or 10%, tv=0.37            40,49%    -58,49%    1,084
+#
+# Le nouveau réglage domine l'ancien sur les trois axes à la fois.
+PRODUCTION_TARGET_VOL: float = 0.37    # 2026-07-26 (was 0.75, Phase I)
+PRODUCTION_MAX_LEVERAGE: float = 31.0  # 2026-07-26 (was 64.0, Phase I)
 
 
 def build_production_portfolio(

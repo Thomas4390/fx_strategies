@@ -23,18 +23,21 @@ if str(_SRC) not in sys.path:
 
 @pytest.fixture(scope="module")
 def synthetic_leverage_variants_rets() -> dict[str, pd.Series]:
-    """Reuse the production trio fixture (same keys and RNG seed)."""
+    """Reuse the production fixture (same keys and RNG seed).
+
+    Keys are derived from ``PRODUCTION_WEIGHTS`` because both variants copy it:
+    hardcoding the sleeve list here made these tests fail with a bare KeyError
+    the day a fourth sleeve entered production.
+    """
+    from strategies.combined_portfolio_v2 import PRODUCTION_WEIGHTS
+
     rng = np.random.default_rng(20260413)
     n = 2500
     idx = pd.bdate_range("2016-01-04", periods=n, freq="B")
+    profiles = [(0.0004, 0.006), (0.0003, 0.009), (0.0002, 0.005), (0.0006, 0.012)]
     return {
-        "MR_Macro": pd.Series(rng.normal(0.0004, 0.006, n), index=idx, name="MR_Macro"),
-        "TS_Momentum_3p": pd.Series(
-            rng.normal(0.0003, 0.009, n), index=idx, name="TS_Momentum_3p"
-        ),
-        "RSI_Daily_3p": pd.Series(
-            rng.normal(0.0002, 0.005, n), index=idx, name="RSI_Daily_3p"
-        ),
+        name: pd.Series(rng.normal(mu, sigma, n), index=idx, name=name)
+        for name, (mu, sigma) in zip(PRODUCTION_WEIGHTS, profiles)
     }
 
 

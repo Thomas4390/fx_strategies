@@ -262,6 +262,19 @@ def _find_featured_trade_window(
             if isinstance(val, pd.Series):
                 ind_series.append(val)
 
+    # Require the portfolio close price to be fully populated across
+    # the trade window so the chart has no missing bars between entry
+    # and exit. Without this check, weekend/holiday gaps or session
+    # carve-outs can produce visible discontinuities in the candle line.
+    try:
+        close = pf.close
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        if isinstance(close, pd.Series):
+            ind_series.append(close)
+    except Exception:
+        pass
+
     def _has_nan(trade_start: pd.Timestamp, trade_end: pd.Timestamp) -> bool:
         for s in ind_series:
             try:
