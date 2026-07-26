@@ -287,6 +287,24 @@ class TesterLogSummary:
     raw_tail: str = ""
 
 
+# Première ligne écrite par OnInit() : elle borne le début du run courant dans un
+# `YYYYMMDD.log` qui en accumule des dizaines.
+_RUN_START_MARKER = r"\[INIT\]\[INFO\] FxMultiSleeve start build"
+
+
+def _slice_last_run(text: str) -> str:
+    """Ne garder que la portion du log postérieure au dernier démarrage d'EA.
+
+    Filtrer les *fichiers* par mtime ne suffit pas : le log du jour accumule tous
+    les runs, si bien qu'un `[INIT][ERROR]` d'un essai abandonné trois quarts
+    d'heure plus tôt était rapporté comme un défaut du run courant. C'est ce qui
+    a fait passer le run de référence du 2026-07-26 pour douteux alors qu'il
+    était propre.
+    """
+    starts = list(re.finditer(_RUN_START_MARKER, text))
+    return text[starts[-1].start():] if starts else text
+
+
 def parse_tester_log(log_dir: Path, since_epoch: float) -> TesterLogSummary:
     """Parse le log Tester du jour. `since_epoch` = on ignore les logs antérieurs
     au lancement courant pour éviter de remonter un run précédent."""
@@ -304,13 +322,12 @@ def parse_tester_log(log_dir: Path, since_epoch: float) -> TesterLogSummary:
 
     log_path = candidates[0]
     summary.log_path = str(log_path)
-    text = read_utf16_safe(log_path)
+    text = _slice_last_run(read_utf16_safe(log_path))
 
     if "[INIT][INFO] EA ready" in text:
         summary.init_ok = True
     for match in re.finditer(r"\[INIT\]\[ERROR\][^\n]+", text):
         summary.init_errors.append(match.group(0).strip())
-    # Le log YYYYMMDD.log accumule plusieurs runs ; on veut le DERNIER match.
     macro_matches = (
         list(re.finditer(r"Macro source resolved=\w+", text))
         or list(re.finditer(

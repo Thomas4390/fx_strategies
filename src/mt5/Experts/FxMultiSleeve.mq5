@@ -526,9 +526,11 @@ double OnTester()
                     if(tk == 0) continue;
                     long magic = HistoryDealGetInteger(tk, DEAL_MAGIC);
                     string sleeve;
-                    if(magic == Inp_MagicMR)       sleeve = "MR_MACRO";
-                    else if(magic == Inp_MagicTS)  sleeve = "TS_MOMENTUM";
-                    else if(magic == Inp_MagicRSI) sleeve = "RSI_DAILY";
+                    if(magic == Inp_MagicMR)        sleeve = "MR_MACRO";
+                    else if(magic == Inp_MagicTS)   sleeve = "TS_MOMENTUM";
+                    else if(magic == Inp_MagicRSI)  sleeve = "RSI_DAILY";
+                    else if(magic == Inp_MagicGold) sleeve = "GOLD_MOMENTUM";
+                    else if(magic == Inp_MagicH1)   sleeve = "H1_MOMENTUM";
                     else                            sleeve = "OTHER";
                     long deal_type  = HistoryDealGetInteger(tk, DEAL_TYPE);
                     long deal_entry = HistoryDealGetInteger(tk, DEAL_ENTRY);
