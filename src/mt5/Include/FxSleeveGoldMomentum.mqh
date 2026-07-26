@@ -6,7 +6,7 @@
 //| Specification (mirrors src/strategies/gold_momentum.py):         |
 //|   * Universe        : one metal symbol (XAUUSD)                  |
 //|   * Score           : mean of sign(return over N) for N in       |
-//|                       {15, 30, 60} D1 bars, in [-1, +1]          |
+//|                       {40, 60, 120, 250} D1 bars, in [-1, +1]    |
 //|   * Long signal     : score > 0                                  |
 //|   * Short signal    : score < 0, disabled by default             |
 //|   * Exit            : signal flip                                |
@@ -15,21 +15,20 @@
 //|                       risk; read the research note first.        |
 //|   * Vol target      : min(target / sigma21, max leverage)        |
 //|                                                                  |
-//| The lookbacks are averaged rather than selected, which is what   |
-//| normally keeps this signal from being an overfit.                |
+//| The lookbacks are averaged rather than selected: replacing a     |
+//| fitted choice with an aggregate is what keeps this signal from   |
+//| being an overfit. Do NOT grid-search them.                       |
 //|                                                                  |
-//| ⚠ 2026-07-26: that property no longer holds. Under an explicit   |
-//| CAGR mandate the grid was retuned from {40,60,120,250} to        |
-//| {15,30,60} by comparing 5 candidate grids on data ending         |
-//| 2025-12-31 — i.e. it IS now a fitted choice, and it carries a    |
-//| selection bias the 2019-2025 numbers do not price. Robustness    |
-//| evidence and the single frozen-tail read are recorded in         |
-//| docs/research/HOLDOUT_POLICY.md. Do not grid-search them again   |
-//| without spending a genuinely fresh slice.                        |
+//| 2026-07-26 — that rule was tested and it held. A CAGR mandate    |
+//| moved the grid to {15,30,60}, which looked better in vbt (CAGR   |
+//| 40.7% vs 33.5%) and was far worse HERE (17.3% vs 36.4%), because |
+//| the short grid flips twice as often (66 trades vs 31) and vbt    |
+//| fills at the same close it decided on while this tester fills at |
+//| the next open. Reverted. Only the sizing was kept.               |
 //|                                                                  |
 //| A lookback slot set to 0 is disabled, so the count is variable   |
 //| (1..4) and combinations can be tested from the Strategy Tester   |
-//| without recompiling.                                             |
+//| without recompiling — which is how the above was measured.       |
 //|                                                                  |
 //| Long-only is the default because gold carries a structural       |
 //| positive drift; enabling shorts cost 3.8 pp of return and        |

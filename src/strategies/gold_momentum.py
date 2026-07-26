@@ -48,32 +48,46 @@ from framework.pipeline_utils import (
 # sleeves and stays directly comparable in the combiner.
 GOLD_DAILY_ANN_FACTOR: float = 252.0
 
-# Fixed lookbacks, averaged rather than selected. Spanning ~3 weeks to ~3 months.
+# Fixed lookbacks, averaged rather than selected. Spanning ~2 to ~12 months
+# covers the horizon range the TSMOM literature documents.
 #
-# Retuned 2026-07-26 from (40, 60, 120, 250) on an explicit CAGR mandate. The
-# shorter span lifts the calibration-window Sharpe from 0.786 to 1.034 and turns
-# 2022 and 2023 from losses into gains, so the sleeve is positive in 7 of 8
-# years instead of 4. The neighbouring grids (20, 40, 80) and (30, 60, 120) sit
-# at Sharpe 0.96-0.99, so this is a plateau rather than an isolated peak.
+# Briefly retuned to (15, 30, 60) on 2026-07-26 under a CAGR mandate, then
+# REVERTED the same day. The short grid looked far better in vbt (CAGR 40.69%
+# vs 33.48% at target_vol=0.45) and far worse in the tester that actually
+# executes:
 #
-# ⚠️ These lookbacks were SELECTED on data (5 grids, calibration window ending
-# 2025-12-31). They carry selection bias that the 2019-2025 numbers do not
-# price. See docs/research/HOLDOUT_POLICY.md — the 2026 tail was read once as a
-# single inference pass (+17.4% vs +9.8% for the old grid) and is now spent for
-# this question.
-DEFAULT_LOOKBACKS: tuple[int, ...] = (15, 30, 60)
+#   grid              tv     vbt CAGR    MT5 CAGR
+#   (40,60,120,250)   0.45     33.48%      36.40%     31 trades
+#   (15,30,60)        0.45     40.69%      17.26%     66 trades
+#
+# Parity holds on the long grid and collapses on the short one, and the split
+# tracks trade count. The reason is spec §6: vbt decides on ``close[t]`` and
+# fills at that same ``close[t]``, while MT5 fills at the next open. Shorter
+# lookbacks flip the signal twice as often, so they bank that idealised
+# execution twice as often — the vbt gain was an artefact of the convention,
+# not an edge. Do NOT grid-search these against a vbt objective; the engine
+# rewards exactly what the live one cannot deliver.
+DEFAULT_LOOKBACKS: tuple[int, ...] = (40, 60, 120, 250)
 
 # Realized-volatility window for the vol-target layer, in sessions.
 VOL_WINDOW: int = 21
 
-# Sizing, retuned 2026-07-26 alongside the lookbacks: target_vol 0.25 -> 0.45 and
-# max_leverage 3.0 -> 5.4 (the cap stays at 12x the target, as before).
+# Sizing, retuned 2026-07-26 under a CAGR mandate: target_vol 0.25 -> 0.55 and
+# max_leverage 3.0 -> 6.6 (the cap stays at 12x the target, as before).
 #
-# This is the point where the sleeve reaches the mandated ~40% CAGR: 40.58% with
-# maxDD -48.44% on the calibration window. It is NOT the CAGR-maximising point —
-# past the Kelly leverage the variance drag wins, and CAGR falls back (65.8% at
-# target_vol=1.00 but maxDD -76.88%, then 8.3% at 2.00 and ruin at 3.00).
-# Raising the target further therefore buys drawdown, not return.
+# This is where the sleeve reaches the mandated ~40% CAGR **on both engines** —
+# 38.05% in vbt, 40.97% in the MT5 tester over 2021-01 → 2025-12-31, a ~3 pp
+# spread consistent with every other point of the long-grid sweep. Cost: maxDD
+# -67.7% (vbt) / -76.0% (MT5). The mandate declared risk non-binding.
+#
+# Only the sizing was calibrated, deliberately: the lookbacks stay unselected,
+# so the grid keeps the property that protects it from overfitting, and vol
+# targeting is a scale knob rather than a signal choice.
+#
+# It is NOT the CAGR-maximising point — past the Kelly leverage the variance
+# drag wins and CAGR falls back (65.8% at target_vol=1.00 on the short grid,
+# then 8.3% at 2.00 and ruin at 3.00). Raising the target further buys
+# drawdown, not return.
 
 # US session close, New York. Used only by the rejected intraday variant.
 SESSION_CLOSE = "16:00"
@@ -214,8 +228,8 @@ def pipeline(
     data: vbt.Data,
     lookbacks: tuple[int, ...] = DEFAULT_LOOKBACKS,
     allow_short: bool = False,
-    target_vol: float | None = 0.45,
-    max_leverage: float = 5.4,
+    target_vol: float | None = 0.55,
+    max_leverage: float = 6.6,
     base_size: float = 1.0,
     sl_stop: float | None = None,
     leverage: float | None = None,
@@ -422,8 +436,8 @@ def pipeline_nb(
     data: vbt.Data,
     lookbacks: tuple[int, ...] = DEFAULT_LOOKBACKS,
     allow_short: bool = False,
-    target_vol: float | None = 0.45,
-    max_leverage: float = 5.4,
+    target_vol: float | None = 0.55,
+    max_leverage: float = 6.6,
     sl_stop: float | None = None,
     leverage: float | None = None,
     init_cash: float | None = None,

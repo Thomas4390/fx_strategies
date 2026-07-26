@@ -101,13 +101,13 @@ input int    Inp_H1_SlippageBps     = 12;
 // The four lookbacks are averaged, not selected. Do NOT grid-search them:
 // the averaging is what keeps this signal from being an overfit.
 input string Inp_Gold_Symbol        = "XAUUSD";
-input int    Inp_Gold_LookbackA     = 15;      // 0 disables a slot
-input int    Inp_Gold_LookbackB     = 30;
-input int    Inp_Gold_LookbackC     = 60;
-input int    Inp_Gold_LookbackD     = 0;       // unused since the 2026-07-26 retune
+input int    Inp_Gold_LookbackA     = 40;      // 0 disables a slot
+input int    Inp_Gold_LookbackB     = 60;
+input int    Inp_Gold_LookbackC     = 120;
+input int    Inp_Gold_LookbackD     = 250;
 input bool   Inp_Gold_AllowShort    = false;   // gold has a structural long drift
-input double Inp_Gold_TargetVol     = 0.45;    // retuned 2026-07-26 (was 0.25)
-input double Inp_Gold_MaxLeverage   = 5.4;     // retuned 2026-07-26 (was 3.0)
+input double Inp_Gold_TargetVol     = 0.55;    // retuned 2026-07-26 (was 0.25)
+input double Inp_Gold_MaxLeverage   = 6.6;     // retuned 2026-07-26 (was 3.0)
 input double Inp_Gold_SafetySL      = 0.04;    // gold is ~2x FX volatility
 input int    Inp_Gold_SlippageBps   = 2;       // XAUUSD CFD spread + commission
 input bool   Inp_Gold_Trace         = false;   // daily reconciliation trace — diagnostic only

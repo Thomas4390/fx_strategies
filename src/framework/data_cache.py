@@ -76,10 +76,13 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 #               convention de sizing.
 # v9-gold-cagr : sleeve or retunée sous mandat de CAGR — lookbacks
 #               (40,60,120,250) -> (15,30,60), target_vol 0.25 -> 0.45,
-#               max_leverage 3.0 -> 5.4. CAGR 16,4% -> 40,6%, maxDD -51,7%
-#               -> -48,4%. Paramètres SÉLECTIONNÉS sur données : voir
-#               l'avertissement dans gold_momentum.DEFAULT_LOOKBACKS.
-_SLEEVES_VERSION = "v9-gold-cagr"
+#               max_leverage 3.0 -> 5.4. Le retune des lookbacks a été ANNULÉ
+#               le jour même (v10) : il ne survivait pas au tester MT5.
+# v10-gold-sizing : lookbacks rendus à (40,60,120,250) ; seul le sizing est
+#               retuné, target_vol 0.55 / max_leverage 6.6. CAGR ~38% en vbt
+#               et ~41% en MT5 sur 2021-2025, contre 17% en MT5 pour la grille
+#               courte — voir gold_momentum.DEFAULT_LOOKBACKS.
+_SLEEVES_VERSION = "v10-gold-sizing"
 
 
 # ═══════════════════════════════════════════════════════════════════════

@@ -57,16 +57,21 @@ poste d'écart de la phase 4, à mesurer et non à annuler.
 ## 3. Score de momentum
 
 ```
-LOOKBACKS := [15, 30, 60]              # séances — retunés le 2026-07-26
+LOOKBACKS := [40, 60, 120, 250]        # séances — inchangés
 score[t]  := moyenne sur N dans LOOKBACKS de  sign( close[t] / close[t-N] - 1 )
 ```
 
-⚠️ **Ces horizons sont issus d'une sélection sur données** (5 grilles comparées, fenêtre
-close au 2025-12-31), sous mandat explicite de CAGR ~40 %. La version antérieure
-`[40, 60, 120, 250]` tenait sa robustesse de l'absence de sélection ; cette propriété
-n'est plus disponible et le biais n'est pas provisionné par les chiffres 2019-2025.
-Éléments de robustesse et lecture unique de la tranche gelée :
-`docs/research/HOLDOUT_POLICY.md`.
+📌 **Ces horizons ont failli changer le 2026-07-26 et ne l'ont pas fait — le §6 explique
+pourquoi.** Sous mandat de CAGR, une grille `[15, 30, 60]` sélectionnée sur données rendait
+40,69 % de CAGR en vbt contre 33,48 % pour la grille d'origine ; **dans le tester MT5, la
+même grille tombait à 17,26 % contre 36,40 %.** La parité tient sur la grille longue
+(31 trades) et s'effondre sur la courte (66 trades) : les horizons courts inversent le
+signal deux fois plus souvent et encaissent donc deux fois plus souvent l'exécution
+idéalisée du §6. Le gain vbt était un artefact de convention, pas un edge.
+
+**Conséquence méthodologique : ne pas optimiser ces horizons contre un objectif vbt.** Le
+moteur récompense précisément ce que l'exécution réelle ne peut pas livrer. Seul le sizing
+(§4) a été retuné.
 
 Propriétés à respecter :
 
@@ -87,8 +92,8 @@ Propriétés à respecter :
 ```
 VOL_WINDOW   := 21                     # séances
 ANN_FACTOR   := 252
-TARGET_VOL   := 0.45                   # retuné le 2026-07-26 (était 0.25)
-MAX_LEVERAGE := 5.4                    # retuné le 2026-07-26 (était 3.0)
+TARGET_VOL   := 0.55                   # retuné le 2026-07-26 (était 0.25)
+MAX_LEVERAGE := 6.6                    # retuné le 2026-07-26 (était 3.0)
 VOL_FLOOR    := 0.01
 ret[t]       := close[t] / close[t-1] - 1
 sigma[t]     := ecart_type( ret[t-20 .. t], ddof=1 ) * racine(ANN_FACTOR)
