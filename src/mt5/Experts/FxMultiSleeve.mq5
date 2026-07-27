@@ -141,7 +141,10 @@ input int    Inp_H1_SlippageBps     = 12;
 //--- Sleeve 5: Gold Momentum (daily TS momentum on XAUUSD) --------
 // The four lookbacks are averaged, not selected. Do NOT grid-search them:
 // the averaging is what keeps this signal from being an overfit.
-input string Inp_Gold_Symbol        = "XAUUSD";
+// Inp_Gold_Symbols is a CSV: the sub-equity is split equally across the
+// instruments listed, so the default single symbol keeps the sizing of the
+// mono-instrument sleeve untouched.
+input string Inp_Gold_Symbols       = "XAUUSD";
 input int    Inp_Gold_LookbackA     = 40;      // 0 disables a slot
 input int    Inp_Gold_LookbackB     = 60;
 input int    Inp_Gold_LookbackC     = 120;

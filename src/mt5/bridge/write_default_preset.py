@@ -103,7 +103,7 @@ PRESET_LINES: list[str] = [
     f"Inp_CommissionBpsPerSide={_ext(5.0, 0.500000, 50.000000)}",
     f"Inp_SwapBpsPerNight={_ext(0.5, 0.050000, 5.000000)}",
     "; --- Sleeve 5 — Gold Momentum (en production depuis 2026-07-26) ---",
-    "Inp_Gold_Symbol=XAUUSD",
+    "Inp_Gold_Symbols=XAUUSD",
     f"Inp_Gold_LookbackA={_ext(40, 0, 400)}",
     f"Inp_Gold_LookbackB={_ext(60, 0, 600)}",
     f"Inp_Gold_LookbackC={_ext(120, 0, 1200)}",

@@ -138,7 +138,7 @@ ROLES: dict[str, str] = {
     "Inp_RSI_SlippageBps": "Slippage modélisé en points de base.",
     "Inp_RSI_TimeStopDays": "Durée maximale de détention, en jours. Au-delà, le \\emph{swap} cumulé annule l'edge du signal.",
     # --- 6.6 Sleeve 4 — Gold Momentum ---
-    "Inp_Gold_Symbol": "Symbole de base~; le suffixe broker est ajouté automatiquement.",
+    "Inp_Gold_Symbols": "Liste d'instruments (CSV)~; le suffixe broker est ajouté automatiquement à chacun.",
     "Inp_Gold_LookbackA": "Horizons de tendance, en séances, dont les votes sont agrégés. Mettre un horizon à $0$ le désactive.",
     "Inp_Gold_AllowShort": "Positions courtes désactivées~: l'or présente une dérive haussière structurelle.",
     "Inp_Gold_TargetVol": "Volatilité cible propre à la sleeve, appliquée avant la couche globale.",
@@ -227,7 +227,7 @@ TABLES: list[tuple[str, str, list[str], set[str]]] = [
         "Inp_RSI_SlippageBps",
     ], set()),
     ("params_sleeve_gold", "p{4.6cm}p{3.4cm}p{6.9cm}", [
-        "Inp_Gold_Symbol", "Inp_Gold_LookbackA", "Inp_Gold_AllowShort",
+        "Inp_Gold_Symbols", "Inp_Gold_LookbackA", "Inp_Gold_AllowShort",
         "Inp_Gold_TargetVol", "Inp_Gold_MaxLeverage", "Inp_Gold_SafetySL",
         "Inp_Gold_SlippageBps", "Inp_Gold_Trace", "Inp_Gold_TraceFile",
     ], set()),

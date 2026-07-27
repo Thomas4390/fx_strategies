@@ -15,7 +15,7 @@ Un run par instrument, configuration or de PRODUCTION inchangée
 sélectionne pas de paramètres, il classe des instruments — le compteur de
 trials reste à 1 config × N instruments.
 
-``Inp_Gold_Symbol`` accepte le nom de base : la sleeve tente
+``Inp_Gold_Symbols`` accepte le nom de base : la sleeve tente
 ``<base>+Inp_SymbolSuffix`` puis retombe sur le nom nu (métaux, énergies et
 indices n'ont pas de suffixe chez ce broker).
 
@@ -56,7 +56,9 @@ MODEL = 1                   # OHLC M1 — les ticks réels ne sont pas télécha
 FROM_LEGACY = "2021.01.01"   # 11 symboles avec historique broker profond
 FROM_NEW = "2022.11.04"      # symboles exportés le 2026-07-27 (limite demo)
 
-# (input Inp_Gold_Symbol, from_date). Le nom de base suffit — fallback nom nu.
+# (valeur de Inp_Gold_Symbols, from_date). Un seul instrument par run : ce
+# balayage classe des instruments joués isolément, il ne teste pas de panier.
+# Le nom de base suffit — fallback nom nu.
 INSTRUMENTS: list[tuple[str, str]] = [
     ("XAUUSD", FROM_LEGACY),
     ("EURUSD", FROM_LEGACY),
@@ -140,7 +142,7 @@ def run_one(symbol: str, from_date: str, deposit: int) -> Result:
         # le compte (constaté le 2026-07-27 : net -9 981 contre +45 596 à 1.0).
         # Les chiffres de ce balayage sont donc en sizing vol-target pur.
         "--input", "Inp_RiskScale=1.0",
-        "--input", f"Inp_Gold_Symbol={symbol}",
+        "--input", f"Inp_Gold_Symbols={symbol}",
         "--input", "Inp_Gold_LookbackA=40",
         "--input", "Inp_Gold_LookbackB=60",
         "--input", "Inp_Gold_LookbackC=120",

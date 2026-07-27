@@ -6,7 +6,7 @@
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
 \midrule
-\code{Inp\_Gold\_Symbol} & \metric{XAUUSD} & Symbole de base~; le suffixe broker est ajouté automatiquement. \\
+\code{Inp\_Gold\_Symbols} & \metric{XAUUSD} & Liste d'instruments (CSV)~; le suffixe broker est ajouté automatiquement à chacun. \\
 \code{Inp\_Gold\_LookbackA..D} & \metric{40 / 60 / 120 / 250} & Horizons de tendance, en séances, dont les votes sont agrégés. Mettre un horizon à $0$ le désactive. \\
 \code{Inp\_Gold\_AllowShort} & \metric{false} & Positions courtes désactivées~: l'or présente une dérive haussière structurelle. \\
 \code{Inp\_Gold\_TargetVol} & \metric{0.55} & Volatilité cible propre à la sleeve, appliquée avant la couche globale. \\
