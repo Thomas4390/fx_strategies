@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T18:05:38.750080+00:00",
+  "generated_at": "2026-07-27T18:39:17.295629+00:00",
   "project_root": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies",
   "files": {
     "AAA10Y_daily.parquet": {
@@ -1334,8 +1334,8 @@
       "index_end": "2026-06-19 00:00:00+00:00"
     },
     "XAG-USD_daily_yahoo.parquet": {
-      "sha256": "560951166fd3b032fc2a64d2a230784baa8d229a7b71356a1e29300cf3ac289d",
-      "size_bytes": 211629,
+      "sha256": "770837dd2a9e491a6b031860910797bcb28979a12d9162cc81d2d372f1a1c61c",
+      "size_bytes": 212076,
       "size_mb": 0.202,
       "row_count": 6501,
       "column_count": 4,
@@ -1400,8 +1400,8 @@
       "index_end": "2026-06-19 00:00:00+00:00"
     },
     "XBR-USD_daily_yahoo.parquet": {
-      "sha256": "f3a80375dd0a80e9d69722a346a849ccc7369a5c641046e3a2718f6585057a6d",
-      "size_bytes": 151265,
+      "sha256": "8ae6a3cf30be6eff85f08536c2394414c42bdccbeec92daee7d1c57012534f16",
+      "size_bytes": 151262,
       "size_mb": 0.144,
       "row_count": 4726,
       "column_count": 4,
@@ -1502,10 +1502,10 @@
       "index_end": "2026-06-19 00:00:00+00:00"
     },
     "XTI-USD_daily_yahoo.parquet": {
-      "sha256": "054c0dc9347a21fa33161e5f38e1aade3e60fb6370199d5580de48756d45e393",
-      "size_bytes": 199728,
+      "sha256": "9d60c20993ab479b5ec3c8c4ebabc76a0faedac8ccf15f46840c4097133be42f",
+      "size_bytes": 199662,
       "size_mb": 0.19,
-      "row_count": 6508,
+      "row_count": 6506,
       "column_count": 4,
       "columns": [
         "open",
@@ -1535,5 +1535,5 @@
       "index_end": "2026-06-19 16:59:00+00:00"
     }
   },
-  "combined_fingerprint": "82fd533f49ab2cfb795f3ffe79cdc5c0d09c497a722d86f9c2973dfaa5b658bf"
+  "combined_fingerprint": "8d4a8fdaa9bb146fb2e6b0fa6c59ba19fd037fc94ae3d0d6154bbc140d8b5aae"
 }

@@ -105,6 +105,34 @@ def test_gold_runs_identically_through_the_registry():
     )
 
 
+def test_yahoo_loader_matches_the_broker_conventions():
+    """A screening instrument loads like a broker one: naive index, daily bars.
+
+    The sleeve reads `index.hour` to cut its sessions, so a tz-aware or a
+    calendar-shifted index would move every boundary without any error.
+    """
+    from strategies.tsmom import load_instrument
+
+    raw, data = load_instrument("US500")
+
+    assert raw.index.tz is None
+    assert raw.index.is_monotonic_increasing
+    assert {"open", "high", "low", "close", "volume"} <= set(raw.columns)
+    assert list(data.close.index) == list(raw.index)
+    assert raw.index.to_series().diff().median() >= pd.Timedelta(days=1)
+
+
+def test_loader_override_switches_the_source():
+    """`loader_override` reads the other history of the same instrument."""
+    from strategies.tsmom import INSTRUMENTS, load_instrument
+
+    assert INSTRUMENTS["JPN225"].loader == "yahoo"
+    long_raw, _ = load_instrument("JPN225")
+    broker_raw, _ = load_instrument("JPN225", loader_override="mt5")
+
+    assert broker_raw.index.min() > long_raw.index.min()
+
+
 def test_unknown_symbol_raises():
     """An unknown symbol names the ones that exist."""
     from strategies.tsmom import load_instrument

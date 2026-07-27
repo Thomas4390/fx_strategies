@@ -44,9 +44,11 @@ class Instrument:
     """What the sleeve needs to know about a tradable, and nothing more.
 
     ``loader`` picks the source: ``"qc"`` for the QuantConnect gold export,
-    ``"mt5"`` for a broker daily parquet. ``session_close_hour`` and
-    ``ann_factor`` are the conventions ``gold_momentum.pipeline`` exposes so
-    another instrument runs through it without a fork.
+    ``"mt5"`` for a broker daily parquet, ``"yahoo"`` for the long daily
+    screening parquet, ``"fx_minute"`` for the long FX minute parquet.
+    ``session_close_hour`` and ``ann_factor`` are the conventions
+    ``gold_momentum.pipeline`` exposes so another instrument runs through it
+    without a fork.
     """
 
     symbol: str
@@ -63,6 +65,18 @@ _MT5_PAIRS: tuple[str, ...] = (
     "AUD-USD", "NZD-USD", "EUR-GBP", "EUR-JPY", "GBP-JPY",
 )
 
+# Metals, energies and cash indices screened alongside the FX book. Their
+# broker exports only start in 2022-11, too short to judge an edge, so the
+# registry points them at the long daily parquets; the screening script
+# overrides back to "mt5" for the ones whose long series does not match the
+# broker's (see reports/research/screening_source_check.json).
+_SCREENING_NAMES: dict[str, str] = {
+    "XAG-USD": "XAGUSD", "XTI-USD": "XTIUSD", "XBR-USD": "XBRUSD",
+    "XNG-USD": "XNGUSD", "US500": "US500Cash", "US100": "US100Cash",
+    "US30": "US30Cash", "GER40": "GER40Cash", "JPN225": "JPN225Cash",
+    "UK100": "UK100Cash",
+}
+
 INSTRUMENTS: dict[str, Instrument] = {
     "XAU-USD": Instrument(
         "XAU-USD", "qc", mt5_symbol="XAUUSD", note="QuantConnect minute export"
@@ -73,10 +87,19 @@ INSTRUMENTS: dict[str, Instrument] = {
         )
         for pair in _MT5_PAIRS
     },
+    **{
+        name: Instrument(
+            name, "yahoo", mt5_symbol=mt5_name, note="long daily screening export"
+        )
+        for name, mt5_name in _SCREENING_NAMES.items()
+    },
 }
 
 
-def load_instrument(symbol: str) -> tuple[pd.DataFrame, vbt.Data]:
+def load_instrument(
+    symbol: str,
+    loader_override: str | None = None,
+) -> tuple[pd.DataFrame, vbt.Data]:
     """Load ``symbol`` through its registered loader, gold-export conventions.
 
     Returns what the loaders return — raw lowercase frame for Numba kernels,
@@ -84,6 +107,11 @@ def load_instrument(symbol: str) -> tuple[pd.DataFrame, vbt.Data]:
     tell which source it came from. ``utils`` is imported here rather than at
     module level: it pulls the data layer in, and the strategy modules must
     stay importable without it.
+
+    ``loader_override`` picks another source for the same instrument without
+    editing the registry: which of two histories is the more trustworthy is a
+    per-study call (the screening script reads it off a verdict file), not a
+    property of the tradable.
     """
     try:
         inst = INSTRUMENTS[symbol]
@@ -92,18 +120,27 @@ def load_instrument(symbol: str) -> tuple[pd.DataFrame, vbt.Data]:
             f"unknown instrument {symbol!r}; available: {', '.join(sorted(INSTRUMENTS))}"
         ) from None
 
-    from utils import load_gold_data, load_mt5_daily
+    from utils import load_fx_data, load_gold_data, load_mt5_daily, load_screening_daily
 
-    if inst.loader == "qc":
+    loader = loader_override or inst.loader
+    if loader == "qc":
         if symbol != "XAU-USD":
             raise ValueError(
                 f"the 'qc' loader only carries XAU-USD, not {symbol!r}: "
                 "load_gold_data reads one hardcoded export."
             )
         return load_gold_data()
-    if inst.loader == "mt5":
+    if loader == "mt5":
         return load_mt5_daily(symbol)
-    raise ValueError(f"{symbol}: unknown loader {inst.loader!r}, expected 'qc' or 'mt5'")
+    if loader == "yahoo":
+        return load_screening_daily(symbol)
+    if loader == "fx_minute":
+        # Long minute export, naive broker-time index (not New York): only the
+        # wall-clock label of the session boundary shifts, not the ordering.
+        return load_fx_data(f"data/{symbol}_minute.parquet")
+    raise ValueError(
+        f"{symbol}: unknown loader {loader!r}, expected 'qc', 'mt5', 'yahoo' or 'fx_minute'"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -111,14 +148,19 @@ def load_instrument(symbol: str) -> tuple[pd.DataFrame, vbt.Data]:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def pipeline(symbol: str, **kwargs: Any) -> tuple[vbt.Portfolio, GoldMomentumIndicator]:
+def pipeline(
+    symbol: str,
+    loader_override: str | None = None,
+    **kwargs: Any,
+) -> tuple[vbt.Portfolio, GoldMomentumIndicator]:
     """Run the gold sleeve on ``symbol``, with that instrument's conventions.
 
     Every ``gold_momentum.pipeline`` keyword is forwarded untouched. The two the
     registry knows about — ``session_close_hour`` and ``ann_factor`` — are
     injected only when the caller did not pass them: explicit wins.
+    ``loader_override`` goes to ``load_instrument`` and picks the source.
     """
-    _, data = load_instrument(symbol)
+    _, data = load_instrument(symbol, loader_override=loader_override)
     inst = INSTRUMENTS[symbol]
 
     kwargs.setdefault("session_close_hour", inst.session_close_hour)

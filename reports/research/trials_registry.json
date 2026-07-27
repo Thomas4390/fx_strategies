@@ -4,5 +4,47 @@
     "family": "fx_legacy",
     "n": 290,
     "note": "sweeps 2026-04 phases 18-21 sur les 4 paires FX (cf. docs/research/phase21_2026-04-13_dsr_retrofit.md)"
+  },
+  {
+    "ts": "2026-07-27T18:23:02.322193+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:30:30.799980+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:31:44.192479+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:39:24.532151+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:39:29.159829+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:39:33.726511+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:39:53.552316+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
   }
 ]

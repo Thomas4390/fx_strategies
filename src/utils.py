@@ -713,3 +713,70 @@ def list_mt5_pairs(period: str = "daily") -> list[str]:
     return sorted(
         p.name[: -len(suffix)] for p in (_PROJECT_ROOT / "data").glob(f"*{suffix}")
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SCREENING DATA LOADING (LONG DAILY HISTORIES)
+# ═══════════════════════════════════════════════════════════════════════
+
+# One parquet per screened instrument, downloaded for the multi-instrument
+# screen: the broker exports start in 2020-2022, which is too short to judge an
+# edge, while these go back to 1990-2000. Same shape as the gold export — a
+# tz-aware UTC index named "time" — with OHLC only, no volume of any kind.
+SCREENING_DATA_TEMPLATE = "data/{name}_daily_yahoo.parquet"
+
+
+def load_screening_daily(
+    name: str,
+    tz: str = GOLD_TZ,
+    validate: bool = True,
+) -> tuple[pd.DataFrame, vbt.Data]:
+    """Load a long daily screening parquet, indexed on naive New York time.
+
+    Mirrors `load_mt5_daily` (raw lowercase frame for Numba kernels,
+    capitalized `vbt.Data` for native VBT functions) so a sleeve written
+    against the broker exports runs unchanged on the long history.
+
+    Parameters
+    ----------
+    name : str
+        Instrument as it appears in the file name, e.g. "US500" or "XAG-USD".
+    tz : str
+        Target timezone. The index is converted to it and then made naive.
+    validate : bool
+        Run `validate_ohlc_frame` on the loaded frame.
+
+    Returns
+    -------
+    raw : pd.DataFrame
+        OHLCV with lowercase columns, naive index in `tz` (for Numba kernels).
+    data : vbt.Data
+        VBT Data wrapper with capitalized columns (for native VBT functions).
+    """
+    path = SCREENING_DATA_TEMPLATE.format(name=name)
+    resolved = _PROJECT_ROOT / path
+
+    data_raw = vbt.Data.from_parquet(str(resolved))
+    df = data_raw.data[data_raw.symbols[0]].sort_index()
+
+    if df.index.tz is None:
+        raise ValueError(
+            f"{path}: index is tz-naive; expected tz-aware UTC. Its timezone would "
+            "have to be guessed, and a wrong guess silently shifts every session boundary."
+        )
+    df.index = df.index.tz_convert(tz).tz_localize(None)
+
+    raw = df.copy()
+    raw.columns = [c.lower() for c in raw.columns]
+
+    if validate:
+        validate_ohlc_frame(raw, name=f"{name}_yahoo", min_rows=1000)
+
+    # No volume in these exports; VWAP-style indicators need the column present.
+    if "volume" not in raw.columns:
+        raw["volume"] = 1.0
+
+    df_cap = raw.copy()
+    df_cap.columns = [c.capitalize() for c in df_cap.columns]
+    data = vbt.Data.from_data({name: df_cap}, tz_localize=False, tz_convert=False)
+    return raw, data

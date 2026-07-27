@@ -89,6 +89,19 @@ def fetch_yahoo_daily(ticker: str) -> pd.DataFrame:
     df = df.dropna(how="any")
     # Doublons possibles sur la dernière barre live : garder la dernière.
     df = df[~df.index.duplicated(keep="last")].sort_index()
+
+    # Réparations de screening, documentées :
+    # 1. Les vieux futures Yahoo portent des barres où high/low sont incohérents
+    #    avec open/close (243 barres sur SI=F, 69 sur BZ=F) — on resserre
+    #    high/low sur l'enveloppe des quatre prix, le signal n'utilise que
+    #    open/close.
+    # 2. Le WTI est allé négatif en avril 2020 (CL=F à -40) : un prix <= 0 casse
+    #    les rendements en pourcentage — ces jours sont retirés. Le CFD broker,
+    #    lui, n'a jamais coté négatif.
+    ohlc = df[["open", "high", "low", "close"]]
+    df["high"] = ohlc.max(axis=1)
+    df["low"] = ohlc.min(axis=1)
+    df = df[(df[["open", "high", "low", "close"]] > 0).all(axis=1)]
     return df
 
 
