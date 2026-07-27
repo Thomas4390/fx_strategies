@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 09:30
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 09:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1783,14 +1783,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 452--453
  []
 
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.8952pt on input line 481.
+(Font)              scaled to size 7.8952pt on input line 482.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 469--482
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 469--483
 [][][][][][] 
  []
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 485--500
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 486--501
 [][][][][][] 
  []
 

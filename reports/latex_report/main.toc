@@ -54,40 +54,40 @@
 \contentsline {subsection}{\numberline {10.7}Contribution mensuelle par moteur}{31}{subsection.10.7}%
 \contentsline {section}{\numberline {11}Validation hors échantillon}{31}{section.11}%
 \contentsline {subsection}{\numberline {11.1}Comparaison directe}{32}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{34}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{34}{subsection.11.3}%
-\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{35}{section.12}%
-\contentsline {subsection}{\numberline {12.1}Méthodologie}{35}{subsection.12.1}%
+\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{33}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{33}{subsection.11.3}%
+\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{36}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Méthodologie}{36}{subsection.12.1}%
 \contentsline {subsection}{\numberline {12.2}Résultats}{36}{subsection.12.2}%
-\contentsline {subsection}{\numberline {12.3}Interprétations critiques}{37}{subsection.12.3}%
-\contentsline {subsection}{\numberline {12.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{37}{subsection.12.4}%
+\contentsline {subsection}{\numberline {12.3}Interprétations critiques}{36}{subsection.12.3}%
+\contentsline {subsection}{\numberline {12.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{36}{subsection.12.4}%
 \contentsline {section}{\numberline {13}Robustesse statistique avancée}{37}{section.13}%
 \contentsline {subsection}{\numberline {13.1}Pourquoi un Sharpe ponctuel ne suffit pas}{37}{subsection.13.1}%
 \contentsline {subsection}{\numberline {13.2}Intervalles de confiance bootstrap sur les métriques}{38}{subsection.13.2}%
 \contentsline {paragraph}{Deux zones de vigilance identifiées.}{40}{paragraph*.36}%
 \contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{40}{subsection.13.3}%
-\contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{41}{subsection.13.4}%
-\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{43}{subsection.13.5}%
-\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{44}{subsection.13.6}%
-\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{45}{subsection.13.7}%
+\contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{40}{subsection.13.4}%
+\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{44}{subsection.13.5}%
+\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{45}{subsection.13.6}%
+\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{46}{subsection.13.7}%
 \contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{46}{section.14}%
-\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{46}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{47}{subsection.14.1}%
 \contentsline {subsection}{\numberline {14.2}Observations transversales}{47}{subsection.14.2}%
-\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{47}{section.15}%
-\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{48}{subsection.15.1}%
-\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{48}{subsection.15.2}%
+\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{48}{section.15}%
+\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{49}{subsection.15.1}%
+\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{49}{subsection.15.2}%
 \contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{49}{subsection.15.3}%
-\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{49}{subsection.15.4}%
-\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{49}{subsection.15.5}%
+\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{50}{subsection.15.4}%
+\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{50}{subsection.15.5}%
 \contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{50}{subsection.15.6}%
-\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{50}{subsection.15.7}%
-\contentsline {section}{\numberline {16}Conditions de déploiement}{50}{section.16}%
-\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{51}{subsection.16.1}%
-\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{51}{appendix.A}%
+\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{51}{subsection.15.7}%
+\contentsline {section}{\numberline {16}Conditions de déploiement}{51}{section.16}%
+\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{52}{subsection.16.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{52}{appendix.A}%
 \contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{54}{appendix.B}%
 \contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{55}{appendix.C}%
 \contentsline {subsection}{\numberline {C.1}La question posée}{55}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{55}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{56}{subsection.C.2}%
 \contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{56}{subsection.C.3}%
 \contentsline {paragraph}{Trois observations saillantes.}{56}{paragraph*.47}%
 \contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{57}{subsection.C.4}%

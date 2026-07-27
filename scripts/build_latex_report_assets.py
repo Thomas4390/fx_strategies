@@ -559,45 +559,59 @@ def build_figures(
     save_fig(fig, "rolling_sharpe_63d")
 
     # ── 5. Rolling correlation between sleeves ──────────────────────
+    # Les paires sont dérivées de PRODUCTION_WEIGHTS, jamais énumérées à la
+    # main : la version précédente traçait les trois paires du trio FX avec des
+    # libellés « RSI 4p » et ignorait la sleeve or, qui est précisément celle
+    # dont la décorrélation justifie la présence au portefeuille.
     df_sleeves = pd.DataFrame(sleeve_rets).dropna()
     roll = 63
-    corr_mr_ts = df_sleeves["MR_Macro"].rolling(roll).corr(df_sleeves["TS_Momentum_3p"])
-    corr_mr_rsi = df_sleeves["MR_Macro"].rolling(roll).corr(df_sleeves["RSI_Daily_3p"])
-    corr_ts_rsi = (
-        df_sleeves["TS_Momentum_3p"].rolling(roll).corr(df_sleeves["RSI_Daily_3p"])
+    keys = [k for k in PRODUCTION_WEIGHTS if k in df_sleeves.columns]
+    pairs = [(a, b) for i, a in enumerate(keys) for b in keys[i + 1:]]
+
+    # Un panneau pour les paires internes au trio FX, un pour celles qui
+    # impliquent l'or : six courbes sur un seul axe seraient illisibles.
+    fx_pairs = [p for p in pairs if "Gold_Momentum" not in p]
+    gold_pairs = [p for p in pairs if "Gold_Momentum" in p]
+    groups = [("Entre moteurs FX", fx_pairs)]
+    if gold_pairs:
+        groups.append(("Entre l'or et chaque moteur FX", gold_pairs))
+
+    fig, axes = plt.subplots(
+        len(groups), 1, figsize=(9.5, 3.4 * len(groups)), sharex=True, sharey=True
     )
-    fig, ax = plt.subplots(figsize=(9.5, 4.0))
-    ax.plot(
-        corr_mr_ts.index,
-        corr_mr_ts.values,
-        label="MR Macro × TS Mom 3p",
-        color=PALETTE["mr"],
-        linewidth=1.2,
+    axes = np.atleast_1d(axes)
+    cycle = [PALETTE["mr"], PALETTE["ts"], PALETTE["rsi"], PALETTE["gold"]]
+
+    for ax, (subtitle, group) in zip(axes, groups):
+        for i, (a, b) in enumerate(group):
+            corr = df_sleeves[a].rolling(roll).corr(df_sleeves[b])
+            other = b if a == "Gold_Momentum" else a
+            label = (
+                f"Or × {SLEEVE_DISPLAY.get(other, other)}"
+                if "Gold_Momentum" in (a, b)
+                else f"{SLEEVE_DISPLAY.get(a, a)} × {SLEEVE_DISPLAY.get(b, b)}"
+            )
+            ax.plot(
+                corr.index,
+                corr.values,
+                label=f"{label}  (moy. {corr.mean():+.2f})",
+                color=cycle[i % len(cycle)],
+                linewidth=1.2,
+            )
+        ax.axhline(0, color="#707070", linewidth=0.8)
+        ax.axhline(0.5, color=PALETTE["accent"], linestyle=":", linewidth=0.7)
+        ax.axhline(-0.5, color=PALETTE["accent"], linestyle=":", linewidth=0.7)
+        ax.set_ylim(-1, 1)
+        ax.set_ylabel("Corrélation")
+        ax.set_title(subtitle, fontsize=10.5, color=PALETTE["primary"])
+        ax.legend(loc="upper left", ncol=1, fontsize=8.5)
+
+    axes[-1].set_xlabel("Date")
+    fig.suptitle(
+        f"Corrélation glissante à {roll} jours entre les {len(keys)} moteurs",
+        color=PALETTE["primary"], fontsize=12, fontweight="bold",
     )
-    ax.plot(
-        corr_mr_rsi.index,
-        corr_mr_rsi.values,
-        label="MR Macro × RSI 4p",
-        color=PALETTE["ts"],
-        linewidth=1.2,
-    )
-    ax.plot(
-        corr_ts_rsi.index,
-        corr_ts_rsi.values,
-        label="TS Mom 3p × RSI 4p",
-        color=PALETTE["rsi"],
-        linewidth=1.2,
-    )
-    ax.axhline(0, color="#707070", linewidth=0.8)
-    ax.axhline(0.5, color=PALETTE["accent"], linestyle=":", linewidth=0.7)
-    ax.axhline(-0.5, color=PALETTE["accent"], linestyle=":", linewidth=0.7)
-    ax.set_title(
-        f"Corrélation glissante à {roll} jours entre sleeves", color=PALETTE["primary"]
-    )
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Corrélation")
-    ax.set_ylim(-1, 1)
-    ax.legend(loc="upper left")
+    fig.tight_layout()
     save_fig(fig, "rolling_correlation_63d")
 
     # ── 6. Per-sleeve monthly contribution ───────────────────────────

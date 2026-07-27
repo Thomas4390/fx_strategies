@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 09:32
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 09:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1818,11 +1818,11 @@ Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
  []
 
-[31] [32] [33]
+[31] [32]
 File: figures/oos_zoom.png Graphic file (type bmp)
 <figures/oos_zoom.png>
- [34]) (./sections/09_stress_test.tex
-(./tables/bootstrap_percentiles.tex) [35]
+ [33]) (./sections/09_stress_test.tex [34] [35]
+(./tables/bootstrap_percentiles.tex)
 File: figures/bootstrap_scatter.png Graphic file (type bmp)
 <figures/bootstrap_scatter.png>
  [36])
@@ -1832,22 +1832,22 @@ Overfull \hbox (30.67487pt too wide) in paragraph at lines 5--24
  [][] 
  []
 
-)
+) [38]
 File: figures/robustness_metric_ci_forest.png Graphic file (type bmp)
 <figures/robustness_metric_ci_forest.png>
- [38]
 File: figures/robustness_bootstrap_sharpe.png Graphic file (type bmp)
 <figures/robustness_bootstrap_sharpe.png>
  [39]
 File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
 <figures/robustness_equity_fan_chart.png>
- (./tables/robustness_overfitting.tex [40]) [41] [42]
+ (./tables/robustness_overfitting.tex) [40] [41] [42]
 File: figures/robustness_pbo_logits.png Graphic file (type bmp)
 <figures/robustness_pbo_logits.png>
-
-(./tables/robustness_arch_tests.tex) [43]
+ [43]
+(./tables/robustness_arch_tests.tex)
 File: figures/robustness_spa_pvalues.png Graphic file (type bmp)
 <figures/robustness_spa_pvalues.png>
+ [44]
 File: figures/robustness_rolling_stability.png Graphic file (type bmp)
 <figures/robustness_rolling_stability.png>
 
@@ -1856,18 +1856,18 @@ Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
  [][] 
  []
 
-) [44] [45]) (./sections/11_scenarios.tex
+) [45]) (./sections/11_scenarios.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
- (./tables/scenarios.tex) [46])
+ (./tables/scenarios.tex) [46] [47])
 (./sections/12_limitations.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (U);
 (lettrine.sty)             reported on input line 4.
- [47] [48] [49]
+ [48] [49]
 Underfull \hbox (badness 1314) in paragraph at lines 86--87
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
  []
@@ -1882,7 +1882,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 88--89
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
  []
 
-) (./sections/13_production_checklist.tex
+[50]) (./sections/13_production_checklist.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.80363pt (A);
@@ -1893,23 +1893,24 @@ Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
  []
 
-[50]) (./sections/appendix_a_inventory.tex [51] [52])
-(./sections/appendix_b_trade_walkthrough.tex [53]
+[51]) (./sections/appendix_a_inventory.tex [52] [53])
+(./sections/appendix_b_trade_walkthrough.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (P);
 (lettrine.sty)             reported on input line 4.
+ [54]
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
 (Font)              scaled to size 8.64523pt on input line 32.
 )
-(./sections/appendix_c_weight_sensitivity.tex [54]
+(./sections/appendix_c_weight_sensitivity.tex
 Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
 risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
 10.95 37$\TU/LatinModernRoman(0)/m/sc/10.95 , $[] \OT1/cmr/m/n/10.95 =
  []
 
-
+[55]
 Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 []\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
 (0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
@@ -1918,10 +1919,10 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 1/cmr/m/n/10.95 ) :
  []
 
-(./tables/weight_sensitivity_named.tex) [55]
+(./tables/weight_sensitivity_named.tex)
 File: figures/weight_sensitivity_named_bars.png Graphic file (type bmp)
 <figures/weight_sensitivity_named_bars.png>
- [56]
+
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -1958,10 +1959,10 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_1d_mr.png Graphic file (type bmp)
 <figures/weight_sensitivity_1d_mr.png>
-[57]
+[56]
 File: figures/weight_sensitivity_simplex_ternary.png Graphic file (type bmp)
 <figures/weight_sensitivity_simplex_ternary.png>
- (./tables/weight_sensitivity_extremes.tex) [58]
+ (./tables/weight_sensitivity_extremes.tex) [57] [58]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -1989,7 +1990,7 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Here is how much of TeX's memory you used:
  42200 strings out of 468173
  969756 string characters out of 5435520
- 1543544 words of memory out of 5000000
+ 1545544 words of memory out of 5000000
  70147 multiletter control sequences out of 15000+600000
  638094 words of font info for 151 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
