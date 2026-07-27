@@ -19,8 +19,10 @@ d'installation documente un mécanisme de protection à l'envers. Ces deux défa
 > (§3), et la fermeture du test qui sautait (§6). Le détail et sa vérification sont en fin
 > de document, section « Correctifs appliqués ».
 >
-> Restent ouverts : §5 (branche morte `if False`), §7 (`test_stress_sanity`), §8 (code de
-> sortie du CLI), §9 (étoiles codées en dur) et §10 à §12.
+> **2026-07-27 — tous les défauts de l'audit sont désormais fermés**, §5 à §12 compris,
+> chacun avec son test vérifié par mutation. Voir « Fermeture des défauts §5 à §12 » en
+> fin de document. Trois défauts supplémentaires, non vus par l'audit, ont été trouvés
+> pendant la correction et fermés aussi.
 
 ---
 
@@ -627,6 +629,37 @@ Mutation testing, quatre scénarios :
 Le script de mutation détecte explicitement le statut `SKIP` : un test qui saute sort en 0
 et se confondrait avec un succès.
 
+### Fermeture des défauts §5 à §12 — 2026-07-27
+
+Traités en parallèle, chacun sur un périmètre de fichiers disjoint, chacun avec ses tests
+vérifiés par mutation avant d'être crus.
+
+| § | Défaut | Correctif | Mutations rouges |
+|---|---|---|---|
+| 5 | Branche morte `if False` écrasant le JSON canonique | L'écriture concurrente est **supprimée** : un seul producteur de `stress_test_report.json`. `summary.txt` dérive des constantes. | 6/6 |
+| 7 | `assert len(sweeps) == 18` littéral | Grille extraite en constantes ; le test vérifie le **contenu** et que le point de production est balayé | 2/2 |
+| 8 | CLI rendant 0 sur un run vide | `validate_run()` : trades > 0, période non dégénérée, métriques numériques | 2/2 |
+| 9 | Étoiles « production » figées à 80/10/10 | Les trois marqueurs et leurs libellés dérivent de `PRODUCTION_WEIGHTS` renormalisés | 2/2 |
+| 11 | CAGR OOS 161 % sans avertissement en §7 | `warningbox` ajouté sous la table, renvoyant à la section 08 | — |
+| 12 | Unités incohérentes, aucune provenance | Sous-bloc `drawdowns` autoporteur (dont le `Balance Drawdown Relative` manquant) + bloc `provenance` avec sha256 des artefacts | 4/4 |
+| 12 | Phrase dupliquée, annexe orpheline, doc MT5 périmée | Corrigés ; l'annexe orpheline porte un en-tête disant qu'elle n'est incluse nulle part | — |
+
+**Trois défauts que l'audit n'avait pas vus**, trouvés en corrigeant :
+
+1. **`_latest()` désignait le mauvais CSV.** Le nom du fichier venant de l'heure *simulée*
+   du tester, le backtest de fenêtre courte relancé pendant l'audit (21:47) était plus
+   récent que celui de la fenêtre publiée (21:42). Relancer `parse_mt5_report.py` sans
+   argument aurait publié un CAGR de **40,47 % au lieu de 35,44 %**, avec les 851 trades et
+   le profit net du HTML inchangés — indétectable à l'œil. Le CSV est désormais choisi par
+   correspondance avec la fenêtre du HTML, et l'incohérence est **fatale** : rien n'est écrit.
+2. **La branche morte était fausse deux fois.** Même en retirant le `if False`, l'expression
+   lisait `RECOMMENDED_CONFIG` **après** le `finally` qui la restaure — elle aurait décrit la
+   configuration restaurée, pas celle du calcul.
+3. **`figure_bootstrap_scatter()` annotait l'ancien mandat** (cible 10-15 %, cap −35 %). Sans
+   impact client — la figure du PDF dérive déjà la bande du JSON — mais le même mensonge
+   subsistait dans le script orphelin. Corrigé, ainsi que l'absence de la sleeve or dans sa
+   palette.
+
 ### Vérification des correctifs
 
 | Contrôle | Résultat |
@@ -637,7 +670,7 @@ et se confondrait avec un succès.
 | « sept tests » | ✅ 0 occurrence |
 | Inputs du guide vs `.mq5` (extraction corrigée, 64 params) | ✅ 0 écart, et désormais dérivés |
 | Générateur idempotent (`--check`) | ✅ 7 tables en phase |
-| Suite de tests | ✅ 210 passés (203 + 6 + 1) |
+| Suite de tests | ✅ **239 passés** (203 au départ de l'audit) |
 | Tables/figures hors légende corrigée | ✅ identiques au bit près |
 
 ---

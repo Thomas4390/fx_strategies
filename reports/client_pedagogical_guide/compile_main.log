@@ -316,9 +316,6 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 13
 4.
 
-
-LaTeX Warning: Reference `sec:gold' on page 4 undefined on input line 163.
-
 [4] [5]
 Underfull \hbox (badness 10000) in paragraph at lines 225--225
 []|\TU/LatinModernRoman(0)/m/n/10 EUR/USD,
@@ -340,9 +337,6 @@ Underfull \hbox (badness 1264) in paragraph at lines 227--228
 
 Underfull \hbox (badness 10000) in paragraph at lines 230--231
 []|\TU/LatinModernRoman(0)/m/n/10 Diversificateur
-
-LaTeX Warning: Reference `sec:gold' on page 6 undefined on input line 250.
-
 [6]
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
@@ -404,10 +398,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 919--920
 []|\TU/LatinModernRoman(0)/m/n/10 Seuil du coupe-circuit, utilisé uniquement si
 
 
-LaTeX Warning: Reference `sec:margin_cap' on page 26 undefined on input line 92
-0.
-
-
 Overfull \hbox (7.81992pt too wide) in paragraph at lines 936--936
 []|\TU/LatinModernMono(0)/m/n/10 Inp_GlobalMaxLeverage| 
 
@@ -442,12 +432,6 @@ ité, indicateur d’efficacité d’uti-
 [32] [33] [34] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)

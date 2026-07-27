@@ -44,7 +44,7 @@
 \contentsline {subsection}{\numberline {9.4}Protection drawdown --- disponible, désactivée, et non remplacée}{22}{subsection.9.4}%
 \contentsline {section}{\numberline {10}Performance de recherche in-sample}{23}{section.10}%
 \contentsline {subsection}{\numberline {10.1}Métriques agrégées}{23}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Validation par fenêtres annuelles (walk-forward)}{24}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.2}Validation par fenêtres annuelles (walk-forward)}{25}{subsection.10.2}%
 \contentsline {subsection}{\numberline {10.3}Heatmap des rendements mensuels}{26}{subsection.10.3}%
 \contentsline {subsection}{\numberline {10.4}Courbe \emph {underwater} du drawdown}{26}{subsection.10.4}%
 \contentsline {subsection}{\numberline {10.5}Sharpe glissant sur 63 jours}{27}{subsection.10.5}%

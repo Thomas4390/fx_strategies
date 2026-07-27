@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  26 JUL 2026 23:00
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 00:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1767,16 +1767,15 @@ Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
  []
 
-) (./tables/sleeve_standalone.tex) [23]
+) [23] (./tables/sleeve_standalone.tex)
 File: figures/walkforward_sharpe.png Graphic file (type bmp)
 <figures/walkforward_sharpe.png>
- (./tables/walkforward_yearly.tex)
-[24]
+ [24] (./tables/walkforward_yearly.tex)
+[25]
 File: figures/monthly_heatmap.png Graphic file (type bmp)
 <figures/monthly_heatmap.png>
- [25]
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/it' will be
-(Font)              scaled to size 9.47424pt on input line 58.
+(Font)              scaled to size 9.47424pt on input line 66.
 File: figures/drawdown_underwater.png Graphic file (type bmp)
 <figures/drawdown_underwater.png>
 File: figures/rolling_sharpe_63d.png Graphic file (type bmp)
@@ -1972,10 +1971,10 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 42133 strings out of 468173
- 967973 string characters out of 5435520
- 1539605 words of memory out of 5000000
- 70083 multiletter control sequences out of 15000+600000
+ 42135 strings out of 468173
+ 968006 string characters out of 5435520
+ 1539603 words of memory out of 5000000
+ 70085 multiletter control sequences out of 15000+600000
  638094 words of font info for 151 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  108i,14n,118p,11207b,1282s stack positions out of 10000i,1000n,20000p,200000b,200000s

@@ -390,8 +390,8 @@ Overfull \hbox (64.0469pt too wide) in paragraph at lines 5--14
 
 Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
-) (./tables/sleeve_standalone.tex) [23] (./tables/walkforward_yearly.tex)
-[24] [25] [26]) (./sections/08_out_of_sample.tex [27]
+) [23] (./tables/sleeve_standalone.tex) [24] (./tables/walkforward_yearly.tex)
+[25] [26]) (./sections/08_out_of_sample.tex [27]
 Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
 [28]) (./sections/09_stress_test.tex [29] (./tables/bootstrap_percentiles.tex)
@@ -490,9 +490,6 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 ) [55] [56] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)
@@ -890,8 +887,8 @@ Overfull \hbox (64.0469pt too wide) in paragraph at lines 5--14
 
 Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
-) (./tables/sleeve_standalone.tex) [23] (./tables/walkforward_yearly.tex)
-[24] [25] [26]) (./sections/08_out_of_sample.tex [27]
+) [23] (./tables/sleeve_standalone.tex) [24] (./tables/walkforward_yearly.tex)
+[25] [26]) (./sections/08_out_of_sample.tex [27]
 Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
 [28]) (./sections/09_stress_test.tex [29] (./tables/bootstrap_percentiles.tex)
