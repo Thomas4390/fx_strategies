@@ -1,10 +1,12 @@
 """Phase 5 — Stress tests for combined_portfolio_v2 recommended config.
 
-Runs four diagnostic suites on the recommended v2 configuration
-(``allocation='custom'`` with MR80/XS10/TS10 weights, ``target_vol=0.22``,
-``max_leverage=15``, ``dd_cap_enabled=False``) and prints a consolidated
+Runs four diagnostic suites on the production v2 configuration
+(``allocation='custom'`` avec ``PRODUCTION_WEIGHTS``, ``PRODUCTION_TARGET_VOL``,
+``PRODUCTION_MAX_LEVERAGE``, ``dd_cap_enabled=False``) and prints a consolidated
 report. Intended to be run manually before any paper-trading or
-production deployment.
+production deployment. Les valeurs ne sont pas recopiées ici : cette phrase a
+décrit pendant trois mois une allocation (MR80/XS10/TS10, tv=0.22, ml=15) qui
+n'était plus celle de production.
 
 Suites
 ------
@@ -113,7 +115,9 @@ class BootstrapStats:
     sharpe_p05: float
     sharpe_p95: float
     pos_fraction: float  # fraction of runs with CAGR > 0
-    target_hit_fraction: float  # CAGR in [0.10, 0.15] AND MaxDD > -0.35
+    # Fraction des runs dont le CAGR tombe dans TARGET_CAGR_BAND. Le plafond de
+    # drawdown du mandat précédent a été retiré : il n'entre plus dans le calcul.
+    target_hit_fraction: float
 
     def to_dict(self) -> dict[str, float]:
         return {k: float(v) for k, v in self.__dict__.items()}
@@ -305,19 +309,29 @@ def run_is_oos_split(
 # ═══════════════════════════════════════════════════════════════════════
 
 
+# Grille du balayage de sensibilité, centrée sur la config de production
+# courante. Elle DOIT contenir le point de production (PRODUCTION_TARGET_VOL,
+# PRODUCTION_MAX_LEVERAGE) : la table publiée au client sert à situer ce point
+# dans son voisinage, et une grille qui ne le contient pas ne dit rien de lui.
+# Ces deux tuples sont volontairement des littéraux, et non des valeurs dérivées
+# des constantes de production : c'est ce qui permet à
+# test_run_parameter_sensitivity_smoke de rougir quand la production bouge sans
+# que la grille suive. L'ancienne grille (0.15-0.28 x 10/15/20) n'encadrait plus
+# rien depuis le passage à tv=0.37 / ml=31 — la table publiée ne contenait même
+# pas la colonne du levier réellement utilisé, et le test la comptait sans la lire.
+SENSITIVITY_TARGET_VOLS: tuple[float, ...] = (0.20, 0.28, 0.33, 0.37, 0.42, 0.50)
+SENSITIVITY_MAX_LEVERAGES: tuple[float, ...] = (20.0, 31.0, 45.0)
+
+
 def run_parameter_sensitivity(
     strategy_returns: dict[str, pd.Series],
 ) -> list[dict[str, Any]]:
     """Sweep target_vol × max_leverage around the recommended config."""
     from strategies.combined_portfolio_v2 import build_combined_portfolio_v2
 
-    # Grille centrée sur la config de production courante. L'ancienne balayait
-    # 0.15-0.28 x 10/15/20, qui n'encadrait plus rien depuis que la production
-    # est à tv=0.37 / ml=31 — la table publiée ne contenait même pas la colonne
-    # du levier réellement utilisé.
     sweeps: list[dict[str, Any]] = []
-    for target_vol in (0.20, 0.28, 0.33, 0.37, 0.42, 0.50):
-        for max_lev in (20.0, 31.0, 45.0):
+    for target_vol in SENSITIVITY_TARGET_VOLS:
+        for max_lev in SENSITIVITY_MAX_LEVERAGES:
             config = {**RECOMMENDED_CONFIG, "target_vol": target_vol, "max_leverage": max_lev}
             res = build_combined_portfolio_v2(strategy_returns, **config)
             sweeps.append({
@@ -345,14 +359,32 @@ def _print_header(title: str) -> None:
     print(f"\n{bar}\n  {title}\n{bar}")
 
 
-def print_bootstrap_stats(stats: BootstrapStats) -> None:
-    _print_header("Block-Bootstrap Stress Test (1000 runs, 20-day blocks)")
-    print(f"  Successful runs: {stats.n_runs}")
+def print_bootstrap_stats(
+    stats: BootstrapStats,
+    n_runs_requested: int,
+    block_size: int,
+) -> None:
+    """Affiche la distribution bootstrap.
+
+    ``n_runs_requested`` et ``block_size`` sont passés par l'appelant plutôt que
+    codés dans l'en-tête : celui-ci annonçait « 1000 runs, 20-day blocks » quels
+    que soient les paramètres réellement utilisés.
+    """
+    _print_header(
+        f"Block-Bootstrap Stress Test ({n_runs_requested} runs, "
+        f"{block_size}-day blocks)"
+    )
+    print(f"  Successful runs: {stats.n_runs}/{n_runs_requested}")
     print(f"\n  CAGR    : mean={_pct(stats.cagr_mean)}  p05={_pct(stats.cagr_p05)}  p50={_pct(stats.cagr_p50)}  p95={_pct(stats.cagr_p95)}")
     print(f"  Max DD  : mean={_pct(stats.max_dd_mean)}  p05={_pct(stats.max_dd_p05)}  p50={_pct(stats.max_dd_p50)}  p95={_pct(stats.max_dd_p95)}")
     print(f"  Sharpe  : mean={stats.sharpe_mean:>6.3f}  p05={stats.sharpe_p05:>6.3f}  p95={stats.sharpe_p95:>6.3f}")
-    print(f"\n  Positive CAGR fraction   : {stats.pos_fraction:.1%}")
-    print(f"  Target hit (10-15%, <35%): {stats.target_hit_fraction:.1%}")
+    # Le libellé suit TARGET_CAGR_BAND, la bande qui a servi au calcul : il
+    # annonçait « 10-15%, <35% », l'ancien mandat, alors que la fraction
+    # affichée était déjà mesurée contre la bande courante.
+    lo, hi = TARGET_CAGR_BAND
+    target_label = f"Target hit ({lo:.0%}-{hi:.0%})"
+    print(f"\n  {'Positive CAGR fraction':<22} : {stats.pos_fraction:.1%}")
+    print(f"  {target_label:<22} : {stats.target_hit_fraction:.1%}")
 
 
 def print_scenarios(scenarios: list[dict[str, Any]]) -> None:
@@ -386,12 +418,17 @@ def print_is_oos(split: dict[str, Any]) -> None:
 
 
 def print_sensitivity(sweeps: list[dict[str, Any]]) -> None:
+    # Le marqueur ★ suit TARGET_CAGR_BAND. Il testait « CAGR dans [10 %, 15 %] et
+    # drawdown > -35 % », l'ancien mandat codé en dur : aucune ligne du balayage
+    # courant ne pouvait plus l'obtenir. Le plafond de drawdown ayant été retiré
+    # du mandat, il ne fait plus partie du critère.
+    lo, hi = TARGET_CAGR_BAND
     _print_header("Parameter Sensitivity — target_vol × max_leverage")
+    print(f"  ★ = CAGR dans la bande visée [{lo:.0%}, {hi:.0%}]")
     print(f"  {'target_vol':>10} {'max_lev':>10} {'CAGR':>10} {'Vol':>10} {'MaxDD':>10} {'Sharpe':>10}")
     print("  " + "-" * 66)
     for s in sweeps:
-        in_target = (0.10 <= s["cagr"] <= 0.15) and (s["max_dd"] > -0.35)
-        mark = "★" if in_target else " "
+        mark = "★" if lo <= s["cagr"] <= hi else " "
         print(
             f"{mark} {s['target_vol']:>10.2f} {s['max_leverage']:>10.1f} "
             f"{_pct(s['cagr'], 9)} {_pct(s['vol'], 9)} "
@@ -444,7 +481,7 @@ def run_stress_tests(
 
     print(f"\nRunning block-bootstrap ({n_bootstrap} resamples, block={block_size})...")
     boot_stats = run_block_bootstrap(strat_rets, n_runs=n_bootstrap, block_size=block_size)
-    print_bootstrap_stats(boot_stats)
+    print_bootstrap_stats(boot_stats, n_runs_requested=n_bootstrap, block_size=block_size)
     report["bootstrap"] = boot_stats.to_dict()
 
     print("\nRunning scenario replay...")

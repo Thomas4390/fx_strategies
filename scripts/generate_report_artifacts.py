@@ -7,8 +7,21 @@ Produces:
   results/production_report/figures/rolling_correlation.html
   results/production_report/figures/bootstrap_scatter.html
   results/production_report/figures/per_sleeve_monthly.html
-  results/production_report/stress_test_report.json
   results/production_report/summary.txt
+
+Ne produit volontairement **pas** ``results/production_report/stress_test_report.json``.
+Ce fichier n'a qu'un producteur, ``scripts/stress_test_combined.py``. Ce script
+l'écrivait lui aussi, avec un schéma différent — sans ``custom_weights``, sans
+``target_cagr_band``, ``n_bootstrap``, ``block_size`` ni ``oos_split_date`` — et
+avec une configuration périmée figée en dur derrière un ``if False`` (80/10/10 à
+``target_vol=0.28`` / ``max_leverage=12``) pendant que les chiffres du même dict
+étaient calculés sur ``PRODUCTION_*``. Deux producteurs pour un artefact lu par
+``build_latex_report_assets.py`` et vérifié par ``tests/test_report_config_sync.py``,
+c'est le dernier lancé qui gagne : exécuter ce script après l'autre remplaçait la
+configuration de production publiée par une allocation abandonnée, et faisait lever
+un ``KeyError`` au test de synchronisation au lieu d'un ``AssertionError``.
+
+La suite de stress tests reste rejouée en mémoire : elle alimente ``summary.txt``.
 
 Run:
     python scripts/generate_report_artifacts.py
@@ -16,7 +29,6 @@ Run:
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -98,10 +110,13 @@ def figure_equity_comparison(
     """Log-scale equity base 100 for the 3 sleeves and the combined."""
     fig = go.Figure()
 
+    # Une sleeve absente de ce dict sortait en gris sans erreur : c'est ce qui
+    # est arrive a Gold_Momentum, entree en production le 2026-07-26.
     colors = {
         "MR_Macro": "#1f77b4",
         "TS_Momentum_3p": "#ff7f0e",
         "RSI_Daily_3p": "#2ca02c",
+        "Gold_Momentum": "#d4a017",
         "Phase18 Combined": "#d62728",
     }
 
@@ -249,20 +264,20 @@ def figure_bootstrap_scatter(
             name="Phase 18 in-sample",
         )
     )
-    fig.add_vline(
-        x=-35.0,
-        line_dash="dash",
-        line_color="red",
-        annotation_text="−35% cap",
-        annotation_position="top right",
-    )
+    # La bande de CAGR est derivee du mandat en vigueur ; elle etait figee a
+    # 10-15 %. Le plafond de drawdown a -35 % a ete retire de la configuration
+    # de production : il n'a plus de ligne a tracer. Meme correctif que
+    # build_latex_report_assets.py, ou la figure du rapport client le fait deja.
+    import stress_test_combined
+
+    lo, hi = stress_test_combined.TARGET_CAGR_BAND
     fig.add_hrect(
-        y0=10.0,
-        y1=15.0,
+        y0=lo * 100,
+        y1=hi * 100,
         fillcolor="green",
         opacity=0.1,
         line_width=0,
-        annotation_text="Target CAGR band",
+        annotation_text=f"Bande de CAGR visee ({lo:.0%}-{hi:.0%})",
         annotation_position="top left",
     )
     fig.update_layout(
@@ -361,31 +376,48 @@ def dump_is_oos_summary(production_result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_stress_test(production_strat_rets: dict[str, pd.Series]) -> dict[str, Any]:
-    """Re-run the full stress test suite on the Phase 18 config."""
-    import stress_test_combined
+def run_stress_test(
+    production_strat_rets: dict[str, pd.Series],
+    n_bootstrap: int = 1000,
+    block_size: int = 20,
+) -> dict[str, Any]:
+    """Rejoue la suite de stress tests complète sur la configuration de production.
 
-    # Override the module-level RECOMMENDED_CONFIG so the helpers use
-    # Phase 18. We restore the previous value on exit to keep the
+    Le dict retourné n'est jamais sérialisé : il alimente uniquement
+    ``summary.txt``. Le JSON canonique reste produit par
+    ``scripts/stress_test_combined.py`` (voir le docstring de module).
+    """
+    import stress_test_combined
+    from strategies.combined_portfolio_v2 import (
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+        PRODUCTION_WEIGHTS,
+    )
+
+    # Un seul objet config, dérivé des constantes de production : il pilote le
+    # calcul ET décrit le résultat. Le bloc `config` retourné était auparavant
+    # une seconde copie, figée à 80/10/10 / 0.28 / 12 derrière un `if False`,
+    # donc systématiquement en désaccord avec les chiffres du même dict.
+    production_config: dict[str, Any] = {
+        "allocation": "custom",
+        "custom_weights": dict(PRODUCTION_WEIGHTS),
+        "target_vol": PRODUCTION_TARGET_VOL,
+        "max_leverage": PRODUCTION_MAX_LEVERAGE,
+        "dd_cap_enabled": False,
+    }
+
+    # Override the module-level RECOMMENDED_CONFIG so the helpers use the
+    # production config. We restore the previous value on exit to keep the
     # script re-entrant.
     prev_config = stress_test_combined.RECOMMENDED_CONFIG
     try:
-        from strategies.combined_portfolio_v2 import (
-            PRODUCTION_MAX_LEVERAGE,
-            PRODUCTION_TARGET_VOL,
-            PRODUCTION_WEIGHTS,
-        )
-
-        stress_test_combined.RECOMMENDED_CONFIG = {
-            "allocation": "custom",
-            "custom_weights": dict(PRODUCTION_WEIGHTS),
-            "target_vol": PRODUCTION_TARGET_VOL,
-            "max_leverage": PRODUCTION_MAX_LEVERAGE,
-            "dd_cap_enabled": False,
-        }
+        stress_test_combined.RECOMMENDED_CONFIG = production_config
         print("\n→ Running full stress test suite (this is slow)...")
         boot = stress_test_combined.run_block_bootstrap(
-            production_strat_rets, n_runs=1000, block_size=20, seed=20260413
+            production_strat_rets,
+            n_runs=n_bootstrap,
+            block_size=block_size,
+            seed=20260413,
         )
         scenarios = stress_test_combined.run_scenario_replay(production_strat_rets)
         is_oos = stress_test_combined.run_is_oos_split(production_strat_rets)
@@ -396,20 +428,74 @@ def run_stress_test(production_strat_rets: dict[str, pd.Series]) -> dict[str, An
         stress_test_combined.RECOMMENDED_CONFIG = prev_config
 
     return {
-        "config": {
-            "allocation": "custom",
-            "weights": dict(stress_test_combined.RECOMMENDED_CONFIG["custom_weights"])
-            if False
-            else {"MR_Macro": 0.80, "TS_Momentum_3p": 0.10, "RSI_Daily_3p": 0.10},
-            "target_vol": 0.28,
-            "max_leverage": 12.0,
-            "dd_cap_enabled": False,
-        },
+        "config": {**production_config, "custom_weights": dict(PRODUCTION_WEIGHTS)},
+        "n_bootstrap": n_bootstrap,
+        "block_size": block_size,
         "bootstrap": boot.to_dict(),
         "scenarios": scenarios,
         "is_oos": is_oos,
         "sensitivity": sensitivity,
     }
+
+
+def build_summary_text(stress_report: dict[str, Any]) -> str:
+    """Compose le contenu de ``summary.txt`` à partir du rapport de stress test.
+
+    Chaque valeur est dérivée de ``stress_report`` : l'en-tête a annoncé
+    « Config: MR80 / TS_Momentum_3p 10 / RSI_Daily_3p 10 » et
+    « target_vol=0.28, max_leverage=12 » pendant que les métriques du même
+    fichier étaient calculées sur la configuration de production courante.
+    Le dénominateur des années walk-forward était lui aussi figé à ``/7``.
+    """
+    config = stress_report["config"]
+    is_oos = stress_report["is_oos_summary"]
+    boot = stress_report["bootstrap"]
+    _is = is_oos["in_sample"]
+    _oos = is_oos["out_of_sample"]
+    wf_sharpes = is_oos.get("wf_sharpes", [])
+    split_date = is_oos.get("split_date", OOS_SPLIT_DATE)
+
+    weights_line = " / ".join(
+        f"{name} {weight * 100:.0f}%"
+        for name, weight in config["custom_weights"].items()
+    )
+    dd_cap = "ON" if config["dd_cap_enabled"] else "OFF"
+
+    parts = [
+        "Phase 18 — Final Strategy Summary\n",
+        "=" * 45 + "\n\n",
+        f"Config: {weights_line}\n",
+        f"        target_vol={config['target_vol']}, "
+        f"max_leverage={config['max_leverage']:.0f}, DDcap={dd_cap}\n\n",
+        f"In-sample (jusqu'au {split_date}):\n",
+        f"  CAGR   : {_is.get('cagr', 0) * 100:.2f}%\n"
+        f"  Vol    : {_is.get('vol', 0) * 100:.2f}%\n"
+        f"  MaxDD  : {_is.get('max_dd', 0) * 100:.2f}%\n"
+        f"  Sharpe : {_is.get('sharpe', 0):.3f}\n"
+        f"  Bars   : {_is.get('n', 0)}\n\n",
+        f"Out-of-sample (depuis {split_date}):\n",
+        f"  CAGR   : {_oos.get('cagr', 0) * 100:.2f}%\n"
+        f"  Vol    : {_oos.get('vol', 0) * 100:.2f}%\n"
+        f"  MaxDD  : {_oos.get('max_dd', 0) * 100:.2f}%\n"
+        f"  Sharpe : {_oos.get('sharpe', 0):.3f}\n"
+        f"  Bars   : {_oos.get('n', 0)}\n\n",
+        f"Bootstrap {stress_report['n_bootstrap']} runs, "
+        f"block={stress_report['block_size']}d:\n",
+        f"  CAGR mean: {boot['cagr_mean'] * 100:.2f}%  "
+        f"P5 {boot['cagr_p05'] * 100:.2f}%  "
+        f"P50 {boot['cagr_p50'] * 100:.2f}%  "
+        f"P95 {boot['cagr_p95'] * 100:.2f}%\n"
+        f"  MaxDD mean: {boot['max_dd_mean'] * 100:.2f}%  "
+        f"P5 {boot['max_dd_p05'] * 100:.2f}%  "
+        f"P50 {boot['max_dd_p50'] * 100:.2f}%  "
+        f"P95 {boot['max_dd_p95'] * 100:.2f}%\n"
+        f"  Sharpe mean: {boot['sharpe_mean']:.3f}\n"
+        f"  Positive CAGR fraction: {boot['pos_fraction'] * 100:.1f}%\n"
+        f"  Target hit: {boot['target_hit_fraction'] * 100:.1f}%\n\n",
+        f"WF per-year Sharpe: {wf_sharpes}\n"
+        f"WF positive years: {is_oos.get('wf_pos_years', 0)}/{len(wf_sharpes)}\n",
+    ]
+    return "".join(parts)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -448,7 +534,8 @@ def main() -> None:
         f"  IS metrics  : CAGR={production_result['annual_return'] * 100:.2f}% "
         f"MaxDD={production_result['max_drawdown'] * 100:.2f}% "
         f"Sharpe={production_result['sharpe']:.3f} "
-        f"Pos years={production_result['wf_pos_years']}/7"
+        f"Pos years={production_result['wf_pos_years']}"
+        f"/{len(production_result['wf_sharpes'])}"
     )
 
     print("\n[3/6] Generating per-sleeve tearsheets...")
@@ -485,60 +572,15 @@ def main() -> None:
     stress_report["bootstrap_scatter_summary"] = scatter_summary
     stress_report["is_oos_summary"] = dump_is_oos_summary(production_result)
 
-    json_path = OUTPUT_ROOT / "stress_test_report.json"
-    with open(json_path, "w") as fh:
-        json.dump(stress_report, fh, indent=2, default=str)
-    print(f"  ✓ {json_path.relative_to(_PROJECT_ROOT)}")
-
-    # Summary text dump for the report
+    # Aucune sérialisation du rapport de stress ici : son unique producteur est
+    # scripts/stress_test_combined.py (voir le docstring de module). Le dict ne
+    # sert qu'à composer summary.txt.
     summary_path = OUTPUT_ROOT / "summary.txt"
-    is_oos = stress_report["is_oos_summary"]
-    boot = stress_report["bootstrap"]
-    with open(summary_path, "w") as fh:
-        fh.write("Phase 18 — Final Strategy Summary\n")
-        fh.write("=" * 45 + "\n\n")
-        fh.write("Config: MR80 / TS_Momentum_3p 10 / RSI_Daily_3p 10\n")
-        fh.write("        target_vol=0.28, max_leverage=12, DDcap=OFF\n\n")
-        fh.write("In-sample (2019 → 2025-04):\n")
-        _is = is_oos["in_sample"]
-        fh.write(
-            f"  CAGR   : {_is.get('cagr', 0) * 100:.2f}%\n"
-            f"  Vol    : {_is.get('vol', 0) * 100:.2f}%\n"
-            f"  MaxDD  : {_is.get('max_dd', 0) * 100:.2f}%\n"
-            f"  Sharpe : {_is.get('sharpe', 0):.3f}\n"
-            f"  Bars   : {_is.get('n', 0)}\n\n"
-        )
-        fh.write("Out-of-sample (2025-04 → 2026-04):\n")
-        _oos = is_oos["out_of_sample"]
-        fh.write(
-            f"  CAGR   : {_oos.get('cagr', 0) * 100:.2f}%\n"
-            f"  Vol    : {_oos.get('vol', 0) * 100:.2f}%\n"
-            f"  MaxDD  : {_oos.get('max_dd', 0) * 100:.2f}%\n"
-            f"  Sharpe : {_oos.get('sharpe', 0):.3f}\n"
-            f"  Bars   : {_oos.get('n', 0)}\n\n"
-        )
-        fh.write("Bootstrap 1000 runs, block=20d:\n")
-        fh.write(
-            f"  CAGR mean: {boot['cagr_mean'] * 100:.2f}%  "
-            f"P5 {boot['cagr_p05'] * 100:.2f}%  "
-            f"P50 {boot['cagr_p50'] * 100:.2f}%  "
-            f"P95 {boot['cagr_p95'] * 100:.2f}%\n"
-            f"  MaxDD mean: {boot['max_dd_mean'] * 100:.2f}%  "
-            f"P5 {boot['max_dd_p05'] * 100:.2f}%  "
-            f"P50 {boot['max_dd_p50'] * 100:.2f}%  "
-            f"P95 {boot['max_dd_p95'] * 100:.2f}%\n"
-            f"  Sharpe mean: {boot['sharpe_mean']:.3f}\n"
-            f"  Positive CAGR fraction: {boot['pos_fraction'] * 100:.1f}%\n"
-            f"  Target hit: {boot['target_hit_fraction'] * 100:.1f}%\n\n"
-        )
-        fh.write(
-            f"WF per-year Sharpe: {is_oos.get('wf_sharpes', [])}\n"
-            f"WF positive years: {is_oos.get('wf_pos_years', 0)}/7\n"
-        )
+    summary_path.write_text(build_summary_text(stress_report))
     print(f"  ✓ {summary_path.relative_to(_PROJECT_ROOT)}")
 
     print("\n" + "=" * 70)
-    print("  DONE — artifacts in results/phase18/")
+    print(f"  DONE — artifacts in {OUTPUT_ROOT.relative_to(_PROJECT_ROOT)}/")
     print("=" * 70)
 
 

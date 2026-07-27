@@ -108,12 +108,86 @@ def test_run_is_oos_split_smoke(synthetic_strat_rets):
             assert "sharpe" in s
 
 
+def _contains(grid: tuple[float, ...], value: float) -> bool:
+    """Appartenance tolérante aux flottants, pour ne pas dépendre de l'écriture."""
+    return any(g == pytest.approx(value) for g in grid)
+
+
+def test_sensitivity_grid_brackets_the_production_config():
+    """La grille doit contenir le point de production, sinon la table ne dit rien.
+
+    La table de sensibilité publiée au client sert à situer la configuration de
+    production dans son voisinage. Si ``PRODUCTION_TARGET_VOL`` ou
+    ``PRODUCTION_MAX_LEVERAGE`` n'est pas balayé, la table décrit des réglages
+    que personne ne trade. C'est arrivé : la production est passée à 0.37 / 31
+    pendant que la grille balayait 0.15-0.28 × 10/15/20, et rien ne l'a signalé.
+    """
+    from stress_test_combined import (
+        SENSITIVITY_MAX_LEVERAGES,
+        SENSITIVITY_TARGET_VOLS,
+    )
+    from strategies.combined_portfolio_v2 import (
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+    )
+
+    assert _contains(SENSITIVITY_TARGET_VOLS, PRODUCTION_TARGET_VOL), (
+        f"target_vol de production ({PRODUCTION_TARGET_VOL}) absent de la grille "
+        f"{SENSITIVITY_TARGET_VOLS} : la table de sensibilité du rapport ne "
+        f"contient pas la ligne de la configuration réellement tradée."
+    )
+    assert _contains(SENSITIVITY_MAX_LEVERAGES, PRODUCTION_MAX_LEVERAGE), (
+        f"max_leverage de production ({PRODUCTION_MAX_LEVERAGE}) absent de la "
+        f"grille {SENSITIVITY_MAX_LEVERAGES} : la table de sensibilité du rapport "
+        f"ne contient pas la colonne du levier réellement utilisé."
+    )
+
+
 def test_run_parameter_sensitivity_smoke(synthetic_strat_rets):
-    """Sensitivity sweep must hit every grid point without crashing."""
-    from stress_test_combined import run_parameter_sensitivity
+    """Le balayage doit couvrir exactement la grille déclarée, point de prod inclus.
+
+    Ce test comptait 18 lignes. La grille est passée de 0.15-0.28 × 10/15/20 à
+    0.20-0.50 × 20/31/45 sans qu'il bronche, parce que 6 × 3 = 18 des deux côtés :
+    il vérifiait une forme, pas un contenu. Les assertions portent maintenant sur
+    les couples balayés et sur la présence du point de production.
+    """
+    from stress_test_combined import (
+        SENSITIVITY_MAX_LEVERAGES,
+        SENSITIVITY_TARGET_VOLS,
+        run_parameter_sensitivity,
+    )
+    from strategies.combined_portfolio_v2 import (
+        PRODUCTION_MAX_LEVERAGE,
+        PRODUCTION_TARGET_VOL,
+    )
 
     sweeps = run_parameter_sensitivity(synthetic_strat_rets)
-    # Sweep grid is 6 target_vols × 3 max_levs = 18 rows.
-    assert len(sweeps) == 18
+
+    # Le nombre de points dérive de la grille, il n'est pas recopié.
+    assert len(sweeps) == len(SENSITIVITY_TARGET_VOLS) * len(SENSITIVITY_MAX_LEVERAGES)
+
+    swept = {(s["target_vol"], s["max_leverage"]) for s in sweeps}
+    expected = {
+        (tv, ml)
+        for tv in SENSITIVITY_TARGET_VOLS
+        for ml in SENSITIVITY_MAX_LEVERAGES
+    }
+    assert swept == expected, (
+        "le balayage ne correspond pas au produit cartésien déclaré : "
+        f"manquants={sorted(expected - swept)}, en trop={sorted(swept - expected)}"
+    )
+
+    # L'assertion qui manquait : la configuration de production est une ligne du
+    # balayage, pas un point situé hors de la table publiée.
+    assert any(
+        tv == pytest.approx(PRODUCTION_TARGET_VOL)
+        and ml == pytest.approx(PRODUCTION_MAX_LEVERAGE)
+        for tv, ml in swept
+    ), (
+        f"le point de production ({PRODUCTION_TARGET_VOL}, "
+        f"{PRODUCTION_MAX_LEVERAGE}) n'est pas balayé : la table de sensibilité "
+        f"ne situe pas la configuration tradée dans sa grille."
+    )
+
     for s in sweeps:
         assert set(s) >= {"target_vol", "max_leverage", "cagr", "vol", "max_dd", "sharpe"}

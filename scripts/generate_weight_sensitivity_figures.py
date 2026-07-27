@@ -75,6 +75,23 @@ SLEEVE_LABELS: dict[str, str] = {
     "RSI_Daily_3p": "RSI",
 }
 
+
+def format_alloc(shares: tuple[float, ...]) -> str:
+    """« 80 / 10 / 10 » à partir de parts internes — jamais écrit à la main."""
+    return " / ".join(f"{w * 100:.0f}" for w in shares)
+
+
+# Le point de production dans les coordonnées du simplexe : les parts *internes*
+# au trio FX, renormalisées par le total du trio comme le font ``make_weights``
+# et ``compute_metrics``. Les trois figures marquaient ce point avec « 80 / 10 /
+# 10 » écrit en dur : c'était juste la valeur du moment, et un changement
+# d'allocation aurait laissé les marqueurs sur l'ancien point sans rien signaler.
+_PRODUCTION_FX_TOTAL: float = sum(PRODUCTION_WEIGHTS[k] for k in SLEEVE_KEYS)
+PRODUCTION_INTERNAL: tuple[float, ...] = tuple(
+    PRODUCTION_WEIGHTS[k] / _PRODUCTION_FX_TOTAL for k in SLEEVE_KEYS
+)
+PRODUCTION_ALLOC_LABEL: str = format_alloc(PRODUCTION_INTERNAL)
+
 # Palette aligned with build_latex_report_assets.py.
 PALETTE = {
     "primary": "#0B2545",
@@ -199,11 +216,8 @@ def run_named_allocations(
     """Run the 8 named allocations — production, extremes, equal, risk-parity."""
     # Le point de production est lu dans la config et ramené à la part du trio :
     # 72/9/9/10 est le 80/10/10 du trio une fois l'or servi.
-    fx_share = 1.0 - FIXED_WEIGHT
-    prod = tuple(PRODUCTION_WEIGHTS[k] / fx_share for k in SLEEVE_KEYS)
-    prod_label = " / ".join(f"{w * 100:.0f}" for w in prod) + " (production)"
     named = [
-        (prod_label, *prod),
+        (f"{PRODUCTION_ALLOC_LABEL} (production)", *PRODUCTION_INTERNAL),
         ("100 / 0 / 0 (pur MR)", 1.00, 0.00, 0.00),
         ("0 / 50 / 50 (sans MR)", 0.00, 0.50, 0.50),
         ("70 / 15 / 15", 0.70, 0.15, 0.15),
@@ -232,12 +246,17 @@ def run_named_allocations(
         max_leverage=MAX_LEVERAGE,
         dd_cap_enabled=False,
     )
+    # ``weights_ts`` porte les poids du portefeuille *complet*, or compris : pris
+    # tels quels ils ne somment pas à 1 et ne vivent pas dans le même repère que
+    # tous les autres points. On les ramène aux parts internes du trio.
     avg_w = result["weights_ts"].mean()
+    rp_fx = {k: float(avg_w.get(k, 0.0)) for k in SLEEVE_KEYS}
+    rp_total = sum(rp_fx.values())
     rp_point = WeightPoint(
         label="risk-parity",
-        w_mr=float(avg_w.get("MR_Macro", 0.0)),
-        w_ts=float(avg_w.get("TS_Momentum_3p", 0.0)),
-        w_rsi=float(avg_w.get("RSI_Daily_3p", 0.0)),
+        w_mr=rp_fx["MR_Macro"] / rp_total,
+        w_ts=rp_fx["TS_Momentum_3p"] / rp_total,
+        w_rsi=rp_fx["RSI_Daily_3p"] / rp_total,
         sharpe=float(result["wf_avg_sharpe"]),
         cagr=float(result["annual_return"]),
         vol=float(result["annual_vol"]),
@@ -387,13 +406,18 @@ def plot_1d_sweep(points: list[WeightPoint]) -> None:
 
     def _panel(ax, y, title, ylabel, color, is_pct=True, prod_label=True):
         ax.plot(mr * 100, y, color=color, linewidth=2.0, marker="o", markersize=4)
-        ax.axvline(80, color=PALETTE["accent"], linestyle="--", linewidth=1.2)
+        ax.axvline(
+            PRODUCTION_INTERNAL[0] * 100,
+            color=PALETTE["accent"],
+            linestyle="--",
+            linewidth=1.2,
+        )
         ax.set_title(title, loc="left")
         ax.set_xlabel("Poids MR Macro (%)")
         ax.set_ylabel(ylabel)
         ax.set_xlim(-2, 102)
         # Mark the production point.
-        prod_idx = int(np.argmin(np.abs(mr - 0.80)))
+        prod_idx = int(np.argmin(np.abs(mr - PRODUCTION_INTERNAL[0])))
         ax.plot(
             mr[prod_idx] * 100,
             y[prod_idx],
@@ -403,7 +427,7 @@ def plot_1d_sweep(points: list[WeightPoint]) -> None:
             markeredgecolor=PALETTE["primary"],
             markeredgewidth=0.8,
             zorder=10,
-            label="80/10/10 (prod)" if prod_label else None,
+            label=f"{PRODUCTION_ALLOC_LABEL} (prod)" if prod_label else None,
         )
         if prod_label:
             ax.legend(loc="best")
@@ -492,9 +516,11 @@ def plot_simplex_ternary(points: list[WeightPoint]) -> None:
         ha="center",
     )
 
-    # Mark the production point 80/10/10.
+    # Marqueur du point de production, dérivé de la configuration.
     px, py = _barycentric_to_cartesian(
-        np.array([0.80]), np.array([0.10]), np.array([0.10])
+        np.array([PRODUCTION_INTERNAL[0]]),
+        np.array([PRODUCTION_INTERNAL[1]]),
+        np.array([PRODUCTION_INTERNAL[2]]),
     )
     ax.plot(
         px,
@@ -507,7 +533,7 @@ def plot_simplex_ternary(points: list[WeightPoint]) -> None:
         zorder=10,
     )
     ax.annotate(
-        "80 / 10 / 10",
+        PRODUCTION_ALLOC_LABEL,
         xy=(px[0], py[0]),
         xytext=(px[0] + 0.10, py[0] + 0.07),
         fontsize=10,
@@ -572,9 +598,9 @@ def plot_pareto_frontier(points: list[WeightPoint]) -> None:
     # Production star.
     prod_idx = int(
         np.argmin(
-            (np.abs([p.w_mr - 0.80 for p in points]))
-            + (np.abs([p.w_ts - 0.10 for p in points]))
-            + (np.abs([p.w_rsi - 0.10 for p in points]))
+            (np.abs([p.w_mr - PRODUCTION_INTERNAL[0] for p in points]))
+            + (np.abs([p.w_ts - PRODUCTION_INTERNAL[1] for p in points]))
+            + (np.abs([p.w_rsi - PRODUCTION_INTERNAL[2] for p in points]))
         )
     )
     ax.plot(
@@ -586,13 +612,15 @@ def plot_pareto_frontier(points: list[WeightPoint]) -> None:
         markeredgecolor=PALETTE["primary"],
         markeredgewidth=1.2,
         zorder=10,
-        label="80 / 10 / 10 (production)",
+        label=f"{PRODUCTION_ALLOC_LABEL} (production)",
     )
 
     ax.set_xlabel("Volatilité annualisée (%)")
     ax.set_ylabel("CAGR (%)")
     ax.set_title(
-        "Frontière efficiente empirique — 231 allocations du simplex",
+        # Dérivé, comme la légende de write_extremes_table : le littéral 231 était
+        # faux dès qu'on changeait le pas de la grille (21 points en mode smoke).
+        f"Frontière efficiente empirique — {len(points)} allocations du simplex",
         fontsize=13,
         fontweight="bold",
         color=PALETTE["primary"],

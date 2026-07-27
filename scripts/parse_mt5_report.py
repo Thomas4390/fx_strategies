@@ -22,6 +22,20 @@ mesuré tick par tick par MT5 — c'est celui qu'il faut publier. Les métriques
 dérivées ici de la balance (CAGR, séries annuelles) sont exactes ; les métriques
 de dispersion ne le sont pas et ne sont pas produites.
 
+⚠️ Replis : MT5 publie **deux** statistiques de repli de balance qui ne mesurent
+pas la même chose — ``Balance Drawdown Maximal`` est le maximum en *monnaie*
+(son pourcentage est celui de cet instant-là), ``Balance Drawdown Relative`` est
+le maximum en *pourcentage*, atteint à un autre instant. Seule la seconde se
+compare à une reconstruction faite depuis les deals. Le bloc
+``headline["drawdowns"]`` range les cinq grandeurs sous une convention unique ;
+les clés plates ``*_dd_pct_*`` qui l'entourent sont conservées telles quelles
+parce que ``scripts/build_latex_report_assets.py`` les lit.
+
+Le bloc ``provenance`` rattache le JSON à un run précis : empreintes des deux
+artefacts lus, mode de simulation, inputs de l'EA, horodatage. Sans lui, la
+sélection par ``mtime`` la plus récente ne laissait aucune trace de *quel* run
+avait produit les chiffres publiés.
+
 Usage:
     python scripts/parse_mt5_report.py
     python scripts/parse_mt5_report.py --run reports/mt5/run_2026....json
@@ -31,8 +45,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -141,6 +158,37 @@ def _to_pct(value: str | None) -> float | None:
     return float(match.group(1)) if match else None
 
 
+def _to_leading_pct(value: str | None) -> float | None:
+    """Extraire le pourcentage de '23.37% (3 263.01)'.
+
+    ``Balance Drawdown Relative`` inverse l'ordre des deux autres champs de
+    repli : le pourcentage vient d'abord, le montant est entre parenthèses.
+    ``_to_pct`` y renverrait ``None`` et ``_to_float`` prendrait le pourcentage
+    pour un montant.
+    """
+    if not value:
+        return None
+    match = re.match(r"\s*([\d.]+)%", str(value))
+    return float(match.group(1)) if match else None
+
+
+def _to_paren_amount(value: str | None) -> float | None:
+    """Extraire le montant de '23.37% (3 263.01)'."""
+    if not value:
+        return None
+    match = re.search(r"\(([-\d.\s  ]+)\)", str(value))
+    return _to_float(match.group(1)) if match else None
+
+
+def _extract_inputs(text: str) -> dict[str, str]:
+    """Les inputs de l'EA, tels que l'en-tête HTML les récapitule.
+
+    C'est la seule trace de la configuration qui a produit les chiffres : ni le
+    JSON de run ni le CSV des deals ne la portent.
+    """
+    return dict(re.findall(r"<b>(Inp_[A-Za-z0-9_]+)=([^<]*)</b>", text))
+
+
 def _period_start(period: str | None) -> pd.Timestamp | None:
     """MT5 écrit la période 'M1 (2021.01.01 - 2025.12.31)'."""
     if not period:
@@ -149,12 +197,22 @@ def _period_start(period: str | None) -> pd.Timestamp | None:
     return pd.Timestamp(match.group(1).replace(".", "-")) if match else None
 
 
+def _period_end(period: str | None) -> pd.Timestamp | None:
+    """La borne droite de 'M1 (2021.01.01 - 2026.04.30)'."""
+    dates = re.findall(r"(\d{4}\.\d{2}\.\d{2})", period or "")
+    return pd.Timestamp(dates[-1].replace(".", "-")) if len(dates) >= 2 else None
+
+
 def load_html_header(html_path: Path) -> dict[str, Any]:
     """Les métriques que MT5 calcule lui-même, gardées telles quelles."""
     text = _read_utf16_safe(html_path)
     equity_dd = _extract_html_field(text, "Equity Drawdown Maximal")
+    equity_dd_rel = _extract_html_field(text, "Equity Drawdown Relative")
     balance_dd = _extract_html_field(text, "Balance Drawdown Maximal")
+    balance_dd_rel = _extract_html_field(text, "Balance Drawdown Relative")
     return {
+        "expert": _extract_html_field(text, "Expert"),
+        "inputs": _extract_inputs(text),
         "symbol": _extract_html_field(text, "Symbol"),
         "period": _extract_html_field(text, "Period"),
         "initial_deposit": _to_float(_extract_html_field(text, "Initial Deposit")),
@@ -165,9 +223,45 @@ def load_html_header(html_path: Path) -> dict[str, Any]:
         "total_trades": _to_float(_extract_html_field(text, "Total Trades")),
         "equity_dd_pct": _to_pct(equity_dd),
         "equity_dd_amount": _to_float(equity_dd),
+        "equity_dd_relative_pct": _to_leading_pct(equity_dd_rel),
         "balance_dd_pct": _to_pct(balance_dd),
         "balance_dd_amount": _to_float(balance_dd),
+        # Le maximum de repli de balance exprimé en pourcentage — atteint à un
+        # autre instant que le maximum en monnaie ci-dessus. C'est celui-ci, et
+        # lui seul, qui se compare à une reconstruction depuis les deals.
+        "balance_dd_relative_pct": _to_leading_pct(balance_dd_rel),
+        "balance_dd_relative_amount": _to_paren_amount(balance_dd_rel),
     }
+
+
+# Les libellés du Strategy Tester pour ``Model``. Le run publié tourne en
+# ``Model=1`` (barres M1) et non en ticks réels : ce fait n'apparaît ni dans le
+# rapport HTML ni dans le JSON de run, seul le .ini le porte.
+MODEL_LABELS = {
+    "0": "Every tick",
+    "1": "1 minute OHLC",
+    "2": "Open prices only",
+    "3": "Math calculations",
+    "4": "Every tick based on real ticks",
+}
+
+_TESTER_INI_FIELDS = (
+    "Expert", "Symbol", "Period", "Model", "Spread",
+    "FromDate", "ToDate", "Deposit", "Leverage",
+)
+
+
+def load_tester_ini(ini_path: Path) -> dict[str, Any]:
+    """Les réglages de simulation, lus dans le .ini UTF-16 écrit par le CLI."""
+    text = _read_utf16_safe(ini_path)
+    values: dict[str, Any] = {}
+    for field in _TESTER_INI_FIELDS:
+        match = re.search(rf"^{field}=(.*?)\s*$", text, re.MULTILINE)
+        if match:
+            values[field.lower()] = match.group(1)
+    if "model" in values:
+        values["model_label"] = MODEL_LABELS.get(values["model"], "inconnu")
+    return values
 
 
 # ---------------------------------------------------------------------------
@@ -200,6 +294,21 @@ def balance_curve(
         )
         curve = pd.concat([head, curve])
     return curve.ffill()
+
+
+def balance_path_by_deal(deals: pd.DataFrame, initial_deposit: float) -> pd.Series:
+    """Balance après chaque deal, à la granularité native du CSV.
+
+    ``balance_curve`` agrège par jour : un creux qui se creuse et se referme
+    dans la même journée y est invisible (celui du 21 août 2023 coûte 0,62 point
+    de repli). Cette série-ci ne rate rien de ce que le CSV contient — elle sert
+    à reconstruire le repli, pas à porter une chronologie.
+    """
+    trades = deals[~deals["is_balance_op"]]
+    return pd.concat([
+        pd.Series([initial_deposit]),
+        initial_deposit + trades["net"].cumsum(),
+    ], ignore_index=True)
 
 
 def _max_drawdown(curve: pd.Series) -> float:
@@ -269,8 +378,150 @@ def _group_metrics(deals: pd.DataFrame, key: str) -> list[dict[str, Any]]:
     return sorted(rows, key=lambda r: -r["net_profit"])
 
 
+def _as_positive_pct(fraction: float | None) -> float | None:
+    """Fraction signée → pourcentage positif, la convention du bloc `drawdowns`."""
+    return None if fraction is None else abs(float(fraction)) * 100.0
+
+
+def _drawdown_block(
+    deals: pd.DataFrame,
+    header: dict[str, Any],
+    curve: pd.Series,
+    deposit: float,
+) -> dict[str, Any]:
+    """Les replis sous une convention unique : pourcentage positif.
+
+    23.37 s'y lit « −23,37 % ». MT5 en publie quatre, la balance en reconstruit
+    deux, et une seule paire est comparable : ``balance_relative_mt5_pct`` avec
+    ``balance_relative_per_deal_pct``. Les rapprocher de ``balance_max_money_*``
+    revient à comparer un maximum en monnaie à un maximum en pourcentage.
+    """
+    return {
+        "unit": "pourcentage positif (ampleur du repli)",
+        # Mesuré tick par tick par MT5, positions ouvertes comprises : le CSV
+        # des deals ne permet pas de le recalculer. Ici les deux conventions
+        # MT5 coïncident, le repli d'équité publié n'est donc pas ambigu.
+        "equity_max_money_mt5_pct": header.get("equity_dd_pct"),
+        "equity_relative_mt5_pct": header.get("equity_dd_relative_pct"),
+        # Maximum en MONNAIE : le pourcentage est celui de cet instant-là.
+        "balance_max_money_mt5_pct": header.get("balance_dd_pct"),
+        "balance_max_money_mt5_amount": header.get("balance_dd_amount"),
+        # Maximum en POURCENTAGE, atteint à un autre instant.
+        "balance_relative_mt5_pct": header.get("balance_dd_relative_pct"),
+        "balance_relative_mt5_amount": header.get("balance_dd_relative_amount"),
+        # Reconstructions depuis le CSV. La journalière agrège par
+        # ``resample("D")`` et rate les creux qui se referment dans la journée ;
+        # celle par deal ne rate rien de ce que le CSV contient.
+        "balance_relative_daily_pct": _as_positive_pct(_max_drawdown(curve)),
+        "balance_relative_per_deal_pct": _as_positive_pct(
+            _max_drawdown(balance_path_by_deal(deals, deposit))
+        ),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Provenance
+# ---------------------------------------------------------------------------
+
+# Le tester liquide d'office les positions encore ouvertes au dernier tick : le
+# dernier deal tombe donc sur la fin de la fenêtre simulée. Un CSV dont le
+# dernier deal précède de plus d'une semaine la fin du rapport HTML vient d'un
+# autre run — le cas se produit sans bruit, puisque le CSV est sélectionné par
+# ``mtime`` et le HTML par le JSON de run.
+DEALS_WINDOW_TOLERANCE_DAYS = 7
+
+
+def _artifact_fingerprint(path: Path | None) -> dict[str, Any] | None:
+    """Chemin, date de modification, taille et empreinte d'un artefact lu.
+
+    Le nom du CSV des deals vient de l'heure *simulée* du tester, pas de l'heure
+    réelle : deux runs sur la même fenêtre écrasent le même fichier. Le ``mtime``
+    date le contenu, le sha256 l'identifie.
+    """
+    if path is None or not path.exists():
+        return None
+    stat = path.stat()
+    return {
+        "path": str(path),
+        "mtime_utc": datetime.fromtimestamp(
+            stat.st_mtime, tz=timezone.utc
+        ).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "size_bytes": stat.st_size,
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
+def build_provenance(
+    deals: pd.DataFrame,
+    header: dict[str, Any],
+    deals_path: Path | None = None,
+    html_path: Path | None = None,
+    run_json_path: Path | None = None,
+) -> dict[str, Any]:
+    """Ce qui rattache ce JSON à un run précis plutôt qu'à « le plus récent »."""
+    trades = deals[~deals["is_balance_op"]]
+    last_deal = trades["time_utc"].max() if len(trades) else None
+    period_end = _period_end(header.get("period"))
+
+    provenance: dict[str, Any] = {
+        "generated_at_utc": datetime.now(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        ),
+        "generator": "scripts/parse_mt5_report.py",
+        "expert": header.get("expert"),
+        "deals_csv": _artifact_fingerprint(deals_path),
+        "html_report": _artifact_fingerprint(html_path),
+        "deals_window": {
+            "first_deal_utc": (
+                trades["time_utc"].min().strftime("%Y-%m-%d %H:%M:%S")
+                if len(trades) else None
+            ),
+            "last_deal_utc": (
+                last_deal.strftime("%Y-%m-%d %H:%M:%S") if last_deal is not None
+                else None
+            ),
+            "deal_rows": int(len(trades)),
+        },
+        "html_period": header.get("period"),
+        # Faux = les deux artefacts ne viennent pas du même run.
+        "deals_match_html_period": (
+            bool(
+                last_deal
+                >= period_end - pd.Timedelta(days=DEALS_WINDOW_TOLERANCE_DAYS)
+            )
+            if last_deal is not None and period_end is not None else None
+        ),
+        "ea_inputs": header.get("inputs") or {},
+    }
+
+    if run_json_path is not None and run_json_path.exists():
+        payload = json.loads(run_json_path.read_text())
+        # Le JSON de run n'atteste de rien s'il décrit un autre rapport que
+        # celui qu'on vient de lire : `_latest()` rend le plus récent, et
+        # `--html` peut pointer ailleurs. Mieux vaut pas de provenance qu'une
+        # provenance fausse.
+        reported = (payload.get("metrics") or {}).get("report_path")
+        if html_path is not None and reported is not None and (
+            Path(reported).resolve() != html_path.resolve()
+        ):
+            return provenance
+        run_json = _artifact_fingerprint(run_json_path) or {}
+        run_json["run_id"] = payload.get("run_id")
+        run_json["ini_path"] = payload.get("ini_path")
+        provenance["run_json"] = run_json
+        ini_path = Path(payload["ini_path"]) if payload.get("ini_path") else None
+        if ini_path is not None and ini_path.exists():
+            provenance["tester"] = load_tester_ini(ini_path)
+
+    return provenance
+
+
 def build_reference(
-    deals: pd.DataFrame, header: dict[str, Any]
+    deals: pd.DataFrame,
+    header: dict[str, Any],
+    deals_path: Path | None = None,
+    html_path: Path | None = None,
+    run_json_path: Path | None = None,
 ) -> dict[str, Any]:
     deposit = header.get("initial_deposit") or float(
         deals.loc[deals["is_balance_op"], "profit"].iloc[0]
@@ -280,6 +531,9 @@ def build_reference(
 
     return {
         "source": "MetaTrader 5 Strategy Tester",
+        "provenance": build_provenance(
+            deals, header, deals_path, html_path, run_json_path
+        ),
         "run": {
             "symbol": header.get("symbol"),
             "period": header.get("period"),
@@ -300,6 +554,12 @@ def build_reference(
             "profit_factor": header.get("profit_factor"),
             "recovery_factor": header.get("recovery_factor"),
             "total_trades": header.get("total_trades"),
+            # Les quatre clés `*_dd_pct_*` ci-dessus mélangent deux conventions
+            # (fraction signée pour la reconstruction, pourcentage positif pour
+            # MT5) et deux grandeurs (maximum en monnaie contre maximum en
+            # pourcentage). Elles restent en place parce que le générateur LaTeX
+            # les lit ; ce bloc-ci est la version cohérente et complète.
+            "drawdowns": _drawdown_block(deals, header, curve, deposit),
         },
         "balance_curve": {
             "dates": [d.strftime("%Y-%m-%d") for d in curve.index],
@@ -337,6 +597,13 @@ def build_reference(
             "risque porté.",
             "Les positions ouvertes au dernier tick sont liquidées par le "
             "tester au prix du moment : voir `forced_closes`.",
+            "Les replis se lisent dans `headline.drawdowns`, tous en "
+            "pourcentage positif ; les clés plates `*_dd_pct_*` gardent deux "
+            "conventions et deux grandeurs pour ne pas casser le générateur "
+            "LaTeX qui les consomme.",
+            "La reconstruction journalière du repli de balance est plus "
+            "grossière que celle par deal : elle rate les creux qui se "
+            "referment dans la journée.",
         ],
     }
 
@@ -349,6 +616,37 @@ def build_reference(
 def _latest(pattern: str, directory: Path) -> Path | None:
     matches = sorted(directory.glob(pattern), key=lambda p: p.stat().st_mtime)
     return matches[-1] if matches else None
+
+
+def _pick_deals_for_period(directory: Path, period_end: pd.Timestamp | None) -> Path | None:
+    """Choisir le CSV dont la fenêtre correspond au rapport HTML lu.
+
+    Sélectionner par `mtime` seul est un piège actif : le nom du CSV vient de
+    l'heure *simulée* du tester, si bien qu'un backtest sur une fenêtre plus
+    courte lancé plus tard laisse son fichier en tête du classement. Le 2026-07-26,
+    `deals_20251230T2359.csv` (fenêtre courte) était plus récent que
+    `deals_20260429T2359.csv` (fenêtre publiée) : relancer ce script sans argument
+    aurait produit un CAGR de 40,47 % au lieu de 35,44 %, avec les 851 trades et
+    le profit net du HTML inchangés — l'incohérence était indétectable à l'œil.
+
+    On retient donc le CSV dont le dernier deal tombe dans la fenêtre du HTML, le
+    plus récent en cas d'égalité. Sans candidat, on rend `None` et l'appelant
+    échoue plutôt que de publier un mélange.
+    """
+    candidates = sorted(directory.glob("deals_*.csv"), key=lambda p: p.stat().st_mtime)
+    if not candidates or period_end is None:
+        return candidates[-1] if candidates else None
+
+    tol = pd.Timedelta(days=DEALS_WINDOW_TOLERANCE_DAYS)
+    matching = []
+    for path in candidates:
+        try:
+            last = load_deals(path)["time_utc"].max()
+        except Exception:  # noqa: BLE001 - un CSV illisible n'est pas un candidat
+            continue
+        if last is not None and period_end - tol <= last <= period_end + tol:
+            matching.append(path)
+    return matching[-1] if matching else None
 
 
 def parse_args() -> argparse.Namespace:
@@ -369,28 +667,49 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    deals_path = args.deals or _latest("deals_*.csv", FILE_COMMON)
-    if deals_path is None or not deals_path.exists():
-        raise SystemExit(
-            f"CSV des deals introuvable dans {FILE_COMMON}. "
-            "Relancer un backtest avec --input Inp_ExportDeals=true."
-        )
-
+    # Le HTML d'abord : c'est lui qui définit la fenêtre à laquelle le CSV doit
+    # correspondre.
+    run_json = args.run or _latest("run_*.json", MT5_REPORTS)
     html_path = args.html
-    if html_path is None:
-        run_json = args.run or _latest("run_*.json", MT5_REPORTS)
-        if run_json is not None:
-            payload = json.loads(run_json.read_text())
-            html_path = Path(payload["metrics"]["report_path"])
+    if html_path is None and run_json is not None:
+        payload = json.loads(run_json.read_text())
+        html_path = Path(payload["metrics"]["report_path"])
     if html_path is None or not html_path.exists():
         raise SystemExit(f"Rapport HTML introuvable : {html_path}")
 
+    period_end = _period_end(load_html_header(html_path).get("period"))
+    deals_path = args.deals or _pick_deals_for_period(FILE_COMMON, period_end)
+    if deals_path is None or not deals_path.exists():
+        raise SystemExit(
+            f"Aucun CSV de deals ne couvre la fenêtre du rapport "
+            f"({load_html_header(html_path).get('period')}) dans {FILE_COMMON}. "
+            "Relancer le backtest avec --input Inp_ExportDeals=true, ou passer "
+            "--deals explicitement."
+        )
+
     print(f"[deals] {deals_path}")
     print(f"[html ] {html_path}")
+    print(f"[run  ] {run_json}")
 
     deals = load_deals(deals_path)
     header = load_html_header(html_path)
-    reference = build_reference(deals, header)
+    reference = build_reference(deals, header, deals_path, html_path, run_json)
+
+    # Le CSV est choisi par `mtime`, le HTML par le JSON de run : rien ne
+    # garantit qu'ils viennent du même backtest, et l'incohérence est muette.
+    if reference["provenance"]["deals_match_html_period"] is False:
+        print(
+            f"\n[abort] Le CSV des deals s'arrête le "
+            f"{reference['provenance']['deals_window']['last_deal_utc']}, hors de "
+            f"la fenêtre du rapport HTML ({header.get('period')}). Les deux "
+            f"artefacts ne viennent pas du même backtest.\n"
+            f"        CSV  : {deals_path}\n"
+            f"        HTML : {html_path}\n"
+            f"        Rien n'a été écrit. Relancer le backtest sur la fenêtre "
+            f"voulue, ou passer --deals et --html du même run.",
+            file=sys.stderr,
+        )
+        return 2
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(reference, indent=2, ensure_ascii=False))

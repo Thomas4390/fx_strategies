@@ -375,6 +375,81 @@ def _extract(text: str, label: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+def _to_number(value: str | None) -> float | None:
+    """Convertit un champ numérique du rapport MT5 en float, sinon `None`.
+
+    MT5 sépare les milliers par une espace (`40 267.40`, parfois insécable) et
+    suffixe certains montants d'un pourcentage (`11 211.90 (20.11%)`) — d'où le
+    nettoyage avant lecture du premier nombre.
+    """
+    if value is None:
+        return None
+    # Espaces retirées : ordinaire, insécable et insécable fine.
+    cleaned = re.sub(r"[\s\xa0\u202f]", "", str(value))
+    m = re.match(r"-?\d+(?:\.\d+)?", cleaned)
+    return float(m.group()) if m else None
+
+
+# `Period` vaut `M1 (2021.01.01 - 2026.04.30)` sur un run réel, et
+# `M0 (1970.01.01 - 1970.01.01)` quand le tester n'a chargé aucun historique.
+_PERIOD_BOUNDS_RE = re.compile(
+    r"(\d{4}\.\d{2}\.\d{2})\s*-\s*(\d{4}\.\d{2}\.\d{2})"
+)
+
+
+def _period_bounds(period: str | None) -> tuple[str, str] | None:
+    """Renvoie (début, fin) du champ `Period`, ou `None` s'il est illisible."""
+    if not period:
+        return None
+    m = _PERIOD_BOUNDS_RE.search(period)
+    return (m.group(1), m.group(2)) if m else None
+
+
+def validate_run(metrics: HtmlReportMetrics) -> list[str]:
+    """Renvoie les raisons de tenir le run pour non exploitable (vide = OK).
+
+    Un run dégénéré ne produit pas un rapport vide : MT5 y écrit des zéros
+    (`Total Trades: 0`, `Sharpe Ratio: 0.00`). Le garde-fou historique testait la
+    présence des *chaînes* extraites, qui sont non vides dans ce cas précis : un
+    backtest sans le moindre tick d'historique sortait donc en succès (audit du
+    2026-07-26, §8). On convertit donc en nombres et on vérifie la fenêtre.
+
+    Un Sharpe à 0.00 sur un run qui a bien tradé reste légitime : seule son
+    absence — ou sa non-convertibilité — est un défaut.
+    """
+    problems: list[str] = []
+
+    bounds = _period_bounds(metrics.period)
+    if bounds is None:
+        problems.append(
+            f"période absente ou illisible dans le rapport (Period="
+            f"{metrics.period!r})"
+        )
+    elif bounds[0].startswith("1970") or bounds[1].startswith("1970"):
+        problems.append(
+            f"période dégénérée (Period={metrics.period!r}) — le tester n'a "
+            "chargé aucun historique ; chercher 'no history data, stop testing' "
+            "dans le log Tester (ticks réels non téléchargés en --model 4 ?)"
+        )
+
+    trades = _to_number(metrics.total_trades)
+    if trades is None:
+        problems.append(
+            f"métrique 'Total Trades' absente ou non numérique (valeur="
+            f"{metrics.total_trades!r})"
+        )
+    elif trades <= 0:
+        problems.append("aucun trade exécuté (Total Trades=0)")
+
+    if _to_number(metrics.sharpe_ratio) is None:
+        problems.append(
+            f"métrique 'Sharpe Ratio' absente ou non numérique (valeur="
+            f"{metrics.sharpe_ratio!r})"
+        )
+
+    return problems
+
+
 def parse_html_report(report_path: Path) -> HtmlReportMetrics:
     metrics = HtmlReportMetrics(report_path=str(report_path))
     if not report_path.exists():
@@ -455,6 +530,18 @@ def dump_json(out_dir: Path, metrics: HtmlReportMetrics,
 # ---------------------------------------------------------------------------
 # CLI entry-point
 # ---------------------------------------------------------------------------
+
+
+def resolve_exit_code(terminal_exit_code: int, problems: list[str]) -> int:
+    """Code de sortie final du CLI.
+
+    Conventions préservées : `2` = sanity checks échoués (décidé avant le run),
+    `124` = timeout du terminal. `1` = le terminal a rendu 0 mais son rapport
+    n'est pas exploitable.
+    """
+    if terminal_exit_code != 0:
+        return max(1, terminal_exit_code)
+    return 1 if problems else 0
 
 
 def parse_args() -> argparse.Namespace:
@@ -558,8 +645,12 @@ def main() -> int:
                           exit_code, duration_sec, persistent_ini)
     print(f"[ok] JSON dump → {json_path}", flush=True)
 
-    has_metrics = bool(metrics.sharpe_ratio and metrics.total_trades)
-    return 0 if exit_code == 0 and has_metrics else max(1, exit_code)
+    problems = validate_run(metrics)
+    if problems:
+        print("[fail] run non exploitable :", file=sys.stderr)
+        for msg in problems:
+            print(f"  - {msg}", file=sys.stderr)
+    return resolve_exit_code(exit_code, problems)
 
 
 if __name__ == "__main__":
