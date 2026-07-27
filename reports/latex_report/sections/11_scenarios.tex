@@ -8,17 +8,17 @@
 \subsection{Lecture détaillée des six scénarios}
 
 \begin{itemize}
-\item \textbf{2019 année complète (Sharpe $+1.77$, repli $-11.04\,\%$)}~: la meilleure fenêtre de la série, contrairement à ce que laissaient penser les configurations antérieures du portefeuille. L'ajout de la sleeve or et le relèvement de la cible de volatilité ont transformé une année autrefois négative en la plus rentable du lot.
+\item \textbf{2019 année complète (Sharpe $+1.11$, repli $-26.23\,\%$)}~: la seconde meilleure fenêtre de la série, contrairement à ce que laissaient penser les configurations antérieures du portefeuille. L'entrée de la sleeve momentum et le relèvement de la cible de volatilité ont transformé une année autrefois négative en l'une des plus rentables du lot.
 
-\item \textbf{2020 Q1 Covid (Sharpe $-2.00$, repli $-27.45\,\%$)}~: la pire fenêtre. Le choc frappe simultanément les quatre moteurs, et le dimensionnement actuel amplifie la perte dans la même proportion qu'il amplifie les gains. C'est le scénario qui illustre le plus directement le coût du niveau de risque retenu.
+\item \textbf{2020 Q1 Covid (Sharpe $-2.14$, repli $-26.71\,\%$)}~: la pire fenêtre. Le choc frappe simultanément les quatre moteurs, et le dimensionnement actuel amplifie la perte dans la même proportion qu'il amplifie les gains. C'est le scénario qui illustre le plus directement le coût du niveau de risque retenu.
 
-\item \textbf{2020 année complète (Sharpe $-0.33$, repli $-41.28\,\%$)}~: la récupération post-Covid ne suffit pas à ramener l'année en territoire positif. Le repli sur douze mois atteint plus de 40\,\%~--- sans plafond de drawdown pour l'interrompre.
+\item \textbf{2020 année complète (Sharpe $+0.44$, repli $-32.70\,\%$)}~: la récupération post-Covid ramène l'année en territoire positif, mais au prix d'un repli intermédiaire de près d'un tiers du capital~--- sans plafond de drawdown pour l'interrompre.
 
-\item \textbf{2022 Q3 crise GBP (Sharpe $-0.63$, repli $-16.42\,\%$)}~: la crise du \emph{mini-budget} britannique se solde par une perte. Les versions antérieures de ce document présentaient cette fenêtre comme l'une des meilleures de l'historique~; ce n'est plus vrai sous la configuration actuelle.
+\item \textbf{2022 Q3 crise GBP (Sharpe $-0.34$, repli $-14.20\,\%$)}~: la crise du \emph{mini-budget} britannique se solde par une perte. Les versions antérieures de ce document présentaient cette fenêtre comme l'une des meilleures de l'historique~; ce n'est plus vrai sous la configuration actuelle.
 
-\item \textbf{2023 année de hausses (Sharpe $+0.11$, repli $-25.69\,\%$)}~: l'année neutre en rendement, mais pas en risque~: le repli intermédiaire dépasse le quart du capital pour un résultat final quasi nul.
+\item \textbf{2023 année de hausses (Sharpe $-0.43$, repli $-22.46\,\%$)}~: l'année négative de la série, sur les deux moteurs de mesure~--- c'est aussi la seule année négative du compte à l'exécution et la seule fenêtre walk-forward négative.
 
-\item \textbf{2024 année complète (Sharpe $+1.58$, repli $-18.92\,\%$)}~: seconde meilleure fenêtre. Les quatre moteurs sont alignés.
+\item \textbf{2024 année complète (Sharpe $+1.66$, repli $-15.21\,\%$)}~: la meilleure fenêtre. Les quatre moteurs sont alignés.
 \end{itemize}
 
 \subsection{Observations transversales}
@@ -28,7 +28,7 @@
 \begin{itemize}
 \item \textbf{La moitié des épisodes est négative.} Trois Sharpe sur six sont sous zéro. Le portefeuille n'est pas robuste \emph{à tous} les régimes~: il est rentable en moyenne parce que ses bonnes fenêtres sont plus amples que ses mauvaises.
 \item \textbf{Les épisodes de stress ne sont pas absorbés, ils sont subis.} Covid 2020 et la crise GBP 2022 produisent tous deux des pertes. Aucun mécanisme de la stratégie ne réduit l'exposition à l'entrée d'un régime défavorable~--- le ciblage de volatilité réagit à la volatilité réalisée, avec le retard que cela implique.
-\item \textbf{Le repli intermédiaire est systématiquement supérieur au résultat final.} Même l'année neutre 2023 traverse un repli de plus de 25\,\%. Un investisseur qui juge sur la trajectoire, et non sur le solde de fin d'année, aurait vécu une expérience très différente de celle que résume le rendement annuel.
+\item \textbf{Le repli intermédiaire est systématiquement supérieur au résultat final.} Même 2020, positive au bout du compte, traverse un repli de près d'un tiers du capital. Un investisseur qui juge sur la trajectoire, et non sur le solde de fin d'année, aurait vécu une expérience très différente de celle que résume le rendement annuel.
 \end{itemize}
 \end{insightbox}
 
@@ -38,7 +38,7 @@
 \item Crise \emph{subprime} 2007--2008 (absence de données minute FX de qualité pour cette période).
 \item Choc pétrolier 1979--1980 (structurellement différent, non comparable au régime actuel).
 \item Sortie brutale d'un \emph{peg} monétaire (par exemple le CHF de janvier 2015)~--- extension envisageable à la demande.
-\item \textbf{Un marché baissier durable de l'or.} C'est l'omission la plus importante~: la période disponible ne contient aucun régime prolongé défavorable au moteur qui porte l'essentiel du résultat.
+\item \textbf{Un marché baissier durable des métaux, ou une inversion durable de la tendance du yen.} C'est l'omission la plus importante~: la période disponible ne contient aucun régime prolongé défavorable au moteur qui porte $91\,\%$ du résultat, et les trois instruments de ce moteur ont tendu dans le même sens sur toute la fenêtre.
 \end{itemize}
 Le bootstrap par blocs mobiles agit comme compensation partielle à cette limite, mais il réordonne le passé et n'invente pas de régime absent.
 \end{warningbox}

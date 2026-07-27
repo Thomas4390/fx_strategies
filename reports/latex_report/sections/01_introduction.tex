@@ -7,12 +7,12 @@
 \renewcommand{\arraystretch}{1.35}
 \begin{tabular}{p{4.2cm}p{10cm}}
 \toprule
-\textbf{Univers d'investissement} & Paires de devises majeures~: EUR-USD, GBP-USD, USD-JPY, USD-CAD, plus l'or (XAU-USD). Pas d'exposition aux devises émergentes, aux \emph{crosses} exotiques ni aux dérivés structurés. \\
+\textbf{Univers d'investissement} & Paires de devises majeures~: EUR-USD, GBP-USD, USD-JPY, USD-CAD, plus les deux métaux précieux~: l'or (XAU-USD) et l'argent (XAG-USD). Pas d'exposition aux devises émergentes, aux \emph{crosses} exotiques ni aux dérivés structurés. \\
 \textbf{Objectif de rendement} & CAGR cible de l'ordre de \textbf{40\,\%} annualisés. \\
 \textbf{Contrainte de risque} & \textbf{Aucune}. Le plafond de drawdown de 35\,\% des versions antérieures a été retiré sur instruction du mandant, qui a déclaré le risque non contraignant. Le repli est mesuré et rapporté, il ne borne pas le dimensionnement. \\
 \textbf{Horizon} & Multi-annuel (minimum 3~ans recommandé pour réalisation statistique des métriques). \\
 \textbf{Cadre réglementaire} & L'exécution suppose un compte autorisant le levier requis par le dimensionnement retenu. La compatibilité avec les plafonds ESMA retail (30$\times$ sur majors G10) doit être vérifiée auprès du courtier avant tout déploiement. \\
-\textbf{Réserve de capital} & À dimensionner sur le repli d'équité constaté (44\,\%), et non sur un plafond contractuel qui n'existe plus. \\
+\textbf{Réserve de capital} & À dimensionner sur le repli d'équité constaté (50,9\,\%), et non sur un plafond contractuel qui n'existe plus. \\
 \textbf{Rebalancement} & Quotidien, sans adaptation de régime. Pas de réallocation discrétionnaire. \\
 \textbf{Liquidité} & Positions entièrement liquidables sous 24~heures. \\
 \textbf{Statut actuel} & Prêt pour déploiement contrôlé en \emph{paper-trade}. Go-live conditionné à la validation de la check-list de production (section~\ref{sec:production}). \\
@@ -38,18 +38,18 @@ L'ambition de la Stratégie FX Multi-Moteurs est d'assembler des moteurs de rend
 \centering
 \small
 \begin{tabular}{cccc}
-\colorbox{softBlue}{\parbox{3.3cm}{\centering\color{primary}\sffamily\textbf{Moteur 1\\Mean Reversion Intraday}\\[0.2em]\footnotesize 72\,\% de l'allocation\\Retour au VWAP filtré macro\\4~paires, minute}} &
+\colorbox{softBlue}{\parbox{3.3cm}{\centering\color{primary}\sffamily\textbf{Moteur 1\\Mean Reversion Intraday}\\[0.2em]\footnotesize 62\,\% de l'allocation\\Retour au VWAP filtré macro\\4~paires, minute}} &
 \colorbox{softYellow}{\parbox{3.3cm}{\centering\color{accent}\sffamily\textbf{Moteur 2\\Momentum Journalier}\\[0.2em]\footnotesize 9\,\% de l'allocation\\EMA 20/50 + confirmation RSI\\3~paires}} &
 \colorbox{softGreen}{\parbox{3.3cm}{\centering\color{rsiGreen}\sffamily\textbf{Moteur 3\\RSI Journalier}\\[0.2em]\footnotesize 9\,\% de l'allocation\\Mean reversion sur RSI(14)\\3~paires}} &
-\colorbox{lightGrey}{\parbox{3.3cm}{\centering\color{apogeeGold}\sffamily\textbf{Moteur 4\\Momentum Or}\\[0.2em]\footnotesize 10\,\% de l'allocation\\Suivi de tendance\\XAU-USD}} \\[1.2em]
+\colorbox{lightGrey}{\parbox{3.3cm}{\centering\color{apogeeGold}\sffamily\textbf{Moteur 4\\Momentum Multi-Actifs}\\[0.2em]\footnotesize 20\,\% de l'allocation\\Suivi de tendance\\XAU-USD, USD-JPY, XAG-USD}} \\[1.2em]
 \multicolumn{4}{c}{$\Downarrow$} \\[0.3em]
-\multicolumn{4}{c}{\colorbox{lightGrey}{\parbox{12cm}{\centering\color{primary}\sffamily\textbf{Allocation statique 72 / 9 / 9 / 10}\\[0.1em]\footnotesize Pondérations fixes, pas de réallocation discrétionnaire}}} \\[0.6em]
+\multicolumn{4}{c}{\colorbox{lightGrey}{\parbox{12cm}{\centering\color{primary}\sffamily\textbf{Allocation statique 62 / 9 / 9 / 20}\\[0.1em]\footnotesize Pondérations fixes, pas de réallocation discrétionnaire}}} \\[0.6em]
 \multicolumn{4}{c}{$\Downarrow$} \\[0.3em]
 \multicolumn{4}{c}{\colorbox{lightGrey}{\parbox{12cm}{\centering\color{primary}\sffamily\textbf{Couche de ciblage de volatilité}\\[0.1em]\footnotesize Vol cible 0.37, levier maximal 31$\times$, estimateur pessimiste anti look-ahead\\Plafond de drawdown désactivé}}} \\[0.6em]
 \multicolumn{4}{c}{$\Downarrow$} \\[0.3em]
 \multicolumn{4}{c}{\colorbox{primary}{\parbox{12cm}{\centering\color{white}\sffamily\textbf{Équité finale du portefeuille}}}} \\
 \end{tabular}
-\caption{Architecture à quatre moteurs de la Stratégie FX Multi-Moteurs. Allocation statique, puis couche de ciblage de volatilité, puis pipeline d'équité finale. Le trio FX conserve entre ses membres les ratios $80/10/10$ de l'architecture d'origine, ramenés aux 90\,\% que lui laisse la sleeve or.}
+\caption{Architecture à quatre moteurs de la Stratégie FX Multi-Moteurs. Allocation statique, puis couche de ciblage de volatilité, puis pipeline d'équité finale. Les 10~points de capital transférés à la sleeve momentum en juillet~2026 ont été pris sur la seule Mean Reversion Intraday~: les poids absolus du Momentum Journalier et du RSI Journalier sont inchangés, si bien que le trio FX répartit entre ses membres les 80\,\% qui lui restent selon les ratios $77/11/11$.}
 \end{figure}
 
 \subsection{Pourquoi quatre moteurs}
@@ -57,7 +57,8 @@ L'ambition de la Stratégie FX Multi-Moteurs est d'assembler des moteurs de rend
 \begin{itemize}
 \item \textbf{Deux moteurs ne suffisent pas}~: les analyses d'attribution montrent qu'une combinaison à deux moteurs (Mean Reversion Intraday + Momentum Journalier) laisse les années 2019 et 2023 en territoire négatif.
 \item \textbf{Le trio FX seul plafonne}~: sa combinaison non leviérée rend 2,2\,\% pour une volatilité de 5,8\,\%. Poussé par le ciblage de volatilité, son rendement culmine autour de 32\,\% avant que le \emph{drag} de variance ne le fasse retomber. Le mandat de 40\,\% lui était donc inaccessible, quel que soit le levier.
-\item \textbf{L'or lève cette contrainte parce qu'il est quasi orthogonal au trio}~: à 10\,\% de poids, il porte le Sharpe du combiné de 0,66 à 1,08, ce qui déplace le plafond de rendement au-delà de la cible. La cible devient atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+\item \textbf{La sleeve momentum lève cette contrainte parce qu'elle est quasi orthogonale au trio}~: à 20\,\% de poids, elle porte le Sharpe du combiné de 0,66 à environ 1,0 (tableau~\ref{tab:robustness_bootstrap_ci}), ce qui déplace le plafond de rendement au-delà de la cible. La cible devient atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+\item \textbf{Trois instruments plutôt qu'un depuis juillet~2026}~: la sleeve applique le même signal de tendance à l'or, au dollar-yen et à l'argent, chacun recevant un tiers du budget. L'argent, médiocre pris isolément, casse la dépendance du portefeuille à la seule trajectoire de l'or~; le dollar-yen y ajoute un \emph{carry} de portage positif, alors que l'or coûte des frais de portage.
 \item \textbf{Un cinquième signal a été évalué et retiré}~: une composante \emph{cross-section momentum} présentait une corrélation supérieure à 0,3 avec le Momentum Journalier, sans apport au Sharpe combiné.
 \end{itemize}
 
@@ -66,5 +67,5 @@ L'ambition de la Stratégie FX Multi-Moteurs est d'assembler des moteurs de rend
 \end{insightbox}
 
 \begin{insightbox}
-\textbf{Le revers de cette leçon apparaît à l'exécution.} L'orthogonalité qui justifie l'entrée de l'or explique aussi qu'il porte, à lui seul, près de 80\,\% du résultat du portefeuille sur la période mesurée~: la diversification a servi à \emph{autoriser} le rendement visé, pas à le répartir. Voir la section~\ref{sec:limitations}.
+\textbf{Le revers de cette leçon apparaît à l'exécution.} L'orthogonalité qui justifie l'entrée de la sleeve momentum explique aussi qu'elle porte, à elle seule, 91\,\% du résultat du portefeuille sur la période mesurée~: la diversification a servi à \emph{autoriser} le rendement visé, pas à le répartir. Le passage de l'or seul au trio d'instruments a diversifié la sleeve, pas le portefeuille~--- la concentration s'est même accentuée avec son poids. Voir la section~\ref{sec:limitations}.
 \end{insightbox}

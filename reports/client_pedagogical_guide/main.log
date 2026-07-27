@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 13:22
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 18:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1691,6 +1691,16 @@ Underfull \hbox (badness 10000) in paragraph at lines 225--225
  []
 
 
+Underfull \hbox (badness 10000) in paragraph at lines 225--226
+[]|\TU/LatinModernRoman(0)/m/n/9 XAU/USD,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 225--226
+\TU/LatinModernRoman(0)/m/n/9 USD/JPY,
+ []
+
+
 Underfull \hbox (badness 3590) in paragraph at lines 226--226
 []|\TU/LatinModernRoman(0)/m/n/9 Session 8-16 UTC,
  []
@@ -1737,41 +1747,41 @@ File: figures/equity_combined_logscale.png Graphic file (type bmp)
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 26
-5.
+6.
 
 [6]
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 308.
+(Font)              scaled to size 10.95pt on input line 309.
  [7]
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 347.
+(Font)              scaled to size 10.0pt on input line 348.
 
-Overfull \hbox (3.01082pt too wide) in paragraph at lines 351--351
+Overfull \hbox (3.01082pt too wide) in paragraph at lines 352--352
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_SessionStart| 
  []
 
 
-Underfull \hbox (badness 1735) in paragraph at lines 352--353
+Underfull \hbox (badness 1735) in paragraph at lines 353--354
 []|\TU/LatinModernRoman(0)/m/n/10 Heure UTC de fin. Couvre l’overlap Londres /
  []
 
 
-Overfull \hbox (8.26082pt too wide) in paragraph at lines 353--353
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 354--354
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_TimeStopHours| 
  []
 
 
-Overfull \hbox (8.26082pt too wide) in paragraph at lines 354--354
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 355--355
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_ForcedCloseHr| 
  []
 
 
-Overfull \hbox (3.01082pt too wide) in paragraph at lines 355--355
+Overfull \hbox (3.01082pt too wide) in paragraph at lines 356--356
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_SpreadThresh| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 356--356
+Underfull \hbox (badness 10000) in paragraph at lines 357--357
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_NewsFilter-
  []
 
@@ -1779,7 +1789,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 356--356
 File: figures/sleeve_mr_macro_equity.png Graphic file (type bmp)
 <figures/sleeve_mr_macro_equity.png>
  [9] [10]
-Overfull \hbox (3.96658pt too wide) in paragraph at lines 415--416
+Overfull \hbox (3.96658pt too wide) in paragraph at lines 416--417
 []\TU/LatinModernRoman(0)/b/n/10.95 Sizing par paire à volatilité ciblée \TU/La
 tinModernRoman(0)/m/sc/10.95 : le levier appliqué à chaque paire est $[]\OT1/cm
 r/m/n/10.95 (0[]10 / \OML/cmm/m/it/10.95 ^^[[];  \OT1/cmr/m/n/10.95 3)$\TU/Lati
@@ -1790,112 +1800,115 @@ nModernRoman(0)/m/sc/10.95 ,
 File: figures/sleeve_ts_momentum_3p_equity.png Graphic file (type bmp)
 <figures/sleeve_ts_momentum_3p_equity.png>
  [12] [13] [14]
-Overfull \hbox (8.26082pt too wide) in paragraph at lines 565--565
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 566--566
 []|\TU/LatinModernMono(0)/m/n/10 Inp_RSI_TimeStopDays| 
  []
 
 File: figures/sleeve_rsi_daily_3p_equity.png Graphic file (type bmp)
 <figures/sleeve_rsi_daily_3p_equity.png>
-[15]
-Underfull \hbox (badness 4792) in paragraph at lines 636--641
-[]\TU/LatinModernRoman(0)/b/n/10.95 Le moteur est \TU/LatinModernRoman(0)/b/it/
-10.95 long-only\TU/LatinModernRoman(0)/b/n/10.95 . \TU/LatinModernRoman(0)/m/sc
-/10.95 Il n’y a pas de vente à découvert sur l’or
+[15] [16]
+Underfull \hbox (badness 10000) in paragraph at lines 672--672
+[]|\TU/LatinModernMono(0)/m/n/10 XAUUSD,
  []
 
-[16]
-Overfull \hbox (13.78516pt too wide) in paragraph at lines 658--658
+
+Underfull \hbox (badness 10000) in paragraph at lines 672--672
+\TU/LatinModernMono(0)/m/n/10 USDJPY,
+ []
+
+
+Overfull \hbox (13.78516pt too wide) in paragraph at lines 673--673
 []|$\OT1/cmr/m/n/10 40/60/120/250$| 
  []
 
 File: figures/sleeve_gold_momentum_equity.png Graphic file (type bmp)
 <figures/sleeve_gold_momentum_equity.png>
-[17] [18]
+[17] [18] [19]
 File: figures/gold_sizing_martingale.png Graphic file (type bmp)
 <figures/gold_sizing_martingale.png>
 File: figures/gold_sizing_grid.png Graphic file (type bmp)
 <figures/gold_sizing_grid.png>
- [19] [20]
+ [20] [21]
 File: figures/gold_sizing_outcome.png Graphic file (type bmp)
 <figures/gold_sizing_outcome.png>
- [21] [22] [23]
-Overfull \hbox (51.05196pt too wide) in paragraph at lines 974--975
+ [22] [23]
+Overfull \hbox (51.05196pt too wide) in paragraph at lines 1006--1007
 []\TU/LatinModernRoman(0)/m/sc/10.95 Contrairement au disjoncteur de \TU/LatinM
 odernRoman(0)/m/it/10.95 drawdown\TU/LatinModernRoman(0)/m/sc/10.95 , ce mécani
 sme-ci est \TU/LatinModernRoman(0)/b/n/10.95 actif par défaut \TU/LatinModernRo
 man(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10 Inp_EnableMarginCap
  []
 
-[24]
-Overfull \hbox (10.04738pt too wide) in paragraph at lines 1056--1057
+[24] [25]
+Overfull \hbox (10.04738pt too wide) in paragraph at lines 1089--1090
 []\TU/LatinModernRoman(0)/m/sc/10.95 La stratégie modélise par défaut $\OT1/cmr
 /m/n/10.95 5$ \TU/LatinModernRoman(0)/m/sc/10.95 bps de commission par côté (\T
 U/LatinModernMono(0)/m/n/10 Inp_CommissionBpsPerSide=5,0\TU/LatinModernRoman(0)
 /m/sc/10.95 ),
  []
 
-[25]
-Overfull \hbox (7.81992pt too wide) in paragraph at lines 1121--1121
+[26]
+Overfull \hbox (7.81992pt too wide) in paragraph at lines 1163--1163
 []|\TU/LatinModernMono(0)/m/n/10 Inp_AllocGoldMomentum| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1124--1125
+Underfull \hbox (badness 10000) in paragraph at lines 1166--1167
 []|\TU/LatinModernRoman(0)/m/n/10 Seuil du coupe-circuit, utilisé uniquement si
 
  []
 
-[26]
-Overfull \hbox (7.81992pt too wide) in paragraph at lines 1141--1141
+
+Overfull \hbox (7.81992pt too wide) in paragraph at lines 1183--1183
 []|\TU/LatinModernMono(0)/m/n/10 Inp_GlobalMaxLeverage| 
  []
 
-
-Overfull \hbox (17.87946pt too wide) in paragraph at lines 1159--1159
+[27]
+Overfull \hbox (17.87946pt too wide) in paragraph at lines 1202--1202
 []|\TU/LatinModernMono(0)/m/n/10 Inp_CommissionBpsPerSide| 
  []
 
 
-Overfull \hbox (12.18898pt too wide) in paragraph at lines 1176--1176
+Overfull \hbox (12.18898pt too wide) in paragraph at lines 1219--1219
 []|\TU/LatinModernMono(0)/m/n/10 Inp_MR_NewsFilterEnabled| 
  []
 
 
-Overfull \hbox (38.47542pt too wide) in paragraph at lines 1177--1177
+Overfull \hbox (38.47542pt too wide) in paragraph at lines 1220--1220
 []|\TU/LatinModernMono(0)/m/n/10 fred_api_key.txt| 
  []
 
 
-Overfull \hbox (43.72542pt too wide) in paragraph at lines 1178--1178
+Overfull \hbox (43.72542pt too wide) in paragraph at lines 1221--1221
 []|\TU/LatinModernMono(0)/m/n/10 macro_history.csv| 
  []
 
-[27]
-Underfull \hbox (badness 1762) in paragraph at lines 1221--1221
+[28]
+Underfull \hbox (badness 1762) in paragraph at lines 1265--1265
 []|$\OML/cmm/m/it/10 > \OT1/cmr/m/n/10 1[]0$ \TU/LatinModernRoman(0)/m/n/10 acc
 ep-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1226--1226
-[]|$\OMS/cmsy/m/n/10 ^^X \OT1/cmr/m/n/10 800$ \TU/LatinModernRoman(0)/m/n/10 su
+Underfull \hbox (badness 10000) in paragraph at lines 1270--1270
+[]|$\OMS/cmsy/m/n/10 ^^X \OT1/cmr/m/n/10 900$ \TU/LatinModernRoman(0)/m/n/10 su
 r
  []
 
-[28] [29]
-Overfull \hbox (59.78482pt too wide) in paragraph at lines 1298--1299
+[29] [30]
+Overfull \hbox (59.78482pt too wide) in paragraph at lines 1348--1349
 []\TU/LatinModernRoman(0)/m/sc/10.95 Si l’API FRED est indisponible plus d’une 
 journée, régénérer manuellement le fichier \TU/LatinModernMono(0)/m/n/10.95 mac
 ro_history.csv
  []
 
-[30]
-Overfull \hbox (6.31741pt too wide) in paragraph at lines 1356--1357
+[31]
+Overfull \hbox (6.31741pt too wide) in paragraph at lines 1406--1407
    [] \TU/LatinModernRoman(0)/m/sc/10.95 Ratio rendement excédentaire / volatil
 ité, indicateur d’efficacité d’uti-
  []
 
-[31] [32] [33] (./main.aux)
+[32] [33] [34] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1906,12 +1919,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 41687 strings out of 468173
- 952189 string characters out of 5435520
- 1538240 words of memory out of 5000000
- 69776 multiletter control sequences out of 15000+600000
+ 41689 strings out of 468173
+ 952224 string characters out of 5435520
+ 1537253 words of memory out of 5000000
+ 69778 multiletter control sequences out of 15000+600000
  636493 words of font info for 138 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11207b,1397s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11207b,1407s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (33 pages).
+Output written on main.pdf (34 pages).

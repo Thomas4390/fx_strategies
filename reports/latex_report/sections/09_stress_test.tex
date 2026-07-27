@@ -20,9 +20,9 @@ On applique un \emph{bootstrap} par blocs mobiles sur la série de rendements du
 \begin{insightbox}
 \textbf{Trois observations fondamentales~:}
 \begin{enumerate}
-\item \textbf{Le repli médian des trajectoires est de $-52.47\,\%$, et son 5\textsuperscript{e} percentile de $-74.66\,\%$.} Autrement dit, une trajectoire sur vingt subirait un repli d'environ trois quarts du capital. C'est le profil de risque qu'implique la cible de volatilité retenue, mesuré sans plafond de drawdown pour l'interrompre.
-\item \textbf{97.7\,\% des trajectoires sont positives} (CAGR strictement supérieur à zéro). L'\emph{edge} lui-même est robuste à l'ordre temporel de l'historique~: c'est son \emph{amplitude}, pas son signe, que le dimensionnement met en jeu.
-\item \textbf{Fraction \enquote{cible atteinte}~: 18.9\,\%} des trajectoires tombent dans la bande de CAGR visée. La dispersion est large --- du 5\textsuperscript{e} au 95\textsuperscript{e} percentile, le CAGR va de $5.43\,\%$ à $67.62\,\%$. Atteindre la cible sur une trajectoire donnée relève donc pour une part du tirage.
+\item \textbf{Le repli médian des trajectoires est de $-49.23\,\%$, et son 5\textsuperscript{e} percentile de $-70.83\,\%$.} Autrement dit, une trajectoire sur vingt subirait un repli de plus des deux tiers du capital. C'est le profil de risque qu'implique la cible de volatilité retenue, mesuré sans plafond de drawdown pour l'interrompre.
+\item \textbf{99.1\,\% des trajectoires sont positives} (CAGR strictement supérieur à zéro). L'\emph{edge} lui-même est robuste à l'ordre temporel de l'historique~: c'est son \emph{amplitude}, pas son signe, que le dimensionnement met en jeu.
+\item \textbf{Fraction \enquote{cible atteinte}~: 20.0\,\%} des trajectoires tombent dans la bande de CAGR visée. La dispersion est large --- du 5\textsuperscript{e} au 95\textsuperscript{e} percentile, le CAGR va de $9.24\,\%$ à $67.49\,\%$. Atteindre la cible sur une trajectoire donnée relève donc pour une part du tirage.
 \end{enumerate}
 \end{insightbox}
 
@@ -31,5 +31,5 @@ On applique un \emph{bootstrap} par blocs mobiles sur la série de rendements du
 Le même rapport de stress conduit une analyse de sensibilité sur le couple (volatilité cible, levier maximal). Le tableau reproduit en section~\ref{sec:overlay} montre un Sharpe pratiquement constant sur toute la grille. Cela ne signifie pas que le choix est indifférent~: le ciblage de volatilité déplace le portefeuille le long d'une même droite rendement--risque, si bien qu'un réglage plus ambitieux achète du rendement au prix exactement proportionnel en repli. La robustesse porte sur la \emph{qualité} du signal, pas sur le niveau de risque, qui reste un choix.
 
 \begin{warningbox}
-\textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique disponible contient déjà. Il réordonne le passé, il n'invente pas de crise. En particulier, il ne teste pas un régime durablement défavorable à l'or, alors que ce moteur porte l'essentiel du résultat. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, la section suivante présente un rejeu explicite de scénarios historiques sélectionnés.
+\textbf{Limite inhérente du bootstrap~:} le ré-échantillonnage préserve la structure autocorrélée locale mais \emph{n'injecte pas} de chocs sévères au-delà de ce que l'historique disponible contient déjà. Il réordonne le passé, il n'invente pas de crise. En particulier, il ne teste pas un régime durablement défavorable aux tendances des métaux et du yen, alors que ce moteur porte $91\,\%$ du résultat. Il ne teste donc pas la robustesse à un scénario de type \enquote{crise financière 2008} ou \enquote{choc pétrolier 1979}. Pour compléter, la section suivante présente un rejeu explicite de scénarios historiques sélectionnés.
 \end{warningbox}

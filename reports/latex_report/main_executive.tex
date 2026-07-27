@@ -73,11 +73,12 @@ Un portefeuille à quatre moteurs de rendement quasi orthogonaux\par}
 
 \begin{thesisbox}
 \textbf{En une ligne~:} portefeuille combinant mean reversion intraday filtré macro
-(72\,\%), momentum daily sur 3~paires (9\,\%), mean reversion RSI daily sur 3~paires
-(9\,\%) et momentum sur l'or (10\,\%), avec ciblage de volatilité global.
-\textbf{À l'exécution~: 35.4\,\% de croissance annualisée, Sharpe
-0.89, repli d'équité maximal 44\,\%} sur
-851~transactions. Résultat concentré à près de 80\,\% sur la sleeve or.
+(62\,\%), momentum daily sur 3~paires (9\,\%), mean reversion RSI daily sur 3~paires
+(9\,\%) et momentum sur trois instruments directionnels~--- or, dollar-yen, argent
+(20\,\%), avec ciblage de volatilité global.
+\textbf{À l'exécution~: 47.3\,\% de croissance annualisée, Sharpe
+0.97, repli d'équité maximal 50.9\,\%} sur
+909~transactions. Résultat concentré à 91\,\% sur la sleeve momentum.
 \textbf{Recommandée pour paper-trade} avant tout capital réel.
 \end{thesisbox}
 
@@ -118,7 +119,7 @@ checklist de production complète, se référer au rapport principal \texttt{mai
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} stratégie Apogee est un
 portefeuille quantitatif qui combine quatre moteurs de rendement structurellement
-indépendants sur les devises majeures et l'or. Le mandat vise un rendement annualisé
+indépendants sur les devises majeures et les métaux précieux. Le mandat vise un rendement annualisé
 de l'ordre de \textbf{40\,\%}. Le plafond de repli des versions antérieures a été
 \textbf{retiré à la demande du mandant}~: le risque n'est plus une contrainte, il en
 est une conséquence mesurée.
@@ -131,11 +132,14 @@ quantité et ne sont pas transposables l'un à l'autre.
 \input{tables/mt5_reference.tex}
 
 \begin{insightbox}
-\textbf{Le résultat est concentré.} La sleeve or représente 10\,\% de l'allocation et
-80\,\% du résultat net, pour 35~transactions sur
-851. La performance annoncée dépend donc d'un petit nombre de positions,
-et la période mesurée a été exceptionnellement favorable à l'or. Aucun ratio de Sharpe
-ne rend visible cette dépendance.
+\textbf{Le résultat est concentré, et il l'est davantage qu'avant.} La sleeve momentum
+--- or, dollar-yen et argent, équipondérés --- représente 20\,\% de l'allocation et
+91\,\% du résultat net, pour 93~transactions sur
+909. Doubler son poids en juillet~2026 a rendu son comportement plus régulier (taux de
+gain 39,8\,\% contre 31,4\,\% pour l'or seul) mais a \emph{accentué} la concentration~:
+la performance annoncée dépend d'un petit nombre de positions, et la période mesurée a
+été exceptionnellement favorable aux tendances des métaux et du yen. Aucun ratio de
+Sharpe ne rend visible cette dépendance.
 \end{insightbox}
 
 \input{tables/mt5_by_sleeve.tex}
@@ -143,17 +147,19 @@ ne rend visible cette dépendance.
 \paragraph{Quatre conclusions pour la décision.}
 \begin{enumerate}
 \item \textbf{Le mandat de rendement est tenu} sur la période mesurée~:
-35.4\,\% de croissance annualisée, pour un profit net de
-\$40,267 sur un dépôt de \$10,000.
-\item \textbf{Le repli maximal d'équité atteint 44\,\%}~---
+47.3\,\% de croissance annualisée, pour un profit net de
+\$68,534 sur un dépôt de \$10,000.
+\item \textbf{Le repli maximal d'équité atteint 50.9\,\%}~---
 prix direct du niveau de risque choisi, le dimensionnement multipliant le risque dans
-la proportion exacte où il multiplie le rendement.
-\item \textbf{La performance repose sur une sleeve}~: retirer l'or ramènerait le
-résultat à environ un cinquième de son niveau.
-\item \textbf{Cinq tests de robustesse sur six sont franchis}~; celui de
-sur-ajustement échoue de peu (probabilité $0.532$ pour un seuil de $0.5$), ce qui
-reflète le grand nombre de configurations évaluées sur la même fenêtre historique~---
-voir section~5.
+la proportion exacte où il multiplie le rendement. Le doublement de la sleeve momentum
+a fait monter le rendement \emph{et} le repli~; le rapport des deux ne s'améliore que
+légèrement (Sharpe 0.97 contre 0.89), et c'est sur ce seul critère qu'il se justifie.
+\item \textbf{La performance repose sur une sleeve}~: retirer la sleeve momentum
+ramènerait le résultat à moins d'un dixième de son niveau.
+\item \textbf{Les six tests de robustesse sont franchis}~; celui de sur-ajustement,
+qui échouait sur l'allocation précédente, passe désormais (probabilité $0.335$ pour un
+seuil de $0.5$) sans effacer le grand nombre de configurations évaluées sur la même
+fenêtre historique~--- voir section~5.
 \end{enumerate}
 
 
@@ -166,7 +172,7 @@ voir section~5.
 
 La stratégie repose sur \textbf{quatre moteurs de rendement quasi orthogonaux}, dont les
 corrélations inter-moteurs sont structurellement faibles voire négatives. L'allocation
-est \emph{statique} ($72/9/9/10$) --- les tests d'allocations \emph{regime-adaptive}
+est \emph{statique} ($62/9/9/20$) --- les tests d'allocations \emph{regime-adaptive}
 sous-performent sur la période d'étude, et le \emph{risk-parity} inverse-vol fait jeu
 égal sans être retenu à ce stade.
 
@@ -177,7 +183,7 @@ sous-performent sur la période d'étude, et le \emph{risk-parity} inverse-vol f
 \multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Moteur 1 --- MR Macro}}} &
 \multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Moteur 2 --- TS Momentum}}} &
 \multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Moteur 3 --- RSI Daily}}} \\[0.2em]
-\multicolumn{1}{c}{\small 72\,\% du portefeuille} &
+\multicolumn{1}{c}{\small 62\,\% du portefeuille} &
 \multicolumn{1}{c}{\small 9\,\% du portefeuille} &
 \multicolumn{1}{c}{\small 9\,\% du portefeuille} \\
 \midrule
@@ -191,10 +197,13 @@ modeste mais diversificateur anti-corrélé. \\[0.5em]
 \end{center}
 
 \vspace{0.4em}
-\noindent\small\textbf{Moteur 4 --- Momentum Or} (10\,\% du portefeuille)~: suivi de
-tendance journalier sur XAU-USD, dimensionnement plat, couche de volatilité propre.
+\noindent\small\textbf{Moteur 4 --- Momentum Multi-Actifs} (20\,\% du portefeuille)~:
+suivi de tendance journalier sur XAU-USD, USD-JPY et XAG-USD, budget réparti à parts
+égales entre les trois, dimensionnement plat, couche de volatilité propre.
 Quasi orthogonal au trio FX, il rend le mandat de rendement atteignable~--- et
-concentre à lui seul près de 80\,\% du résultat mesuré à l'exécution.\normalsize
+concentre à lui seul $91\,\%$ du résultat mesuré à l'exécution. Le dollar-yen y apporte
+un portage positif, l'argent y casse la dépendance à la seule trajectoire de
+l'or.\normalsize
 
 \begin{insightbox}
 \textbf{La leçon méthodologique centrale~:} un moteur à Sharpe standalone faible peut
@@ -225,7 +234,7 @@ déleveragant pendant les phases de rebond, et le mandat ne fixe plus de seuil d
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{equity_combined_logscale.png}
-\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération ni ciblage de volatilité}~; la courbe épaisse bordeaux est le portefeuille combiné après application des poids $72/9/9/10$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 37\,\%$, plafond $31\times$). La différence de niveau reflète l'amplification par le levier, pas une supériorité intrinsèque du combiné.}
+\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération ni ciblage de volatilité}~; la courbe épaisse bordeaux est le portefeuille combiné après application des poids $62/9/9/20$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 37\,\%$, plafond $31\times$). La différence de niveau reflète l'amplification par le levier, pas une supériorité intrinsèque du combiné.}
 \end{figure}
 
 \begin{minipage}{0.55\textwidth}
@@ -235,10 +244,10 @@ déleveragant pendant les phases de rebond, et le mandat ne fixe plus de seuil d
 \toprule
 Métrique & Valeur \\
 \midrule
-CAGR & 25.75\,\% \\
-Volatilité annualisée & 36.82\,\% \\
-Max Drawdown & $-58.49\,\%$ \\
-Sharpe Ratio & 0.81 \\
+CAGR & 23.08\,\% \\
+Volatilité annualisée & 37.00\,\% \\
+Max Drawdown & $-55.00\,\%$ \\
+Sharpe Ratio & 0.75 \\
 Fenêtres positives walk-forward & 6/7 \\
 \bottomrule
 \end{tabular}
@@ -247,10 +256,10 @@ Fenêtres positives walk-forward & 6/7 \\
 \small
 \textbf{Commentaires par année} \\[0.3em]
 \begin{itemize}[leftmargin=0.8em]
-\item 2019 ($+2.14$)~: meilleure fenêtre de la série
-\item 2021 ($-0.56$)~: seule fenêtre négative
-\item 2024 ($+2.09$)~: quatre moteurs alignés
-\item 2025--2026-04 ($+3.71$)~: fenêtre de quinze mois, recouvre en partie la tranche gelée
+\item 2022 ($+2.31$)~: meilleure fenêtre hors dernière tranche
+\item 2023 ($-0.20$)~: seule fenêtre négative
+\item 2024 ($+2.21$)~: quatre moteurs alignés
+\item 2025--2026-04 ($+3.45$)~: dernière fenêtre, recouvre en partie la tranche gelée
 \end{itemize}
 \end{minipage}
 
@@ -266,16 +275,16 @@ Fenêtres positives walk-forward & 6/7 \\
 
 \textbf{Fenêtre hors échantillon.} Un vrai surajustement aurait typiquement produit
 une dégradation sévère (Sharpe qui passe de $>1$ à proche de zéro). Ici le Sharpe hors
-échantillon atteint 2.94 contre 0.81 en in-sample, et le repli
+échantillon atteint 3.02 contre 0.75 en in-sample, et le repli
 maximal y est nettement plus faible. Cela réfute un surajustement \emph{majeur}, sans
 établir que la performance se reproduira~--- le test de sur-ajustement de la section~5
-échoue de peu. Le CAGR annualisé sur cette fenêtre courte n'est pas une prévision~: il
+passe, mais de peu. Le CAGR annualisé sur cette fenêtre courte n'est pas une prévision~: il
 extrapole quelques mois particulièrement favorables.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{oos_zoom.png}
-\caption{Zoom sur la fenêtre hors échantillon, rebasée à 100 au début de la fenêtre. Le repli maximal y atteint $-19.37\,\%$ contre $-58.49\,\%$ en in-sample.}
+\caption{Zoom sur la fenêtre hors échantillon, rebasée à 100 au début de la fenêtre. Le repli maximal y atteint $-17.84\,\%$ contre $-55.00\,\%$ en in-sample.}
 \end{figure}
 
 \textbf{Bootstrap historique par blocs mobiles sur la période complète.}
@@ -284,13 +293,13 @@ extrapole quelques mois particulièrement favorables.
 
 \begin{insightbox}
 \textbf{Trois observations clés du stress test~:}
-(1) le repli médian des trajectoires est de $-52.5\,\%$ et son
-5\textsuperscript{e}~percentile de $-74.7\,\%$~--- une trajectoire
-sur vingt perdrait environ trois quarts du capital, sans plafond pour l'interrompre~;
-(2) 97.7\,\% des trajectoires restent positives~: c'est l'amplitude
+(1) le repli médian des trajectoires est de $-49.2\,\%$ et son
+5\textsuperscript{e}~percentile de $-70.8\,\%$~--- une trajectoire
+sur vingt perdrait plus des deux tiers du capital, sans plafond pour l'interrompre~;
+(2) 99.1\,\% des trajectoires restent positives~: c'est l'amplitude
 du risque qui est en jeu, pas le signe de l'\emph{edge}~;
-(3) la fraction \enquote{cible atteinte} est de 18.9\,\%,
-le CAGR allant de $5.4\,\%$ à $67.6\,\%$ entre les
+(3) la fraction \enquote{cible atteinte} est de 20.0\,\%,
+le CAGR allant de $9.2\,\%$ à $67.5\,\%$ entre les
 5\textsuperscript{e} et 95\textsuperscript{e} percentiles.
 \end{insightbox}
 
@@ -305,7 +314,8 @@ le CAGR allant de $5.4\,\%$ à $67.6\,\%$ entre les
 Le rapport complet applique des tests statistiques exigeants qui corrigent les trois
 biais classiques~: bruit d'estimation sur échantillon fini, biais de sélection lorsqu'on
 rapporte la meilleure configuration parmi plusieurs testées, et dépendance temporelle
-des rendements. Cinq d'entre eux sont franchis~; celui de sur-ajustement échoue.
+des rendements. Les six sont franchis, y compris celui de sur-ajustement, qui échouait
+sur l'allocation précédente.
 
 \input{tables/robustness_verdict_summary.tex}
 
@@ -319,14 +329,15 @@ positive, ce qui est la condition statistique minimale de présence d'un \emph{e
 \end{figure}
 
 \begin{insightbox}
-\textbf{L'\emph{edge} résiste, la sélection est en cause.} Le Sharpe observé dépasse
-largement l'espérance du maximum sous l'hypothèse nulle d'absence d'\emph{edge}, et il
-survit à la correction pour tests multiples (ratio de survie $79\,\%$). En revanche, la
-probabilité de surajustement calculée par validation croisée combinatoire atteint
-$53.2\,\%$, au-dessus du seuil de danger de $50\,\%$~: plus de deux cents configurations
-ont été évaluées sur la même fenêtre historique, et cela se paie. C'est la raison pour
-laquelle une tranche de données a été gelée et pour laquelle le \emph{paper-trade}
-préalable n'est pas une formalité.
+\textbf{L'\emph{edge} résiste~; la sélection reste le point faible.} Le Sharpe observé
+dépasse largement l'espérance du maximum sous l'hypothèse nulle d'absence d'\emph{edge},
+et il survit à la correction pour tests multiples (ratio de survie $79\,\%$). La
+probabilité de surajustement calculée par validation croisée combinatoire tombe à
+$33.5\,\%$, sous le seuil de danger de $50\,\%$~--- elle était à $53.2\,\%$, en échec,
+sur l'allocation précédente. La marge reste modeste, et plus de deux cents configurations
+ont été évaluées sur la même fenêtre historique. C'est la raison pour laquelle une
+tranche de données a été gelée et pour laquelle le \emph{paper-trade} préalable n'est
+pas une formalité.
 \end{insightbox}
 
 
@@ -349,7 +360,7 @@ fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.532$~: dans un peu moins de la moitié des découpages temporels possibles seulement, le classement reste stable. C'est au-dessus du seuil de danger de $0.5$.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.335$~: dans deux découpages temporels sur trois, le classement reste stable. C'est sous le seuil de danger de $0.5$, alors que l'allocation précédente échouait à $0.532$.}
 \end{figure}
 
 
@@ -371,22 +382,26 @@ avec la seule fenêtre walk-forward négative.}
 \vspace{0.3em}
 
 \begin{thesisbox}
-\textbf{Cinq tests de robustesse sur six sont franchis~; celui de sur-ajustement
-échoue.} Les risques résiduels ci-dessous persistent \emph{malgré} cette validation, et
-deux d'entre eux portent sur la nature même de la performance plutôt que sur sa mesure.
+\textbf{Les six tests de robustesse sont franchis.} Les risques résiduels ci-dessous
+persistent \emph{malgré} cette validation, et deux d'entre eux portent sur la nature même
+de la performance plutôt que sur sa mesure.
 Ils imposent la discipline de déploiement de la section~8.
 \end{thesisbox}
 
 \paragraph{Six avertissements à retenir.}
 \begin{enumerate}[leftmargin=1.2em]
-\item \textbf{Le résultat repose sur une seule sleeve} --- l'or produit près de 80\,\%
-du profit pour 10\,\% de l'allocation, sur une période de hausse exceptionnelle du
-métal. Action~: suivi de la contribution par sleeve, réexamen du poids sur données
-fraîches.
-\item \textbf{Le test de sur-ajustement échoue} ($0.532$ contre un seuil de $0.5$).
-Action~: tranche de données gelée, \emph{paper-trade} $\geq 3$~mois avant capital réel.
+\item \textbf{Le résultat repose sur une seule sleeve, plus qu'avant} --- la sleeve
+momentum produit $91\,\%$ du profit pour $20\,\%$ de l'allocation, sur une période de
+hausse exceptionnelle des métaux et de tendance longue du yen~; c'était $80\,\%$ pour
+$10\,\%$ avant juillet~2026. À ce poids, elle porte environ la moitié du budget de
+risque. Action~: suivi de la contribution par sleeve et par instrument, réexamen du
+poids sur données fraîches.
+\item \textbf{La sélection a consommé du pouvoir statistique} --- le test de
+sur-ajustement passe ($0.335$ contre un seuil de $0.5$) mais le poids de la sleeve
+momentum a été arrêté à la borne du domaine testé. Action~: tranche de données gelée,
+\emph{paper-trade} $\geq 3$~mois avant capital réel.
 \item \textbf{Aucun coupe-circuit n'est actif} --- le plafonnement de drawdown est
-désactivé et le mandat ne fixe plus de seuil. Repli d'équité constaté~: 44\,\%.
+désactivé et le mandat ne fixe plus de seuil. Repli d'équité constaté~: 50.9\,\%.
 Action~: dimensionner la réserve sur ce chiffre, plafond réactivable à la demande.
 \item \textbf{Le dimensionnement multiplie risque et rendement à parts égales} ---
 paramètre unique, documenté, abaissable sans toucher aux signaux.

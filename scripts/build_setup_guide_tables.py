@@ -20,6 +20,7 @@ Usage :
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -260,6 +261,11 @@ def render_row(name: str, values: dict[str, str]) -> str:
     role = ROLES[name].replace("{v}", fmt_value(name, values[name]))
     if name.endswith("_Pairs"):
         role = role.replace("{n}", str(n_pairs(values[name])))
+    # Une valeur CSV sans espace (`XAUUSD,USDJPY,XAGUSD`) est un mot unique pour
+    # TeX : elle débordait de sa colonne et recouvrait la colonne « Rôle » du
+    # guide. Un point de coupure après chaque virgule suffit, et reste sans
+    # effet sur les valeurs qui tiennent déjà.
+    value = re.sub(r",(?!\s)", ",\\\\allowbreak ", value)
     return f"\\code{{{label}}} & \\metric{{{value}}} & {role} \\\\"
 
 

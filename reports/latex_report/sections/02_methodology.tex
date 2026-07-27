@@ -17,6 +17,7 @@ L'exécution simulée est délibérément conservative~: slippage de 15~points d
 \midrule
 EUR-USD, GBP-USD, USD-JPY, USD-CAD & minute & Moteur~1 (close et VWAP intraday) \\
 Idem, resamplées & journalière & Moteurs~2 et~3 (signaux EMA et RSI) \\
+XAU-USD, USD-JPY, XAG-USD & journalière & Moteur~4 (tendance multi-horizons) \\
 Spread 10Y--2Y des bons du Trésor US & journalière & Filtre macro du Moteur~1 \\
 Taux de chômage US & mensuelle & Filtre macro du Moteur~1 \\
 \bottomrule
@@ -33,7 +34,7 @@ Les séries FX minute sont strictement intersectées entre les paires (pas de \e
 \end{itemize}
 
 \begin{warningbox}
-\textbf{Point de transparence sur le caractère de l'OOS~:} la fenêtre hors échantillon est un découpage \emph{ex-post}, effectué lorsque les données 2025-04 et postérieures sont devenues disponibles. Il ne s'agit donc pas d'un véritable \emph{holdout} pré-engagé avant le design. Malgré cette limite, le résultat reste significatif parce que le Sharpe OOS est strictement supérieur à l'in-sample ($1.44$ contre $0.94$)~--- un surajustement authentique produirait systématiquement une dégradation hors période de conception, pas une amélioration.
+\textbf{Point de transparence sur le caractère de l'OOS~:} la fenêtre hors échantillon est un découpage \emph{ex-post}, effectué lorsque les données 2025-04 et postérieures sont devenues disponibles. Il ne s'agit donc pas d'un véritable \emph{holdout} pré-engagé avant le design. Malgré cette limite, le résultat reste significatif parce que le Sharpe OOS est strictement supérieur à l'in-sample ($3.02$ contre $0.75$)~--- un surajustement authentique produirait systématiquement une dégradation hors période de conception, pas une amélioration.
 \end{warningbox}
 
 \subsection{Contrôle anti look-ahead}

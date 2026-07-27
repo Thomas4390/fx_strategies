@@ -86,8 +86,8 @@ l'usage standard de MetaTrader.
 {\small\color{slateGrey}\sffamily
 À la fin de ce guide, vous aurez : (i)~MT5 configuré avec le broker recommandé,
 (ii)~la stratégie compilée et chargeable en un drag-and-drop, (iii)~un backtest
-\textbf{Sharpe~$\approx 0.89$, repli d'équité maximal
-$44\,\%$, 851~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
+\textbf{Sharpe~$\approx 0.97$, repli d'équité maximal
+$50{,}9\,\%$, 909~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
 
 \vfill
 
@@ -120,8 +120,9 @@ $44\,\%$, 851~trades} reproductible localement, et (iv)~la procédure pour bascu
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{F}{xMultiSleeve} est un Expert
 Advisor MQL5 qui combine \textbf{quatre moteurs de rendement quasi orthogonaux}
-sur quatre paires de devises majeures (EUR/USD, GBP/USD, USD/JPY, USD/CAD) et l'or
-(XAU/USD). Un seul EA attaché à un seul chart EUR/USD~M1 dispatche les signaux vers
+sur quatre paires de devises majeures (EUR/USD, GBP/USD, USD/JPY, USD/CAD) et deux
+métaux précieux (XAU/USD, XAG/USD). Un seul EA attaché à un seul chart EUR/USD~M1
+dispatche les signaux vers
 les quatre sleeves, applique un ciblage de volatilité global ($37\,\%$ annualisé),
 un plafond de levier à $31\times$ et un facteur d'échelle de risque
 (\code{Inp\_RiskScale}) fixé à $4.5$.
@@ -135,10 +136,10 @@ un plafond de levier à $31\times$ et un facteur d'échelle de risque
 \multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Sleeve 2 --- TS Momentum}}} &
 \multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Sleeve 3 --- RSI Daily}}} &
 \multicolumn{1}{c}{\textcolor{apogeeGold}{\textbf{Sleeve 4 --- Gold}}} \\[0.2em]
-\multicolumn{1}{c}{\small \textbf{72~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{62~\%} du portefeuille} &
 \multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} &
 \multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} &
-\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} \\
+\multicolumn{1}{c}{\small \textbf{20~\%} du portefeuille} \\
 \midrule
 Mean reversion intraday M1 sur 4~paires, fenêtre 8--16~UTC, filtre
 Bollinger(80, 5$\sigma$) sur la déviation VWAP, gating macro (courbe
@@ -149,9 +150,9 @@ explicitement exclu. &
 Mean reversion daily RSI(14) sur 3~paires equal-weight (EUR, GBP, CAD),
 oversold/overbought 25/75, exit à 50. Sleeve diversificateur
 anti-corrélé en années difficiles. &
-Suivi de tendance daily sur XAU/USD, vote de signe sur 4~horizons
-(40/60/120/250 séances), long-only, vol-targeting propre à $55\,\%$.
-Produit $80\,\%$ du résultat net. \\
+Suivi de tendance daily sur XAU/USD, USD/JPY et XAG/USD (budget réparti à parts
+égales), vote de signe sur 4~horizons (40/60/120/250 séances), long-only,
+vol-targeting propre à $55\,\%$. Produit $91\,\%$ du résultat net. \\
 \end{tabular}
 \end{center}
 
@@ -167,10 +168,10 @@ EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
 \toprule
 Métrique & Valeur & Métrique & Valeur \\
 \midrule
-Sharpe Ratio       & \metric{0.89}             & Total Net Profit  & \metric{+40,267.40~USD} \\
-Profit Factor      & \metric{2.14}             & CAGR              & \metric{+35.44~\%} \\
-Recovery Factor    & \metric{1.10}             & Equity DD Max     & \metric{$44.33~\%$} \\
-Total Trades       & \metric{851}              & Balance DD Max    & \metric{$6.66~\%$} \\
+Sharpe Ratio       & \metric{0.97}             & Total Net Profit  & \metric{+68,534.16~USD} \\
+Profit Factor      & \metric{2.23}             & CAGR              & \metric{+47.29~\%} \\
+Recovery Factor    & \metric{0.89}             & Equity DD Max     & \metric{$50.88~\%$} \\
+Total Trades       & \metric{909}              & Balance DD Max    & \metric{$20.46~\%$} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -183,7 +184,7 @@ périmé, suffixe symbole incorrect) --- voir la section \textbf{Troubleshooting
 page~\pageref{sec:troubleshooting}.
 
 \medskip
-\textbf{Un repli d'équité de 44\,\% fait partie du résultat
+\textbf{Un repli d'équité de 50,9\,\% fait partie du résultat
 attendu.} Il n'est pas le signe d'un défaut d'installation~: aucun coupe-circuit
 automatique n'est actif dans cette configuration, et le dimensionnement
 (\code{Inp\_RiskScale}) a été calibré pour la cible de rendement, pas pour borner le
@@ -282,11 +283,12 @@ suffixe \code{.c} (les autres suffixes nécessitent un ajustement, voir~3.4).
 \item Se connecter au compte démo broker (login + password reçus par email).
 \item Confirmer dans \code{Outils $\rightarrow$ Options $\rightarrow$ Server} que le
 serveur indique bien \code{SquaredFinancialSC-MT5 Demo} (ou équivalent).
-\item Vérifier que les \textbf{cinq symboles} sont visibles dans \emph{Market Watch}
+\item Vérifier que les \textbf{six symboles} sont visibles dans \emph{Market Watch}
 avec le suffixe \code{.c}~: \code{EURUSD.c}, \code{GBPUSD.c}, \code{USDJPY.c},
-\code{USDCAD.c} et \code{XAUUSD.c}. Si un symbole est absent, clic-droit dans
-Market Watch $\rightarrow$ \emph{Show All}. \textbf{L'or ne doit pas être oublié}~:
-c'est le symbole du Sleeve~4, qui produit l'essentiel du résultat.
+\code{USDCAD.c}, \code{XAUUSD.c} et \code{XAGUSD.c}. Si un symbole est absent,
+clic-droit dans Market Watch $\rightarrow$ \emph{Show All}. \textbf{Les deux métaux
+ne doivent pas être oubliés}~: ce sont, avec USD/JPY, les symboles du Sleeve~4, qui
+produit l'essentiel du résultat.
 \end{enumerate}
 
 \subsection*{3.2 Localiser le \emph{Data Folder} de MT5}
@@ -446,7 +448,7 @@ Visual mode & \emph{décoché} (bien plus rapide en non-visuel) \\
 
 Onglet \emph{Inputs} du Strategy Tester $\rightarrow$ bouton \emph{Load}
 $\rightarrow$ sélectionner \code{FxMultiSleeve\_Default.set}. Tous les
-inputs par défaut sont chargés (allocations $72/9/9/10$, vol cible $37\,\%$,
+inputs par défaut sont chargés (allocations $62/9/9/20$, vol cible $37\,\%$,
 levier max $31\times$, échelle de risque $4{,}5$, mode macro AUTO).
 
 \subsection*{5.3 Lancer le test}
@@ -534,17 +536,20 @@ difficiles.
 
 \subsection*{6.6 Sleeve 4 --- Gold Momentum (daily D1)}
 
-Suivi de tendance sur l'or, quasi orthogonal aux trois sleeves FX. C'est la sleeve
-qui rend la cible de rendement atteignable~--- et, sur le backtest de référence,
-celle qui produit l'essentiel du résultat.
+Suivi de tendance sur l'or, le dollar-yen et l'argent~--- le budget de la sleeve est
+divisé à parts égales entre les instruments listés dans \code{Inp\_Gold\_Symbols}.
+Quasi orthogonale aux trois sleeves FX, c'est la sleeve qui rend la cible de rendement
+atteignable~--- et, sur le backtest de référence, celle qui produit $91\,\%$ du
+résultat.
 
 \input{tables/params_sleeve_gold.tex}
 
 \begin{warningbox}
-\textbf{Vérifiez que votre courtier propose XAU-USD} avec le même suffixe que vos
-paires FX. Sans ce symbole, la sleeve reste inactive~: l'EA démarre normalement, mais
-le backtest ne reproduira pas les métriques de référence --- il leur manquera
-l'essentiel du résultat.
+\textbf{Vérifiez que votre courtier propose XAU-USD \emph{et} XAG-USD} avec le même
+suffixe que vos paires FX. Un instrument manquant est simplement écarté~: l'EA démarre
+normalement, mais le backtest ne reproduira pas les métriques de référence --- il leur
+manquera une part majeure du résultat. L'argent est le symbole le plus souvent absent
+d'un compte démo par défaut.
 \end{warningbox}
 
 \subsection*{6.7 Opérationnel \& source macro}
@@ -583,13 +588,13 @@ cause de différences microscopiques dans les flux de ticks broker.
 \toprule
 \textbf{Métrique} & \textbf{Référence} & \textbf{Tolérance} \\
 \midrule
-Sharpe Ratio                       & \metric{0.89}            & $\pm 0.10$ \\
-Total Net Profit                   & \metric{$+$40,267.40~USD} & $\pm 500$~USD \\
-Profit Factor                      & \metric{2.14}            & $\pm 0.05$ \\
-Recovery Factor                    & \metric{1.10}            & $\pm 0.30$ \\
-Total Trades                       & \metric{851}             & $\pm 15$ \\
-Equity Drawdown Maximal            & \metric{$44.33\,\%$}     & $\pm 1$~pp \\
-Balance Drawdown Maximal           & \metric{$6.66\,\%$}     & $\pm 1$~pp \\
+Sharpe Ratio                       & \metric{0.97}            & $\pm 0.10$ \\
+Total Net Profit                   & \metric{$+$68,534.16~USD} & $\pm 500$~USD \\
+Profit Factor                      & \metric{2.23}            & $\pm 0.05$ \\
+Recovery Factor                    & \metric{0.89}            & $\pm 0.30$ \\
+Total Trades                       & \metric{909}             & $\pm 15$ \\
+Equity Drawdown Maximal            & \metric{$50.88\,\%$}     & $\pm 1$~pp \\
+Balance Drawdown Maximal           & \metric{$20.46\,\%$}     & $\pm 1$~pp \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -601,24 +606,25 @@ en produit la ventilation. Sur le backtest de référence~:
 304~transactions MR~Macro,
 479~TS~Momentum,
 33~RSI~Daily et
-35~Gold~Momentum.
+93~Gold~Momentum (or, dollar-yen et argent confondus).
 
-\textbf{Le résultat est très concentré}~: la sleeve or produit
-80\,\% du profit net pour
-35~transactions. C'est un comportement attendu d'un suivi
+\textbf{Le résultat est très concentré}~: la sleeve momentum produit
+91\,\% du profit net pour
+93~transactions, soit $10\,\%$ du total. C'est un comportement attendu d'un suivi
 de tendance, mais il faut le savoir avant de juger une période courte.
 
 \paragraph{Interprétation rapide.}
 \begin{itemize}
-\item \textbf{Sharpe~$0.89$}~: rendement par unité de risque
+\item \textbf{Sharpe~$0.97$}~: rendement par unité de risque
 correct pour une stratégie FX retail, sans être exceptionnel.
-\item \textbf{Repli d'équité $44\,\%$}~: il n'existe
+\item \textbf{Repli d'équité $50{,}9\,\%$}~: il n'existe
 \textbf{aucun plafond contractuel} ni circuit-breaker actif dans cette configuration.
 Ce repli est le prix du dimensionnement retenu, pas un incident.
-\item \textbf{Recovery Factor $4.98$}~: pour 1~unité de risque
-(drawdown maximal), la stratégie a généré $5$~unités de gain net. Indice
-synthétique de qualité de la trajectoire.
-\item \textbf{835 trades sur 5.4~ans}~: $\sim 154$~trades/an, soit
+\item \textbf{Recovery Factor $0.89$}~: pour 1~unité de risque
+(repli maximal de balance), la stratégie a généré $0{,}9$~unité de gain net. Indice
+synthétique de qualité de la trajectoire~--- et rappel que le repli est du même ordre
+que le gain.
+\item \textbf{909 trades sur 5.3~ans}~: $\sim 170$~trades/an, soit
 $\sim 3$/semaine. Volume modéré, trade frequency raisonnable pour les
 coûts de transaction.
 \end{itemize}

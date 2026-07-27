@@ -8,13 +8,13 @@
 
 \item \textbf{Réserve de marge d'au moins 30\,\%} en cash hors-broker, accessible en moins de 24~heures. Cette réserve absorbe les \emph{tails} au-delà du 5\textsuperscript{e} percentile bootstrap.
 
-\item \textbf{Alerte automatique de drawdown live}~: arrêt automatique du trading si le drawdown depuis le \emph{high water mark} dépasse 15\,\%. Le seuil à 15\,\% est choisi pour déclencher l'alerte \emph{avant} d'atteindre la bande P5 du bootstrap ($-30.68\,\%$), en laissant une marge de décision manuelle.
+\item \textbf{Alerte automatique de drawdown live}~: arrêt automatique du trading si le drawdown depuis le \emph{high water mark} dépasse 15\,\%. Le seuil à 15\,\% est choisi pour déclencher l'alerte \emph{avant} d'atteindre la bande la plus favorable du bootstrap ($-34.93\,\%$ au 95\textsuperscript{e}~percentile du repli), en laissant une marge de décision manuelle.
 
-\item \textbf{Monitoring par moteur}~: calcul du Sharpe glissant sur 63~jours pour chaque moteur individuel, avec alerte si un moteur passe sous 0.5. Cela permet de détecter une dégradation structurelle avant que le portefeuille combiné n'en souffre visiblement.
+\item \textbf{Monitoring par moteur, et par instrument sur le Moteur~4}~: calcul du Sharpe glissant sur 63~jours pour chaque moteur individuel, avec alerte si un moteur passe sous 0.5. Le Moteur~4 portant $91\,\%$ du résultat, sa contribution est suivie instrument par instrument (or, dollar-yen, argent). Cela permet de détecter une dégradation structurelle avant que le portefeuille combiné n'en souffre visiblement.
 
 \item \textbf{Re-run mensuel des tests de stress}~: régénération complète des trajectoires bootstrap et comparaison aux baselines du présent rapport, chaque premier du mois. Alerte si le CAGR bootstrap moyen dérive de plus de 3~points de pourcentage.
 
-\item \textbf{Validation du slippage réel}~: pendant le premier mois de paper-trade, mesurer l'execution spread réel sur le Moteur~1 (hypothèse du backtest~: 15~pb) et sur les Moteurs~2 et~3 (hypothèse~: 10~pb). Si le slippage réel dépasse l'hypothèse, recalibrer la baseline de performance.
+\item \textbf{Validation du slippage réel}~: pendant le premier mois de paper-trade, mesurer l'execution spread réel sur le Moteur~1 (hypothèse du backtest~: 15~pb), sur les Moteurs~2 et~3 (hypothèse~: 10~pb) et sur le Moteur~4 (hypothèse~: 2~pb par côté, sur les trois instruments). Si le slippage réel dépasse l'hypothèse, recalibrer la baseline de performance.
 
 \item \textbf{Plafond d'utilisation de la marge}~: configurer le compte broker pour déclencher un déleverage automatique si l'utilisation de marge dépasse 70\,\% du compte.
 

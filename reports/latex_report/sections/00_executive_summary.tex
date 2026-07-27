@@ -1,7 +1,7 @@
 \section{Résumé exécutif}
 \label{sec:executive_summary}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} \textbf{Stratégie FX Multi-Moteurs} est un portefeuille quantitatif qui combine quatre moteurs de rendement structurellement indépendants~: une composante de \emph{retour à la moyenne} intraday filtrée par un régime macroéconomique, une composante de \emph{suivi de tendance} journalier sur trois paires, une composante de \emph{retour à la moyenne} journalier sur l'indicateur RSI, et une composante de \emph{suivi de tendance} sur l'or. L'ensemble est piloté par une couche unifiée de ciblage de volatilité.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} \textbf{Stratégie FX Multi-Moteurs} est un portefeuille quantitatif qui combine quatre moteurs de rendement structurellement indépendants~: une composante de \emph{retour à la moyenne} intraday filtrée par un régime macroéconomique, une composante de \emph{suivi de tendance} journalier sur trois paires, une composante de \emph{retour à la moyenne} journalier sur l'indicateur RSI, et une composante de \emph{suivi de tendance} sur trois instruments directionnels (or, dollar-yen, argent). L'ensemble est piloté par une couche unifiée de ciblage de volatilité.
 
 Le mandat retenu vise un rendement annualisé de l'ordre de \textbf{40\,\%}. Le plafond de drawdown qui figurait dans les versions antérieures de ce document a été \textbf{retiré à la demande du mandant}~: le risque n'est plus une contrainte du programme, il en est une conséquence mesurée. Ce document énonce donc ce que ce niveau d'ambition coûte en repli, sans l'atténuer.
 
@@ -18,7 +18,7 @@ Deux moteurs mesurent ce portefeuille et ils ne mesurent pas la même chose. Le 
 \end{figure}
 
 \begin{insightbox}
-\textbf{Le résultat est concentré.} La sleeve or représente 10\,\% de l'allocation et près de 80\,\% du résultat net, pour 35~transactions sur 851. Cette concentration est le fait le plus important du document~: elle signifie que la performance annoncée dépend d'un petit nombre de positions, et que la période 2021--2026 a été exceptionnellement favorable à l'or. Aucune moyenne, aucun ratio de Sharpe ne rend visible cette dépendance --- la section~\ref{sec:limitations} en tire les conséquences.
+\textbf{Le résultat est concentré, et il l'est davantage qu'avant.} La sleeve momentum --- or, dollar-yen et argent, équipondérés --- représente 20\,\% de l'allocation et 91\,\% du résultat net, pour 93~transactions sur 909. Élargir cette sleeve à trois instruments et doubler son poids a rendu son comportement plus régulier (taux de gain 39,8\,\% contre 31,4\,\% pour l'or seul), mais a \emph{accentué} la concentration au lieu de la diluer. C'est le fait le plus important du document~: la performance annoncée dépend d'un petit nombre de positions, et la période 2021--2026 a été exceptionnellement favorable aux tendances des métaux et du yen. Aucune moyenne, aucun ratio de Sharpe ne rend visible cette dépendance --- la section~\ref{sec:limitations} en tire les conséquences.
 \end{insightbox}
 
 \input{tables/mt5_by_sleeve.tex}
@@ -26,10 +26,10 @@ Deux moteurs mesurent ce portefeuille et ils ne mesurent pas la même chose. Le 
 \subsection*{Quatre conclusions pour la décision}
 
 \begin{enumerate}
-\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~: 35,4\,\% de croissance annualisée, pour un profit net de 40\,267~USD sur un dépôt de 10\,000~USD.
-\item \textbf{Le repli maximal d'équité atteint 44\,\%.} C'est le prix direct du niveau de risque choisi~: le dimensionnement des positions a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
-\item \textbf{La performance repose sur une sleeve.} Retirer l'or ramènerait le résultat à environ un cinquième de son niveau. La diversification annoncée par l'architecture à quatre moteurs ne s'est pas traduite par une diversification du résultat.
-\item \textbf{Deux années sur six sont négatives} (2021 et 2023), et le repli d'équité dépasse celui du solde sur toute la période --- signe que des positions restent longtemps ouvertes en territoire défavorable.
+\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~: 47,3\,\% de croissance annualisée, pour un profit net de 68\,534~USD sur un dépôt de 10\,000~USD.
+\item \textbf{Le repli maximal d'équité atteint 50,9\,\%.} C'est le prix direct du niveau de risque choisi~: le dimensionnement des positions a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion. Le passage de la sleeve momentum de 10 à 20\,\% du capital a fait monter le rendement \emph{et} le repli~; le rapport des deux s'améliore à peine (Sharpe 0,97 contre 0,89), et c'est sur ce seul critère que la décision se justifie.
+\item \textbf{La performance repose sur une sleeve.} Retirer la sleeve momentum ramènerait le résultat à moins d'un dixième de son niveau. La diversification annoncée par l'architecture à quatre moteurs ne s'est pas traduite par une diversification du résultat.
+\item \textbf{Une année sur six est négative} (2023, $-13{,}1$\,\%), et le repli d'équité dépasse celui du solde sur toute la période --- signe que des positions restent longtemps ouvertes en territoire défavorable.
 \end{enumerate}
 
 \input{tables/mt5_yearly.tex}

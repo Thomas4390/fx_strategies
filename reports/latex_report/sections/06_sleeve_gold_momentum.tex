@@ -1,15 +1,37 @@
-\section{Moteur 4 --- Momentum sur l'Or (10\,\%)}
+\section{Moteur 4 --- Momentum Multi-Actifs (20\,\%)}
 \label{sec:gold_momentum}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} quatrième moteur est le plus récent et le seul à sortir de l'univers des devises. Il suit la tendance de l'or (XAU-USD) sur données journalières. Son entrée en production répond à une contrainte précise~: sans lui, le mandat de rendement était hors d'atteinte.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} quatrième moteur est le plus récent et le seul à sortir de l'univers des devises. Il suit la tendance de trois instruments sur données journalières~--- l'or (XAU-USD), le dollar-yen (USD-JPY) et l'argent (XAG-USD)~--- avec le même signal appliqué à chacun. Son entrée en production répond à une contrainte précise~: sans lui, le mandat de rendement était hors d'atteinte.
 
-\subsection{Pourquoi l'or, et pourquoi maintenant}
+\begin{insightbox}
+\textbf{Ce moteur a changé deux fois en juillet~2026.} Il portait l'or seul à 10\,\% du capital~; il porte désormais trois instruments équipondérés à 20\,\%. Les deux décisions sont distinctes et se justifient différemment~: l'élargissement à trois instruments réduit la dépendance à une trajectoire unique (le repli de la sleeve isolée baisse de $-76{,}7\,\%$ à $-38{,}0\,\%$ en mesure standalone), le doublement du poids augmente à la fois le rendement et le repli du portefeuille. Le reste de la section décrit le signal, inchangé, puis ce que ces deux décisions coûtent et rapportent.
+\end{insightbox}
+
+\subsection{Pourquoi ce moteur, et pourquoi trois instruments}
 
 \begin{thesisbox}
 Le trio FX, combiné et non leviérié, rend 2,2\,\% par an pour une volatilité de 5,8\,\%. Le ciblage de volatilité peut amplifier ce résultat, mais pas indéfiniment~: au-delà d'un certain levier, le \emph{drag} de variance détruit plus de rendement composé qu'il n'en crée, et le rendement plafonne autour de 32\,\% avant de retomber. Un mandat à 40\,\% ne pouvait donc pas être servi par un levier plus élevé~--- il exigeait une source de rendement supplémentaire, faiblement corrélée aux trois autres.
 \end{thesisbox}
 
-L'or remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À 10\,\% de poids, il porte le Sharpe du portefeuille combiné de 0,66 à 1,08, ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+Le suivi de tendance sur métaux et sur le yen remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À 20\,\% de poids, il porte le Sharpe du portefeuille combiné de 0,66 à environ 1,0 (tableau~\ref{tab:robustness_bootstrap_ci}), ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+
+\subsubsection*{Ce que chaque instrument apporte}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.0cm}>{\raggedright\arraybackslash}p{6.0cm}}
+\toprule
+\textbf{Instrument} & \textbf{Ce qu'il apporte} & \textbf{Ce qu'il coûte} \\
+\midrule
+\textbf{Or} (XAU-USD) & Le moteur d'origine~: la tendance la plus ample de la fenêtre, et 40\,\% du résultat de la sleeve pour 35~positions. & Un portage \emph{négatif}~--- l'or ne rapporte rien à qui le détient, les frais de nuit s'accumulent sur des positions qui durent des semaines. \\
+\textbf{Dollar-yen} (USD-JPY) & Une tendance longue de nature différente (différentiel de taux), et un portage \textbf{positif}~: ici les frais de nuit sont une recette, pas une charge. & Une corrélation non nulle avec le Momentum Journalier, qui traite aussi cette paire~--- les deux moteurs peuvent se retrouver du même côté. \\
+\textbf{Argent} (XAG-USD) & Le poste qui divise le repli~: médiocre pris isolément, il casse la dépendance du résultat à la seule trajectoire de l'or. Sur cette fenêtre il apporte la plus grosse part du résultat de la sleeve, 49\,\% en 23~positions seulement. & L'historique le plus court des trois sur données de courtier propres, et la volatilité la plus élevée. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le budget de la sleeve est réparti \textbf{à parts égales} entre les instruments configurés~: chacun reçoit un tiers de la sous-équité, et le dimensionnement d'un instrument ne dépend pas de ce que font les deux autres. Ce choix est délibérément le plus simple possible~--- une pondération optimisée entre les trois serait une surface d'ajustement supplémentaire pour un gain non démontré.
 
 \subsection{Mécanique du signal}
 \label{sec:gold_signal}
@@ -17,15 +39,15 @@ L'or remplit cette condition. Sa corrélation avec chacun des trois moteurs FX e
 Le signal est un \emph{time series momentum} au sens de Moskowitz, Ooi et Pedersen (\emph{Journal of Financial Economics}, 2012)~: le rendement passé d'un actif prédit le signe de son rendement futur sur des horizons de un à douze mois. La difficulté pratique de cette famille de signaux n'est pas de la mettre en \oe uvre, mais de choisir l'horizon sans le sur-ajuster. Ce moteur résout le problème en refusant de choisir.
 
 \begin{enumerate}
-\item \textbf{Quatre horizons, un vote de signe.} À la clôture de chaque séance, le rendement de l'or est mesuré sur $40$, $60$, $120$ et $250$~séances. De chacun, on ne retient que le \emph{signe}~--- pas l'amplitude, nettement plus bruitée. Le signal est la moyenne des quatre signes, donc une valeur dans $\{-1;\,-0{,}5;\,0;\,+0{,}5;\,+1\}$. La position s'ouvre quand cette moyenne devient strictement positive et se ferme quand elle cesse de l'être.
+\item \textbf{Quatre horizons, un vote de signe.} À la clôture de chaque séance, et pour chacun des trois instruments séparément, le rendement est mesuré sur $40$, $60$, $120$ et $250$~séances. De chacun, on ne retient que le \emph{signe}~--- pas l'amplitude, nettement plus bruitée. Le signal est la moyenne des quatre signes, donc une valeur dans $\{-1;\,-0{,}5;\,0;\,+0{,}5;\,+1\}$. La position s'ouvre quand cette moyenne devient strictement positive et se ferme quand elle cesse de l'être.
 
 \item \textbf{Aucun horizon n'est optimisé.} Les quatre valeurs sont fixées \emph{a priori} d'après la littérature, jamais ajustées sur l'historique. Moyenner remplace un paramètre choisi par un agrégat, ce qui retire une surface d'ajustement au lieu d'en ajouter une. Un raccourcissement de la grille à $(15,30,60)$ a bien été évalué~: il paraissait supérieur en simulation Python, et le backtest sur le moteur d'exécution MetaTrader~5 l'a réfuté~--- $17{,}3\,\%$ de rendement annualisé contre $36{,}4\,\%$ pour la grille d'origine. Les horizons longs ont été conservés.
 
-\item \textbf{Long-only.} Il n'y a pas de vente à découvert sur l'or~: quand le vote est négatif, le moteur est hors marché. Autoriser les positions courtes coûtait $3{,}8$~points de rendement annualisé et doublait le repli maximal ($-66{,}8\,\%$ contre $-23{,}3\,\%$ sur la fenêtre de recherche).
+\item \textbf{Long-only.} Il n'y a pas de vente à découvert~: quand le vote d'un instrument est négatif, le moteur est hors marché sur cet instrument. Autoriser les positions courtes coûtait $3{,}8$~points de rendement annualisé et doublait le repli maximal ($-66{,}8\,\%$ contre $-23{,}3\,\%$ sur la fenêtre de recherche).
 
 \item \textbf{La séance est bornée à 17h00, heure de New York}, conformément à la convention du courtier sur les CFD. Ce détail n'en est pas un~: borner la journée à minuit fabrique $392$~fausses séances~--- les dimanches soir, longs de six heures au lieu de treize~--- et gonfle le décompte de séances de $20\,\%$, ce qui raccourcit d'autant tous les horizons exprimés en séances. Cette borne fait l'objet d'un verrou de test dédié.
 
-\item \textbf{Le moteur est lent.} Le vote ne bascule qu'une dizaine de fois par an. Sur la fenêtre d'exécution de référence, cela représente $35$~positions en cinq ans et quatre mois~--- $4\,\%$ des transactions du portefeuille. Les positions se comptent en semaines, et le coût de rotation est négligeable~: environ $0{,}2\,\%$ par an.
+\item \textbf{Le moteur est lent.} Le vote de chaque instrument ne bascule qu'une dizaine de fois par an. Sur la fenêtre d'exécution de référence, les trois cumulés représentent $93$~positions en cinq ans et quatre mois~--- $10\,\%$ des transactions du portefeuille, contre $4\,\%$ du temps où l'or était seul. Les positions se comptent en semaines, et le coût de rotation reste négligeable~: environ $0{,}2\,\%$ par an.
 \end{enumerate}
 
 \subsection{Du signal à la taille de position}
@@ -42,9 +64,9 @@ où $\hat{\sigma}_t$ est la volatilité annualisée récemment réalisée par l'
 Trois précisions sur ces valeurs~:
 
 \begin{itemize}
-\item La cible de $55\,\%$ est élevée dans l'absolu, et volontairement. Ce moteur est borné en aval par son allocation de $10\,\%$~: c'est à ce niveau, et non à l'intérieur du moteur, que son risque est contenu.
-\item Un \textbf{stop de sécurité à $4\,\%$} du prix d'entrée complète le dispositif. Ce n'est pas un stop de stratégie~--- le signal sort de lui-même~--- mais un garde-fou contre un décrochage brutal. Sur la fenêtre de référence, il ne s'est déclenché qu'une fois.
-\item Le coût modélisé est de \textbf{2 points de base par côté}, spread et commission compris. C'est moins que sur les paires FX de la stratégie, ce qui reflète la profondeur du marché de l'or spot aux volumes traités ici.
+\item La cible de $55\,\%$ est élevée dans l'absolu, et volontairement. Ce moteur est borné en aval par son allocation de $20\,\%$, elle-même divisée en trois budgets égaux~: c'est à ce niveau, et non à l'intérieur du moteur, que son risque est contenu. La formule ci-dessus s'applique instrument par instrument, sur la volatilité propre à chacun.
+\item Un \textbf{stop de sécurité à $4\,\%$} du prix d'entrée complète le dispositif. Ce n'est pas un stop de stratégie~--- le signal sort de lui-même~--- mais un garde-fou contre un décrochage brutal. Sur la fenêtre de référence il n'a servi qu'exceptionnellement~: une fois sur l'or, jamais sur le dollar-yen.
+\item Le coût modélisé est de \textbf{2 points de base par côté}, spread et commission compris. C'est moins que sur les paires FX de la stratégie, ce qui reflète la profondeur des marchés traités ici aux volumes en jeu. Les frais de portage, eux, sont comptés séparément et changent de signe selon l'instrument~: charge sur les métaux, recette sur le dollar-yen.
 \end{itemize}
 
 \subsection{Dimensionnement progressif~: ce qui a été testé, et pourquoi il est écarté}
@@ -72,7 +94,7 @@ La question posée au départ de ce moteur était explicite~: un dimensionnement
 
 Ces règles ont une propriété commune qu'il faut énoncer avant tout chiffre~: \textbf{aucune ne modifie le signal}. Elles ne changent ni le moment d'entrer, ni celui de sortir. Elles ne peuvent donc pas créer de rendement là où le signal n'en produit pas~--- elles ne font que redistribuer les résultats dans le temps.
 
-Les deux figures suivantes montrent ce que chacune aurait réellement fait sur l'historique du moteur, en appliquant la règle telle qu'elle est codée à la séquence de transactions effectivement produite par le signal de production.
+Les deux figures suivantes montrent ce que chacune aurait réellement fait sur l'historique du moteur, en appliquant la règle telle qu'elle est codée à la séquence de transactions effectivement produite par le signal de production. L'étude a été conduite sur l'or, instrument d'origine de la sleeve~; sa conclusion porte sur le \emph{mécanisme} de dimensionnement, qui est commun aux trois instruments.
 
 \begin{figure}[htbp]
 \centering
@@ -264,9 +286,11 @@ Le dossier de l'anti-martingale était réel et méritait d'être instruit~: c'�
 \subsection{Ce que ce moteur doit à sa période}
 
 \begin{warningbox}
-\textbf{2019--2026 a été un marché haussier de l'or d'une ampleur inhabituelle.} Le prix du métal a plus que doublé sur la fenêtre. Un moteur de suivi de tendance y réalise mécaniquement sa meilleure performance possible, et rien dans les données disponibles ne permet de distinguer la part qui revient au signal de celle qui revient au régime.
+\textbf{2019--2026 a été un marché haussier des métaux d'une ampleur inhabituelle, doublé d'une mégatendance sur le yen.} Le prix de l'or a plus que doublé sur la fenêtre. Un moteur de suivi de tendance y réalise mécaniquement sa meilleure performance possible, et rien dans les données disponibles ne permet de distinguer la part qui revient au signal de celle qui revient au régime. Élargir la sleeve à trois instruments ne corrige pas ce biais~: les trois ont tendu dans le même sens sur la même période.
 
-Deux constats l'illustrent. D'abord, le Sharpe du portefeuille croît de façon monotone avec le poids accordé à l'or sur toute la plage testée~: l'optimum est \emph{à la borne} de la grille, ce qui est la signature d'un biais de période et non d'un optimum. Le poids a été arrêté à 10\,\% pour cette raison, alors que l'optimisation en réclamait davantage. Ensuite, à l'exécution, ce moteur produit près de 80\,\% du résultat net du portefeuille pour 4\,\% de ses transactions.
+Trois constats l'illustrent. D'abord, le Sharpe du portefeuille croît de façon monotone avec le poids accordé à cette sleeve sur toute la plage testée~: l'optimum est \emph{à la borne} de la grille (20\,\%), ce qui est la signature d'un biais de période et non d'un optimum démontré~--- le poids retenu est le meilleur point \emph{testé}, pas un maximum. Ensuite, à ce poids, la sleeve porte environ la \textbf{moitié du budget de risque} du portefeuille pour 20\,\% de son capital~: c'est le vrai plafond à discuter, et il est assumé. Enfin, à l'exécution, ce moteur produit 91\,\% du résultat net du portefeuille pour 10\,\% de ses transactions.
 
-Le taux de gain de la sleeve est de 31\,\%~: elle perd deux fois sur trois. Sa rentabilité tient entièrement à l'amplitude de quelques positions gagnantes, ce qui est le comportement attendu d'un suivi de tendance --- et ce qui rend son résultat futur d'autant plus dépendant de la persistance de la tendance.
+Le taux de gain de la sleeve est de 39,8\,\%~: elle perd trois fois sur cinq. C'est une amélioration réelle par rapport aux 31,4\,\% de l'or seul --- trois instruments produisent trois séquences de tendance moins synchrones --- mais sa rentabilité tient toujours à l'amplitude de quelques positions gagnantes, comportement attendu d'un suivi de tendance, et son résultat futur reste dépendant de la persistance des tendances.
+
+Deux réserves héritées du dossier de recherche complètent ce tableau. L'argent est le \textbf{maillon le plus court}~: son historique de données de courtier propres est le plus récent des trois, et sa contribution mesurée repose donc sur moins d'observations que celle de l'or. Et l'ensemble des chiffres d'exécution de ce document sont des \textbf{majorants}~: le simulateur reconstruit les prix à partir des bougies OHLC à la minute, ce qui donne au moteur un remplissage légèrement plus favorable que la réalité tick par tick.
 \end{warningbox}

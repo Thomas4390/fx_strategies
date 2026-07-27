@@ -4,31 +4,35 @@
 \lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Six avertissements} sont identifiés et divulgués ci-dessous. Aucune erreur structurelle n'a été détectée dans la chaîne de calcul~--- pas de biais de \emph{look-ahead}, pas de bug numérique, bootstrap méthodologiquement correct~--- mais deux des avertissements ci-dessous portent sur la nature même de la performance, et non sur sa mesure.
 
 \begin{thesisbox}
-\textbf{Cinq tests de robustesse sur six sont franchis~; un échoue.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
+\textbf{Les six tests de robustesse sont franchis.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
 
-La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0.532$, au-dessus du seuil de danger de $0.5$~: \textbf{ce test échoue}. Les avertissements ci-dessous sont les limites résiduelles qui persistent malgré la validation statistique, et celles que cette validation elle-même signale.
+La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0.335$, sous le seuil de danger de $0.5$~: \textbf{ce test, qui échouait à $0.532$ sur l'allocation précédente, passe désormais}. Un verdict unanime ne clôt pas la discussion~--- les avertissements ci-dessous sont les limites résiduelles qui persistent malgré la validation statistique, et la première d'entre elles s'est aggravée.
 \end{thesisbox}
 
-\subsection{Avertissement 1 --- Le résultat repose sur un seul moteur}
+\subsection{Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} à l'exécution, la sleeve or produit près de 80\,\% du résultat net du portefeuille pour 4\,\% de ses transactions et 10\,\% de son allocation. Les trois moteurs FX, qui portent 90\,\% de l'allocation, contribuent ensemble à un cinquième du gain.
+\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $91\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $20\,\%$ de son allocation. Les trois moteurs FX, qui portent $80\,\%$ de l'allocation, ne contribuent ensemble qu'à $8{,}9\,\%$ du gain.
 
-\textbf{Impact potentiel~:} le portefeuille est présenté comme diversifié sur quatre sources d'alpha, mais son \emph{résultat} ne l'est pas. Un régime durablement défavorable à l'or ne serait pas compensé par les trois autres moteurs à leur niveau de contribution actuel. La diversification a servi à rendre la cible de rendement atteignable, elle n'a pas réparti le risque de résultat.
+\textbf{Ce risque s'est aggravé en juillet~2026.} Avant le doublement du poids de la sleeve, la concentration était de $80\,\%$ du résultat pour $10\,\%$ du capital~; elle est maintenant de $91\,\%$ pour $20\,\%$. Élargir la sleeve à trois instruments a diversifié \emph{la sleeve} --- son repli isolé et son taux de gain s'améliorent nettement --- mais pas le portefeuille, dont le résultat dépend plus qu'avant d'une seule famille de signaux. C'est un arbitrage assumé, pas un effet de bord~: il a été retenu pour le profil risque-ajusté, en connaissance de cette contrepartie.
 
-\textbf{Aggravant~:} 2019--2026 a été un marché haussier de l'or d'ampleur inhabituelle, et le Sharpe du portefeuille croît de façon monotone avec le poids accordé à ce moteur sur toute la plage testée --- l'optimum est \emph{à la borne} de la grille, signature d'un biais de période. Le poids a été volontairement arrêté à 10\,\% pour cette raison.
+\textbf{Impact potentiel~:} le portefeuille est présenté comme diversifié sur quatre sources d'alpha, mais son \emph{résultat} ne l'est pas. Un régime durablement défavorable au suivi de tendance ne serait pas compensé par les trois autres moteurs à leur niveau de contribution actuel. La diversification a servi à rendre la cible de rendement atteignable, elle n'a pas réparti le risque de résultat.
 
-\textbf{Action corrective~:} suivre la contribution par sleeve en production et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids de l'or sur une tranche de données réellement fraîche, postérieure à juillet~2026.
+\textbf{Aggravant~:} 2019--2026 a été un marché haussier des métaux d'ampleur inhabituelle, doublé d'une mégatendance sur le yen, et le Sharpe du portefeuille croît de façon monotone avec le poids accordé à ce moteur sur toute la plage testée --- l'optimum est \emph{à la borne} de la grille, signature d'un biais de période. Le poids retenu, $20\,\%$, est le meilleur point \emph{testé} et non un maximum démontré. À ce poids, la sleeve porte environ la moitié du budget de risque du portefeuille.
+
+\textbf{Aggravant secondaire~:} l'argent, qui apporte près de la moitié du résultat de la sleeve sur cette fenêtre, est aussi l'instrument dont l'historique de données de courtier propres est le plus court. Sa contribution est mesurée sur moins d'observations que celle de l'or.
+
+\textbf{Action corrective~:} suivre la contribution par sleeve et par instrument en production, et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids de la sleeve sur une tranche de données réellement fraîche, postérieure à juillet~2026.
 \end{warningbox}
 
-\subsection{Avertissement 2 --- Le test de sur-ajustement échoue}
+\subsection{Avertissement 2 --- La sélection a consommé du pouvoir statistique}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting} vaut $0.532$ contre un seuil de $0.5$. La procédure estime qu'une configuration sélectionnée sur une moitié des données a un peu plus d'une chance sur deux de se retrouver sous la médiane sur l'autre moitié.
+\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting} vaut $0.335$ contre un seuil de $0.5$. Le test passe --- il échouait à $0.532$ sur l'allocation précédente --- mais la marge reste modeste~: la procédure estime qu'une configuration sélectionnée sur une moitié des données a encore une chance sur trois de se retrouver sous la médiane sur l'autre moitié.
 
 \textbf{Origine~:} plus de deux cents configurations ont été évaluées au fil de la recherche sur la même fenêtre historique, chaque phase héritant des meilleurs points de la précédente. Aucune correction formelle pour tests multiples n'était appliquée avant l'introduction des tests de la section~\ref{sec:advanced_robustness}.
 
-\textbf{Ce que cela ne dit pas~:} l'\emph{edge} n'est pas invalidé. Le \textit{Probabilistic} et le \textit{Deflated Sharpe Ratio} restent au maximum, et l'intervalle de confiance du Sharpe exclut zéro. C'est la \emph{sélection} de cette configuration précise qui a consommé une part importante du pouvoir statistique disponible.
+\textbf{Ce que le verdict favorable ne dit pas~:} que la sélection n'a rien coûté. Le poids de la sleeve momentum a été arrêté à la borne du domaine testé, et le classement des allocations voisines tient dans le bruit d'estimation (annexe~\ref{app:weight_sensitivity}). C'est la \emph{sélection} de cette configuration précise qui a consommé une part importante du pouvoir statistique disponible.
 
 \textbf{Action corrective~:} une tranche de données a été gelée et retirée de la sélection de modèle. Le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation authentiquement pré-engagée dont ce portefeuille dispose.
 \end{warningbox}
@@ -36,7 +40,7 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \subsection{Avertissement 3 --- Aucun coupe-circuit n'est actif}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint 44\,\%~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-75\,\%$.
+\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint $50{,}9\,\%$~--- contre $44{,}3\,\%$ avant le doublement de la sleeve momentum~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-71\,\%$.
 
 \textbf{Impact potentiel~:} il n'existe aucun mécanisme automatique pour interrompre une perte en cours. Le ciblage de volatilité réduit l'exposition \emph{après} que la volatilité réalisée a augmenté, avec le retard que cela implique~; ce n'est pas un dispositif de protection du capital.
 
@@ -83,7 +87,7 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \textbf{\#} & \textbf{Risque} & \textbf{Gravité} & \textbf{Mitigation} \\
 \midrule
 1 & Résultat concentré sur une sleeve & Élevée & Suivi de contribution, réexamen du poids sur données fraîches \\
-2 & Test de sur-ajustement en échec & Élevée & Tranche de données gelée, \emph{paper-trade} pré-engagé \\
+2 & Pouvoir statistique consommé & Moyenne & Tranche de données gelée, \emph{paper-trade} pré-engagé \\
 3 & Aucun coupe-circuit actif & Élevée & Réserve dimensionnée sur le repli réel, plafond réactivable \\
 4 & Dimensionnement agressif & Élevée (choisie) & Paramètre unique, abaissable sans toucher aux signaux \\
 5 & Coûts de rebalancement non chargés & Faible & Monitoring live du \emph{slippage} \\

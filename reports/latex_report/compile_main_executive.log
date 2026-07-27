@@ -302,18 +302,18 @@ Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 93--105
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 94--106
 [][][][][][] 
 [1]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 117--118
+Overfull \hbox (10.95pt too wide) in paragraph at lines 118--119
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 117--118
+Underfull \hbox (badness 10000) in paragraph at lines 118--119
 
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 11
-9.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 12
+0.
 
 (./tables/mt5_reference.tex
 
@@ -322,86 +322,86 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 
 
 ) (./tables/mt5_by_sleeve.tex) [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 165--166
+Overfull \hbox (10.95pt too wide) in paragraph at lines 171--172
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 165--166
+Underfull \hbox (badness 10000) in paragraph at lines 171--172
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 184--185
+Underfull \hbox (badness 10000) in paragraph at lines 190--191
 []|\TU/LatinModernRoman(0)/m/n/10 Mean reversion intraday
 
-Underfull \hbox (badness 7256) in paragraph at lines 186--187
+Underfull \hbox (badness 7256) in paragraph at lines 192--193
 \TU/LatinModernRoman(0)/m/n/10 trois paires (EUR, GBP,
 
-Underfull \hbox (badness 5563) in paragraph at lines 186--187
+Underfull \hbox (badness 5563) in paragraph at lines 192--193
 \TU/LatinModernRoman(0)/m/n/10 10%. USD-CAD explicite-
 
-Underfull \hbox (badness 1629) in paragraph at lines 188--189
+Underfull \hbox (badness 1629) in paragraph at lines 194--195
 \TU/LatinModernRoman(0)/m/n/10 Sharpe standalone modeste
 
-Underfull \hbox (badness 10000) in paragraph at lines 188--189
+Underfull \hbox (badness 10000) in paragraph at lines 194--195
 \TU/LatinModernRoman(0)/m/n/10 mais diversificateur anti-
 [3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 223--224
+Overfull \hbox (10.95pt too wide) in paragraph at lines 232--233
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
+Underfull \hbox (badness 10000) in paragraph at lines 232--233
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 248--249
+Underfull \hbox (badness 10000) in paragraph at lines 257--258
 
 
-Overfull \hbox (13.38089pt too wide) in paragraph at lines 231--256
+Overfull \hbox (13.38089pt too wide) in paragraph at lines 240--265
 []$[]$ $[]$ 
 (./tables/walkforward_yearly.tex) [4]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 265--266
+Overfull \hbox (10.95pt too wide) in paragraph at lines 274--275
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
+Underfull \hbox (badness 10000) in paragraph at lines 274--275
 
 (./tables/bootstrap_percentiles.tex) [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 303--304
+Overfull \hbox (10.95pt too wide) in paragraph at lines 312--313
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 303--304
+Underfull \hbox (badness 10000) in paragraph at lines 312--313
 
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
+Overfull \hbox (29.1687pt too wide) in paragraph at lines 5--18
  [][] 
 ) [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 338--339
+Overfull \hbox (10.95pt too wide) in paragraph at lines 349--350
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 338--339
+Underfull \hbox (badness 10000) in paragraph at lines 349--350
 
 [7]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 361--362
+Overfull \hbox (10.95pt too wide) in paragraph at lines 372--373
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 361--362
+Underfull \hbox (badness 10000) in paragraph at lines 372--373
 
-[8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 405--406
+[8] [9]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 420--421
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
+Underfull \hbox (badness 10000) in paragraph at lines 420--421
 
-[9]
-Underfull \hbox (badness 1189) in paragraph at lines 440--444
+
+Underfull \hbox (badness 1189) in paragraph at lines 455--459
 \TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
 s, de la matrice de responsabilité
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 452--453
+Overfull \hbox (10.95pt too wide) in paragraph at lines 467--468
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 452--453
+Underfull \hbox (badness 10000) in paragraph at lines 467--468
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 469--483
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 484--498
 [][][][][][] 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 486--501
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 501--516
 [][][][][][] 
 [10] [11] (./main_executive.aux)
 
@@ -715,18 +715,18 @@ Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 93--105
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 94--106
 [][][][][][] 
 [1]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 117--118
+Overfull \hbox (10.95pt too wide) in paragraph at lines 118--119
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 117--118
+Underfull \hbox (badness 10000) in paragraph at lines 118--119
 
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 11
-9.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 12
+0.
 
 (./tables/mt5_reference.tex
 
@@ -735,86 +735,86 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 
 
 ) (./tables/mt5_by_sleeve.tex) [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 165--166
+Overfull \hbox (10.95pt too wide) in paragraph at lines 171--172
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 165--166
+Underfull \hbox (badness 10000) in paragraph at lines 171--172
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 184--185
+Underfull \hbox (badness 10000) in paragraph at lines 190--191
 []|\TU/LatinModernRoman(0)/m/n/10 Mean reversion intraday
 
-Underfull \hbox (badness 7256) in paragraph at lines 186--187
+Underfull \hbox (badness 7256) in paragraph at lines 192--193
 \TU/LatinModernRoman(0)/m/n/10 trois paires (EUR, GBP,
 
-Underfull \hbox (badness 5563) in paragraph at lines 186--187
+Underfull \hbox (badness 5563) in paragraph at lines 192--193
 \TU/LatinModernRoman(0)/m/n/10 10%. USD-CAD explicite-
 
-Underfull \hbox (badness 1629) in paragraph at lines 188--189
+Underfull \hbox (badness 1629) in paragraph at lines 194--195
 \TU/LatinModernRoman(0)/m/n/10 Sharpe standalone modeste
 
-Underfull \hbox (badness 10000) in paragraph at lines 188--189
+Underfull \hbox (badness 10000) in paragraph at lines 194--195
 \TU/LatinModernRoman(0)/m/n/10 mais diversificateur anti-
 [3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 223--224
+Overfull \hbox (10.95pt too wide) in paragraph at lines 232--233
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
+Underfull \hbox (badness 10000) in paragraph at lines 232--233
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 248--249
+Underfull \hbox (badness 10000) in paragraph at lines 257--258
 
 
-Overfull \hbox (13.38089pt too wide) in paragraph at lines 231--256
+Overfull \hbox (13.38089pt too wide) in paragraph at lines 240--265
 []$[]$ $[]$ 
 (./tables/walkforward_yearly.tex) [4]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 265--266
+Overfull \hbox (10.95pt too wide) in paragraph at lines 274--275
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
+Underfull \hbox (badness 10000) in paragraph at lines 274--275
 
 (./tables/bootstrap_percentiles.tex) [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 303--304
+Overfull \hbox (10.95pt too wide) in paragraph at lines 312--313
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 303--304
+Underfull \hbox (badness 10000) in paragraph at lines 312--313
 
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
+Overfull \hbox (29.1687pt too wide) in paragraph at lines 5--18
  [][] 
 ) [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 338--339
+Overfull \hbox (10.95pt too wide) in paragraph at lines 349--350
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 338--339
+Underfull \hbox (badness 10000) in paragraph at lines 349--350
 
 [7]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 361--362
+Overfull \hbox (10.95pt too wide) in paragraph at lines 372--373
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 361--362
+Underfull \hbox (badness 10000) in paragraph at lines 372--373
 
-[8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 405--406
+[8] [9]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 420--421
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
+Underfull \hbox (badness 10000) in paragraph at lines 420--421
 
-[9]
-Underfull \hbox (badness 1189) in paragraph at lines 440--444
+
+Underfull \hbox (badness 1189) in paragraph at lines 455--459
 \TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
 s, de la matrice de responsabilité
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 452--453
+Overfull \hbox (10.95pt too wide) in paragraph at lines 467--468
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 452--453
+Underfull \hbox (badness 10000) in paragraph at lines 467--468
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 469--483
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 484--498
 [][][][][][] 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 486--501
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 501--516
 [][][][][][] 
 [10] [11] (./main_executive.aux)
 

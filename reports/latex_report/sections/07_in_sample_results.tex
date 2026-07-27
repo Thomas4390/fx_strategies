@@ -10,9 +10,9 @@
 \input{tables/metrics_summary.tex}
 
 \begin{warningbox}
-\textbf{La colonne « Out-of-sample » de ce tableau annualise une fenêtre de 448 barres.}
-Son CAGR de $161.44\,\%$ n'est ni une performance ni une prévision~: il extrapole à l'année
-un segment de quelques mois qui recouvre la phase la plus favorable du marché de l'or.
+\textbf{La colonne « Out-of-sample » de ce tableau annualise une fenêtre de 449 barres.}
+Son CAGR de $181.48\,\%$ n'est ni une performance ni une prévision~: il extrapole à l'année
+un segment de quelques mois qui recouvre la phase la plus favorable du marché des métaux.
 Le chiffre est reporté pour la transparence du calcul et ne figure dans aucune conclusion
 de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \end{warningbox}
@@ -20,15 +20,15 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \input{tables/sleeve_standalone.tex}
 
 \begin{itemize}
-\item \textbf{CAGR}~: $25.75\,\%$
-\item \textbf{Volatilité annualisée}~: $36.82\,\%$
-\item \textbf{Max Drawdown}~: $-58.49\,\%$
-\item \textbf{Sharpe Ratio}~: $0.81$
-\item \textbf{Nombre de barres journalières}~: 2647
+\item \textbf{CAGR}~: $23.08\,\%$
+\item \textbf{Volatilité annualisée}~: $37.00\,\%$
+\item \textbf{Max Drawdown}~: $-55.00\,\%$
+\item \textbf{Sharpe Ratio}~: $0.75$
+\item \textbf{Fenêtre}~: du 1\textsuperscript{er}~avril 2019 au 1\textsuperscript{er}~avril 2025
 \end{itemize}
 
 \begin{insightbox}
-\textbf{Un repli de 58\,\% sur la mesure de recherche.} Ce n'est pas une anomalie de calcul~: c'est ce que produit mécaniquement une cible de volatilité de 37\,\% appliquée à un portefeuille dont la volatilité naturelle est de quelques points. Le moteur de recherche atteint cette cible~; le moteur d'exécution, dont le dimensionnement passe par un budget de risque borné par le stop, n'y parvient pas et réalise un repli plus faible. L'écart entre les deux chiffres est une différence de définition, pas une contradiction.
+\textbf{Un repli de 55\,\% sur la mesure de recherche.} Ce n'est pas une anomalie de calcul~: c'est ce que produit mécaniquement une cible de volatilité de 37\,\% appliquée à un portefeuille dont la volatilité naturelle est de quelques points. Le moteur de recherche atteint cette cible~; le moteur d'exécution, dont le dimensionnement passe par un budget de risque borné par le stop, n'y parvient pas et réalise un repli plus faible. L'écart entre les deux chiffres est une différence de définition, pas une contradiction.
 \end{insightbox}
 
 \subsection{Validation par fenêtres annuelles (walk-forward)}
@@ -42,17 +42,17 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \input{tables/walkforward_yearly.tex}
 
 \begin{itemize}
-\item \textbf{2019 ($+2.14$)}~: la meilleure fenêtre de la série. Le régime de fin de cycle, longtemps présenté comme défavorable à la stratégie, lui est en réalité favorable sous la configuration actuelle.
-\item \textbf{2020 ($+0.13$)}~: année du choc Covid, tout juste positive. Le filtre macro bloque le Moteur~1 pendant l'essentiel de la période, le privant du rebond.
-\item \textbf{2021 ($-0.56$)}~: seule fenêtre négative de la série.
-\item \textbf{2022 ($+1.51$)}~: le cycle de hausses de la Fed et la parité EUR-USD alimentent le suivi de tendance.
-\item \textbf{2023 ($+0.42$)}~: année modeste au niveau agrégé.
-\item \textbf{2024 ($+2.09$)}~: seconde meilleure fenêtre, les quatre moteurs alignés.
-\item \textbf{2025 à mars 2026 ($+3.71$)}~: dernière fenêtre, plus longue que les autres (quinze mois). Elle recouvre en partie la tranche de données gelée par la politique de \emph{holdout}~--- elle est rapportée ici à titre de mesure, elle n'a servi à aucun choix de paramètre.
+\item \textbf{2019 ($+1.22$)}~: le régime de fin de cycle, longtemps présenté comme défavorable à la stratégie, lui est en réalité favorable sous la configuration actuelle.
+\item \textbf{2020 ($+0.88$)}~: année du choc Covid, positive malgré tout. Le filtre macro bloque le Moteur~1 pendant l'essentiel de la période, le privant du rebond.
+\item \textbf{2021 ($+0.45$)}~: la fenêtre la plus terne des positives.
+\item \textbf{2022 ($+2.31$)}~: le cycle de hausses de la Fed et la parité EUR-USD alimentent le suivi de tendance.
+\item \textbf{2023 ($-0.20$)}~: seule fenêtre négative de la série. C'est aussi la seule année négative du compte à l'exécution.
+\item \textbf{2024 ($+2.21$)}~: seconde meilleure fenêtre, les quatre moteurs alignés.
+\item \textbf{2025 à avril 2026 ($+3.45$)}~: dernière fenêtre, plus longue que les autres. Elle recouvre en partie la tranche de données gelée par la politique de \emph{holdout}~--- elle est rapportée ici à titre de mesure, elle n'a servi à aucun choix de paramètre.
 \end{itemize}
 
 \begin{warningbox}
-\textbf{Ces Sharpe de fenêtre ne sont pas des rendements annuels.} Ils mesurent la régularité du signal à l'intérieur de chaque fenêtre, pas ce que le compte aurait gagné. Le résultat année par année du compte figure au tableau~\ref{tab:mt5_yearly}, et il raconte une histoire différente~: deux années négatives, et une concentration du gain sur 2024--2026.
+\textbf{Ces Sharpe de fenêtre ne sont pas des rendements annuels.} Ils mesurent la régularité du signal à l'intérieur de chaque fenêtre, pas ce que le compte aurait gagné. Le résultat année par année du compte figure au tableau~\ref{tab:mt5_yearly}, et il raconte une histoire voisine~: une seule année négative, 2023, et une concentration du gain sur 2024--2026.
 \end{warningbox}
 
 \subsection{Heatmap des rendements mensuels}
@@ -68,7 +68,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{drawdown_underwater.png}
-\caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal atteint $-58.49\,\%$ sur la fenêtre in-sample de recherche.}
+\caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal atteint $-55.00\,\%$ sur la fenêtre in-sample de recherche.}
 \end{figure}
 
 \subsection{Sharpe glissant sur 63 jours}
@@ -76,7 +76,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{rolling_sharpe_63d.png}
-\caption{Sharpe Ratio calculé sur une fenêtre glissante de 63~jours (environ un trimestre). La ligne pointillée orange représente le seuil de 1.0. Le Sharpe reste majoritairement positif, avec des pics au-dessus de 2.5 en 2022 et 2024 et de brefs passages sous zéro en 2019 et début 2023.}
+\caption{Sharpe Ratio calculé sur une fenêtre glissante de 63~jours (environ un trimestre). La ligne pointillée orange représente le seuil de 1.0. Le Sharpe est positif deux tiers du temps ($66\,\%$ des fenêtres) et culmine à $7.4$ en mai~2024, mais chaque année de l'historique contient à la fois des pics au-dessus de $2.5$ et des passages sous zéro~: la régularité s'apprécie sur l'année, pas sur le trimestre.}
 \end{figure}
 
 \subsection{Corrélations glissantes entre moteurs}
@@ -84,7 +84,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{rolling_correlation_63d.png}
-\caption{Corrélation glissante à 63~jours pour les six paires de moteurs, moyenne de période en légende. En haut, les paires internes au trio FX~: Momentum Journalier $\times$ RSI Journalier reste majoritairement négative ($-0{,}24$ en moyenne), ce qui est le levier de diversification identifié sur la pleine période. En bas, les trois paires impliquant l'or~: les moyennes sont faibles ($-0{,}03$, $+0{,}10$, $-0{,}09$), ce qui fonde la contribution de ce moteur à la diversification. \textbf{La moyenne masque toutefois des épisodes marqués}~: la corrélation entre l'or et le Momentum Journalier atteint $+0{,}5$ à $+0{,}6$ sur plusieurs séquences de quelques mois --- deux moteurs de suivi de tendance s'alignent naturellement lorsque les régimes sont directionnels. La décorrélation est une propriété de long terme, pas une garantie instantanée~: sur ces épisodes, les deux moteurs perdent ou gagnent ensemble.}
+\caption{Corrélation glissante à 63~jours pour les six paires de moteurs, moyenne de période en légende. En haut, les paires internes au trio FX~: Momentum Journalier $\times$ RSI Journalier reste majoritairement négative ($-0{,}24$ en moyenne), ce qui est le levier de diversification identifié sur la pleine période. En bas, les trois paires impliquant la sleeve momentum~: les moyennes sont faibles ($-0{,}00$, $+0{,}18$, $-0{,}08$), ce qui fonde la contribution de ce moteur à la diversification. \textbf{La moyenne masque toutefois des épisodes marqués}~: la corrélation entre la sleeve momentum et le Momentum Journalier atteint $+0{,}65$ sur plusieurs séquences de quelques mois --- les deux moteurs traitent d'ailleurs le même dollar-yen depuis juillet~2026 --- deux moteurs de suivi de tendance s'alignent naturellement lorsque les régimes sont directionnels. La décorrélation est une propriété de long terme, pas une garantie instantanée~: sur ces épisodes, les deux moteurs perdent ou gagnent ensemble.}
 \end{figure}
 
 \subsection{Contribution mensuelle par moteur}
@@ -92,5 +92,5 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{sleeve_monthly_contribution.png}
-\caption{Contribution mensuelle pondérée (72 / 9 / 9 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
+\caption{Contribution mensuelle pondérée (62 / 9 / 9 / 20) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
 \end{figure}
