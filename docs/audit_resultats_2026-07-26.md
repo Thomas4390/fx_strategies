@@ -14,8 +14,13 @@ d'installation documente un mécanisme de protection à l'envers. Ces deux défa
 > ## ✅ Suites données — 2026-07-26
 >
 > **Les quatre défauts graves (§1 à §4) ont été corrigés et les quatre PDF recompilés.**
-> Le détail des correctifs et leur vérification sont en fin de document,
-> section « Correctifs appliqués ». Les défauts §5 à §12 restent ouverts.
+> Les **trois correctifs de fond** identifiés par l'audit ont également été appliqués : la
+> légende calculée (§2), la génération de la table de paramètres du guide d'installation
+> (§3), et la fermeture du test qui sautait (§6). Le détail et sa vérification sont en fin
+> de document, section « Correctifs appliqués ».
+>
+> Restent ouverts : §5 (branche morte `if False`), §7 (`test_stress_sanity`), §8 (code de
+> sortie du CLI), §9 (étoiles codées en dur) et §10 à §12.
 
 ---
 
@@ -192,6 +197,10 @@ ce test-là. Les cinq autres comparent des valeurs qui bougent ensemble.
 
 **Correctif proposé.** Faire échouer plutôt que sauter quand le JSON manque, ou versionner
 les deux JSON de référence (ils pèsent 83 Ko).
+
+> **Fait — les deux.** Faire échouer seul aurait rendu la CI rouge sur tout clone frais ;
+> c'est le versionnement qui rend l'échec tenable. Voir « Fermeture du test qui sautait »
+> plus bas.
 
 ---
 
@@ -568,6 +577,56 @@ Le troisième point est délibéré : `test_published_stress_json_matches_the_cu
 *saute* quand son fichier manque, et c'est ce qui l'a rendu inopérant en CI. Ces tests-ci
 échouent.
 
+### Fermeture du test qui sautait
+
+Troisième et dernier correctif de fond. `test_published_stress_json_matches_the_current_config`
+était le seul test comparant les artefacts publiés à la configuration courante, et il
+`skip` quand son fichier manque — c'est-à-dire par défaut, puisque `results/` était
+intégralement gitignoré.
+
+**Le versionnement d'abord, l'échec ensuite.** Faire échouer sans versionner aurait rendu
+la CI rouge sur tout clone frais : le test aurait été désactivé pour de bon, ou ignoré. Le
+raisonnement qui tranche est ailleurs — `reports/latex_report/tables/*.tex` est versionné
+et ces tables **dérivent** de ces JSON. Versionner la sortie sans l'entrée rend le document
+publié irreproductible et inauditable. 83 Ko pour les deux.
+
+```gitignore
+results/*
+!results/production_report/
+results/production_report/*
+!results/production_report/*.json
+*/**/results/
+```
+
+La dernière ligne répare un effet de bord découvert au passage : l'ancien motif `results/`,
+sans slash initial, matchait **tout** répertoire de ce nom à n'importe quelle profondeur, y
+compris `src/strategies/results/` (sorties de recherche par stratégie). Le motif ancré ne
+le faisait plus, et 200+ fichiers seraient entrés dans le dépôt. `*/**/` exige au moins un
+composant de chemin, donc ne peut pas matcher la racine et casser la négation.
+
+**Le générateur aussi avalait l'absence.** `build_mt5_assets()` se contentait d'un `⚠` puis
+d'un `return` : les trois tables MT5 gardaient le contenu du run précédent et la chaîne
+rendait un rapport d'apparence complète, bâti sur d'autres chiffres. Il lève désormais.
+
+Un septième test a été ajouté, `test_published_mt5_reference_covers_every_allocated_sleeve` :
+le nombre de sleeves décrites par le JSON MT5 doit égaler le nombre de sleeves à poids non
+nul. L'assertion porte sur le compte et non sur les noms — les libellés MT5
+(« Gold Momentum ») et les clés Python (`Gold_Momentum`) diffèrent, et recopier la
+correspondance créerait une troisième copie à maintenir.
+
+Mutation testing, quatre scénarios :
+
+| Mutation | Attendu | Résultat |
+|---|---|---|
+| `stress_test_report.json` absent | RED (et non SKIP) | ✅ RED |
+| `mt5_reference.json` absent | RED | ✅ RED |
+| idem, côté générateur | `FileNotFoundError` | ✅ levée |
+| sleeve or retirée de la production | RED | ✅ RED |
+| `PRODUCTION_TARGET_VOL` 0.37 → 0.99 | RED | ✅ RED |
+
+Le script de mutation détecte explicitement le statut `SKIP` : un test qui saute sort en 0
+et se confondrait avec un succès.
+
 ### Vérification des correctifs
 
 | Contrôle | Résultat |
@@ -578,7 +637,7 @@ Le troisième point est délibéré : `test_published_stress_json_matches_the_cu
 | « sept tests » | ✅ 0 occurrence |
 | Inputs du guide vs `.mq5` (extraction corrigée, 64 params) | ✅ 0 écart, et désormais dérivés |
 | Générateur idempotent (`--check`) | ✅ 7 tables en phase |
-| Suite de tests | ✅ 209 passés (203 + 6) |
+| Suite de tests | ✅ 210 passés (203 + 6 + 1) |
 | Tables/figures hors légende corrigée | ✅ identiques au bit près |
 
 ---

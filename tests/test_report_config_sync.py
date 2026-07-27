@@ -31,6 +31,7 @@ from strategies.combined_portfolio_v2 import (  # noqa: E402
 )
 
 STRESS_JSON = _ROOT / "results/production_report/stress_test_report.json"
+MT5_JSON = _ROOT / "results/production_report/mt5_reference.json"
 
 
 def test_stress_test_runs_the_production_config():
@@ -80,9 +81,23 @@ def test_every_production_sleeve_has_a_label_and_a_colour():
 
 
 def test_published_stress_json_matches_the_current_config():
-    """Un JSON d'une autre configuration produit un rapport qui se contredit."""
-    if not STRESS_JSON.exists():  # pragma: no cover - artefact non versionné
-        pytest.skip(f"{STRESS_JSON} absent : relancer stress_test_combined.py")
+    """Un JSON d'une autre configuration produit un rapport qui se contredit.
+
+    Ce test **échoue** quand l'artefact manque, il ne saute pas. Il a sauté
+    pendant trois mois : ``results/`` était intégralement gitignoré, donc le
+    fichier était absent par défaut sur tout clone frais et en CI. Le seul test
+    qui comparait les artefacts publiés à la configuration courante était
+    silencieusement inactif là où il aurait le plus servi.
+
+    Les deux JSON de référence sont désormais versionnés (voir ``.gitignore``) :
+    l'absence du fichier est un vrai défaut, pas un environnement incomplet.
+    """
+    assert STRESS_JSON.exists(), (
+        f"{STRESS_JSON.relative_to(_ROOT)} absent. Ce fichier est versionné et "
+        f"alimente les tables du rapport client : son absence rend le document "
+        f"publié irreproductible. Le régénérer avec "
+        f"`python scripts/stress_test_combined.py`."
+    )
 
     payload = json.loads(STRESS_JSON.read_text())
 
@@ -92,3 +107,37 @@ def test_published_stress_json_matches_the_current_config():
     # La bande de CAGR visée doit être publiée, sinon la ligne « Cible
     # atteinte » du rapport ne dit pas contre quel mandat elle est mesurée.
     assert len(payload["target_cagr_band"]) == 2
+
+
+def test_published_mt5_reference_covers_every_allocated_sleeve():
+    """Le JSON MT5 doit décrire le portefeuille réellement alloué.
+
+    ``build_mt5_assets()`` se contentait d'un avertissement quand ce fichier
+    manquait : les trois tables MT5 gardaient alors le contenu du run précédent
+    et la chaîne rendait un rapport d'apparence complète. Le fichier est
+    désormais versionné et le générateur lève ; ce test ferme la boucle côté
+    configuration.
+
+    L'assertion porte sur le *nombre* de sleeves plutôt que sur leurs noms : les
+    libellés MT5 (« Gold Momentum ») et les clés Python (``Gold_Momentum``) ne
+    coïncident pas, et un test qui recopierait la correspondance serait une
+    troisième copie à maintenir.
+    """
+    assert MT5_JSON.exists(), (
+        f"{MT5_JSON.relative_to(_ROOT)} absent. Ce fichier est versionné et "
+        f"porte les chiffres publiés au client. Le régénérer avec "
+        f"`python scripts/parse_mt5_report.py`."
+    )
+
+    payload = json.loads(MT5_JSON.read_text())
+    traded = {
+        row["sleeve"] for row in payload["by_sleeve"]
+        if row["sleeve"] != "Hors sleeve"
+    }
+    allocated = {k for k, w in PRODUCTION_WEIGHTS.items() if w > 0}
+    assert len(traded) == len(allocated), (
+        f"{len(traded)} sleeve(s) dans mt5_reference.json ({sorted(traded)}) "
+        f"contre {len(allocated)} allouée(s) en production ({sorted(allocated)}). "
+        f"Le backtest MT5 de référence ne décrit pas la configuration courante : "
+        f"le relancer, puis scripts/parse_mt5_report.py."
+    )

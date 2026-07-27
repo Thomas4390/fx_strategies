@@ -256,12 +256,17 @@ def build_mt5_assets() -> None:
     MT5 qui exécute. Ces assets viennent de ``mt5_reference.json``, produit par
     ``scripts/parse_mt5_report.py``.
     """
+    # Un simple avertissement laissait les trois tables MT5 à leur contenu
+    # précédent : la chaîne rendait un rapport d'apparence complète, bâti sur
+    # les chiffres d'un run antérieur. Le JSON est versionné, son absence est
+    # un défaut, pas un environnement incomplet.
     if not MT5_JSON.exists():
-        print(
-            f"  ⚠ {MT5_JSON.relative_to(_PROJECT_ROOT)} absent — "
-            "lancer scripts/parse_mt5_report.py"
+        raise FileNotFoundError(
+            f"{MT5_JSON.relative_to(_PROJECT_ROOT)} absent. Les tables MT5 du "
+            f"rapport client en dérivent ; sans lui, la chaîne republierait "
+            f"celles du run précédent. Le régénérer avec "
+            f"scripts/parse_mt5_report.py."
         )
-        return
 
     with open(MT5_JSON) as fh:
         mt5 = json.load(fh)

@@ -9,8 +9,21 @@ data/**
 *.parquet
 *.ods
 
-# Results (generated)
-results/
+# Results (generated) — sauf les deux JSON de reference du rapport client.
+# Les tables reports/latex_report/tables/*.tex sont versionnees ; versionner la
+# sortie sans l'entree rend le document publie irreproductible, et laisse
+# test_published_stress_json_matches_the_current_config inoperant (il sautait
+# faute de fichier, donc par defaut sur tout clone frais).
+results/*
+!results/production_report/
+results/production_report/*
+!results/production_report/*.json
+
+# Sorties de recherche nichees (src/strategies/results/...). L'ancien motif
+# `results/` les couvrait par effet de bord ; le motif ancre ci-dessus ne le
+# fait plus. `*/**/` exige au moins un composant de chemin, donc ne peut pas
+# matcher le results/ de la racine et casser la negation ci-dessus.
+*/**/results/
 
 # Documentation (binary)
 docs/*.pdf
