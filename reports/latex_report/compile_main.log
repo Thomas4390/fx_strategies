@@ -397,31 +397,22 @@ Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
 [28]) (./sections/09_stress_test.tex [29] (./tables/bootstrap_percentiles.tex)
 [30] [31]) (./sections/10_advanced_robustness.tex [32]
 (./tables/robustness_bootstrap_ci.tex
-
-LaTeX Warning: Reference `tab:metrics_summary' on page 33 undefined on input li
-ne 3.
-
-
-LaTeX Warning: Reference `tab:metrics_summary' on page 33 undefined on input li
-ne 3.
-
-
 Overfull \hbox (30.67487pt too wide) in paragraph at lines 5--24
  [][] 
-) [33] [34] (./tables/robustness_overfitting.tex [35]) [36] [37]
-(./tables/robustness_arch_tests.tex) [38] [39]
+) [33] [34] [35] (./tables/robustness_overfitting.tex) [36] [37] [38]
+(./tables/robustness_arch_tests.tex) [39] [40]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
  [][] 
-)) (./sections/11_scenarios.tex [40] (./tables/scenarios.tex) [41])
+)) (./sections/11_scenarios.tex [41] (./tables/scenarios.tex) [42])
 (./sections/12_limitations.tex
 
 Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 42.
+(lettrine)                The dropped cap U doesn't fit on page 43.
 (lettrine)                Missing vertical space: 42.22546pt. 
 (lettrine)                Reported on input line 4.
 
-[42] [43] [44]
+[43] [44] [45]
 Underfull \hbox (badness 1314) in paragraph at lines 86--87
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
 
@@ -430,12 +421,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 88--89
 
 Underfull \hbox (badness 10000) in paragraph at lines 88--89
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
-) (./sections/13_production_checklist.tex [45]
+) (./sections/13_production_checklist.tex [46]
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
-) [46] (./sections/appendix_a_inventory.tex [47] [48])
-(./sections/appendix_b_trade_walkthrough.tex [49])
+) [47] (./sections/appendix_a_inventory.tex [48] [49])
+(./sections/appendix_b_trade_walkthrough.tex [50])
 (./sections/appendix_c_weight_sensitivity.tex
 Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
@@ -448,7 +439,7 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
  $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
 1/cmr/m/n/10.95 ) :
-(./tables/weight_sensitivity_named.tex) [50] [51]
+(./tables/weight_sensitivity_named.tex) [51] [52]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -483,7 +474,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
 
-[52] (./tables/weight_sensitivity_extremes.tex) [53]
+[53] (./tables/weight_sensitivity_extremes.tex) [54]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -496,19 +487,16 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
 
-) [54] [55] (./main.aux)
+) [55] [56] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: There were undefined references.
 
 
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (59 pages).
+Output written on main.pdf (60 pages).
 Transcript written on main.log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
@@ -911,20 +899,20 @@ Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
 (./tables/robustness_bootstrap_ci.tex
 Overfull \hbox (30.67487pt too wide) in paragraph at lines 5--24
  [][] 
-) [33] [34] (./tables/robustness_overfitting.tex [35]) [36] [37]
-(./tables/robustness_arch_tests.tex) [38] [39]
+) [33] [34] [35] (./tables/robustness_overfitting.tex) [36] [37] [38]
+(./tables/robustness_arch_tests.tex) [39] [40]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
  [][] 
-)) (./sections/11_scenarios.tex [40] (./tables/scenarios.tex) [41])
+)) (./sections/11_scenarios.tex [41] (./tables/scenarios.tex) [42])
 (./sections/12_limitations.tex
 
 Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 42.
+(lettrine)                The dropped cap U doesn't fit on page 43.
 (lettrine)                Missing vertical space: 42.22546pt. 
 (lettrine)                Reported on input line 4.
 
-[42] [43] [44]
+[43] [44] [45]
 Underfull \hbox (badness 1314) in paragraph at lines 86--87
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
 
@@ -933,12 +921,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 88--89
 
 Underfull \hbox (badness 10000) in paragraph at lines 88--89
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
-) (./sections/13_production_checklist.tex [45]
+) (./sections/13_production_checklist.tex [46]
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
-) [46] (./sections/appendix_a_inventory.tex [47] [48])
-(./sections/appendix_b_trade_walkthrough.tex [49])
+) [47] (./sections/appendix_a_inventory.tex [48] [49])
+(./sections/appendix_b_trade_walkthrough.tex [50])
 (./sections/appendix_c_weight_sensitivity.tex
 Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
@@ -951,7 +939,7 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
  $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
 1/cmr/m/n/10.95 ) :
-(./tables/weight_sensitivity_named.tex) [50] [51]
+(./tables/weight_sensitivity_named.tex) [51] [52]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -986,7 +974,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
 
-[52] (./tables/weight_sensitivity_extremes.tex) [53]
+[53] (./tables/weight_sensitivity_extremes.tex) [54]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -999,11 +987,11 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
 
-) [54] [55] (./main.aux)
+) [55] [56] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (59 pages).
+Output written on main.pdf (60 pages).
 Transcript written on main.log.

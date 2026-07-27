@@ -3,7 +3,7 @@
 
 \subsection{Pourquoi un Sharpe ponctuel ne suffit pas}
 
-Un Sharpe rapporté seul est une \emph{statistique ponctuelle} dont la fiabilité dépend de trois biais bien documentés en recherche quantitative~: le bruit d'estimation sur échantillon fini, le biais de sélection lorsqu'on rapporte la meilleure configuration parmi plusieurs testées, et la dépendance temporelle des rendements qui viole l'hypothèse d'indépendance sous-jacente aux tests classiques. Cette section applique sept tests statistiques qui répondent à chacun de ces biais et produisent des intervalles de confiance, des corrections pour tests multiples et des mesures de sur-ajustement.
+Un Sharpe rapporté seul est une \emph{statistique ponctuelle} dont la fiabilité dépend de trois biais bien documentés en recherche quantitative~: le bruit d'estimation sur échantillon fini, le biais de sélection lorsqu'on rapporte la meilleure configuration parmi plusieurs testées, et la dépendance temporelle des rendements qui viole l'hypothèse d'indépendance sous-jacente aux tests classiques. Cette section applique une batterie de tests statistiques qui répondent à chacun de ces biais et produisent des intervalles de confiance, des corrections pour tests multiples et des mesures de sur-ajustement. Le verdict consolidé est donné en fin de section~: \textbf{cinq tests sur six franchissent leur seuil, un échoue.}
 
 \subsection{Intervalles de confiance bootstrap sur les métriques}
 
@@ -28,13 +28,13 @@ Le deuxième bloc $(r_{4},r_{5},r_{6}) = (-2.1,+1.9,-1.7)$ est \textbf{copié in
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_metric_ci_forest.png}
-\caption{\emph{Forest plot} des cinq métriques principales. Le diamant orange marque la valeur observée, la barre bleue l'intervalle de confiance bootstrap à 95\,\%. La borne basse du Sharpe ($0.365$) est strictement positive, ce qui est la condition statistique minimale pour qu'une stratégie soit considérée comme ayant un \emph{edge} non-nul avec un niveau de confiance de 95\,\%.}
+\caption{\emph{Forest plot} des cinq métriques principales. Le diamant orange marque la valeur observée, la barre bleue l'intervalle de confiance bootstrap à 95\,\%. La borne basse du Sharpe ($0.356$) est strictement positive, ce qui est la condition statistique minimale pour qu'une stratégie soit considérée comme ayant un \emph{edge} non-nul avec un niveau de confiance de 95\,\%.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_bootstrap_sharpe.png}
-\caption{Distribution bootstrap du Sharpe ratio. La ligne orange matérialise la valeur observée ($0.97$), les deux lignes vertes pointillées matérialisent les bornes de l'intervalle de confiance à 95\,\% $[0.37,\ 1.55]$. La distribution est légèrement asymétrique à droite, cohérente avec les queues épaisses des rendements FX.}
+\caption{Distribution bootstrap du Sharpe ratio. La ligne orange matérialise la valeur observée ($1.085$), les deux lignes vertes pointillées matérialisent les bornes de l'intervalle de confiance à 95\,\% $[0.356,\ 1.841]$. La distribution est légèrement asymétrique à droite, cohérente avec les queues épaisses des rendements FX.}
 \end{figure}
 
 \begin{insightbox}
@@ -61,13 +61,13 @@ La bande P5 reste plate voire négative sur les premières années, ce qui repro
 
 \subsection{Tests d'\emph{overfitting}}
 
-Cinq tests complémentaires sont appliqués. Chacun pose une question légèrement différente, et tous convergent vers le même verdict favorable.
+Cinq tests complémentaires sont appliqués. Chacun pose une question légèrement différente. \textbf{Quatre franchissent leur seuil~; le cinquième --- la probabilité de sur-ajustement --- échoue.} Il est discuté en détail plus bas et repris dans le verdict consolidé.
 
 \input{tables/robustness_overfitting.tex}
 
 \begin{itemize}
 \item \textbf{Probabilistic Sharpe Ratio (PSR)~$= 1.000$}~: la probabilité que le vrai Sharpe soit supérieur à zéro est de 100\,\%, après correction pour la non-normalité des rendements.
-\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les cinq composantes candidates testées, le Sharpe observé dépasse de plus de trois fois l'espérance du maximum sous hypothèse nulle. La stratégie n'est pas le fruit d'un \emph{best of N}.
+\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les six composantes candidates testées, le Sharpe observé dépasse de près de cinq fois l'espérance du maximum sous hypothèse nulle ($1.31$ contre $0.273$). La stratégie n'est pas le fruit d'un \emph{best of N}.
 \end{itemize}
 
 \begin{examplebox}
@@ -80,24 +80,27 @@ Le \textbf{PSR} répond à~: \emph{ce participant-là est-il statistiquement dif
 Le \textbf{DSR} répond à~: \emph{ce participant est-il significatif sachant qu'il est le vainqueur de 1\,000 essais~?} Il compare son $z=3$ à $\mathbb{E}[\max z] \approx \sqrt{2\ln 1000} \approx 3.72$. Conclusion~: non, son score est en-dessous de ce qu'on attend par chance. Le DSR dira non.
 
 \smallskip
-\textbf{Application Apogée.} Avec $N=5$ composantes candidates testées, $\mathbb{E}[\max \mathrm{SR}\mid N=5] \approx 0.30$. Le Sharpe observé $\widehat{\mathrm{SR}}=0.97$ dépasse ce seuil d'un facteur~$3.26$, d'où DSR~$\approx 1.000$. \textbf{Si on avait testé 10\,000~configurations} au lieu de 5, le seuil monterait à $\sqrt{2\ln 10\,000} \cdot \sqrt{0.089} \approx 1.27$~--- et avec un Sharpe de $0.97$ on aurait DSR nettement inférieur à $0.95$. C'est pour ça que le DSR exige d'honnêtement déclarer $N$.
+\textbf{Application Apogée.} Avec $N=6$ composantes candidates testées, $\mathbb{E}[\max \mathrm{SR}\mid N=6] \approx 0.273$. Le Sharpe observé $\widehat{\mathrm{SR}}=1.31$ dépasse ce seuil d'un facteur~$4.8$, d'où DSR~$\approx 1.000$. \textbf{Si on avait testé 10\,000~configurations} au lieu de 6, le seuil monterait à $\sqrt{2\ln 10\,000} \cdot \sqrt{0.089} \approx 1.28$~--- soit pratiquement le Sharpe observé, et le DSR s'effondrerait sous $0.95$. C'est pour ça que le DSR exige d'honnêtement déclarer $N$.
+
+\smallskip
+\textbf{Et c'est précisément la limite de ce test ici.} Le $N=6$ déclaré compte les six composantes candidates entrées dans la validation croisée. Il ne compte pas les configurations explorées en amont au fil de la recherche. Le DSR répond donc à «~ce portefeuille est-il le meilleur de six~?~» et non à «~est-il le meilleur de tout ce qui a été essayé~?~». Le PBO, lui, ne dépend pas d'un $N$ déclaré~--- c'est une des raisons pour lesquelles son verdict défavorable pèse plus lourd que le verdict favorable du DSR.
 \end{examplebox}
 
 \begin{itemize}
-\item \textbf{Haircut Sharpe~$= 0.84$ (ratio de survie $87\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $0.84$. On perd seulement 13\,\% du Sharpe à la correction, ce qui est très faible.
-\item \textbf{Minimum Backtest Length~$= 3.5$~ans}~: la longueur minimale de backtest requise pour valider statistiquement un Sharpe cible de $0.97$ est de 3.5~ans. On dispose de 7~ans, soit le double du minimum requis.
-\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.31$}~: dans 70\,\% des découpages temporels, le vainqueur in-sample reste dans la moitié supérieure out-of-sample. Le seuil de danger est $0.5$~; $0.31$ est confortable.
+\item \textbf{Haircut Sharpe~$= 1.035$ (ratio de survie $79.29\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $1.035$. On perd $21\,\%$ du Sharpe à la correction, ce qui reste modéré.
+\item \textbf{Minimum Backtest Length~$= 2.10$~ans}~: la longueur minimale de backtest requise pour valider statistiquement un Sharpe cible de $1.31$ est de 2.10~ans. On dispose de 7.5~ans, soit plus de trois fois le minimum requis.
+\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.532$~--- \emph{échec}}~: dans seulement $46.8\,\%$ des découpages temporels, le vainqueur in-sample reste dans la moitié supérieure out-of-sample. Le seuil de danger est $0.5$~; $0.532$ le franchit. C'est le seul test de cette section qui échoue, et il est traité comme tel dans le verdict consolidé.
 \end{itemize}
 
 \begin{examplebox}
-\textbf{Le Haircut Sharpe étape par étape.} On part du Sharpe observé $\widehat{\mathrm{SR}} = 0.97$ sur $T = 1\,764$~barres journalières, avec $N = 5$~essais.
+\textbf{Le Haircut Sharpe étape par étape.} On part du Sharpe observé $\widehat{\mathrm{SR}} = 1.31$ sur $T = 1\,887$~barres journalières, avec $N = 6$~essais.
 
 \begin{enumerate}
-\item \emph{Aller en t-stat}~: $t_{\text{obs}} = 0.97 \times \sqrt{1763} \approx 40.7$~--- statistiquement énorme sous hypothèse nulle.
+\item \emph{Aller en t-stat}~: $t_{\text{obs}} = 1.31 \times \sqrt{1886} \approx 56.9$~--- statistiquement énorme sous hypothèse nulle.
 \item \emph{P-value brute} (survie Student-t)~: $p_{\text{raw}} \approx 10^{-6}$.
-\item \emph{Correction BHY} pour $N = 5$~essais~: on multiplie par $N$ puis par le 5\textsuperscript{e}~nombre harmonique $c(5) = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} + \tfrac{1}{5} \approx 2.28$. Donc $p_{\text{adj}} \approx 10^{-6} \times 5 \times 2.28 \approx 1.14 \times 10^{-5}$.
-\item \emph{Retour en t-stat}~: $t_{\text{adj}} = \Phi^{-1}_{\text{Student}}(1 - p_{\text{adj}}) \approx 34.3$.
-\item \emph{Retour en Sharpe}~: $\mathrm{SR}_{\text{haircut}} = 34.3 / \sqrt{1763} \approx 0.82$, soit un ratio de survie de $0.82 / 0.97 = 85\,\%$.
+\item \emph{Correction BHY} pour $N = 6$~essais~: on multiplie par $N$ puis par le 6\textsuperscript{e}~nombre harmonique $c(6) = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} + \tfrac{1}{5} + \tfrac{1}{6} \approx 2.45$. Donc $p_{\text{adj}} \approx 10^{-6} \times 6 \times 2.45 \approx 1.47 \times 10^{-5}$.
+\item \emph{Retour en t-stat}~: $t_{\text{adj}} = \Phi^{-1}_{\text{Student}}(1 - p_{\text{adj}}) \approx 45.0$.
+\item \emph{Retour en Sharpe}~: $\mathrm{SR}_{\text{haircut}} = 45.0 / \sqrt{1886} \approx 1.035$, soit un ratio de survie de $1.035 / 1.31 = 79\,\%$.
 \end{enumerate}
 
 \textbf{Intuition.} Le BHY pénalise le Sharpe de façon d'autant plus douce que l'\emph{edge} initial est grand par rapport à sa variance d'estimation. Une stratégie avec $\widehat{\mathrm{SR}} = 0.25$ et les mêmes paramètres verrait son Haircut s'effondrer à quasi-zéro~: la correction «~mord~» d'autant plus fort que le signal est faible.
@@ -128,17 +131,17 @@ Partition & In-sample & Out-of-sample & Logit \\
 Pour chaque partition, on identifie le \emph{vainqueur} in-sample~--- la configuration au meilleur Sharpe sur $B_{1},B_{2}$ par exemple~--- puis on regarde son rang out-of-sample sur $B_{3},B_{4}$. Ce rang est converti en \emph{logit}~: positif si le vainqueur reste dans la moitié supérieure, négatif s'il tombe sous la médiane.
 
 \smallskip
-Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaut donc $1/6 \approx 0.17$. Sous $0.5$~: régime sain. Sur le vrai CSCV à 12\,870~partitions, Apogée reporte $\mathrm{PBO} = 0.31$~--- 3~926~partitions sur 12\,870 voient un retournement IS$\to$OOS, ce qui reste confortablement sous le seuil critique.
+Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaudrait donc $1/6 \approx 0.17$~: sous $0.5$, régime sain. \textbf{Le vrai CSCV ne donne pas ce résultat.} Sur les 12\,870~partitions réelles, Apogée reporte $\mathrm{PBO} = 0.532$~--- environ 6\,850~partitions sur 12\,870 voient un retournement IS$\to$OOS, soit un peu plus d'une sur deux. Le seuil critique est franchi.
 \end{examplebox}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.31$ signifie que 31\,\% de la masse de la distribution est à gauche du seuil.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.532$ signifie que $53.2\,\%$ de la masse de la distribution est à gauche du seuil~--- la majorité, d'où l'échec du test.}
 \end{figure}
 
 \begin{insightbox}
-\textbf{Les cinq tests d'\emph{overfitting} convergent vers un verdict favorable.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui pourrait être obtenu par chance pure. Le \emph{Haircut} ne prélève que $13\,\%$ du Sharpe, signe d'un \emph{edge} grand relativement à sa variance d'estimation. Le PBO à $0.31$ confirme la stabilité du classement des composantes à travers les découpages temporels.
+\textbf{Quatre tests d'\emph{overfitting} sur cinq sont favorables~; le PBO ne l'est pas.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui pourrait être obtenu par chance pure. Le \emph{Haircut} prélève $21\,\%$ du Sharpe, signe d'un \emph{edge} grand relativement à sa variance d'estimation. \textbf{Mais le PBO à $0.532$ échoue}~: le classement des composantes n'est pas stable d'un découpage temporel à l'autre. Les deux constats ne s'annulent pas et ne se contredisent pas~--- ils répondent à des questions différentes. Le PSR et le DSR demandent «~l'\emph{edge} est-il réel~?~»~; le PBO demande «~le choix qu'on a fait parmi les candidats se transporte-t-il hors échantillon~?~». La réponse est oui à la première, non à la seconde.
 \end{insightbox}
 
 \subsection{Tests de supériorité prédictive}

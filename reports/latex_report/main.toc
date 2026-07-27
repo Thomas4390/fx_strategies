@@ -65,33 +65,33 @@
 \contentsline {paragraph}{Deux zones de vigilance identifiées.}{35}{paragraph*.33}%
 \contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{35}{subsection.13.3}%
 \contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{36}{subsection.13.4}%
-\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{38}{subsection.13.5}%
-\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{39}{subsection.13.6}%
-\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{40}{subsection.13.7}%
-\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{41}{section.14}%
-\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{41}{subsection.14.1}%
-\contentsline {subsection}{\numberline {14.2}Observations transversales}{42}{subsection.14.2}%
-\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{43}{section.15}%
-\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{43}{subsection.15.1}%
-\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{44}{subsection.15.2}%
-\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{44}{subsection.15.3}%
-\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{44}{subsection.15.4}%
-\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{45}{subsection.15.5}%
-\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{45}{subsection.15.6}%
-\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{45}{subsection.15.7}%
-\contentsline {section}{\numberline {16}Conditions de déploiement}{45}{section.16}%
-\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{46}{subsection.16.1}%
-\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{47}{appendix.A}%
-\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{49}{appendix.B}%
-\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{50}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}La question posée}{50}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{50}{subsection.C.2}%
-\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{51}{subsection.C.3}%
-\contentsline {paragraph}{Trois observations saillantes.}{51}{paragraph*.44}%
-\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{52}{subsection.C.4}%
-\contentsline {paragraph}{Lecture du plateau.}{52}{paragraph*.46}%
-\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{53}{subsection.C.5}%
-\contentsline {paragraph}{Distance au maximum.}{53}{paragraph*.49}%
-\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{54}{subsection.C.6}%
-\contentsline {paragraph}{Lecture de la frontière.}{54}{paragraph*.51}%
+\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{39}{subsection.13.5}%
+\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{40}{subsection.13.6}%
+\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{41}{subsection.13.7}%
+\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{42}{section.14}%
+\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{42}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.2}Observations transversales}{43}{subsection.14.2}%
+\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{44}{section.15}%
+\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{44}{subsection.15.1}%
+\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{45}{subsection.15.2}%
+\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{45}{subsection.15.3}%
+\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{45}{subsection.15.4}%
+\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{46}{subsection.15.5}%
+\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{46}{subsection.15.6}%
+\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{46}{subsection.15.7}%
+\contentsline {section}{\numberline {16}Conditions de déploiement}{46}{section.16}%
+\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{47}{subsection.16.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{48}{appendix.A}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{50}{appendix.B}%
+\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{51}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}La question posée}{51}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{51}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{52}{subsection.C.3}%
+\contentsline {paragraph}{Trois observations saillantes.}{52}{paragraph*.44}%
+\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{53}{subsection.C.4}%
+\contentsline {paragraph}{Lecture du plateau.}{53}{paragraph*.46}%
+\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{54}{subsection.C.5}%
+\contentsline {paragraph}{Distance au maximum.}{54}{paragraph*.49}%
+\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{55}{subsection.C.6}%
+\contentsline {paragraph}{Lecture de la frontière.}{55}{paragraph*.51}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

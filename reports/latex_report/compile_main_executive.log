@@ -289,7 +289,7 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
-No file main_executive.aux.
+(./main_executive.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -297,9 +297,6 @@ No file main_executive.aux.
 nary-french.trsl)
 (/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
 nary-english.trsl)
-
-Package hyperref Warning: Rerun to get /PageLabels entry.
-
 
 Package polyglossia Warning: Failed to patch part for French
 
@@ -409,9 +406,6 @@ Overfull \hbox (9.64635pt too wide) in paragraph at lines 492--507
 [15] (./main_executive.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)

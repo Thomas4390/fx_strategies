@@ -215,7 +215,7 @@ copierez chaque dossier vers son équivalent dans le \emph{Data Folder} de MT5
 \textbf{Chemin dans l'archive} & \textbf{Rôle} \\
 \midrule
 \multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Experts/}} --- Expert Advisor principal}} \\
-\quad\code{FxMultiSleeve.mq5} & Source MQL5 de l'EA orchestrateur (3~sleeves) \\
+\quad\code{FxMultiSleeve.mq5} & Source MQL5 de l'EA orchestrateur (4~sleeves) \\
 \quad\code{FxMultiSleeve.ex5} & Binaire pré-compilé (à recompiler localement) \\
 \addlinespace
 \multicolumn{2}{l}{\textcolor{primary}{\textbf{\code{Include/}} --- Modules MQL5 ($\sim 13$~fichiers)}} \\
@@ -512,8 +512,8 @@ gardes-fous de risque agrégés au niveau portefeuille.
 \code{Inp\_EnableDDCap}      & \metric{false} & Circuit-breaker DD désactivé par défaut (Phase~A 2026-05-04, freinait 24\,\% configs IS sans bénéfice OOS). \\
 \code{Inp\_DDCap}            & \metric{0.20}  & Seuil DD relatif (utilisé seulement si \code{EnableDDCap=true}). \\
 \code{Inp\_ResetDDState}     & \metric{false} & Force le reset de l'état DD persisté (debug uniquement). \\
-\code{Inp\_EnableMarginCap}  & \metric{false} & Cap marge désactivé par défaut (jamais touché en backtest 5.4 ans). \\
-\code{Inp\_MarginCapPct}     & \metric{0.70}  & Plafond marge (utilisé seulement si \code{EnableMarginCap=true}). \\
+\code{Inp\_EnableMarginCap}  & \metric{true}  & Cap marge \textbf{actif}. Jamais déclenché sur le backtest de référence, mais il protège en conditions réelles. \\
+\code{Inp\_MarginCapPct}     & \metric{0.50}  & Seuil d'utilisation de marge au-delà duquel le levier global est divisé par deux. Une fermeture forcée de toutes les positions intervient séparément à $85\,\%$. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -808,7 +808,7 @@ souriant} (icône \enquote{:-)}), et dans le \emph{Journal} la ligne~:
 4  & Vérifier mensuellement que \code{macro\_history.csv} est rafraîchi (cf.~4.3). \\
 5  & Surveillance hebdomadaire du Journal MT5 pour les warnings d'history M1/D1. \\
 6  & Slippage réel mesuré en démo \emph{avant} le passage capital réel. \\
-7  & Cap d'utilisation de marge \emph{désactivé} par défaut~; ré-activer manuellement (\code{Inp\_EnableMarginCap=true}) si désiré, l'auto-deleverage s'active alors $> 70\,\%$ marge. \\
+7  & Cap d'utilisation de marge \textbf{actif} par défaut (\code{Inp\_EnableMarginCap=true})~: l'auto-deleverage divise le levier par deux dès $50\,\%$ de marge utilisée, et une fermeture forcée intervient à $85\,\%$. Prévoir que ces réductions puissent survenir sans action de votre part. \\
 8  & Kill switch~: capacité à flatten toutes les positions en $< 10$~minutes. \\
 \bottomrule
 \end{tabular}

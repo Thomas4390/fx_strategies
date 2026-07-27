@@ -131,7 +131,7 @@ document se concentre sur la pédagogie de la stratégie elle-même : intuition
 \section{Vue d'ensemble}
 \label{sec:overview}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{F}{x}MultiSleeve est une stratégie quantitative diversifiée sur le marché des changes (FX) déployée en un seul \emph{Expert Advisor} sur MetaTrader~5. Elle combine \textbf{trois moteurs de rendement indépendants}, chacun spécialisé dans un régime de marché différent, regroupés sous une couche commune de gestion du risque.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{F}{x}MultiSleeve est une stratégie quantitative diversifiée sur le marché des changes (FX) déployée en un seul \emph{Expert Advisor} sur MetaTrader~5. Elle combine \textbf{quatre moteurs de rendement indépendants}~--- trois sur les devises, un sur l'or~--- chacun spécialisé dans un régime de marché différent, regroupés sous une couche commune de gestion du risque.
 
 \subsection{Le mandat client}
 
@@ -152,14 +152,15 @@ mean reversion vs momentum) lisse la courbe d'équité et réduit la sévérité
 phases de creux. C'est le principe de la diversification temporelle et stylistique.
 \end{insightbox}
 
-\subsection{Trois moteurs, une seule philosophie}
+\subsection{Quatre moteurs, une seule philosophie}
 
-Les moteurs FX partagent une racine commune : ils exploitent tous des \emph{anomalies micro-structurelles} bien documentées dans la littérature académique sur le marché des changes, plutôt que de s'appuyer sur des prédictions macroéconomiques discrétionnaires. Cette discipline rend le système \emph{auditable} et \emph{testable}, et limite la dérive comportementale.
+Les trois moteurs FX partagent une racine commune : ils exploitent tous des \emph{anomalies micro-structurelles} bien documentées dans la littérature académique sur le marché des changes, plutôt que de s'appuyer sur des prédictions macroéconomiques discrétionnaires. Le quatrième, sur l'or, relève de la même discipline mais d'une littérature différente~--- le \emph{time series momentum}. Cette discipline rend le système \emph{auditable} et \emph{testable}, et limite la dérive comportementale.
 
 \begin{itemize}
 \item Le \sleeve{Moteur~1 (MR Macro)} capture la \emph{mean reversion} intraday autour du VWAP en horaires de forte liquidité, filtré par un régime macroéconomique sain.
 \item Le \sleeve{Moteur~2 (TS Momentum)} capture les tendances FX lentes induites par les divergences de politique monétaire entre banques centrales, sur un horizon journalier.
 \item Le \sleeve{Moteur~3 (RSI Daily)} capture les \emph{overshoot} statistiques de court terme via le RSI, en s'activant exactement quand les deux autres moteurs sont en creux.
+\item Le \sleeve{Moteur~4 (Gold Momentum)} capture le \emph{time series momentum} de l'or sur des horizons de plusieurs semaines. C'est le seul moteur hors devises, et la source de rendement dominante du portefeuille (cf.~\ref{sec:gold}).
 \end{itemize}
 
 \subsection{Allocation et levier}
@@ -239,7 +240,14 @@ Le Moteur~1 reçoit 72\,\% parce qu'il a la volatilité intrinsèque la plus bas
 (environ $1.3\,\%$ annualisé) couplée au Sharpe le plus élevé. Lui allouer une
 fraction importante du capital ne le rend pas plus risqué que les autres
 moteurs~--- au contraire, en termes de \emph{contribution au risque}, les trois
-moteurs sont approximativement équipondérés.
+moteurs FX sont approximativement équipondérés.
+
+\smallskip
+Le Moteur~4 échappe à cette logique~: ses $10\,\%$ ne sont pas un poids
+vol-équipondéré mais un plafond d'exposition délibéré. Sa volatilité propre
+($33.9\,\%$ annualisée) est d'un ordre de grandeur au-dessus de celle des moteurs
+FX, si bien qu'à $10\,\%$ du capital il porte déjà l'essentiel du risque \emph{et}
+du rendement du portefeuille. C'est un choix assumé, discuté en~\ref{sec:gold}.
 \end{thesisbox}
 
 Cette logique \emph{vol-équipondérée}, classique en construction de portefeuille institutionnel, s'oppose à une équipondération naïve $33/33/33$ qui aurait sur-pondéré les moteurs daily volatils au détriment du moteur intraday régulier.
@@ -577,7 +585,135 @@ fréquemment un signal à Sharpe $0{,}60$ fortement corrélé.
 \newpage
 
 % ═══════════════════════════════════════════════════════════════════════
-%  § 6 — GESTION DU RISQUE
+%  § 6 — MOTEUR 4 : GOLD MOMENTUM
+% ═══════════════════════════════════════════════════════════════════════
+\section{Moteur 4 --- Gold Momentum (suivi de tendance sur l'or)}
+\label{sec:gold}
+
+\subsection{Intuition économique}
+
+Les trois premiers moteurs travaillent sur des paires de devises. Le quatrième
+travaille sur l'or (\code{XAUUSD}), et exploite une régularité différente~: le
+\emph{time series momentum}. Documentée par Moskowitz, Ooi et Pedersen
+(\emph{Journal of Financial Economics}, 2012) sur plus de cinquante marchés à
+terme, elle énonce que le rendement passé d'un actif prédit son rendement futur
+sur des horizons de un à douze mois.
+
+L'or est un terrain naturel pour cette anomalie. Il ne verse pas de coupon et ne
+génère pas de flux~: son prix est presque entièrement porté par des flux de
+capitaux et des changements de régime macroéconomique~--- inflation anticipée,
+taux réels, aversion au risque. Ces changements se propagent lentement, ce qui
+crée des tendances de plusieurs semaines à plusieurs mois plutôt que des
+retournements rapides.
+
+C'est aussi, et c'est le point qui justifie sa présence, une source de rendement
+\textbf{structurellement décorrélée} des trois moteurs FX. Ceux-ci vivent des
+divergences de politique monétaire entre banques centrales et de la
+micro-structure du marché des changes. L'or répond à autre chose.
+
+\subsection{Mécanique du signal}
+
+Le piège classique du \emph{momentum} est le choix de l'horizon~: retenir la
+fenêtre qui a le mieux marché sur l'historique revient à sur-ajuster. Ce moteur
+l'évite en \textbf{refusant de choisir}.
+
+\begin{enumerate}
+\item Quatre horizons fixes sont évalués en parallèle~: $40$, $60$, $120$ et
+      $250$~séances.
+\item Pour chacun, on ne retient que le \emph{signe} du rendement passé~--- pas
+      son amplitude, qui serait bien plus bruitée.
+\item Les quatre signes sont moyennés. Le résultat est un signal d'ensemble.
+\item La position s'ouvre quand l'ensemble devient positif et se ferme quand il
+      redevient négatif.
+\end{enumerate}
+
+Moyenner remplace un choix par un agrégat. C'est à la fois plus proche de la
+manière dont la littérature applique le TSMOM en pratique, et nettement plus
+difficile à sur-ajuster~: aucun des quatre horizons n'a été optimisé.
+
+\begin{insightbox}
+\textbf{Le moteur est \emph{long-only}.} Il n'y a pas de vente à découvert sur
+l'or (\code{Inp\_Gold\_AllowShort = false}). Quand l'ensemble est négatif, le
+moteur est simplement hors marché. Ce choix supprime la queue de risque la plus
+brutale~--- un \emph{short squeeze} sur l'or~--- au prix des tendances baissières
+non exploitées.
+\end{insightbox}
+
+Les positions se comptent en semaines, pas en heures~: sur la fenêtre de
+référence de cinq ans et quatre mois, le moteur n'a ouvert que \textbf{35~positions}.
+C'est de loin le moteur le moins actif du portefeuille, et c'est cohérent avec un
+signal d'horizon long.
+
+\subsection{Paramètres expliqués}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{p{3.9cm}p{1.8cm}p{7.7cm}}
+\toprule
+\textbf{Paramètre} & \textbf{Valeur} & \textbf{Pourquoi cette valeur ?} \\
+\midrule
+\code{Inp\_Gold\_Symbol} & \texttt{XAUUSD} & Le symbole or du broker. Le suffixe de compte (\code{.c}) est ajouté automatiquement. \\
+\code{Inp\_Gold\_LookbackA..D} & $40/60/120/250$ & Les quatre horizons de l'ensemble, en séances. Fixés a priori depuis la littérature TSMOM, jamais optimisés. \\
+\code{Inp\_Gold\_AllowShort} & \texttt{false} & Long-only. Voir l'encadré ci-dessus. \\
+\code{Inp\_Gold\_TargetVol} & $0{,}55$ & Volatilité annualisée visée pour ce moteur pris isolément. Élevée par construction~: c'est un moteur de rendement, borné en aval par son allocation de $10\,\%$. \\
+\code{Inp\_Gold\_MaxLeverage} & $6{,}6$ & Plafond de levier propre au moteur, qui borne l'exposition quand la volatilité réalisée de l'or s'effondre. \\
+\code{Inp\_Gold\_SafetySL} & $0{,}04$ & Stop de sécurité à $4\,\%$ du prix d'entrée. Ce n'est pas un stop de stratégie~--- le signal sort de lui-même~--- mais un garde-fou contre un décrochage brutal. \\
+\code{Inp\_Gold\_SlippageBps} & $2$ & Slippage modélisé, en points de base par côté. Plus bas que sur les paires FX~: le marché de l'or spot est profond aux volumes traités ici. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Performance historique}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_gold_momentum_equity.png}
+\caption{Équité du Moteur~4 pris isolément, à son dimensionnement propre et \emph{avant} l'allocation de $10\,\%$. La progression est très irrégulière~: de longues périodes hors marché ou sans progrès, ponctuées de quelques mouvements de grande amplitude qui font l'essentiel du résultat.}
+\end{figure}
+
+Pris isolément et à son dimensionnement propre, le moteur rend $577{,}8\,\%$ sur
+la période, soit un CAGR de $25{,}06\,\%$, pour une volatilité annualisée de
+$33{,}88\,\%$ et un Sharpe de $0{,}74$. Son repli maximal isolé atteint
+$-79{,}62\,\%$.
+
+\begin{warningbox}
+\textbf{Ce moteur porte le résultat, et il porte le risque.} Sur le backtest
+d'exécution MetaTrader~5 de référence, il produit $79{,}8\,\%$ du profit net du
+portefeuille avec $10\,\%$ de l'allocation et $4\,\%$ des transactions. Son taux
+de réussite est de $31{,}4\,\%$~: environ deux positions sur trois perdent de
+l'argent, et l'ensemble du résultat vient d'une minorité de mouvements longs.
+
+\smallskip
+Trois conséquences pratiques qu'il faut avoir en tête avant de déployer~:
+\begin{itemize}
+\item \textbf{Une longue série de pertes est le régime normal}, pas un signal de
+      dysfonctionnement. Un moteur de suivi de tendance à $31\,\%$ de réussite
+      passe l'essentiel de son temps à perdre de petites sommes.
+\item \textbf{La performance du portefeuille est concentrée.} Si l'or entre dans
+      un régime sans tendance durable, le portefeuille perd sa principale source
+      de rendement et retombe sur les trois moteurs FX, dont les CAGR isolés
+      s'échelonnent entre $1{,}5\,\%$ et $5{,}2\,\%$~--- un tout autre ordre de
+      grandeur.
+\item \textbf{Le repli isolé de $-79{,}62\,\%$ est réel}, même s'il est ramené à
+      l'échelle du portefeuille par l'allocation de $10\,\%$ et par la couche de
+      ciblage de volatilité globale.
+\end{itemize}
+\end{warningbox}
+
+\begin{insightbox}
+\textbf{Pourquoi $10\,\%$ et pas davantage~?} Parce que le poids optimal apparent
+de ce moteur se situe à la borne du domaine testé~--- autrement dit, les données
+disponibles ne permettent pas de trancher entre $10\,\%$ et une valeur plus
+élevée. Face à une indétermination de ce type, le choix retenu est le plus
+prudent des deux. Augmenter cette part serait une décision à prendre sur des
+données futures, pas sur celles qui ont servi à la calibrer.
+\end{insightbox}
+
+\newpage
+
+% ═══════════════════════════════════════════════════════════════════════
+%  § 7 — GESTION DU RISQUE
 % ═══════════════════════════════════════════════════════════════════════
 \section{Gestion du risque}
 \label{sec:risk}
@@ -626,8 +762,9 @@ la stratégie.
 Le mécanisme reste disponible et peut être réactivé à tout moment~: en le passant à \code{true}, la couche de risque compare chaque seconde l'\emph{equity} courante au plus haut historique et ferme toutes les positions si le repli dépasse le seuil \code{Inp\_DDCap} ($20\,\%$ par défaut), en armant un verrou que seul un \emph{reset} manuel lève.
 
 \subsection{Plafond d'utilisation de la marge}
+\label{sec:margin_cap}
 
-Indépendamment du \emph{drawdown} en P\&L, la marge engagée auprès du broker est surveillée toutes les 30~secondes. Deux seuils~:
+Contrairement au disjoncteur de \emph{drawdown}, ce mécanisme-ci est \textbf{actif par défaut} (\code{Inp\_EnableMarginCap = true}). Indépendamment du \emph{drawdown} en P\&L, la marge engagée auprès du broker est surveillée toutes les 30~secondes. Deux seuils~:
 
 \begin{itemize}
 \item \textbf{$50\,\%$ de marge utilisée}~: le levier global est divisé par deux. Effet immédiat sur les nouvelles entrées (sizing réduit), pas de fermeture forcée.
@@ -780,8 +917,8 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \code{Inp\_RiskScale}         & $4{,}5$   & \textbf{Le réglage du risque}. Rendement et repli y répondent proportionnellement~: l'abaisser réduit les deux, sans changer les signaux ni le nombre de trades. \\
 \code{Inp\_EnableDDCap}       & \texttt{false} & Désactivé dans la configuration livrée. À passer à \texttt{true} pour réactiver le coupe-circuit de repli. \\
 \code{Inp\_DDCap}             & $0{,}20$  & Seuil du coupe-circuit, utilisé uniquement si \code{Inp\_EnableDDCap} vaut \texttt{true}. \\
-\code{Inp\_EnableMarginCap}   & \texttt{false} & Désactivé (jamais déclenché en backtest). \\
-\code{Inp\_MarginCapPct}      & $0{,}70$  & À adapter selon la marge dont vous disposez en réserve. \\
+\code{Inp\_EnableMarginCap}   & \texttt{true} & \textbf{Actif.} Jamais déclenché en backtest, mais il protège en conditions réelles (cf.~\ref{sec:margin_cap}). \\
+\code{Inp\_MarginCapPct}      & $0{,}50$  & Seuil de déclenchement du désendettement. À adapter selon la marge dont vous disposez en réserve. \\
 \bottomrule
 \end{tabular}
 \end{center}

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  26 JUL 2026 20:34
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  26 JUL 2026 23:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1818,28 +1818,28 @@ File: figures/robustness_bootstrap_sharpe.png Graphic file (type bmp)
  [34]
 File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
 <figures/robustness_equity_fan_chart.png>
- (./tables/robustness_overfitting.tex [35]) [36]
+ [35] (./tables/robustness_overfitting.tex) [36] [37]
 File: figures/robustness_pbo_logits.png Graphic file (type bmp)
 <figures/robustness_pbo_logits.png>
- [37]
+ [38]
 (./tables/robustness_arch_tests.tex)
 File: figures/robustness_spa_pvalues.png Graphic file (type bmp)
 <figures/robustness_spa_pvalues.png>
- [38]
+ [39]
 File: figures/robustness_rolling_stability.png Graphic file (type bmp)
 <figures/robustness_rolling_stability.png>
- [39]
+ [40]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
  [][] 
  []
 
-)) (./sections/11_scenarios.tex [40]
+)) (./sections/11_scenarios.tex [41]
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
- (./tables/scenarios.tex) [41])
+ (./tables/scenarios.tex) [42])
 (./sections/12_limitations.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
@@ -1848,11 +1848,11 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 
 
 Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 42.
+(lettrine)                The dropped cap U doesn't fit on page 43.
 (lettrine)                Missing vertical space: 42.22546pt. 
 (lettrine)                Reported on input line 4.
 
-[42] [43] [44]
+[43] [44] [45]
 Underfull \hbox (badness 1314) in paragraph at lines 86--87
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
  []
@@ -1872,13 +1872,13 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.80363pt (A);
 (lettrine.sty)             reported on input line 4.
- [45]
+ [46]
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
  []
 
-) [46] (./sections/appendix_a_inventory.tex [47] [48])
+) [47] (./sections/appendix_a_inventory.tex [48] [49])
 (./sections/appendix_b_trade_walkthrough.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
@@ -1886,7 +1886,7 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             reported on input line 4.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
 (Font)              scaled to size 8.64523pt on input line 32.
- [49])
+ [50])
 (./sections/appendix_c_weight_sensitivity.tex
 Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
@@ -1903,10 +1903,10 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 1/cmr/m/n/10.95 ) :
  []
 
-(./tables/weight_sensitivity_named.tex) [50]
+(./tables/weight_sensitivity_named.tex) [51]
 File: figures/weight_sensitivity_named_bars.png Graphic file (type bmp)
 <figures/weight_sensitivity_named_bars.png>
- [51]
+ [52]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -1943,10 +1943,10 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_1d_mr.png Graphic file (type bmp)
 <figures/weight_sensitivity_1d_mr.png>
-[52]
+[53]
 File: figures/weight_sensitivity_simplex_ternary.png Graphic file (type bmp)
 <figures/weight_sensitivity_simplex_ternary.png>
- (./tables/weight_sensitivity_extremes.tex) [53]
+ (./tables/weight_sensitivity_extremes.tex) [54]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -1961,7 +1961,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_pareto_frontier.png Graphic file (type bmp)
 <figures/weight_sensitivity_pareto_frontier.png>
-) [54] [55] (./main.aux)
+) [55] [56] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1974,10 +1974,10 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Here is how much of TeX's memory you used:
  42133 strings out of 468173
  967973 string characters out of 5435520
- 1539545 words of memory out of 5000000
+ 1539605 words of memory out of 5000000
  70083 multiletter control sequences out of 15000+600000
  638094 words of font info for 151 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  108i,14n,118p,11207b,1282s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (59 pages).
+Output written on main.pdf (60 pages).

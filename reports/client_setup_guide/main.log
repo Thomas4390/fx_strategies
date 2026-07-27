@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  26 JUL 2026 20:42
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  26 JUL 2026 23:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1754,11 +1754,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 513--514
 []|\TU/LatinModernRoman(0)/m/n/10 Seuil DD relatif (utilisé seulement si
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 516--517
-[]|\TU/LatinModernRoman(0)/m/n/10 Plafond marge (utilisé seulement si
- []
-
 [9
 
 ] [10] [11
@@ -1817,13 +1812,6 @@ S/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Allow Algo Trading
 
 Overfull \hbox (1.0441pt too wide) in paragraph at lines 803--803
 []|\TU/LatinModernRoman(0)/b/n/10 #| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 811--812
-[]|\TU/LatinModernRoman(0)/m/n/10 Cap d’utilisation de marge \TU/LatinModernRom
-an(0)/m/it/10 désactivé \TU/LatinModernRoman(0)/m/n/10 par défaut; ré-activer m
-anuellement
  []
 
 [15
