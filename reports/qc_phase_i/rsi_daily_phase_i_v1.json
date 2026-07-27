@@ -1,0 +1,41 @@
+{
+  "name": "rsi_daily_phase_i_v1",
+  "statistics": {
+    "Total Orders": "64",
+    "Average Win": "0.50%",
+    "Average Loss": "-0.69%",
+    "Compounding Annual Return": "1.815%",
+    "Drawdown": "2.800%",
+    "Expectancy": "0.537",
+    "Start Equity": "1000000.00",
+    "End Equity": "1102755.08",
+    "Net Profit": "10.276%",
+    "Sharpe Ratio": "-1.431",
+    "Sortino Ratio": "-1.556",
+    "Probabilistic Sharpe Ratio": "22.687%",
+    "Loss Rate": "11%",
+    "Win Rate": "89%",
+    "Profit-Loss Ratio": "0.73",
+    "Alpha": "-0.023",
+    "Beta": "0.036",
+    "Annual Standard Deviation": "0.017",
+    "Annual Variance": "0",
+    "Information Ratio": "0.188",
+    "Tracking Error": "0.063",
+    "Treynor Ratio": "-0.678",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$810000.00",
+    "Lowest Capacity Asset": "USDCAD 8G",
+    "Portfolio Turnover": "0.90%"
+  },
+  "runtimeStatistics": {
+    "Equity": "$1,102,755.08",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$104,023.10",
+    "Probabilistic Sharpe Ratio": "22.687%",
+    "Return": "10.28 %",
+    "Unrealized": "$0.00",
+    "Volume": "$18,877,330.86"
+  }
+}

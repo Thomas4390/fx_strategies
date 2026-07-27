@@ -1,0 +1,31 @@
+{
+  "run_id": "20260726T205852Z",
+  "exit_code": 0,
+  "duration_sec": 10.790531257000112,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/combo40.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/combo40_report.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2021.01.01 - 2025.12.31)",
+    "initial_deposit": "0.00",
+    "total_net_profit": "0.00",
+    "profit_factor": "0.00",
+    "recovery_factor": "0.00",
+    "sharpe_ratio": "0.00",
+    "total_trades": "0",
+    "balance_dd_max": "0.00 (0.00%)",
+    "equity_dd_max": "0.00 (0.00%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260726.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] RiskManager init failed",
+      "[INIT][ERROR] RiskManager init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "NQ\t0\t16:58:48.334\tCore 01\t  Inp_Gold_LookbackC=120\nCO\t0\t16:58:48.334\tCore 01\t  Inp_Gold_LookbackD=250\nDF\t0\t16:58:48.334\tCore 01\t  Inp_Gold_AllowShort=false\nRO\t0\t16:58:48.334\tCore 01\t  Inp_Gold_TargetVol=0.55\nQK\t0\t16:58:48.334\tCore 01\t  Inp_Gold_MaxLeverage=6.6\nMN\t0\t16:58:48.334\tCore 01\t  Inp_Gold_SafetySL=0.04\nPO\t0\t16:58:48.334\tCore 01\t  Inp_Gold_SlippageBps=2\nRI\t0\t16:58:48.334\tCore 01\t  Inp_Gold_Trace=false\nQQ\t0\t16:58:48.334\tCore 01\t  Inp_Gold_TraceFile=gold_trace.csv\nLD\t0\t16:58:48.334\tCore 01\t  Inp_CommissionBpsPerSide=5.0\nEL\t0\t16:58:48.334\tCore 01\t  Inp_SwapBpsPerNight=0.5\nCD\t0\t16:58:48.334\tCore 01\t  Inp_SymbolSuffix=.c\nIM\t0\t16:58:48.334\tCore 01\t  Inp_MagicMR=831\nJR\t0\t16:58:48.334\tCore 01\t  Inp_MagicTS=832\nJK\t0\t16:58:48.334\tCore 01\t  Inp_MagicRSI=833\nHR\t0\t16:58:48.334\tCore 01\t  Inp_MagicH1=834\nJQ\t0\t16:58:48.334\tCore 01\t  Inp_MagicGold=835\nLH\t0\t16:58:48.334\tCore 01\t  Inp_LogVerbose=false\nDL\t0\t16:58:48.334\tCore 01\t  Inp_LogToFile=true\nKJ\t0\t16:58:48.334\tCore 01\t  Inp_ExportDeals=false\nDG\t0\t16:58:48.334\tCore 01\t  Inp_MacroCacheFile=macro_cache.csv\nMN\t0\t16:58:48.334\tCore 01\t  Inp_MacroUseCommon=true\nJG\t0\t16:58:48.334\tCore 01\t  Inp_MacroMaxAgeHours=168\nKL\t0\t16:58:48.334\tCore 01\t  Inp_DailyRecomputeHr=21\nKG\t0\t16:58:48.334\tCore 01\t  Inp_MacroSourceMode=4\nMN\t0\t16:58:48.334\tCore 01\t  Inp_FREDApiKeyFile=fred_api_key.txt\nEJ\t0\t16:58:48.334\tCore 01\t  Inp_FREDKeyUseCommon=true\nQL\t0\t16:58:48.334\tCore 01\t  Inp_FREDSeriesId=T10Y2Y\nDO\t0\t16:58:48.334\tCore 01\t  Inp_MacroHistoryFile=macro_history.csv\nCM\t0\t16:58:48.334\tCore 01\t  Inp_MacroHistoryUseCommon=true\nNL\t0\t16:58:48.334\tCore 01\t2021.01.01 00:00:00   [INIT][INFO] FxMultiSleeve start build (non-string passed)\nHM\t0\t16:58:48.334\tCore 01\t2021.01.01 00:00:00   CRiskManager::Init: allocations sum=1.1000 != 1.0 (mr=0.80 ts=0.10 rsi=0.10 h1=0.00 gold=0.10)\nJO\t0\t16:58:48.334\tCore 01\t2021.01.01 00:00:00   [INIT][ERROR] RiskManager init failed\nJO\t0\t16:58:48.334\tCore 01\t2021.01.01 00:00:00   [DEINIT][INFO] EA stopped reason=8\nKI\t2\t16:58:48.334\tCore 01\ttester stopped because OnInit reports incorrect input parameters\nDJ\t0\t16:58:48.558\tTester\tautomatic testing finished\nDF\t2\t16:58:48.560\tCore 01\tdisconnected\nIQ\t0\t16:58:48.560\tCore 01\tconnection closed\nIH\t0\t16:58:48.569\tTester\tquality of analyzed history is 100%\nHS\t0\t16:58:48.590\tTester\tautomatic testing finished"
+  }
+}

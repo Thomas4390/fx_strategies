@@ -1,0 +1,28 @@
+{
+  "run_id": "20260726T202838Z",
+  "exit_code": 0,
+  "duration_sec": 14.40104294699995,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/gold_sweep_20-40-80_tv0.25.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/gold_sweep_20-40-80_tv0.25.htm",
+    "symbol": "XAUUSD.c",
+    "period": "M1 (2021.01.01 - 2025.12.31)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "15 376.32",
+    "profit_factor": "2.84",
+    "recovery_factor": "2.37",
+    "sharpe_ratio": "0.80",
+    "total_trades": "41",
+    "balance_dd_max": "3 298.05 (32.98%)",
+    "equity_dd_max": "6 495.12 (24.54%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260726.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "QQ\t0\t16:28:32.384\tCore 01\t2025.12.20 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nRJ\t0\t16:28:32.384\tCore 01\t2025.12.21 21:00:17   [RISK][INFO] Daily recompute: sigma21=2.6016 sigma63=1.5021 realized=2.6016 -> lev=0.288\nHF\t0\t16:28:32.384\tCore 01\t2025.12.21 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKD\t0\t16:28:32.384\tCore 01\t2025.12.22 21:00:17   [RISK][INFO] Daily recompute: sigma21=2.9004 sigma63=1.6745 realized=2.9004 -> lev=0.259\nCD\t0\t16:28:32.384\tCore 01\t2025.12.22 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMG\t0\t16:28:32.384\tCore 01\t2025.12.23 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.0744 sigma63=1.7750 realized=3.0744 -> lev=0.244\nNJ\t0\t16:28:32.384\tCore 01\t2025.12.23 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHQ\t0\t16:28:32.384\tCore 01\t2025.12.24 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.0207 sigma63=1.7440 realized=3.0207 -> lev=0.248\nEO\t0\t16:28:32.384\tCore 01\t2025.12.24 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nES\t0\t16:28:32.384\tCore 01\t2025.12.25 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.0154 sigma63=1.7409 realized=3.0154 -> lev=0.249\nLM\t0\t16:28:32.384\tCore 01\t2025.12.25 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKN\t0\t16:28:32.384\tCore 01\t2025.12.26 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.1659 sigma63=1.8279 realized=3.1659 -> lev=0.237\nOS\t0\t16:28:32.384\tCore 01\t2025.12.26 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nJH\t0\t16:28:32.384\tCore 01\t2025.12.27 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.1665 sigma63=1.8282 realized=3.1665 -> lev=0.237\nJP\t0\t16:28:32.384\tCore 01\t2025.12.27 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQJ\t0\t16:28:32.384\tCore 01\t2025.12.28 21:00:17   [RISK][INFO] Daily recompute: sigma21=3.1665 sigma63=1.8282 realized=3.1665 -> lev=0.237\nIF\t0\t16:28:32.384\tCore 01\t2025.12.28 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHE\t0\t16:28:32.384\tCore 01\t2025.12.29 21:00:17   [RISK][INFO] Daily recompute: sigma21=2.5768 sigma63=1.4877 realized=2.5768 -> lev=0.291\nPK\t0\t16:28:32.384\tCore 01\t2025.12.29 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMG\t0\t16:28:32.384\tCore 01\t2025.12.30 21:00:17   [RISK][INFO] Daily recompute: sigma21=2.5977 sigma63=1.4998 realized=2.5977 -> lev=0.289\nFI\t0\t16:28:32.384\tCore 01\t2025.12.30 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKN\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 4339.080 [#82 buy 0.13 XAUUSD.c 3397.550 sl: 3259.270]\nMP\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   deal #83 sell 0.13 XAUUSD.c at 4339.080 done (based on order #83)\nHN\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   deal performed [#83 sell 0.13 XAUUSD.c at 4339.080]\nPO\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   order performed sell 0.13 at 4339.080 [#83 sell 0.13 XAUUSD.c at 4339.080]\nEN\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   [OPTIM] vt=0.7500 maxlev=64.0000 volfloor=0.0200 cagr=0.204873 dd=42.6498 sharpe=0.8002 pf=2.8424 rf=2.3674 trades=41 net=15376.32 years=4.997\nCF\t0\t16:28:32.384\tCore 01\tfinal balance 25376.32 USD\nLQ\t0\t16:28:32.384\tCore 01\tOnTester result 0.2048726053662724\nQE\t0\t16:28:32.384\tCore 01\t2025.12.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nIM\t0\t16:28:32.384\tCore 01\tXAUUSD.c,M1: 7044346 ticks, 1763446 bars generated. Test passed in 0:00:05.180 (including ticks preprocessing 0:00:00.879).\nGQ\t0\t16:28:32.384\tCore 01\t35943517 total ticks for all symbols\nPJ\t0\t16:28:32.384\tCore 01\tEURUSD.c: generate 7228529 ticks in 0:00:00.183, passed to tester 7228529 ticks\nHE\t0\t16:28:32.384\tCore 01\tGBPUSD.c: generate 7232254 ticks in 0:00:00.179, passed to tester 7232254 ticks\nNG\t0\t16:28:32.384\tCore 01\tUSDCAD.c: generate 7189994 ticks in 0:00:00.172, passed to tester 7189994 ticks\nER\t0\t16:28:32.384\tCore 01\tUSDJPY.c: generate 7248394 ticks in 0:00:00.174, passed to tester 7248394 ticks\nIL\t0\t16:28:32.384\tCore 01\tXAUUSD.c: generate 7044346 ticks in 0:00:00.171, passed to tester 7044346 ticks\nIP\t0\t16:28:32.384\tCore 01\t1338 Mb memory used including 551 Mb of history data, 704 Mb of tick data\nGK\t0\t16:28:32.384\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260726.log\" written\nIF\t0\t16:28:32.399\tTester\tautomatic testing finished\nIQ\t0\t16:28:32.399\tCore 01\tconnection closed"
+  }
+}

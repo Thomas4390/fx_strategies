@@ -12,7 +12,7 @@
 \fancyhead[L]{\footnotesize\color{slateGrey}\textsf{FxMultiSleeve --- Setup MT5}}
 
 \hypersetup{
-  pdftitle={Stratégie FX Tri-Signaux --- Guide d'installation client},
+  pdftitle={Stratégie FX Multi-Moteurs --- Guide d'installation client},
   pdfsubject={Setup MetaTrader 5 Windows pour FxMultiSleeve},
   pdfkeywords={MT5, MetaTrader, FxMultiSleeve, setup, installation, client}
 }
@@ -47,7 +47,7 @@
 \vspace{0.7cm}
 
 {\sffamily\color{primary}\huge\bfseries
-Stratégie FX Tri-Signaux\par}
+Stratégie FX Multi-Moteurs\par}
 
 \vspace{0.4cm}
 
@@ -86,8 +86,8 @@ l'usage standard de MetaTrader.
 {\small\color{slateGrey}\sffamily
 À la fin de ce guide, vous aurez : (i)~MT5 configuré avec le broker recommandé,
 (ii)~la stratégie compilée et chargeable en un drag-and-drop, (iii)~un backtest
-\textbf{Sharpe~$\approx 1.38$, drawdown maximal $-13\,\%$, 785~trades sur 5.4~ans}
-reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
+\textbf{Sharpe~$\approx 0.89$, repli d'équité maximal
+$44\,\%$, 851~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
 
 \vfill
 
@@ -119,11 +119,12 @@ reproductible localement, et (iv)~la procédure pour basculer en trading démo r
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{F}{xMultiSleeve} est un Expert
-Advisor MQL5 qui combine \textbf{trois moteurs de rendement orthogonaux} sur
-quatre paires de devises majeures (EUR/USD, GBP/USD, USD/JPY, USD/CAD). Un seul
-EA attaché à un seul chart EUR/USD~M1 dispatche les signaux vers les trois
-sleeves, applique un ciblage de volatilité global ($75\,\%$ annualisé)
-et un plafond de levier à $64\times$.
+Advisor MQL5 qui combine \textbf{quatre moteurs de rendement quasi orthogonaux}
+sur quatre paires de devises majeures (EUR/USD, GBP/USD, USD/JPY, USD/CAD) et l'or
+(XAU/USD). Un seul EA attaché à un seul chart EUR/USD~M1 dispatche les signaux vers
+les quatre sleeves, applique un ciblage de volatilité global ($37\,\%$ annualisé),
+un plafond de levier à $31\times$ et un facteur d'échelle de risque
+(\code{Inp\_RiskScale}) fixé à $4.5$.
 
 \vspace{0.3em}
 
@@ -133,9 +134,9 @@ et un plafond de levier à $64\times$.
 \multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Sleeve 1 --- MR Macro}}} &
 \multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Sleeve 2 --- TS Momentum}}} &
 \multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Sleeve 3 --- RSI Daily}}} \\[0.2em]
-\multicolumn{1}{c}{\small \textbf{80~\%} du portefeuille} &
-\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} &
-\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} \\
+\multicolumn{1}{c}{\small \textbf{72~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} \\
 \midrule
 Mean reversion intraday M1 sur 4~paires, fenêtre 6--14~UTC, filtre
 Bollinger(80, 5$\sigma$) sur la déviation VWAP, gating macro (courbe
@@ -161,19 +162,27 @@ EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
 \toprule
 Métrique & Valeur & Métrique & Valeur \\
 \midrule
-Sharpe Ratio       & \metric{1.38}             & Total Net Profit  & \metric{+11\,625.17~USD} \\
-Profit Factor      & \metric{1.50}             & Rendement total   & \metric{+116.25~\%} \\
-Recovery Factor    & \metric{5.38}             & Equity DD Max     & \metric{$-13.00~\%$} \\
-Total Trades       & \metric{785}              & Balance DD Max    & \metric{$-11.89~\%$} \\
+Sharpe Ratio       & \metric{0.89}             & Total Net Profit  & \metric{+40,267.40~USD} \\
+Profit Factor      & \metric{2.14}             & CAGR              & \metric{+35.44~\%} \\
+Recovery Factor    & \metric{1.10}             & Equity DD Max     & \metric{$44.33~\%$} \\
+Total Trades       & \metric{851}              & Balance DD Max    & \metric{$6.66~\%$} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \begin{insightbox}
-Ces chiffres sont la cible que votre installation doit reproduire. Un écart de
-plus de $\pm 5\,\%$ sur le Sharpe ou $\pm 50$ trades indique un problème de setup
-(mauvais broker, fichier macro stale, suffixe symbole incorrect) --- voir
-la section \textbf{Troubleshooting} page~\pageref{sec:troubleshooting}.
+Ces chiffres sont la cible que votre installation doit reproduire, sur
+EURUSD.c du 2021-01-01 au 2026-04-29. Un écart de plus de $\pm 5\,\%$ sur le
+Sharpe ou $\pm 50$ trades indique un problème de setup (mauvais broker, fichier macro
+périmé, suffixe symbole incorrect) --- voir la section \textbf{Troubleshooting}
+page~\pageref{sec:troubleshooting}.
+
+\medskip
+\textbf{Un repli d'équité de 44\,\% fait partie du résultat
+attendu.} Il n'est pas le signe d'un défaut d'installation~: aucun coupe-circuit
+automatique n'est actif dans cette configuration, et le dimensionnement
+(\code{Inp\_RiskScale}) a été calibré pour la cible de rendement, pas pour borner le
+repli.
 \end{insightbox}
 
 \paragraph{Pourquoi MetaTrader~5.}
@@ -435,8 +444,8 @@ Visual mode & \emph{décoché} (bien plus rapide en non-visuel) \\
 
 Onglet \emph{Inputs} du Strategy Tester $\rightarrow$ bouton \emph{Load}
 $\rightarrow$ sélectionner \code{FxMultiSleeve\_Default.set}. Tous les
-inputs par défaut sont chargés (allocations $80/10/10$, vol cible $75\,\%$,
-levier max $64\times$, mode macro AUTO).
+inputs par défaut sont chargés (allocations $72/9/9/10$, vol cible $37\,\%$,
+levier max $31\times$, échelle de risque $4{,}5$, mode macro AUTO).
 
 \subsection*{5.3 Lancer le test}
 
@@ -495,11 +504,13 @@ gardes-fous de risque agrégés au niveau portefeuille.
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
 \midrule
-\code{Inp\_AllocMRMacro}     & \metric{0.80}  & Part de l'équity pilotée par le Sleeve~1 (MR Macro). \\
-\code{Inp\_AllocTSMomentum}  & \metric{0.10}  & Part allouée au Sleeve~2 (TS Momentum). \\
-\code{Inp\_AllocRSIDaily}    & \metric{0.10}  & Part allouée au Sleeve~3 (RSI Daily). \\
+\code{Inp\_AllocMRMacro}     & \metric{0.72}  & Part de l'équity pilotée par le Sleeve~1 (MR Macro). \\
+\code{Inp\_AllocTSMomentum}  & \metric{0.09}  & Part allouée au Sleeve~2 (TS Momentum). \\
+\code{Inp\_AllocRSIDaily}    & \metric{0.09}  & Part allouée au Sleeve~3 (RSI Daily). \\
+\code{Inp\_AllocGoldMomentum} & \metric{0.10} & Part allouée au Sleeve~4 (Gold Momentum, XAU-USD). \\
+\code{Inp\_RiskScale}        & \metric{4.5}   & Facteur d'échelle appliqué aux budgets de risque des quatre sleeves. \textbf{C'est le paramètre qui dimensionne le risque}~: le rendement et le repli y répondent de façon quasi proportionnelle. \\
 \code{Inp\_EnableDDCap}      & \metric{false} & Circuit-breaker DD désactivé par défaut (Phase~A 2026-05-04, freinait 24\,\% configs IS sans bénéfice OOS). \\
-\code{Inp\_DDCap}            & \metric{0.30}  & Seuil DD relatif (utilisé seulement si \code{EnableDDCap=true}). \\
+\code{Inp\_DDCap}            & \metric{0.20}  & Seuil DD relatif (utilisé seulement si \code{EnableDDCap=true}). \\
 \code{Inp\_ResetDDState}     & \metric{false} & Force le reset de l'état DD persisté (debug uniquement). \\
 \code{Inp\_EnableMarginCap}  & \metric{false} & Cap marge désactivé par défaut (jamais touché en backtest 5.4 ans). \\
 \code{Inp\_MarginCapPct}     & \metric{0.70}  & Plafond marge (utilisé seulement si \code{EnableMarginCap=true}). \\
@@ -518,8 +529,8 @@ volatilité annualisée cible.
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
 \midrule
-\code{Inp\_GlobalTargetVol}    & \metric{0.75}  & Volatilité annualisée cible du portefeuille (75\,\%, Phase~I 2026-05-05). \\
-\code{Inp\_GlobalMaxLeverage}  & \metric{64.0}  & Plafond dur du levier brut (64$\times$, Phase~I 2026-05-05). \\
+\code{Inp\_GlobalTargetVol}    & \metric{0.37}  & Volatilité annualisée cible du portefeuille. \\
+\code{Inp\_GlobalMaxLeverage}  & \metric{31.0}  & Plafond dur du levier brut (31$\times$). \\
 \code{Inp\_GlobalVolFloor}     & \metric{0.02}  & Plancher vol estimée~; évite un levier explosif si vol $< 2\,\%$. \\
 \bottomrule
 \end{tabular}
@@ -599,7 +610,38 @@ difficiles.
 \end{tabular}
 \end{center}
 
-\subsection*{6.6 Opérationnel \& source macro}
+\subsection*{6.6 Sleeve 4 --- Gold Momentum (daily D1)}
+
+Suivi de tendance sur l'or, quasi orthogonal aux trois sleeves FX. C'est la sleeve
+qui rend la cible de rendement atteignable~--- et, sur le backtest de référence,
+celle qui produit l'essentiel du résultat.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_Gold\_Symbol}       & \metric{XAUUSD}   & Symbole de base~; le suffixe broker est ajouté automatiquement. \\
+\code{Inp\_Gold\_LookbackA..D} & \metric{40 / 60 / 120 / 250} & Horizons de tendance dont les votes sont agrégés. Mettre à $0$ désactive un horizon. \\
+\code{Inp\_Gold\_AllowShort}   & \metric{false}    & Positions courtes désactivées~: l'or présente une dérive haussière structurelle. \\
+\code{Inp\_Gold\_TargetVol}    & \metric{0.55}     & Volatilité cible propre à la sleeve, appliquée avant la couche globale. \\
+\code{Inp\_Gold\_MaxLeverage}  & \metric{6.6}      & Plafond de levier interne à la sleeve. \\
+\code{Inp\_Gold\_SafetySL}     & \metric{0.04}     & Stop de sécurité à $4\,\%$~: l'or est environ deux fois plus volatil que les paires FX. \\
+\code{Inp\_Gold\_SlippageBps}  & \metric{2}        & Spread CFD XAU-USD $+$ commission, en points de base. \\
+\code{Inp\_Gold\_Trace}        & \metric{false}    & Trace journalière de réconciliation (diagnostic uniquement). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+\textbf{Vérifiez que votre courtier propose XAU-USD} avec le même suffixe que vos
+paires FX. Sans ce symbole, la sleeve reste inactive~: l'EA démarre normalement, mais
+le backtest ne reproduira pas les métriques de référence --- il leur manquera
+l'essentiel du résultat.
+\end{warningbox}
+
+\subsection*{6.7 Opérationnel \& source macro}
 
 Paramètres d'environnement, identifiants de deals et configuration de la
 source de données macro (5~modes, voir~4.4).
@@ -614,6 +656,8 @@ source de données macro (5~modes, voir~4.4).
 \code{Inp\_MagicMR}               & \metric{831}                & Magic number Sleeve~1 (audit deals). \\
 \code{Inp\_MagicTS}               & \metric{832}                & Magic number Sleeve~2. \\
 \code{Inp\_MagicRSI}              & \metric{833}                & Magic number Sleeve~3. \\
+\code{Inp\_MagicGold}             & \metric{835}                & Magic number Sleeve~4. \\
+\code{Inp\_ExportDeals}           & \metric{false}              & Écrit un CSV par transaction (avec magic et sleeve) en fin de backtest. \\
 \code{Inp\_LogVerbose}            & \metric{false}              & Active les logs \emph{DEBUG} (désactiver en prod). \\
 \code{Inp\_LogToFile}             & \metric{true}               & Écrit dans \code{MQL5\textbackslash Files\textbackslash fx\_log.csv}. \\
 \code{Inp\_DailyRecomputeHr}      & \metric{21}                 & Heure UTC du recompute daily (vol-targeting + sleeves D1). \\
@@ -661,31 +705,38 @@ cause de différences microscopiques dans les flux de ticks broker.
 \toprule
 \textbf{Métrique} & \textbf{Référence} & \textbf{Tolérance} \\
 \midrule
-Sharpe Ratio                       & \metric{1.15}            & $\pm 0.10$ \\
-Total Net Profit                   & \metric{$+$4\,615.41~USD} & $\pm 200$~USD \\
-Profit Factor                      & \metric{1.38}            & $\pm 0.05$ \\
-Recovery Factor                    & \metric{4.98}            & $\pm 0.30$ \\
-Total Trades                       & \metric{835}             & $\pm 15$ \\
-Equity Drawdown Maximal            & \metric{$-7.21\,\%$}     & $\pm 0.5$~pp \\
-Balance Drawdown Maximal           & \metric{$-6.58\,\%$}     & $\pm 0.5$~pp \\
+Sharpe Ratio                       & \metric{0.89}            & $\pm 0.10$ \\
+Total Net Profit                   & \metric{$+$40,267.40~USD} & $\pm 500$~USD \\
+Profit Factor                      & \metric{2.14}            & $\pm 0.05$ \\
+Recovery Factor                    & \metric{1.10}            & $\pm 0.30$ \\
+Total Trades                       & \metric{851}             & $\pm 15$ \\
+Equity Drawdown Maximal            & \metric{$44.33\,\%$}     & $\pm 1$~pp \\
+Balance Drawdown Maximal           & \metric{$6.66\,\%$}     & $\pm 1$~pp \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\paragraph{Ventilation par sleeve (indicative).}
-Le rapport HTML ne ventile pas par \emph{magic number}, mais le journal
-permet de compter manuellement~: $\sim 350$ trades MR~Macro, $\sim 440$~TS
-Momentum, $\sim 45$~RSI~Daily. Le Sleeve~1 (M1) est le plus actif~; les
-sleeves~2 et~3 (D1) prennent peu de positions mais à plus fort levier.
+\paragraph{Ventilation par sleeve.}
+En activant \code{Inp\_ExportDeals}, l'EA écrit un CSV par transaction portant le
+\emph{magic number} et donc la sleeve d'origine~; \code{scripts/parse\_mt5\_report.py}
+en produit la ventilation. Sur le backtest de référence~:
+304~transactions MR~Macro,
+479~TS~Momentum,
+33~RSI~Daily et
+35~Gold~Momentum.
+
+\textbf{Le résultat est très concentré}~: la sleeve or produit
+80\,\% du profit net pour
+35~transactions. C'est un comportement attendu d'un suivi
+de tendance, mais il faut le savoir avant de juger une période courte.
 
 \paragraph{Interprétation rapide.}
 \begin{itemize}
-\item \textbf{Sharpe~$1.15$}~: rendement par unité de risque solide pour
-une stratégie FX retail. Au-dessus de~$1.0$ est le seuil empirique de
-\enquote{stratégie déployable}.
-\item \textbf{Drawdown $-7\,\%$}~: trois fois inférieur au plafond
-contractuel de~$15\,\%$. La stratégie peut absorber un \enquote{event}
-de l'ordre de $2\sigma$ sans déclencher le circuit-breaker.
+\item \textbf{Sharpe~$0.89$}~: rendement par unité de risque
+correct pour une stratégie FX retail, sans être exceptionnel.
+\item \textbf{Repli d'équité $44\,\%$}~: il n'existe
+\textbf{aucun plafond contractuel} ni circuit-breaker actif dans cette configuration.
+Ce repli est le prix du dimensionnement retenu, pas un incident.
 \item \textbf{Recovery Factor $4.98$}~: pour 1~unité de risque
 (drawdown maximal), la stratégie a généré $5$~unités de gain net. Indice
 synthétique de qualité de la trajectoire.
@@ -807,7 +858,7 @@ Vérifier la dernière date du CSV vs \code{ToDate} du tester. \\
 Vérifier le bouton \emph{Algo~Trading} vert + sleeve~1 ne trade que
 6h-14h~UTC. \\
 \addlinespace
-Sharpe $< 0.9$ ou trades $< 700$ & Configuration broker différente &
+Sharpe $< 0.7$ ou trades $< 750$ & Configuration broker différente &
 Vérifier suffixe symbole, leverage, modèle de simulation, \emph{Forward}
 désactivé. \\
 \addlinespace

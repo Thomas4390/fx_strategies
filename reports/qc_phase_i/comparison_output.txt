@@ -1,0 +1,37 @@
+========================================================================
+ Validation reproductibilite MT5 C1 <-> QuantConnect Phase I
+ Periode 2020-11-23 -> 2026-04-30 (5.432y), tolerance stricte
+========================================================================
+
+--- MT5 C1 reference (deals_c1_full.csv + run JSON) ---
+  Sharpe rf=0     : 1.3800
+  CAGR            : 15.26 %
+  MaxDD equity    : 13.00 %
+  Vol implied     : 11.06 % (cagr / sharpe)
+  Total trades    : 785 (round trips per OnTester)
+  Profit factor   : 1.50
+  Recovery factor : 5.38
+  Years           : 5.432
+  Deal events/sleeve : {'MR_MACRO': 624, 'TS_MOMENTUM': 877, 'RSI_DAILY': 66, 'OTHER': 4}
+  Entry deals/sleeve : {'MR_MACRO': 312, 'TS_MOMENTUM': 440, 'RSI_DAILY': 33}
+
+--- QC Phase I sleeves standalone ---
+  mr_macro    : orders=152   CAGR= 2.02%  Vol=1.60%  DD= 3.00%  Sharpe(rf=0)= 1.26  Win=60%
+  ts_momentum : orders=1387  CAGR= 5.48%  Vol=5.50%  DD= 8.20%  Sharpe(rf=0)= 1.00  Win=60%
+  rsi_daily   : orders=64    CAGR= 1.81%  Vol=1.70%  DD= 2.80%  Sharpe(rf=0)= 1.07  Win=89%
+
+--- Combined Phase I vs MT5 C1 ---
+  QC combined synth: CAGR=83.51% Vol=47.62% DD=42.59% Sharpe(rf=0)=1.75
+  Sum standalone QC orders (MR+TS+RSI) = 1603
+
+--- Tolerance gates (combined leveraged) ---
+  [FAIL] Sharpe rf=0: MT5=1.3800 QC=1.7535 diff=27.1% (tol 10%)
+  [FAIL] CAGR (%): MT5=15.2565 QC=83.5070 diff=447.4% (tol 10%)
+  [FAIL] MaxDD (%): MT5=13.0038 QC=42.5861 diff=227.5% (tol 10%)
+  [FAIL] Vol annual (%): MT5=11.0554 QC=47.6237 abs_diff=36.5683 (tol 2.0000)
+  [FAIL] Deal count: MT5=785.0000 QC=1603.0000 diff=104.2% (tol 10%)
+
+--- Verdict ---
+  Gates passes : 0/5  (failed 5)
+  MR Macro standalone Sharpe rf=0 = 1.26  (>0.40 ? YES)
+  VERDICT GLOBAL : FAIL

@@ -1,0 +1,31 @@
+{
+  "name": "tri_signaux_phase_m1d_v5",
+  "backtest_id": "e264a6d4f21edc92db00f62e699bc5f2",
+  "project_id": 30125395,
+  "MT5_LEV_AVG": 8.9,
+  "MR_SLIP_PER_LEG_BPS": 0.5,
+  "period_start_unix": 1606168800,
+  "period_end_unix": 1746050400,
+  "start_equity": 1000000,
+  "end_equity_unlev": 1109214.5598,
+  "end_equity_lev": 2433804.7958,
+  "unleveraged": {
+    "cagr_pct": 1.9164127576196899,
+    "vol_pct": 1.3148719683945356,
+    "sharpe_rf0": 1.4574900094338752,
+    "drawdown_pct": -1.3338325244149685,
+    "bars": 1376,
+    "years": 5.4603174603174605,
+    "total_return_pct": 10.92145597999945
+  },
+  "leveraged": {
+    "cagr_pct": 17.691254255079492,
+    "vol_pct": 11.702360532359016,
+    "sharpe_rf0": 1.5117680066479038,
+    "drawdown_pct": -11.726673655180653,
+    "bars": 1376,
+    "years": 5.4603174603174605,
+    "total_return_pct": 143.38047958000107
+  },
+  "gates_passed": 3
+}

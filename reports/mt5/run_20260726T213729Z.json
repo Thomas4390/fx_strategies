@@ -1,0 +1,31 @@
+{
+  "run_id": "20260726T213729Z",
+  "exit_code": 0,
+  "duration_sec": 19.546070929998677,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/rs_2.0.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/rs_2.0.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2021.01.01 - 2025.12.31)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "15 955.03",
+    "profit_factor": "2.22",
+    "recovery_factor": "4.47",
+    "sharpe_ratio": "1.13",
+    "total_trades": "812",
+    "balance_dd_max": "1 298.73 (10.08%)",
+    "equity_dd_max": "3 566.01 (15.83%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260726.log",
+    "init_ok": true,
+    "init_errors": [
+      "[INIT][ERROR] RiskManager init failed",
+      "[INIT][ERROR] RiskManager init failed"
+    ],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "OG\t0\t17:37:23.047\tCore 01\t2025.12.27 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKD\t0\t17:37:23.047\tCore 01\t2025.12.28 21:00:17   [RISK][INFO] Daily recompute: sigma21=1.3885 sigma63=0.8011 realized=1.3885 -> lev=0.266\nPD\t0\t17:37:23.047\tCore 01\t2025.12.28 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nDF\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   [RISK][INFO] Daily recompute: sigma21=1.1350 sigma63=0.6548 realized=1.1350 -> lev=0.326\nDK\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   market buy 0.01 USDCAD.c sl: 1.34022 (1.36958 / 1.36967 / 1.36958)\nJK\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   deal #1622 buy 0.01 USDCAD.c at 1.36967 done (based on order #1622)\nOP\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   deal performed [#1622 buy 0.01 USDCAD.c at 1.36967]\nEQ\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   order performed buy 0.01 at 1.36967 [#1622 buy 0.01 USDCAD.c at 1.36967]\nQM\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   CTrade::OrderSend: market buy 0.01 USDCAD.c sl: 1.34022 [done at 1.36967]\nMP\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   [RSI_Daily][INFO] Entry LONG USDCAD.c lots=0.01 price=1.36967\nMP\t0\t17:37:23.047\tCore 01\t2025.12.29 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nJJ\t0\t17:37:23.047\tCore 01\t2025.12.30 21:00:17   [RISK][INFO] Daily recompute: sigma21=1.1510 sigma63=0.6640 realized=1.1510 -> lev=0.321\nOF\t0\t17:37:23.047\tCore 01\t2025.12.30 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nPJ\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 1.36946 [#1622 buy 0.01 USDCAD.c 1.36967 sl: 1.34022]\nCG\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal #1623 sell 0.01 USDCAD.c at 1.36946 done (based on order #1623)\nKJ\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal performed [#1623 sell 0.01 USDCAD.c at 1.36946]\nNR\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   order performed sell 0.01 at 1.36946 [#1623 sell 0.01 USDCAD.c at 1.36946]\nKN\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 156.395 [#1621 buy 0.05 USDJPY.c 156.307 sl: 152.946]\nRD\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal #1624 sell 0.05 USDJPY.c at 156.395 done (based on order #1624)\nKN\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal performed [#1624 sell 0.05 USDJPY.c at 156.395]\nHN\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   order performed sell 0.05 at 156.395 [#1624 sell 0.05 USDJPY.c at 156.395]\nRP\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 4339.080 [#1555 buy 0.06 XAUUSD.c 3338.760 sl: 3202.872]\nHS\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal #1625 sell 0.06 XAUUSD.c at 4339.080 done (based on order #1625)\nLP\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   deal performed [#1625 sell 0.06 XAUUSD.c at 4339.080]\nLM\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   order performed sell 0.06 at 4339.080 [#1625 sell 0.06 XAUUSD.c at 4339.080]\nNL\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   [OPTIM] vt=0.3700 maxlev=31.0000 volfloor=0.0200 cagr=0.210322 dd=15.8294 sharpe=1.1343 pf=2.2185 rf=4.4742 trades=812 net=15955.03 years=4.997\nCG\t0\t17:37:23.047\tCore 01\tfinal balance 25955.03 USD\nCF\t0\t17:37:23.047\tCore 01\tOnTester result 0.2103223419985751\nJS\t0\t17:37:23.047\tCore 01\t2025.12.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nKN\t0\t17:37:23.047\tCore 01\tEURUSD.c,M1: 7228529 ticks, 1841683 bars generated. Test passed in 0:00:08.938 (including ticks preprocessing 0:00:00.875).\nLP\t0\t17:37:23.047\tCore 01\t35943517 total ticks for all symbols\nQK\t0\t17:37:23.047\tCore 01\tEURUSD.c: generate 7228529 ticks in 0:00:00.172, passed to tester 7228529 ticks\nOG\t0\t17:37:23.047\tCore 01\tGBPUSD.c: generate 7232254 ticks in 0:00:00.179, passed to tester 7232254 ticks\nLP\t0\t17:37:23.047\tCore 01\tUSDCAD.c: generate 7189994 ticks in 0:00:00.175, passed to tester 7189994 ticks\nDS\t0\t17:37:23.047\tCore 01\tUSDJPY.c: generate 7248394 ticks in 0:00:00.181, passed to tester 7248394 ticks\nFN\t0\t17:37:23.047\tCore 01\tXAUUSD.c: generate 7044346 ticks in 0:00:00.168, passed to tester 7044346 ticks\nOG\t0\t17:37:23.047\tCore 01\t1239 Mb memory used including 442 Mb of history data, 704 Mb of tick data\nLE\t0\t17:37:23.047\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260726.log\" written\nOI\t0\t17:37:23.088\tTester\tautomatic testing finished\nCS\t0\t17:37:23.088\tCore 01\tconnection closed"
+  }
+}

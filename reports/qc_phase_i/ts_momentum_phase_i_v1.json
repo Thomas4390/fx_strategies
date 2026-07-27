@@ -1,0 +1,41 @@
+{
+  "name": "ts_momentum_phase_i_v1",
+  "statistics": {
+    "Total Orders": "1387",
+    "Average Win": "0.32%",
+    "Average Loss": "-0.34%",
+    "Compounding Annual Return": "5.480%",
+    "Drawdown": "8.200%",
+    "Expectancy": "0.169",
+    "Start Equity": "1000000.00",
+    "End Equity": "1336627.43",
+    "Net Profit": "33.663%",
+    "Sharpe Ratio": "0.04",
+    "Sortino Ratio": "0.05",
+    "Probabilistic Sharpe Ratio": "20.184%",
+    "Loss Rate": "40%",
+    "Win Rate": "60%",
+    "Profit-Loss Ratio": "0.95",
+    "Alpha": "0.001",
+    "Beta": "-0.025",
+    "Annual Standard Deviation": "0.055",
+    "Annual Variance": "0.003",
+    "Information Ratio": "0.454",
+    "Tracking Error": "0.085",
+    "Treynor Ratio": "-0.089",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$1000000.00",
+    "Lowest Capacity Asset": "EURUSD 8G",
+    "Portfolio Turnover": "24.37%"
+  },
+  "runtimeStatistics": {
+    "Equity": "$1,336,560.53",
+    "Fees": "-$0.00",
+    "Holdings": "$1,365,338.31",
+    "Net Profit": "$358,567.84",
+    "Probabilistic Sharpe Ratio": "20.184%",
+    "Return": "33.66 %",
+    "Unrealized": "$6,810.06",
+    "Volume": "$565,969,970.83"
+  }
+}

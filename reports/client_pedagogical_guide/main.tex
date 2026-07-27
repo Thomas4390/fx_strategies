@@ -6,13 +6,18 @@
 
 \input{../latex_report/preamble.tex}
 
+% \rowcolor vient de colortbl, que le préambule partagé ne charge pas : le
+% document l'utilise depuis toujours, et les compilations antérieures passaient
+% l'erreur sans s'arrêter faute de -halt-on-error.
+\usepackage[table]{xcolor}
+
 % Override paths/headers pour ce document
 \graphicspath{{figures/}{../../docs/logo/}{../latex_report/figures/}}
 \fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide pédagogique client --- Mai 2026}}
 \fancyhead[L]{\footnotesize\color{slateGrey}\textsf{FxMultiSleeve --- Comprendre la stratégie}}
 
 \hypersetup{
-  pdftitle={Stratégie FX Tri-Signaux --- Guide pédagogique client},
+  pdftitle={Stratégie FX Multi-Moteurs --- Guide pédagogique client},
   pdfsubject={Comprendre la stratégie FxMultiSleeve : moteurs, paramètres, gestion du risque},
   pdfkeywords={FX, mean reversion, momentum, RSI, MetaTrader 5, pédagogie}
 }
@@ -47,7 +52,7 @@
 \vspace{0.7cm}
 
 {\sffamily\color{primary}\huge\bfseries
-Stratégie FX Tri-Signaux\par}
+Stratégie FX Multi-Moteurs\par}
 
 \vspace{0.4cm}
 
@@ -75,7 +80,7 @@ Logique, paramètres et gestion du risque\par}
 
 \begin{thesisbox}
 \textbf{Objectif de ce guide.} Vous expliquer \emph{pourquoi} la stratégie
-FxMultiSleeve fonctionne, \emph{comment} chacun de ses trois moteurs prend ses
+FxMultiSleeve fonctionne, \emph{comment} chacun de ses quatre moteurs prend ses
 décisions, et \emph{quels paramètres} influencent quoi. Ce document n'est pas un
 manuel d'installation~--- pour cela, voir le \emph{Guide d'installation client}.
 Ici, l'objectif est la compréhension : à la fin de la lecture, vous saurez lire
@@ -134,12 +139,12 @@ Le contrat avec Apogée Invest impose trois contraintes de premier ordre que la 
 
 \begin{itemize}
 \item \textbf{Rendement annualisé (CAGR)} dans l'intervalle $[10\,\%,\,15\,\%]$~;
-\item \textbf{Drawdown maximal} strictement inférieur à $35\,\%$~;
+\item \textbf{Aucun plafond de repli}~: le mandant a retiré cette contrainte~;
 \item \textbf{Philosophie risk-first}~: la priorité est la \emph{robustesse hors échantillon} plutôt que la maximisation du Sharpe in-sample, ce qui implique une discipline forte de validation statistique et de \emph{guardrails} de risque.
 \end{itemize}
 
 \begin{insightbox}
-\textbf{Pourquoi trois moteurs plutôt qu'un seul ?} Parce que chaque régime de
+\textbf{Pourquoi quatre moteurs plutôt qu'un seul ?} Parce que chaque régime de
 marché favorise des inefficiences différentes. Un moteur unique~--- aussi bon
 soit-il~--- subit des périodes prolongées de drawdown lorsque son régime favori
 disparaît. La combinaison de trois signaux \emph{décorrélés} (intraday vs daily,
@@ -149,7 +154,7 @@ phases de creux. C'est le principe de la diversification temporelle et stylistiq
 
 \subsection{Trois moteurs, une seule philosophie}
 
-Les trois moteurs partagent une racine commune : ils exploitent tous des \emph{anomalies micro-structurelles} bien documentées dans la littérature académique sur le marché des changes, plutôt que de s'appuyer sur des prédictions macroéconomiques discrétionnaires. Cette discipline rend le système \emph{auditable} et \emph{testable}, et limite la dérive comportementale.
+Les moteurs FX partagent une racine commune : ils exploitent tous des \emph{anomalies micro-structurelles} bien documentées dans la littérature académique sur le marché des changes, plutôt que de s'appuyer sur des prédictions macroéconomiques discrétionnaires. Cette discipline rend le système \emph{auditable} et \emph{testable}, et limite la dérive comportementale.
 
 \begin{itemize}
 \item Le \sleeve{Moteur~1 (MR Macro)} capture la \emph{mean reversion} intraday autour du VWAP en horaires de forte liquidité, filtré par un régime macroéconomique sain.
@@ -159,7 +164,7 @@ Les trois moteurs partagent une racine commune : ils exploitent tous des \emph{a
 
 \subsection{Allocation et levier}
 
-Le portefeuille combine les trois moteurs avec une allocation statique et une couche commune de ciblage de volatilité~:
+Le portefeuille combine les quatre moteurs avec une allocation statique et une couche commune de ciblage de volatilité~:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
@@ -167,18 +172,18 @@ Le portefeuille combine les trois moteurs avec une allocation statique et une co
 \toprule
 \textbf{Moteur} & \textbf{Allocation} & \textbf{Timeframe} & \textbf{Style} & \textbf{Univers} \\
 \midrule
-\rowcolor{softBlue} Moteur 1 --- MR Macro & $80\,\%$ & M1 intraday & Mean reversion & 4 majors \\
+\rowcolor{softBlue} Moteur 1 --- MR Macro & $72\,\%$ & M1 intraday & Mean reversion & 4 majors \\
 \rowcolor{softYellow} Moteur 2 --- TS Momentum & $10\,\%$ & D1 swing & Trend following & 3 majors \\
 \rowcolor{softGreen} Moteur 3 --- RSI Daily & $10\,\%$ & D1 swing & Mean reversion & 3 majors \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Au-dessus de cette allocation, un \textbf{ciblage de volatilité global} ajuste quotidiennement le levier appliqué de façon à maintenir une volatilité réalisée du portefeuille proche de $75\,\%$ annualisé (cible élevée, justifiée par la diversification entre moteurs). Le levier est plafonné à $64\times$ et est recalculé chaque jour à 21h~UTC sur la base de la volatilité observée des 21 et 63 derniers jours.
+Au-dessus de cette allocation, un \textbf{ciblage de volatilité global} ajuste quotidiennement le levier appliqué de façon à maintenir une volatilité réalisée du portefeuille proche de $37\,\%$ annualisé (cible élevée, justifiée par la diversification entre moteurs). Le levier est plafonné à $31\times$ et est recalculé chaque jour à 21h~UTC sur la base de la volatilité observée des 21 et 63 derniers jours.
 
 \begin{warningbox}
-\textbf{Les chiffres de levier (jusqu'à $64\times$) supposent un compte bancaire
-US offshore ou un compte EU \og Professionnel \fg{} avec capital significatif.}
+\textbf{Les chiffres de levier (jusqu'à $31\times$) supposent un compte bancaire
+US offshore ou un compte EU \enquote{Professionnel} avec capital significatif.}
 Sur un compte EU retail standard plafonné à $30\times$ par les règles ESMA, la
 stratégie reste opérationnelle mais le \emph{return on equity} est mécaniquement
 réduit. Le sizing s'adapte automatiquement au levier maximum disponible.
@@ -189,7 +194,7 @@ réduit. Le sizing s'adapte automatiquement au levier maximum disponible.
 % ═══════════════════════════════════════════════════════════════════════
 %  § 2 — ARCHITECTURE
 % ═══════════════════════════════════════════════════════════════════════
-\section{Architecture des trois moteurs}
+\section{Architecture des quatre moteurs}
 \label{sec:architecture}
 
 \subsection{Vue synthétique}
@@ -212,7 +217,7 @@ Chaque moteur est une stratégie autonome avec son propre univers de paires, ses
  & \cellcolor{softBlue}\textbf{Moteur 1} & \cellcolor{softYellow}\textbf{Moteur 2} & \cellcolor{softGreen}\textbf{Moteur 3} \\
  & \cellcolor{softBlue}MR Macro & \cellcolor{softYellow}TS Momentum & \cellcolor{softGreen}RSI Daily \\
 \midrule
-Allocation & 80\,\% & 10\,\% & 10\,\% \\
+Allocation & 72\,\% & 9\,\% & 9\,\% \\
 Timeframe & M1 (1 minute) & D1 (1 jour) & D1 (1 jour) \\
 Type & Mean reversion intraday & Suivi de tendance & Mean reversion swing \\
 Indicateurs & VWAP + Bollinger 5\,$\sigma$ & EMA 20/50 + RSI(7) & RSI(14) \\
@@ -230,7 +235,7 @@ Rôle dans le P\&L & \emph{Workhorse} ($\sim 56\,\%$) & Marginal ($\sim 8\,\%$) 
 
 \begin{thesisbox}
 \textbf{Le poids reflète le rapport rendement/volatilité, pas la part du P\&L.}
-Le Moteur~1 reçoit 80\,\% parce qu'il a la volatilité intrinsèque la plus basse
+Le Moteur~1 reçoit 72\,\% parce qu'il a la volatilité intrinsèque la plus basse
 (environ $1.3\,\%$ annualisé) couplée au Sharpe le plus élevé. Lui allouer une
 fraction importante du capital ne le rend pas plus risqué que les autres
 moteurs~--- au contraire, en termes de \emph{contribution au risque}, les trois
@@ -271,7 +276,7 @@ combinaison à Sharpe $1.3$ avec drawdowns plafonnés à $10\,\%$.
 liquidité normale et de transmission monétaire saine.} Lorsque la courbe des
 taux s'inverse ou que le taux de chômage commence à remonter, les
 micro-structures qui rendent la \emph{mean reversion} profitable disparaissent~:
-les flux deviennent unidirectionnels en raison de la \og fuite vers la qualité \fg,
+les flux deviennent unidirectionnels en raison de la \enquote{fuite vers la qualité},
 les spreads s'élargissent, et toute prise de position à contre-courant devient
 coûteuse. Le filtre macro bloque précisément la stratégie dans ces régimes.
 \end{thesisbox}
@@ -301,7 +306,7 @@ Trois filtres doivent simultanément valider l'entrée~:
 \begin{itemize}
 \item \textbf{Session UTC} : l'heure courante doit être dans la fenêtre $[8\text{h}, 16\text{h}[$ qui couvre la session Londres complète et le démarrage de New~York.
 \item \textbf{Régime macro} : le \emph{spread} 10Y-2Y des Treasuries américaines doit être inférieur à $0{,}5$ \emph{et} le taux de chômage US ne doit pas être en hausse sur 3 mois glissants.
-\item \textbf{Fenêtre de news} : l'instant courant ne doit pas être dans une fenêtre de $\pm 15$~minutes autour d'une publication économique \og high impact \fg{} américaine (NFP, CPI, FOMC, etc.).
+\item \textbf{Fenêtre de news} : l'instant courant ne doit pas être dans une fenêtre de $\pm 15$~minutes autour d'une publication économique \enquote{high impact} américaine (NFP, CPI, FOMC, etc.).
 \end{itemize}
 
 \paragraph{Sorties.}
@@ -556,7 +561,7 @@ La décomposition année par année révèle le mécanisme~:
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{sleeve_rsi_daily_4p_equity.png}
+\includegraphics[width=\linewidth]{sleeve_rsi_daily_3p_equity.png}
 \caption{Équité du Moteur~3 pris isolément. Courbe relativement plate, avec des pics positifs en 2019, 2023 et début 2026 qui correspondent exactement aux années faibles des autres moteurs~--- profil typique d'un diversificateur.}
 \end{figure}
 
@@ -577,11 +582,11 @@ fréquemment un signal à Sharpe $0{,}60$ fortement corrélé.
 \section{Gestion du risque}
 \label{sec:risk}
 
-La couche de risque s'applique uniformément aux trois moteurs et constitue la \emph{moitié invisible} de la stratégie~: elle ne génère pas de signal, mais elle modère, plafonne et protège.
+La couche de risque s'applique uniformément aux quatre moteurs et constitue la \emph{moitié invisible} de la stratégie~: elle ne génère pas de signal, mais elle modère, plafonne et protège.
 
 \subsection{Ciblage de volatilité global}
 
-Chaque jour à 21h~UTC, après la fermeture des positions intraday du Moteur~1, la couche de risque recalcule un \textbf{levier global} commun aux trois moteurs. La formule~:
+Chaque jour à 21h~UTC, après la fermeture des positions intraday du Moteur~1, la couche de risque recalcule un \textbf{levier global} commun aux quatre moteurs. La formule~:
 
 \[
 \text{leverage} = \min\!\left(\frac{\text{target\_vol}}{\max(\sigma_{21},\,\sigma_{63},\,\text{vol\_floor})},\ \text{max\_leverage}\right)
@@ -593,7 +598,7 @@ où~:
 \item $\sigma_{63}$ idem sur 63 jours,
 \item $\text{target\_vol} = 0{,}75$ (la cible),
 \item $\text{vol\_floor} = 0{,}02$ (plancher pour éviter une division par zéro),
-\item $\text{max\_leverage} = 64$ (plafond dur).
+\item $\text{max\_leverage} = 31$ (plafond dur).
 \end{itemize}
 
 \begin{insightbox}
@@ -614,7 +619,11 @@ vérifier l'intégrité des données, et décider manuellement de réactiver ou 
 la stratégie.
 \end{warningbox}
 
-À chaque seconde (\emph{throttling} 1~Hz), la couche de risque compare l'\emph{equity} courante au plus haut historique persistant. Si le \emph{drawdown} dépasse $20\,\%$, la stratégie ferme \textbf{immédiatement toutes les positions} de tous les moteurs et arme un verrou~: tant que le verrou n'est pas levé manuellement (input \code{Inp\_ResetDDState}), aucun nouveau trade n'est ouvert.
+\textbf{Ce disjoncteur est désactivé dans la configuration livrée} (\code{Inp\_EnableDDCap = false}). Le mandat ne fixant plus de plafond de repli, il n'a aucun seuil à faire respecter~; les tests avaient par ailleurs montré qu'il dégradait la performance en réduisant l'exposition pendant les phases de rebond.
+
+\textbf{Il n'existe donc aucun coupe-circuit automatique.} Le repli d'équité constaté sur le backtest de référence atteint $44\,\%$, et rien ne l'aurait interrompu s'il était allé plus loin. C'est un choix assumé du mandant, pas un oubli.
+
+Le mécanisme reste disponible et peut être réactivé à tout moment~: en le passant à \code{true}, la couche de risque compare chaque seconde l'\emph{equity} courante au plus haut historique et ferme toutes les positions si le repli dépasse le seuil \code{Inp\_DDCap} ($20\,\%$ par défaut), en armant un verrou que seul un \emph{reset} manuel lève.
 
 \subsection{Plafond d'utilisation de la marge}
 
@@ -627,7 +636,7 @@ Indépendamment du \emph{drawdown} en P\&L, la marge engagée auprès du broker 
 
 \subsection{Filtre des fenêtres de news}
 
-Cette protection est spécifique au Moteur~1 (intraday). Elle interroge le calendrier économique MetaTrader pour identifier les publications USD \og high impact \fg{} (NFP, CPI, FOMC, retail sales, GDP, \ldots) et bloque toute nouvelle entrée dans une fenêtre de $\pm 15$~minutes autour de chaque publication.
+Cette protection est spécifique au Moteur~1 (intraday). Elle interroge le calendrier économique MetaTrader pour identifier les publications USD \enquote{high impact} (NFP, CPI, FOMC, retail sales, GDP, \ldots) et bloque toute nouvelle entrée dans une fenêtre de $\pm 15$~minutes autour de chaque publication.
 
 \begin{examplebox}
 \textbf{Pourquoi $\pm 15$~minutes et pas $\pm 5$ ?} Parce que le \emph{spread}
@@ -683,7 +692,7 @@ Ces valeurs sont \emph{plus conservatrices} que les valeurs typiques observées 
 Le slippage est appliqué de deux manières dans la stratégie~:
 \begin{enumerate}
 \item Décalage des niveaux SL et TP par \texttt{slip\_pct} pour absorber le coût des sorties par stop ou take-profit.
-\item Pré-paiement via une réduction proportionnelle du \emph{sizing} (\texttt{slip\_drag}) pour couvrir les sorties \og non-déclenchées \fg{} (time-stop, fermeture quotidienne, inversion de signal).
+\item Pré-paiement via une réduction proportionnelle du \emph{sizing} (\texttt{slip\_drag}) pour couvrir les sorties \enquote{non-déclenchées} (time-stop, fermeture quotidienne, inversion de signal).
 \end{enumerate}
 
 \subsection{Commission}
@@ -715,7 +724,7 @@ Toute position détenue à la clôture du marché à 22h~UTC subit un débit ou 
 
 \subsection{Spread spike news}
 
-Lors des publications \og high impact \fg{} (NFP, CPI, FOMC), le \emph{spread} EUR/USD typique passe de $1$ pip à $8$--$10$ pips pendant 1 à 5 minutes. Cette élargissement transitoire peut détruire un trade quasi-instantanément.
+Lors des publications \enquote{high impact} (NFP, CPI, FOMC), le \emph{spread} EUR/USD typique passe de $1$ pip à $8$--$10$ pips pendant 1 à 5 minutes. Cette élargissement transitoire peut détruire un trade quasi-instantanément.
 
 \begin{warningbox}
 \textbf{Le filtre de news (\S~\ref{sec:risk}) est précisément là pour mitiger ce
@@ -764,13 +773,15 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Quand le toucher ?} \\
 \midrule
-\code{Inp\_AllocMRMacro}    & $0{,}80$  & Jamais (sauf rééquilibrage stratégique majeur). \\
-\code{Inp\_AllocTSMomentum} & $0{,}10$  & Jamais. \\
-\code{Inp\_AllocRSIDaily}   & $0{,}10$  & Jamais. \\
-\code{Inp\_EnableDDCap}     & \texttt{true} & Garder activé en production. À désactiver uniquement pour tests d'optimisation. \\
-\code{Inp\_DDCap}           & $0{,}20$  & À ajuster selon la tolérance au risque du compte. $0{,}15$ pour un compte conservateur, $0{,}25$ pour un compte plus tolérant. \\
-\code{Inp\_EnableMarginCap} & \texttt{true} & Garder activé. \\
-\code{Inp\_MarginCapPct}    & $0{,}50$  & À adapter selon la marge dont vous disposez en réserve. \\
+\code{Inp\_AllocMRMacro}      & $0{,}72$  & Jamais (sauf rééquilibrage stratégique majeur). \\
+\code{Inp\_AllocTSMomentum}   & $0{,}09$  & Jamais. \\
+\code{Inp\_AllocRSIDaily}     & $0{,}09$  & Jamais. \\
+\code{Inp\_AllocGoldMomentum} & $0{,}10$  & Jamais. La somme des quatre allocations doit valoir exactement $1{,}0$. \\
+\code{Inp\_RiskScale}         & $4{,}5$   & \textbf{Le réglage du risque}. Rendement et repli y répondent proportionnellement~: l'abaisser réduit les deux, sans changer les signaux ni le nombre de trades. \\
+\code{Inp\_EnableDDCap}       & \texttt{false} & Désactivé dans la configuration livrée. À passer à \texttt{true} pour réactiver le coupe-circuit de repli. \\
+\code{Inp\_DDCap}             & $0{,}20$  & Seuil du coupe-circuit, utilisé uniquement si \code{Inp\_EnableDDCap} vaut \texttt{true}. \\
+\code{Inp\_EnableMarginCap}   & \texttt{false} & Désactivé (jamais déclenché en backtest). \\
+\code{Inp\_MarginCapPct}      & $0{,}70$  & À adapter selon la marge dont vous disposez en réserve. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -784,8 +795,8 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Quand le toucher ?} \\
 \midrule
-\code{Inp\_GlobalTargetVol}    & $0{,}75$ & Cible volatilité du portefeuille. À réduire à $0{,}50$ ou $0{,}30$ sur compte EU retail $30\times$. \\
-\code{Inp\_GlobalMaxLeverage}  & $64{,}0$ & Plafond levier. À ajuster au levier maximum offert par votre broker. \\
+\code{Inp\_GlobalTargetVol}    & $0{,}37$ & Cible de volatilité du portefeuille. À réduire sur un compte EU retail plafonné à $30\times$. \\
+\code{Inp\_GlobalMaxLeverage}  & $31{,}0$ & Plafond levier. À ajuster au levier maximum offert par votre broker. \\
 \code{Inp\_GlobalVolFloor}     & $0{,}02$ & Plancher anti-zéro. Ne pas modifier. \\
 \bottomrule
 \end{tabular}
@@ -866,9 +877,9 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \toprule
 \textbf{Métrique} & \textbf{Cible} & \textbf{Lecture} \\
 \midrule
-Sharpe ratio (rf=0) & $> 1{,}0$ acceptable, $> 1{,}5$ excellent & Rendement annualisé divisé par volatilité annualisée. Mesure l'efficacité d'utilisation du risque. Notre baseline backtest~: $1{,}33$. \\
-CAGR & $\in [10\,\%,\,15\,\%]$ & Mandat client. En dehors de cet intervalle, à auditer. \\
-MaxDD equity & $< 35\,\%$ & Mandat client. Le DD-cap interne $20\,\%$ donne déjà un \emph{buffer}. \\
+Sharpe ratio (rf=0) & $> 1{,}0$ acceptable, $> 1{,}5$ excellent & Rendement annualisé divisé par volatilité annualisée. Mesure l'efficacité d'utilisation du risque. Notre baseline backtest~: $0.89$. \\
+CAGR & $\approx 40\,\%$ visé & Mandat client. Baseline backtest~: $35.4\,\%$. \\
+MaxDD equity & \emph{mesuré} & Aucun plafond contractuel. Repli constaté au backtest~: $44\,\%$. \\
 Profit factor & $> 1{,}5$ & Total des gains divisé par total des pertes. Au-dessus de $1{,}5$, le système est solidement profitable. \\
 Recovery factor & $> 3{,}0$ & Gain net divisé par drawdown maximal. Mesure la capacité à se relever d'un creux. \\
 Total trades & $\sim 800$ sur 5{,}4~ans & Ordre de grandeur attendu, en fonction de la fréquence des moteurs. \\
@@ -903,7 +914,7 @@ rate du Moteur~3 sous $60\,\%$ serait un signal d'alerte.
 
 \subsection{Year-by-year}
 
-Sur la fenêtre validée, $6$ années sur $7$ sont positives, ce qui est attendu pour un Sharpe combiné de $1{,}33$. Une année négative isolée est une variance normale~; deux années consécutives négatives mériteraient une analyse de régime.
+Sur la fenêtre validée, $6$ fenêtres sur $7$ sont positives, ce qui est attendu pour un Sharpe combiné de $0.89$. Une année négative isolée est une variance normale~; deux années consécutives négatives mériteraient une analyse de régime.
 
 \begin{warningbox}
 \textbf{Ne pas sur-interpréter une seule exécution.} La performance d'un
@@ -962,7 +973,7 @@ Trois situations qui sortent du cadre statistique exploité par la stratégie~:
 \begin{itemize}
 \item Une mauvaise journée ou une mauvaise semaine isolée.
 \item Un trade individuel qui semble \emph{intuitivement faux} mais respecte les règles du système.
-\item Un sentiment de marché contraire (\og je sens que l'EUR va monter \fg).
+\item Un sentiment de marché contraire (\enquote{je sens que l'EUR va monter}).
 \end{itemize}
 La discipline systématique est le principal atout de la stratégie ; les
 interventions impulsives détruisent l'edge bien plus souvent qu'elles ne le
@@ -983,7 +994,7 @@ Macro CSV stale plus de 7 jours ?                       & \emph{Régénérer} & 
 Crise systémique annoncée par les médias économiques ?  & \emph{Réduire alloc} & Continuer \\
 Broker change ses conditions (suffix, levier, swap) ?   & \emph{Adapter inputs} & Continuer \\
 Drawdown sur 1 mois > 5\,\% ?                           & Continuer & Continuer \\
-Trade individuel \og bizarre \fg{} ?                    & Continuer & Continuer \\
+Trade individuel \enquote{bizarre} ?                    & Continuer & Continuer \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1003,7 +1014,7 @@ Trade individuel \og bizarre \fg{} ?                    & Continuer & Continuer 
 
 \begin{description}[leftmargin=4.5cm, style=nextline]
 \item[\textbf{CAGR}] \emph{Compounded Annual Growth Rate}, taux de croissance annualisé composé. Mesure le rendement annuel équivalent d'une stratégie sur une période multi-annuelle.
-\item[\textbf{Sharpe ratio}] Ratio rendement excédentaire / volatilité, indicateur d'efficacité d'utilisation du risque. Calculé ici avec un taux sans risque nul (\og rf=0 \fg).
+\item[\textbf{Sharpe ratio}] Ratio rendement excédentaire / volatilité, indicateur d'efficacité d'utilisation du risque. Calculé ici avec un taux sans risque nul (\enquote{rf=0}).
 \item[\textbf{Drawdown (DD)}] Perte cumulée maximale par rapport au plus haut historique. Le \emph{MaxDD} est le pire creux observé sur la fenêtre.
 \item[\textbf{Volatility targeting}] Mécanisme de sizing qui ajuste l'exposition pour cibler une volatilité réalisée constante.
 \item[\textbf{Slippage}] Écart entre le prix anticipé et le prix d'exécution réel d'un ordre.
@@ -1035,10 +1046,12 @@ Trade individuel \og bizarre \fg{} ?                    & Continuer & Continuer 
 R : La lecture de ce guide prend $30$--$45$~minutes. Une compréhension opérationnelle complète (savoir lire un journal, juger une intervention) demande quelques semaines de paper trade en parallèle.
 
 \paragraph{Q : La stratégie peut-elle perdre de l'argent ?}
-R : Oui, comme toute stratégie quantitative. Le \emph{drawdown maximum} historique observé sur 5{,}4~ans est de $9{,}3\,\%$, mais des creux plus profonds restent statistiquement possibles. Le mandat client autorise jusqu'à $35\,\%$.
+R : Oui, et il faut s'attendre à des creux importants. Le \emph{drawdown} d'équité maximal observé sur le backtest de référence est de $44\,\%$, et les simulations de résistance placent une trajectoire sur vingt au-delà de $70\,\%$. Le mandat ne fixe \textbf{aucun plafond}~: le dimensionnement a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
 
-\paragraph{Q : Pourquoi 80\,\% sur le Moteur~1 et seulement 10\,\% sur les autres ?}
-R : Cette répartition ne reflète pas la part du P\&L mais la \emph{contribution au risque}. Le Moteur~1 a la volatilité la plus basse, donc il peut porter une allocation nominale plus grande sans dominer le risque global. Voir \S~\ref{sec:architecture}.
+\paragraph{Q : Pourquoi 72\,\% sur le Moteur~1 et si peu sur les autres ?}
+R : Cette répartition ne reflète pas la part du P\&L mais la \emph{contribution au risque}. Le Moteur~1 a la volatilité la plus basse, donc il peut porter une allocation nominale plus grande sans dominer le risque global.
+
+Il faut d'ailleurs bien distinguer les deux~: sur le backtest de référence, le Moteur~4 (or) ne pèse que $10\,\%$ de l'allocation mais produit 80\,\% du résultat, tandis que le Moteur~1 en produit moins d'un dixième. Un poids d'allocation dimensionne une exposition, il ne prédit pas un profit.
 
 \paragraph{Q : Que se passe-t-il si je change de broker ?}
 R : Adapter \code{Inp\_SymbolSuffix} au nouveau broker, vérifier les structures de \emph{spread} et de commission, ajuster \code{Inp\_CommissionBpsPerSide} et éventuellement \code{Inp\_GlobalMaxLeverage} si le levier offert change. Voir \emph{Guide d'installation}.

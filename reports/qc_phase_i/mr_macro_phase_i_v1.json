@@ -1,0 +1,41 @@
+{
+  "name": "mr_macro_phase_i_v1",
+  "statistics": {
+    "Total Orders": "152",
+    "Average Win": "0.46%",
+    "Average Loss": "-0.27%",
+    "Compounding Annual Return": "2.020%",
+    "Drawdown": "3.000%",
+    "Expectancy": "0.617",
+    "Start Equity": "1000000.00",
+    "End Equity": "1114896.73",
+    "Net Profit": "11.490%",
+    "Sharpe Ratio": "-1.4",
+    "Sortino Ratio": "-0.563",
+    "Probabilistic Sharpe Ratio": "33.625%",
+    "Loss Rate": "40%",
+    "Win Rate": "60%",
+    "Profit-Loss Ratio": "1.70",
+    "Alpha": "-0.024",
+    "Beta": "-0.03",
+    "Annual Standard Deviation": "0.016",
+    "Annual Variance": "0",
+    "Information Ratio": "0.198",
+    "Tracking Error": "0.067",
+    "Treynor Ratio": "0.77",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$11000000.00",
+    "Lowest Capacity Asset": "EURUSD 8G",
+    "Portfolio Turnover": "7.50%"
+  },
+  "runtimeStatistics": {
+    "Equity": "$1,114,896.73",
+    "Fees": "-$0.00",
+    "Holdings": "$1,136,565.29",
+    "Net Profit": "$132,823.93",
+    "Probabilistic Sharpe Ratio": "33.625%",
+    "Return": "11.49 %",
+    "Unrealized": "$-17,965.96",
+    "Volume": "$162,835,087.49"
+  }
+}
