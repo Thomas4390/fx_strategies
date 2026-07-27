@@ -1,0 +1,8 @@
+[
+  {
+    "ts": "2026-07-27T17:42:32.349408+00:00",
+    "family": "fx_legacy",
+    "n": 290,
+    "note": "sweeps 2026-04 phases 18-21 sur les 4 paires FX (cf. docs/research/phase21_2026-04-13_dsr_retrofit.md)"
+  }
+]

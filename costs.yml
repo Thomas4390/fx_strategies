@@ -1,0 +1,168 @@
+# GÉNÉRÉ par scripts/build_cost_table.py — ne pas éditer.
+# Coûts de transaction par symbole, dérivés des spreads broker MT5
+# (colonne `spread` en points des parquets data/<PAIR>_daily_mt5.parquet).
+# `half_spread_frac` est le coût par fill à passer en slippage VBT.
+# Ni swap ni commission ici — modèle de friction de screening uniquement.
+AUD-USD:
+  spread_points_median: 13.0
+  spread_frac_median: 0.00018717078
+  spread_frac_p75: 0.0001974974255
+  half_spread_frac: 9.358538998e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+EUR-GBP:
+  spread_points_median: 14.0
+  spread_frac_median: 0.0001593072411
+  spread_frac_p75: 0.0001848599689
+  half_spread_frac: 7.965362056e-05
+  n_bars: 1088
+  from: '2022-11-04'
+  to: '2026-05-01'
+EUR-JPY:
+  spread_points_median: 18.0
+  spread_frac_median: 0.0001072007365
+  spread_frac_p75: 0.0001339172138
+  half_spread_frac: 5.360036827e-05
+  n_bars: 1088
+  from: '2022-11-04'
+  to: '2026-05-01'
+EUR-USD:
+  spread_points_median: 11.0
+  spread_frac_median: 9.636527696e-05
+  spread_frac_p75: 0.0001054427638
+  half_spread_frac: 4.818263848e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+GBP-JPY:
+  spread_points_median: 29.0
+  spread_frac_median: 0.0001723000873
+  spread_frac_p75: 0.0001896903305
+  half_spread_frac: 8.615004367e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+GBP-USD:
+  spread_points_median: 12.0
+  spread_frac_median: 9.924784313e-05
+  spread_frac_p75: 0.000103743546
+  half_spread_frac: 4.962392157e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+GER40:
+  spread_points_median: 110.0
+  spread_frac_median: 6.007515511e-05
+  spread_frac_p75: 6.915471722e-05
+  half_spread_frac: 3.003757755e-05
+  n_bars: 1064
+  from: '2022-11-06'
+  to: '2026-06-19'
+JPN225:
+  spread_points_median: 952.0
+  spread_frac_median: 0.0002611052371
+  spread_frac_p75: 0.0003191088715
+  half_spread_frac: 0.0001305526186
+  n_bars: 1114
+  from: '2022-11-04'
+  to: '2026-06-19'
+NZD-USD:
+  spread_points_median: 26.0
+  spread_frac_median: 0.0003709410489
+  spread_frac_p75: 0.0004253648321
+  half_spread_frac: 0.0001854705245
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+UK100:
+  spread_points_median: 88.0
+  spread_frac_median: 0.0001068657943
+  spread_frac_p75: 0.0001307815427
+  half_spread_frac: 5.343289713e-05
+  n_bars: 1086
+  from: '2022-11-04'
+  to: '2026-06-19'
+US100:
+  spread_points_median: 160.0
+  spread_frac_median: 8.145246027e-05
+  spread_frac_p75: 0.0001024287188
+  half_spread_frac: 4.072623014e-05
+  n_bars: 1123
+  from: '2022-11-04'
+  to: '2026-06-19'
+US30:
+  spread_points_median: 160.0
+  spread_frac_median: 3.978446765e-05
+  spread_frac_p75: 5.027315605e-05
+  half_spread_frac: 1.989223382e-05
+  n_bars: 1123
+  from: '2022-11-04'
+  to: '2026-06-19'
+US500:
+  spread_points_median: 40.0
+  spread_frac_median: 8.140611885e-05
+  spread_frac_p75: 0.0001828696849
+  half_spread_frac: 4.070305942e-05
+  n_bars: 1123
+  from: '2022-11-04'
+  to: '2026-06-19'
+USD-CAD:
+  spread_points_median: 14.0
+  spread_frac_median: 0.0001042550973
+  spread_frac_p75: 0.0001435830349
+  half_spread_frac: 5.212754866e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+USD-CHF:
+  spread_points_median: 18.0
+  spread_frac_median: 0.0001955905204
+  spread_frac_p75: 0.0002080155318
+  half_spread_frac: 9.779526019e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+USD-JPY:
+  spread_points_median: 13.0
+  spread_frac_median: 8.640864086e-05
+  spread_frac_p75: 0.0001171614485
+  half_spread_frac: 4.320432043e-05
+  n_bars: 1697
+  from: '2020-11-22'
+  to: '2026-05-01'
+XAG-USD:
+  spread_points_median: 26.0
+  spread_frac_median: 0.000900120016
+  spread_frac_p75: 0.001196959727
+  half_spread_frac: 0.000450060008
+  n_bars: 1123
+  from: '2022-11-04'
+  to: '2026-06-19'
+XAU-USD:
+  half_spread_frac: 0.0001
+  source: spec
+XBR-USD:
+  spread_points_median: 20.0
+  spread_frac_median: 0.0002686186287
+  spread_frac_p75: 0.0002992891882
+  half_spread_frac: 0.0001343093144
+  n_bars: 959
+  from: '2022-11-04'
+  to: '2026-06-19'
+XNG-USD:
+  spread_points_median: 17.0
+  spread_frac_median: 0.005465838509
+  spread_frac_p75: 0.00691521347
+  half_spread_frac: 0.002732919255
+  n_bars: 1105
+  from: '2022-11-04'
+  to: '2026-06-19'
+XTI-USD:
+  spread_points_median: 20.0
+  spread_frac_median: 0.0002927400484
+  spread_frac_p75: 0.0003308314551
+  half_spread_frac: 0.0001463700242
+  n_bars: 1120
+  from: '2022-11-04'
+  to: '2026-06-19'

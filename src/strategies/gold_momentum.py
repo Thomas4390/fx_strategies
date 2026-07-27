@@ -98,7 +98,7 @@ FIRST_HALF_HOUR_END = "10:00"
 SESSION_CLOSE_HOUR: int = 17
 
 
-def _daily_close(data: Any) -> pd.Series:
+def _daily_close(data: Any, session_close_hour: int = SESSION_CLOSE_HOUR) -> pd.Series:
     """Daily close series from a vbt.Data, DataFrame or Series of any frequency.
 
     Sessions close at 17:00 New York, not at midnight. Gold trades from Sunday
@@ -111,6 +111,10 @@ def _daily_close(data: Any) -> pd.Series:
     The 17:00 boundary is also the convention of the QuantConnect daily CFD bar,
     which matters because the local parquet was exported from QuantConnect —
     aligning here is aligning on the data's producer.
+
+    ``session_close_hour`` is the boundary in New York hours. It defaults to the
+    gold convention and is a parameter only so that another instrument, whose
+    broker cuts its day elsewhere, can be run through the same sleeve.
     """
     close = data.close if hasattr(data, "close") else data
     if isinstance(close, pd.DataFrame):
@@ -122,10 +126,43 @@ def _daily_close(data: Any) -> pd.Series:
     if len(steps) and steps.median() >= pd.Timedelta(days=1):
         return close  # already daily or coarser — nothing to aggregate
 
-    return close.groupby(session_dates(close.index)).last().dropna()
+    return close.groupby(session_dates(close.index, session_close_hour)).last().dropna()
 
 
-def session_dates(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+def _daily_open(data: Any, session_close_hour: int = SESSION_CLOSE_HOUR) -> pd.Series:
+    """First price of each session — the sister of ``_daily_close``.
+
+    Same aggregation, same boundary, ``first`` instead of ``last``: the open of
+    the first bar after the previous session's close. This is what a next-open
+    fill convention needs, and it must be cut on the same boundary as the close
+    or the two series stop describing the same sessions.
+
+    When the source carries no open (the gold minute export does, an OHLC-less
+    series does not), the close is returned instead. That is a degradation, not
+    an equivalence — a "next open" fill then really fills at the next close —
+    and it is spelled out rather than hidden because the caller cannot see it
+    in the output.
+    """
+    if not hasattr(data, "open"):
+        return _daily_close(data, session_close_hour)
+
+    open_ = data.open
+    if isinstance(open_, pd.DataFrame):
+        open_ = open_.iloc[:, 0]
+    if not isinstance(open_.index, pd.DatetimeIndex):
+        return open_
+
+    steps = open_.index.to_series().diff().dropna()
+    if len(steps) and steps.median() >= pd.Timedelta(days=1):
+        return open_  # already daily or coarser — nothing to aggregate
+
+    return open_.groupby(session_dates(open_.index, session_close_hour)).first().dropna()
+
+
+def session_dates(
+    index: pd.DatetimeIndex,
+    session_close_hour: int = SESSION_CLOSE_HOUR,
+) -> pd.DatetimeIndex:
     """Session date each timestamp belongs to, under a 17:00 New York close.
 
     Shifting by the distance to midnight turns "which session does this bar
@@ -143,8 +180,12 @@ def session_dates(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
 
     The index must be tz-naive New York (``utils.load_gold_data``): the boundary
     is a wall-clock hour, so a UTC index would drift by one hour across DST.
+
+    ``session_close_hour`` defaults to the gold convention; it is exposed so
+    that an instrument closing its day at another hour reuses this one
+    definition rather than growing a second one.
     """
-    offset = pd.Timedelta(hours=24 - SESSION_CLOSE_HOUR) - pd.Timedelta(nanoseconds=1)
+    offset = pd.Timedelta(hours=24 - session_close_hour) - pd.Timedelta(nanoseconds=1)
     return (index + offset).normalize()
 
 
@@ -238,6 +279,9 @@ def pipeline(
     fees: float | None = None,
     signal_func_nb: Any = None,
     signal_args: tuple = (),
+    session_close_hour: int = SESSION_CLOSE_HOUR,
+    ann_factor: float = GOLD_DAILY_ANN_FACTOR,
+    fill: str = "close",
     **pf_kwargs: Any,
 ) -> tuple[vbt.Portfolio, GoldMomentumIndicator]:
     """Investigation path — constant sizing unless a ``signal_func_nb`` is given.
@@ -252,13 +296,29 @@ def pipeline(
     ``signal_func_nb`` / ``signal_args`` are forwarded untouched to
     ``from_signals``: this is the seam through which the path-dependent sizing
     overlays of ``framework.sizing_nb`` plug in.
+
+    ``session_close_hour`` and ``ann_factor`` default to the gold conventions
+    (17:00 New York, 252 sessions). They exist so the same sleeve can be run on
+    another instrument without a fork; see ``strategies.tsmom``.
+
+    ``fill`` selects the execution convention:
+
+    - ``"close"`` (default) — decide on ``close[t]`` and fill at that same
+      ``close[t]``. Idealised, and the historical behaviour of this sleeve.
+    - ``"next_open"`` — decide on ``close[t]`` and fill at ``open[t+1]``, which
+      is what MT5 actually does. VBT resolves this through ``price="nextopen"``
+      (an implicit ``from_ago=1``): signals, size and leverage are read on the
+      signal bar and applied to the following bar's open, so the ``shift(1)``
+      already applied by ``vol_target_leverage`` is not doubled.
     """
     if not lookbacks:
         raise ValueError("lookbacks must be a non-empty tuple")
     if base_size <= 0:
         raise ValueError(f"base_size must be > 0, got {base_size}")
+    if fill not in ("close", "next_open"):
+        raise ValueError(f"fill must be 'close' or 'next_open', got {fill!r}")
 
-    close_daily = _daily_close(data)
+    close_daily = _daily_close(data, session_close_hour)
     score = momentum_ensemble(close_daily, lookbacks)
 
     long_ok = score > 0.0
@@ -276,7 +336,9 @@ def pipeline(
 
     if target_vol is not None:
         daily_ret = close_daily.vbt.pct_change()
-        realized = daily_ret.vbt.rolling_std(VOL_WINDOW, minp=VOL_WINDOW, ddof=1) * np.sqrt(252)
+        realized = daily_ret.vbt.rolling_std(
+            VOL_WINDOW, minp=VOL_WINDOW, ddof=1
+        ) * np.sqrt(ann_factor)
         lev_ts = vol_target_leverage(realized, target_vol, max_leverage=max_leverage)
     else:
         lev_ts = pd.Series(1.0, index=close_daily.index)
@@ -301,6 +363,12 @@ def pipeline(
         fees=fees,
         freq="1D",
     )
+    if fill == "next_open":
+        # Only added on this branch: passing `open=` under the "close" fill
+        # would change how the stop orders are simulated, and the default path
+        # is pinned bit-for-bit by the snapshots.
+        pf_args["open"] = _daily_open(data, session_close_hour).reindex(close_daily.index)
+        pf_args["price"] = "nextopen"
     if sl_stop is not None:
         pf_args["sl_stop"] = sl_stop
     if signal_func_nb is not None:

@@ -625,3 +625,91 @@ def mr_band_signal_nb(
             return False, False, False, True
 
     return False, False, False, False
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BROKER (METATRADER 5) DATA LOADING
+# ═══════════════════════════════════════════════════════════════════════
+
+# One parquet per pair and per period, exported from the broker terminal.
+# Shares the gold export's shape — tz-aware UTC index named "time" — and adds
+# three broker columns QuantConnect does not carry: tick_volume (number of
+# price changes, the only volume a retail FX feed has), spread and real_volume.
+MT5_DATA_TEMPLATE = "data/{pair}_{period}_mt5.parquet"
+
+
+def load_mt5_daily(
+    pair: str,
+    period: str = "daily",
+    tz: str = GOLD_TZ,
+    validate: bool = True,
+) -> tuple[pd.DataFrame, vbt.Data]:
+    """Load a broker MT5 parquet, indexed on naive New York time.
+
+    Mirrors `load_gold_data` (raw lowercase frame for Numba kernels,
+    capitalized `vbt.Data` for native VBT functions) so that a sleeve written
+    against the gold export runs unchanged on a broker export: same index
+    convention, same column casing, same fail-fast validation.
+
+    Parameters
+    ----------
+    pair : str
+        Pair as it appears in the file name, e.g. "EUR-USD".
+    period : str
+        Bar period, e.g. "daily" or "minute".
+    tz : str
+        Target timezone. The index is converted to it and then made naive.
+    validate : bool
+        Run `validate_ohlc_frame` on the loaded frame.
+
+    Returns
+    -------
+    raw : pd.DataFrame
+        OHLCV with lowercase columns, naive index in `tz` (for Numba kernels).
+        Keeps the broker's `tick_volume` and `spread` columns.
+    data : vbt.Data
+        VBT Data wrapper with capitalized columns (for native VBT functions).
+    """
+    path = MT5_DATA_TEMPLATE.format(pair=pair, period=period)
+    resolved = _PROJECT_ROOT / path
+
+    data_raw = vbt.Data.from_parquet(str(resolved))
+    df = data_raw.data[data_raw.symbols[0]].sort_index()
+
+    if df.index.tz is None:
+        raise ValueError(
+            f"{path}: index is tz-naive; expected tz-aware UTC. Its timezone would "
+            "have to be guessed, and a wrong guess silently shifts every session boundary."
+        )
+    df.index = df.index.tz_convert(tz).tz_localize(None)
+
+    raw = df.copy()
+    raw.columns = [c.lower() for c in raw.columns]
+
+    if validate:
+        validate_ohlc_frame(raw, name=f"{pair}_mt5")
+
+    # Retail FX has no traded volume; tick_volume is the broker's proxy and is
+    # mirrored into `volume` so VWAP-style indicators find the column they
+    # expect, without dropping the original name.
+    if "tick_volume" in raw.columns:
+        raw["volume"] = raw["tick_volume"].astype(float)
+    elif "volume" not in raw.columns:
+        raw["volume"] = 1.0
+
+    df_cap = raw.copy()
+    df_cap.columns = [c.capitalize() for c in df_cap.columns]
+    data = vbt.Data.from_data({pair: df_cap}, tz_localize=False, tz_convert=False)
+    return raw, data
+
+
+def list_mt5_pairs(period: str = "daily") -> list[str]:
+    """Pairs with a broker parquet for `period`, sorted, e.g. ``["AUD-USD", ...]``.
+
+    Reads the data directory rather than a hardcoded list: adding a pair to the
+    export is then enough to make it visible to the callers.
+    """
+    suffix = f"_{period}_mt5.parquet"
+    return sorted(
+        p.name[: -len(suffix)] for p in (_PROJECT_ROOT / "data").glob(f"*{suffix}")
+    )

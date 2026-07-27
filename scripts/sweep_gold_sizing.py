@@ -12,7 +12,7 @@ Two comparisons are produced, and the second is the one that matters:
 - **risk-matched**: every regime rescaled to the same realized volatility, so
   the only remaining difference is the *shape* of the return distribution.
 
-Holdout discipline: selection metrics use data before ``HOLDOUT_START`` only.
+Holdout discipline: selection metrics use data before ``GOLD_HOLDOUT_START`` only.
 Pass ``--holdout`` to score the frozen winner on the blind period — once.
 
     python scripts/sweep_gold_sizing.py --smoke
@@ -36,6 +36,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from framework import holdout  # noqa: E402
 from framework.ruin import compare_regimes, format_comparison, ruin_report  # noqa: E402
 from framework.sizing_nb import (  # noqa: E402
     MODE_ANTI_MART,
@@ -53,7 +54,7 @@ from utils import load_gold_data  # noqa: E402
 # sleeve locks six months earlier so the blind period spans both the parabolic
 # 2025 advance and the 2026 drawdown — the regime that decides whether a
 # path-dependent sizing rule is survivable.
-HOLDOUT_START = pd.Timestamp("2025-07-01")
+GOLD_HOLDOUT_START = pd.Timestamp("2025-07-01")
 
 INIT_CASH = 100_000.0
 TARGET_VOL = 0.25
@@ -142,6 +143,20 @@ def load_daily() -> tuple[pd.DataFrame, np.ndarray]:
     return daily, atr
 
 
+def _period_slicer(blind: bool):
+    """Slicer keeping either the blind period or the selection period.
+
+    Both come from ``framework.holdout``, so the blind reads are logged
+    where the policy expects them (``docs/research/HOLDOUT_POLICY.md``).
+    """
+    def cut(obj):
+        if blind:
+            return holdout.frozen_oos_slice(obj, holdout_start=GOLD_HOLDOUT_START)
+        return holdout.trim_insample(obj, holdout_start=GOLD_HOLDOUT_START)
+
+    return cut
+
+
 def run_regime(daily: pd.DataFrame, atr: np.ndarray, mode: int, params: dict, holdout: bool):
     """Simulate one regime over full history; return (returns, exposure, worst).
 
@@ -159,19 +174,14 @@ def run_regime(daily: pd.DataFrame, atr: np.ndarray, mode: int, params: dict, ho
         slippage=SLIPPAGE,
         **build_overlay_kwargs(p, atr, memory=memory),
     )
-    mask = (
-        pf.returns.index >= HOLDOUT_START if holdout else pf.returns.index < HOLDOUT_START
-    )
-    returns = pf.returns[mask]
-    exposure = float((pf.asset_value / pf.value)[mask].abs().mean())
+    cut = _period_slicer(holdout)
+    returns = cut(pf.returns)
+    exposure = float(cut(pf.asset_value / pf.value).abs().mean())
 
     trades = pf.trades.records_readable
     if len(trades):
         col = "Exit Index" if "Exit Index" in trades.columns else "Entry Index"
-        in_period = (
-            trades[col] >= HOLDOUT_START if holdout else trades[col] < HOLDOUT_START
-        )
-        sub = trades[in_period]
+        sub = cut(trades.set_index(col))
         worst = float(sub["PnL"].min() / INIT_CASH) if len(sub) else float("nan")
     else:
         worst = float("nan")
@@ -221,7 +231,7 @@ def main() -> None:
     period = "HOLDOUT (blind)" if args.holdout else "SELECTION"
     print(f"\n{'=' * 92}")
     print(f"  Gold sizing sweep — {period}")
-    scored = daily[daily.index >= HOLDOUT_START] if args.holdout else daily[daily.index < HOLDOUT_START]
+    scored = _period_slicer(args.holdout)(daily)
     print(f"  {len(scored)} sessions scored, {scored.index.min().date()} -> {scored.index.max().date()}")
     print(f"  (simulated on the full {len(daily)} sessions so the 250-day lookback is warm)")
     print(f"  {len(grid)} regimes, {n_boot} bootstrap paths, slippage {SLIPPAGE * 1e4:.1f} bp/side")
@@ -257,7 +267,7 @@ def main() -> None:
         "sessions": len(daily),
         "start": str(daily.index.min().date()),
         "end": str(daily.index.max().date()),
-        "holdout_start": str(HOLDOUT_START.date()),
+        "holdout_start": str(GOLD_HOLDOUT_START.date()),
         "slippage_bps_per_side": SLIPPAGE * 1e4,
         "target_vol": TARGET_VOL,
         "n_boot": n_boot,
