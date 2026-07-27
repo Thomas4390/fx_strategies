@@ -175,6 +175,43 @@ ou 2022-11 (nouveaux) → 2025-12-31 :
   volumétrie. In-sample seulement (tranche holdout or épuisée), mais l'ampleur
   et l'unanimité suffisent au kill.
 
+## 4.5 Familles nouvelles (Phase 3)
+
+- **allow_short — TUÉE** (§4.4).
+- **Dual/acceleration momentum — TUÉE** (`reports/research/dual_screen_2026H2.csv`,
+  4 configs + référence, 14 instruments). Le meilleur agrégé (brake 21/126,
+  Sharpe moyen 0,369) ne bat pas le TSMOM non filtré (0,375) avec une
+  corrélation de panier de **0,973** ; le gate strict (long seulement si
+  l'accélération est positive) coupe ~40 % des trades et effondre l'agrégé à
+  0,08 — la décélération n'est pas un prédicteur de perte sur ce moteur lent.
+  La baseline recalculée reproduit les Sharpe du screening au bit près (mêmes
+  conventions garanties).
+- **Donchian — REJETÉE** (`reports/research/donchian_screen_2026H2.csv`,
+  6 configs, 14 instruments). Le gate Sharpe passe (0,437 agrégé pour
+  entry=252/exit=126, 10/14 instruments ≥ 0,30) mais : (a) **redondance** —
+  corr de panier 0,790 avec le TSMOM (0,73-0,75 par instrument : le même flux
+  de rendements) ; (b) **contre-productivité volumétrique** — la config
+  gagnante fait 0,2-0,6 trade/an/instrument (exposition médiane 0,85 : un
+  quasi buy-and-hold vol-ciblé), à l'opposé de l'objectif du cycle, et les
+  configs rapides (55/13 : ~49 trades/an agrégés) perdent le Sharpe (0,278)
+  avant même le mur de la fréquence côté MT5. Une famille breakout n'ajoute
+  ni un pari distinct ni des trades utiles sur cet univers.
+- **XS momentum — PASS formel, NON PROMUE ce cycle**
+  (`reports/research/xs_screen_2026H2.csv`, 6 configs, panel des 14 PASS).
+  Meilleur panier : lb252 long-only top-3, Sharpe 0,609, corr 0,66 au panier
+  TSMOM — additif en théorie de portefeuille (0,609 > 0,66 × 0,856 = 0,565)
+  mais marginalement, et SOUS le panier TSMOM (0,856). La variante long-short
+  est vraiment orthogonale (corr 0,15-0,18) et volumétrique (~40 trades/an)
+  mais à Sharpe 0,28. Motif de non-promotion : l'XS exigerait une sleeve
+  MQL5 multi-symboles à rebalancement — un chantier d'exécution entier —
+  pour un apport marginal, quand les sleeves TSMOM atteignent l'objectif
+  volumétrique avec l'EA existant (`Inp_Gold_Symbol` runtime). Piste notée
+  pour un cycle futur si le mandat volumétrique devait aller au-delà.
+
+**Conclusion Phase 3 : les quatre familles convergent — le portage TSMOM
+multi-instruments (USD-JPY, XAG-USD, US100) est la voie du cycle.** Aucune
+famille nouvelle n'ajoute un pari à la fois distinct, positif et exécutable.
+
 ## 5. Prochaines étapes
 
 1. Phase 3 — familles nouvelles (allow_short or in-sample seulement — tranche
