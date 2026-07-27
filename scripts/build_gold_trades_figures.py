@@ -2,27 +2,33 @@
 """Figures et tables du rapport d'analyse des trades de la sleeve or.
 
 Consomme ``reports/mt5/gold_trades_production.csv`` (figé par
-``scripts/extract_gold_trades.py``) et rejoue la sleeve côté vbt pour la
-comparaison. Sortie : ``reports/latex_report/figures/gold_trades_*.png`` et
+``scripts/extract_gold_trades.py``). Sortie :
+``reports/latex_report/figures/gold_trades_*.png`` et
 ``reports/latex_report/tables/gold_trades_*.tex``.
 
-Trois précautions de mesure sont câblées ici, parce que les ignorer produit des
+Le document est **entièrement adossé au moteur d'exécution**. La comparaison
+avec le backtest de recherche a été retirée du livrable client : elle
+introduisait une distinction entre deux implémentations qui n'éclaire aucune
+décision côté investisseur. Elle reste documentée pour l'interne dans
+``reports/investigations/vbt_vs_mt5_gold_parity.md``.
+
+Le module de stratégie n'est donc utilisé que pour **recalculer l'indicateur**
+— cours de clôture de séance, score d'ensemble, levier cible — qui sert de
+contexte aux figures. Aucun résultat de backtest Python n'entre dans le
+rapport.
+
+Deux précautions de mesure sont câblées ici, parce que les ignorer produit des
 chiffres plausibles et faux :
 
-* **On ne publie aucun Sharpe MT5 pour l'or seul.** L'équité reconstruite depuis
-  les deals est une *balance* : elle ne bouge qu'à la clôture d'une position et
-  ignore tout le chemin intra-position. Le CAGR et les séries annuelles s'en
-  déduisent exactement, les métriques de dispersion non — même argument que
-  ``scripts/parse_mt5_report.py``. La comparaison de Sharpe est citée depuis les
-  runs d'isolation, jamais recalculée sur cette balance.
-* **La comparaison trade à trade porte sur le rendement de prix**
-  (``exit/entry - 1``), pas sur le P&L. vbt part de 1 000 000 en sleeve seule,
-  MT5 de 10 000 avec 10 % d'allocation et ``Inp_RiskScale=4.5`` : les P&L ne sont
-  pas commensurables, les rendements de prix le sont.
-* **L'appariement vbt ↔ MT5 est positionnel** (par rang chronologique). Il n'est
-  légitime que parce que les deux moteurs produisent exactement 35 trades sur la
-  fenêtre commune ; la figure d'alignement montre l'écart résiduel de dates au
-  lieu de le masquer.
+* **On ne publie aucun ratio de Sharpe pour l'or seul.** L'équité reconstruite
+  depuis les deals est une *balance* : elle ne bouge qu'à la clôture d'une
+  position et ignore tout le chemin intra-position. Le CAGR et les séries
+  annuelles s'en déduisent exactement, les métriques de dispersion non — même
+  argument que ``scripts/parse_mt5_report.py``.
+* **Le cours de référence et les prix d'exécution viennent de deux flux
+  distincts** (historique de recherche contre flux du courtier). Les écarts sont
+  visibles sur les zooms de trade et sont signalés en légende plutôt que
+  masqués.
 
 Usage:
     python scripts/build_gold_trades_figures.py
@@ -49,7 +55,6 @@ for _path in (str(_SCRIPTS), str(_PROJECT_ROOT / "src")):
 # quatrième copie du bloc rcParams finirait par dériver des trois autres.
 from build_latex_report_assets import (  # noqa: E402
     PALETTE,
-    latex_escape,
     save_fig,
     save_tex,
 )
@@ -96,95 +101,25 @@ def load_mt5_trades() -> pd.DataFrame:
     return trades
 
 
-def run_vbt() -> dict[str, Any]:
-    """Rejouer la sleeve or aux paramètres de production."""
+def load_signal_context() -> dict[str, Any]:
+    """Recalculer l'indicateur du moteur : cours de séance, score, levier cible.
+
+    Seul l'indicateur est utilisé — ni le portefeuille ni les trades produits
+    par ce chemin n'entrent dans le rapport, qui est adossé au seul journal
+    d'exécution. Ces séries servent de contexte aux figures : le prix sur lequel
+    les trades se lisent, le score qui a décidé, le levier visé.
+    """
     from strategies.gold_momentum import pipeline
     from utils import apply_vbt_settings, load_gold_data
 
     apply_vbt_settings()
     _, data = load_gold_data()
-    pf, ind = pipeline(data)
+    _, ind = pipeline(data)
 
-    trades = pf.trades.records_readable.copy()
-    trades["Entry Index"] = pd.to_datetime(trades["Entry Index"])
-    trades["Exit Index"] = pd.to_datetime(trades["Exit Index"])
-    trades["price_return"] = (
-        trades["Avg Exit Price"] / trades["Avg Entry Price"] - 1.0
-    )
     return {
-        "trades": trades,
         "close": ind.close,
         "score": ind.score,
         "leverage": ind.leverage,
-        "returns": pf.returns,
-    }
-
-
-def compare_engines(mt5: pd.DataFrame, vbt_trades: pd.DataFrame) -> dict[str, Any]:
-    """Comparer les deux moteurs par **couverture temporelle**, pas par rang.
-
-    L'appariement positionnel semblait acquis : le document de parité relève 35
-    trades de part et d'autre et en conclut que « le signal et les transitions
-    concordent ». La conclusion tient au niveau des **fenêtres** — les deux
-    moteurs sont en position les mêmes jours à 90 % près, pour une exposition
-    identique — mais pas au niveau des **trades** : dix positions MT5 sont
-    découpées en deux ou trois côté vbt, sept n'ont aucun équivalent et huit
-    trades vbt n'en ont pas non plus. L'égalité du compte est donc une
-    coïncidence, et un appariement par rang comparerait des trades sans rapport.
-
-    Ce qui se compare honnêtement, c'est l'**état** des deux moteurs séance par
-    séance : en position ou non, plus le recouvrement trade à trade.
-    """
-    lo = mt5["entry_time"].min().normalize()
-    hi = mt5["exit_time"].max().normalize()
-    window = vbt_trades[
-        (vbt_trades["Entry Index"] >= lo) & (vbt_trades["Entry Index"] <= hi)
-    ].sort_values("Entry Index", ignore_index=True)
-
-    days = pd.date_range(lo, hi, freq="D")
-    mt5_in = pd.Series(False, index=days)
-    for _, t in mt5.iterrows():
-        mt5_in.loc[t["entry_time"].normalize():t["exit_time"].normalize()] = True
-    vbt_in = pd.Series(False, index=days)
-    for _, t in window.iterrows():
-        vbt_in.loc[t["Entry Index"]:min(t["Exit Index"], hi)] = True
-
-    # Recouvrement trade à trade : combien de trades vbt chaque position MT5
-    # recouvre-t-elle ? C'est la mesure qui distingue « même trade » de
-    # « même fenêtre découpée autrement ».
-    overlaps = np.array(
-        [
-            int(
-                (
-                    (window["Entry Index"] <= t["exit_time"])
-                    & (window["Exit Index"] >= t["entry_time"])
-                ).sum()
-            )
-            for _, t in mt5.iterrows()
-        ]
-    )
-    vbt_orphans = int(
-        sum(
-            not (
-                (mt5["entry_time"] <= v["Exit Index"])
-                & (mt5["exit_time"] >= v["Entry Index"])
-            ).any()
-            for _, v in window.iterrows()
-        )
-    )
-
-    return {
-        "vbt_window": window,
-        "coverage": pd.DataFrame({"mt5": mt5_in, "vbt": vbt_in}),
-        "agreement": float((mt5_in == vbt_in).mean()),
-        "both_in": float((mt5_in & vbt_in).mean()),
-        "mt5_exposure": float(mt5_in.mean()),
-        "vbt_exposure": float(vbt_in.mean()),
-        "one_to_one": int((overlaps == 1).sum()),
-        "split": int((overlaps >= 2).sum()),
-        "mt5_orphans": int((overlaps == 0).sum()),
-        "vbt_orphans": vbt_orphans,
-        "overlaps": overlaps,
     }
 
 
@@ -421,8 +356,8 @@ def _plot_trade_panel(ax, trade: pd.Series, close: pd.Series) -> None:
 
 def fig_best_worst(mt5: pd.DataFrame, close: pd.Series) -> None:
     subtitle = (
-        "trait gris : cours de clôture du flux de recherche (QuantConnect) · "
-        "trait coloré : le trade tel qu'exécuté par le broker"
+        "trait gris : cours de clôture quotidien de l'or · "
+        "trait coloré : le trade tel qu'exécuté, d'un prix à l'autre"
     )
     for name, subset, title in (
         ("gold_trades_best4", mt5.nlargest(4, "net"),
@@ -565,102 +500,8 @@ def fig_yearly(mt5: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Chapitre 5 — vbt contre MT5
+# Chapitre 5 — où passe l'argent
 # ---------------------------------------------------------------------------
-
-
-def fig_alignment(mt5: pd.DataFrame, cmp_: dict[str, Any]) -> None:
-    """Quand chaque moteur était en position — la vraie comparaison."""
-    coverage = cmp_["coverage"]
-    window = cmp_["vbt_window"]
-
-    fig, ax = plt.subplots(figsize=(9.5, 4.4))
-    for _, t in mt5.iterrows():
-        ax.axvspan(
-            t["entry_time"], t["exit_time"], ymin=0.56, ymax=0.94,
-            color=GOLD, alpha=0.9, linewidth=0,
-        )
-    for _, t in window.iterrows():
-        ax.axvspan(
-            t["Entry Index"], t["Exit Index"], ymin=0.06, ymax=0.44,
-            color=PALETTE["mr"], alpha=0.9, linewidth=0,
-        )
-
-    # Souligner les zones de désaccord : c'est là que se loge l'information.
-    disagree = coverage["mt5"] != coverage["vbt"]
-    ax.fill_between(
-        coverage.index, 0, 1, where=disagree, transform=ax.get_xaxis_transform(),
-        color=LOSS, alpha=0.10, linewidth=0, zorder=0,
-    )
-
-    ax.set_ylim(0, 1)
-    ax.set_yticks([0.25, 0.75])
-    ax.set_yticklabels(["vbt\n(recherche)", "MT5\n(exécution)"], fontsize=9)
-    ax.set_title(
-        "Périodes en position — mêmes fenêtres, découpage différent",
-        color=PALETTE["primary"],
-    )
-    ax.text(
-        0.015, -0.20,
-        f"états identiques {cmp_['agreement'] * 100:.0f} % des jours   ·   "
-        f"exposition MT5 {cmp_['mt5_exposure'] * 100:.0f} %, "
-        f"vbt {cmp_['vbt_exposure'] * 100:.0f} %   ·   "
-        "fond rosé = les deux moteurs divergent\n"
-        f"correspondance simple : {cmp_['one_to_one']} trades   ·   "
-        f"position MT5 découpée par vbt : {cmp_['split']}   ·   "
-        f"sans équivalent : {cmp_['mt5_orphans']} côté MT5, "
-        f"{cmp_['vbt_orphans']} côté vbt",
-        transform=ax.transAxes, fontsize=8, color=NEUTRAL, va="top",
-    )
-    save_fig(fig, "gold_trades_alignment")
-
-
-def fig_engine_profiles(mt5: pd.DataFrame, cmp_: dict[str, Any]) -> None:
-    """Deux moteurs, deux profils de trade : durée et rendement de prix."""
-    window = cmp_["vbt_window"]
-    vbt_duration = (
-        window["Exit Index"] - window["Entry Index"]
-    ).dt.total_seconds() / 86400.0
-
-    fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.2))
-
-    ax = axes[0]
-    bins = np.logspace(0, np.log10(max(mt5["duration_days"].max(), vbt_duration.max())), 12)
-    ax.hist([mt5["duration_days"], vbt_duration], bins=bins,
-            color=[GOLD, PALETTE["mr"]], label=["MT5", "vbt"])
-    ax.set_xscale("log")
-    ax.set_xlabel("durée du trade (jours, log)")
-    ax.set_ylabel("nombre de trades")
-    ax.set_title(
-        "Des durées de détention quasi identiques", color=PALETTE["primary"], fontsize=11
-    )
-    ax.legend()
-    ax.text(
-        0.98, 0.95,
-        f"médiane  MT5 {mt5['duration_days'].median():.0f} j · "
-        f"vbt {vbt_duration.median():.0f} j\n"
-        f"cumul  MT5 {mt5['duration_days'].sum():.0f} j · "
-        f"vbt {vbt_duration.sum():.0f} j",
-        transform=ax.transAxes, fontsize=8, color=NEUTRAL, ha="right", va="top",
-    )
-
-    ax = axes[1]
-    bins = np.histogram_bin_edges(
-        np.concatenate([mt5["price_return"], window["price_return"]]) * 100, bins=14
-    )
-    ax.hist([mt5["price_return"] * 100, window["price_return"] * 100], bins=bins,
-            color=[GOLD, PALETTE["mr"]], label=["MT5", "vbt"])
-    ax.axvline(0, color=NEUTRAL, linewidth=0.9)
-    ax.set_xlabel("rendement de prix par trade (%)")
-    ax.set_title("Des distributions de gain proches", color=PALETTE["primary"], fontsize=11)
-    ax.legend()
-    ax.text(
-        0.98, 0.95,
-        f"moyenne  MT5 {mt5['price_return'].mean() * 100:+.2f} %   ·   "
-        f"vbt {window['price_return'].mean() * 100:+.2f} %",
-        transform=ax.transAxes, fontsize=8, color=NEUTRAL, ha="right", va="top",
-    )
-    save_fig(fig, "gold_trades_engine_profiles")
 
 
 def cost_attribution(mt5: pd.DataFrame) -> dict[str, float]:
@@ -875,54 +716,34 @@ def table_full(mt5: pd.DataFrame) -> None:
 
 
 def table_summary(
-    mt5: pd.DataFrame, cmp_: dict[str, Any], att: dict[str, float], max_dd: float
+    mt5: pd.DataFrame, att: dict[str, float], max_dd: float
 ) -> None:
     wins = mt5[mt5["win"]]
-    window = cmp_["vbt_window"]
-    vbt_duration = (
-        window["Exit Index"] - window["Entry Index"]
-    ).dt.total_seconds() / 86400.0
+    losses = mt5[~mt5["win"]]
     lines = [
-        ("Trades", f"{len(mt5)}", f"{len(window)}"),
-        ("Gagnants", f"{len(wins)} ({len(wins) / len(mt5) * 100:.1f}\\,\\%)",
-         f"{int((window['PnL'] > 0).sum())} "
-         f"({(window['PnL'] > 0).mean() * 100:.1f}\\,\\%)"),
-        ("Résultat net", f"{att['net']:+,.0f}\\,\\$", "non commensurable"),
-        ("Résultat de prix", f"{att['gross_price']:+,.0f}\\,\\$", "---"),
-        ("Swap payé", f"{att['swap']:+,.0f}\\,\\$", "non modélisé"),
-        (
-            "Rendement de prix moyen",
-            f"{mt5['price_return'].mean() * 100:+.2f}\\,\\%",
-            f"{window['price_return'].mean() * 100:+.2f}\\,\\%",
-        ),
-        ("Meilleur trade", f"{mt5['net'].max():+,.0f}\\,\\$", "---"),
-        ("Pire trade", f"{mt5['net'].min():+,.0f}\\,\\$", "---"),
-        ("Durée médiane", f"{mt5['duration_days'].median():.0f}\\,j",
-         f"{vbt_duration.median():.0f}\\,j"),
-        ("Durée maximale", f"{mt5['duration_days'].max():.0f}\\,j",
-         f"{vbt_duration.max():.0f}\\,j"),
-        ("Exposition (jours en position)",
-         f"{cmp_['mt5_exposure'] * 100:.0f}\\,\\%",
-         f"{cmp_['vbt_exposure'] * 100:.0f}\\,\\%"),
-        ("États identiques",
-         f"\\multicolumn{{2}}{{r}}{{{cmp_['agreement'] * 100:.0f}\\,\\% des jours}}",
-         None),
-        ("Repli maximal de balance", f"{max_dd:.1f}\\,\\%", "cf. \\S\\,limites"),
-        ("Stops de sécurité", f"{att['safety_stop_count']}", "aucun (vbt sans stop)"),
+        ("Trades", f"{len(mt5)}"),
+        ("Gagnants", f"{len(wins)} ({len(wins) / len(mt5) * 100:.1f}\\,\\%)"),
+        ("Résultat net", f"{att['net']:+,.0f}\\,\\$"),
+        ("Résultat de prix", f"{att['gross_price']:+,.0f}\\,\\$"),
+        ("Swap payé", f"{att['swap']:+,.0f}\\,\\$"),
+        ("Gain moyen", f"{wins['net'].mean():+,.0f}\\,\\$"),
+        ("Perte moyenne", f"{losses['net'].mean():+,.0f}\\,\\$"),
+        ("Meilleur trade", f"{mt5['net'].max():+,.0f}\\,\\$"),
+        ("Pire trade", f"{mt5['net'].min():+,.0f}\\,\\$"),
+        ("Rendement de prix moyen", f"{mt5['price_return'].mean() * 100:+.2f}\\,\\%"),
+        ("Durée médiane", f"{mt5['duration_days'].median():.0f}\\,j"),
+        ("Durée maximale", f"{mt5['duration_days'].max():.0f}\\,j"),
+        ("Repli maximal de balance", f"{max_dd:.1f}\\,\\%"),
+        ("Stops de sécurité", f"{att['safety_stop_count']}"),
     ]
-    body = "\n".join(
-        (f"{a} & {b} \\\\" if c is None else f"{a} & {b} & {c} \\\\")
-        for a, b, c in lines
-    )
+    body = "\n".join(f"{a} & {b} \\\\" for a, b in lines)
     content = (
         "% Généré par scripts/build_gold_trades_figures.py — NE PAS ÉDITER À LA MAIN.\n"
-        "\\begin{table}[H]\n\\centering\n\\begin{tabular}{@{}lrr@{}}\n\\toprule\n"
-        " & \\textbf{MT5 (exécution)} & \\textbf{vbt (recherche)} \\\\\n\\midrule\n"
+        "\\begin{table}[H]\n\\centering\n\\begin{tabular}{@{}lr@{}}\n\\toprule\n"
+        "\\textbf{Métrique} & \\textbf{Backtest MT5} \\\\\n\\midrule\n"
         f"{body}\n\\bottomrule\n\\end{{tabular}}\n"
-        "\\caption{La sleeve or trade par trade, sur les deux moteurs. Les deux "
-        "colonnes portent sur la même fenêtre ; les P\\&L ne sont pas "
-        "commensurables (capitaux et allocations différents), les rendements de "
-        "prix le sont.}\n"
+        "\\caption{La sleeve or en chiffres, telle que le simulateur d'exécution "
+        "l'a jouée sur la période 2021--2026.}\n"
         "\\end{table}\n"
     )
     save_tex("gold_trades_summary", content)
@@ -986,14 +807,9 @@ def main() -> None:
         f"{mt5['entry_time'].min():%Y-%m-%d} → {mt5['exit_time'].max():%Y-%m-%d}"
     )
 
-    print("[2/4] Rejeu de la sleeve côté vbt (~2 min)...")
-    ctx = run_vbt()
-    cmp_ = compare_engines(mt5, ctx["trades"])
-    print(
-        f"      {len(ctx['trades'])} trades vbt au total, "
-        f"{len(cmp_['vbt_window'])} sur la fenêtre commune  ·  "
-        f"états identiques {cmp_['agreement'] * 100:.0f} % des jours"
-    )
+    print("[2/4] Recalcul de l'indicateur (cours, score, levier)...")
+    ctx = load_signal_context()
+    print(f"      {len(ctx['close'])} séances de contexte")
 
     print("[3/4] Figures...")
     fig_timeline(mt5, ctx)
@@ -1005,8 +821,6 @@ def main() -> None:
     fig_streaks(mt5)
     max_dd = fig_equity_dd(mt5)
     yearly = fig_yearly(mt5)
-    fig_alignment(mt5, cmp_)
-    fig_engine_profiles(mt5, cmp_)
     att = cost_attribution(mt5)
     fig_attribution(mt5, att)
     fig_costs(mt5)
@@ -1014,7 +828,7 @@ def main() -> None:
 
     print("[4/4] Tables...")
     table_full(mt5)
-    table_summary(mt5, cmp_, att, max_dd)
+    table_summary(mt5, att, max_dd)
     table_attribution(att, yearly)
 
     print(

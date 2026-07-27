@@ -10,7 +10,8 @@ que celui du rapport d'investissement, vérifié par empreinte du fichier de
 transactions. Trente-cinq positions y figurent, du 9~novembre~2021 au
 21~avril~2026, avec pour chacune le prix d'entrée, le prix de sortie, le volume
 en lots, le résultat, le portage, ainsi que le score de décision et le levier
-relevés dans le journal du testeur.
+relevés dans le journal du simulateur. Tous les chiffres de ce document
+proviennent de cette source unique.
 
 \subsection*{Cinq constats}
 
@@ -28,15 +29,15 @@ total. Les vingt-et-une positions de moins d'une semaine perdent ensemble
 $-$6\,188\,\$. Le moteur ne gagne pas en tradant~: il gagne en \emph{tenant}.
 
 \item \textbf{Le portage coûte 28\,\% du résultat brut.} Le gain de prix
-s'élève à $+$44\,926\,\$~; le swap en retire $-$12\,784\,\$. C'est le prix
-mécanique de la tenue longue, et il n'est pas modélisé du côté recherche.
+s'élève à $+$44\,926\,\$~; le portage en retire $-$12\,784\,\$. C'est le prix
+mécanique de la tenue longue, et il tombe intégralement sur les positions
+longues --- celles qui rapportent.
 
-\item \textbf{Les deux moteurs occupent les mêmes fenêtres mais découpent
-autrement.} Le moteur de recherche (vbt) et celui d'exécution (MT5) sont en
-position les mêmes jours à 90\,\% près, pour une exposition identique de
-75\,\%. Mais dix positions MT5 sont fractionnées en deux ou trois côté vbt.
-L'égalité «~35~trades de part et d'autre~» relevée lors de la réconciliation est
-une coïncidence de comptage, pas une correspondance de transactions.
+\item \textbf{Il faut encaisser dix pertes d'affilée.} La plus longue série
+perdante court sur 255~jours, soit plus de huit mois sans un seul gain. La plus
+longue série gagnante, elle, ne compte que deux trades. Tenir la stratégie
+pendant ces périodes est une condition d'accès au rendement, pas un détail de
+tempérament.
 
 \item \textbf{Le ciblage de volatilité ne cible jamais sa cible.} La volatilité
 réalisée de l'or oscille entre 8 et 33\,\% sur la période, toujours sous

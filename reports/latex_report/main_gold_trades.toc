@@ -15,12 +15,11 @@
 \contentsline {subsection}{\numberline {5.1}Combien de pertes d'affilée faut-il supporter}{12}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Le repli}{13}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Par année}{14}{subsection.5.3}%
-\contentsline {section}{\numberline {6}Le moteur de recherche contre celui qui exécute}{14}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Ce que la réconciliation avait conclu, et ce que le détail montre}{14}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Deux profils de trade}{16}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Où passe l'argent}{17}{subsection.6.3}%
-\contentsline {section}{\numberline {7}Le dimensionnement à l'épreuve des faits}{18}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Ce que le pas de lot impose}{19}{subsection.7.1}%
-\contentsline {section}{\numberline {8}Ce que ce document ne démontre pas}{20}{section.8}%
-\contentsline {section}{Annexe --- Les trente-cinq trades}{22}{section.8}%
+\contentsline {section}{\numberline {6}Où passe l'argent}{14}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Le portage est un loyer de temps}{16}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Deux postes plus fins}{16}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Le dimensionnement à l'épreuve des faits}{17}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Ce que le pas de lot impose}{18}{subsection.7.1}%
+\contentsline {section}{\numberline {8}Ce que ce document ne démontre pas}{18}{section.8}%
+\contentsline {section}{Annexe --- Les trente-cinq trades}{20}{section.8}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

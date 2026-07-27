@@ -52,7 +52,6 @@ if str(Path(__file__).resolve().parent) not in sys.path:
 # sleeve). On le réutilise plutôt que de relire le CSV à côté.
 from parse_mt5_report import (  # noqa: E402
     FILE_COMMON,
-    _read_utf16_safe,
     load_deals,
 )
 

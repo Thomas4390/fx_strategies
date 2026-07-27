@@ -1,0 +1,63 @@
+\section{Où passe l'argent}
+\label{sec:couts}
+
+Le résultat affiché par le moteur n'est pas celui que le marché lui a donné~:
+entre les deux, il y a des coûts. Cette section les mesure sur le journal des
+transactions, poste par poste, et vérifie que la somme retombe exactement sur le
+chiffre publié.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_attribution}
+\caption{Du résultat de prix au résultat net. Les trois postes sont mesurés sur
+le journal des transactions et se recollent exactement au chiffre publié.}
+\end{figure}
+
+\input{tables/gold_trades_attribution.tex}
+
+Le résultat de prix --- ce que le mouvement de l'or a rapporté --- s'élève à
+$+$44\,926\,\$. Le portage en retire $-$12\,784\,\$, soit \metric{28,5\,\%}. La
+commission est nulle sur ce compte. Il reste $+$32\,141\,\$, qui est exactement
+le chiffre du rapport d'exécution~: l'attribution est complète, sans résidu.
+
+\subsection{Le portage est un loyer de temps}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_costs}
+\caption{Résultat de prix et résultat net cumulés~: l'écart entre les deux
+courbes est le portage. À droite, le portage payé par trade en fonction de sa
+durée.}
+\end{figure}
+
+Le panneau de droite explicite le mécanisme~: le portage croît avec la durée de
+détention, et frappe donc le plus lourdement les positions qui rapportent le
+plus. Le trade de 214~jours paie 2\,874\,\$ de portage, soit 11,7\,\% de son
+gain de prix~; celui de 199~jours en paie 2\,844\,\$, soit 18,9\,\% du sien.
+
+Rapporté à l'ensemble, le portage représente pourtant 28,5\,\% du résultat de
+prix --- nettement plus que sur les grands trades. La raison est simple~: les
+positions perdantes paient elles aussi leur loyer, sans rien rapporter en
+face.
+
+\begin{insightbox}
+C'est le coût structurel de la méthode, et il ne peut pas être supprimé sans
+supprimer ce qui fait gagner le moteur. Raccourcir les positions réduirait le
+portage, mais amputerait d'abord les gains~: rappelons que les cinq positions
+de plus de cent jours produisent \emph{plus} que le résultat total.
+\end{insightbox}
+
+\subsection{Deux postes plus fins}
+
+Deux coûts complètent le tableau, et il faut être clair sur leur statut.
+
+Le \textbf{glissement} --- l'écart entre le prix visé et le prix obtenu --- est
+estimé à environ 545\,\$ sur 1,4~million de dollars de notionnel cumulé, à
+partir du paramètre de 2~points de base par côté. Cette somme est déjà contenue
+dans les prix d'exécution du tableau ci-dessus~: ce n'est pas un poste à
+retrancher en plus.
+
+L'\textbf{arrondi des volumes} au pas de 0,01~lot n'est pas reconstructible à
+partir des artefacts disponibles. Il est réel, son ordre de grandeur est discuté
+au chapitre~\ref{sec:sizing}, mais il reste \emph{non attribué} --- et ce
+document ne lui invente pas de chiffre.

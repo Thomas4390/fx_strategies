@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-27T16:25:43+00:00",
+  "generated_at_utc": "2026-07-27T17:21:51+00:00",
   "generator": "scripts/extract_gold_trades.py",
   "sleeve": "GOLD_MOMENTUM",
   "deals_csv": {
