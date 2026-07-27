@@ -1826,46 +1826,76 @@ def _build_robustness_tables(report: dict, backtest_years: float) -> None:
     pbo = report.get("pbo") or {}
 
     rows = []
+    # La légende affirmait « tous les tests convergent vers un verdict
+    # favorable » en dur, au-dessus d'une ligne marquée (OVERFIT). Chaque test
+    # enregistre désormais son verdict, et la légende les compte.
+    verdicts: list[bool] = []
     if psr:
+        psr_val = float(psr.get("psr", float("nan")))
+        verdicts.append(psr_val > 0.95)
         rows.append(
-            f"PSR vs 0 & {fmt_num(psr.get('psr', float('nan')), 4)} & "
+            f"PSR vs 0 & {fmt_num(psr_val, 4)} & "
             r"$P(\text{Sharpe vrai} > 0)$ élevé --- présence d'edge \\"
         )
     if dsr:
+        dsr_val = float(dsr.get("dsr", float("nan")))
+        verdicts.append(dsr_val > 0.95)
         rows.append(
             f"DSR ($N = {int(dsr.get('n_trials', 0))}$ trials) & "
-            f"{fmt_num(dsr.get('dsr', float('nan')), 4)} & "
+            f"{fmt_num(dsr_val, 4)} & "
             f"Seuil $E[\\max\\mathrm{{SR}}] = {fmt_num(dsr.get('expected_max_sharpe', float('nan')), 3)}$ \\\\"
         )
     if haircut:
+        haircut_ratio = float(haircut.get("haircut_ratio", float("nan")))
+        verdicts.append(haircut_ratio > 0.50)
         rows.append(
             f"Haircut Sharpe (BHY) & "
             f"{fmt_num(haircut.get('haircut_sharpe', float('nan')), 3)} & "
             f"Ratio survivant = "
-            f"{fmt_pct(haircut.get('haircut_ratio', float('nan')), 2)} \\\\"
+            f"{fmt_pct(haircut_ratio, 2)} \\\\"
         )
     if minbtl:
+        minbtl_years = float(minbtl.get("years", float("nan")))
+        verdicts.append(minbtl_years < backtest_years)
         rows.append(
             f"MinBTL (années) & "
-            f"{fmt_num(minbtl.get('years', float('nan')), 2)} & "
+            f"{fmt_num(minbtl_years, 2)} & "
             f"Pour Sharpe cible "
             f"{fmt_num(minbtl.get('sharpe_target', float('nan')), 2)} \\\\"
         )
     if pbo:
         pbo_val = float(pbo.get("pbo", float("nan")))
-        verdict = "SAIN" if pbo_val < 0.5 else "OVERFIT"
+        pbo_ok = pbo_val < 0.5
+        verdicts.append(pbo_ok)
+        verdict = "SAIN" if pbo_ok else "OVERFIT"
         rows.append(
             f"PBO CSCV ($n_{{\\text{{bins}}}} = {int(pbo.get('n_bins', 0))}$) & "
             f"{fmt_num(pbo_val, 3)} & "
             f"Seuil de danger $= 0.5$ \\textit{{ ({verdict})}} \\\\"
         )
+
+    n_total = len(verdicts)
+    n_passed = sum(verdicts)
+    if n_total and n_passed == n_total:
+        summary = (
+            "Tous les tests convergent vers un verdict favorable sur le "
+            "portefeuille combiné."
+        )
+    elif n_total:
+        summary = (
+            f"{n_passed} test(s) sur {n_total} franchissent leur seuil sur le "
+            f"portefeuille combiné~; les autres échouent et sont signalés "
+            f"dans la colonne d'interprétation."
+        )
+    else:
+        summary = "Aucun test disponible."
     content = tex_table_wrap(
         header=r"Test & Valeur & Interprétation \\",
         rows=rows,
         caption=(
-            r"Tests de correction d'\textit{overfitting}. Tous les tests "
-            r"convergent vers un verdict favorable sur le portefeuille "
-            r"combiné. Références~: Bailey \& L\'opez~de~Prado~(2012, 2014, "
+            r"Tests de correction d'\textit{overfitting}. "
+            + summary
+            + r" Références~: Bailey \& L\'opez~de~Prado~(2012, 2014, "
             r"2015), Harvey \& Liu~(2015)."
         ),
         label="tab:robustness_overfitting",
