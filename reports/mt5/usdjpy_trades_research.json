@@ -1,0 +1,44 @@
+{
+  "generated_at_utc": "2026-07-27T19:19:25+00:00",
+  "generator": "scripts/extract_usdjpy_trades.py",
+  "sleeve": "GOLD_MOMENTUM",
+  "symbol": "USDJPY.c",
+  "deals_csv": {
+    "path": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies/reports/mt5/oos_usdjpy_deals.csv",
+    "sha256": "2d43efba1220961ebcf5e22d01460d3d01f5c02f356fc2352d78bdab84379060",
+    "size_bytes": 14036
+  },
+  "tester_log": {
+    "path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "size_bytes": 59570496,
+    "usdjpy_runs_found": 6
+  },
+  "window": {
+    "first_entry_utc": "2021-09-14T21:00:17",
+    "last_exit_utc": "2026-04-29T23:59:59"
+  },
+  "counts": {
+    "trades": 35,
+    "safety_stops": 0,
+    "forced_closes": 1
+  },
+  "totals": {
+    "profit": 64556.59,
+    "commission": 0.0,
+    "swap": 112265.89,
+    "net": 176822.48
+  },
+  "research_run": {
+    "run_id": "20260727T191203Z",
+    "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/oos_USDJPY.ini",
+    "html_report": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/oos_USDJPY.htm",
+    "period": "M1 (2021.01.01 - 2026.04.30)",
+    "initial_deposit": "100 000.00",
+    "total_net_profit": "176 822.48",
+    "sharpe_ratio": "0.66",
+    "total_trades": "35",
+    "balance_dd_max": "96 940.43 (33.79%)",
+    "equity_dd_max": "179 811.23 (45.16%)",
+    "net_matches_report": true
+  }
+}

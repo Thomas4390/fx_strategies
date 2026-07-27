@@ -1,0 +1,83 @@
+\section{D'où vient l'argent}
+\label{sec:carry}
+
+Sur la sleeve or, cette section s'intitulait «~où passe l'argent~»~: le portage
+y est un coût, et il fallait montrer combien il prélève. Ici la question
+s'inverse. Le différentiel de taux entre le dollar et le yen a été positif sur
+toute la fenêtre, et un long USD/JPY l'encaisse chaque nuit. Le poste change de
+signe --- et de rang.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_attribution}
+\caption{Du résultat de prix au résultat net. Les trois postes sont mesurés sur
+le journal des transactions et se recollent exactement au chiffre du
+simulateur.}
+\end{figure}
+
+\input{tables/usdjpy_trades_attribution.tex}
+
+Le résultat de prix --- ce que le mouvement du change a rapporté --- s'élève à
+$+$64\,557\,\$. Le portage y ajoute $+$112\,266\,\$, soit \metric{174\,\%} de
+plus, et la commission est nulle sur ce compte. Il reste $+$176\,822\,\$, qui
+est exactement le chiffre du rapport d'exécution~: l'attribution est complète,
+sans résidu.
+
+\begin{insightbox}
+\textbf{Ce candidat n'est pas seulement un momentum~: c'est un momentum
+\emph{plus} un portage.} Le portage représente \metric{63\,\%} du résultat net.
+Il retourne même le signe de \textbf{trois} trades, perdants sur le prix et
+gagnants une fois le carry compté. Un instrument dont le classement repose à
+63\,\% sur un poste que le signal ne pilote pas ne se juge pas comme les
+autres.
+\end{insightbox}
+
+\subsection{Le portage est un loyer de temps --- perçu, pas payé}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_costs}
+\caption{Résultat de prix et résultat net cumulés~: l'écart entre les deux
+courbes est le portage encaissé. À droite, le portage perçu par trade en
+fonction de sa durée, sur deux échelles logarithmiques.}
+\end{figure}
+
+Le panneau de droite est presque une droite~: le portage croît proportionnellement
+à la durée de détention. Rapporté au notionnel effectivement porté, il vaut
+\metric{0,69~point de base par jour}, soit environ 2,5\,\% l'an du notionnel.
+Multiplié par le levier moyen du moteur (6,1$\times$) et par son taux
+d'exposition (67\,\%), cela représente de l'ordre de \metric{10\,\% l'an} du
+sous-compte --- perçu sans qu'aucune décision de trading n'intervienne. Le
+calcul direct donne la même chose~: 24\,276\,\$ de portage par an pour une
+balance moyenne de 249\,289\,\$.
+
+C'est ce qui explique la forme du panneau de gauche~: la courbe nette s'écarte
+vers le haut de la courbe de prix et ne la rejoint jamais. Du sommet de
+juillet~2024 au creux de février~2026, le résultat de prix cumulé perd
+117\,704\,\$~; le résultat net n'en perd que 82\,355. Le portage a absorbé
+\metric{30\,\%} des dégâts du signal sur cette phase.
+
+\subsection{Trois réserves sur ce poste}
+
+\textbf{Le carry est un régime, pas une constante.} La fenêtre 2021--2026
+couvre l'épisode où la Réserve fédérale est montée au-delà de 5\,\% pendant que
+la Banque du Japon restait à zéro. C'est le différentiel de taux le plus large
+depuis des décennies, et rien dans ces trente-cinq trades ne dit ce que devient
+le candidat si l'écart se referme. La question n'est pas hypothétique~: elle
+porte sur les deux tiers du résultat.
+
+\textbf{Le glissement pèse ici bien plus lourd que sur l'or.} Il est estimé à
+\metric{25\,350\,\$} sur 63,4~millions de dollars de notionnel cumulé, à partir
+de l'hypothèse de 2~points de base par côté --- soit \metric{39\,\%} du
+résultat de prix. Cette somme est déjà contenue dans les prix d'exécution du
+tableau ci-dessus~: ce n'est pas un poste à retrancher en plus. Mais si
+l'hypothèse était deux fois trop optimiste, le résultat de prix perdrait encore
+25\,000\,\$ et le résultat net 14\,\%. Sur l'or, la même hypothèse ne
+représentait que 1,2\,\% du résultat de prix~; le candidat USD/JPY est
+nettement plus sensible à la qualité d'exécution supposée.
+
+\textbf{Le résultat de prix ne suffirait pas.} Sans portage, ce candidat aurait
+rapporté $+$64\,557\,\$ au lieu de $+$176\,822\,\$, pour un risque au moins
+aussi élevé --- le repli d'équité de 45\,\% est mesuré \emph{portage compris}.
+Il est donc honnête de dire que c'est le \emph{carry} qui a placé USD/JPY en
+tête du cycle, autant que le signal.

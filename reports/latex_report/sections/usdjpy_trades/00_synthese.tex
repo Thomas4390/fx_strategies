@@ -1,0 +1,70 @@
+\section{Ce que les trente-cinq trades racontent}
+
+\lettrine{L}{e} cycle d'expansion momentum 2026-H2 cherchait des instruments
+capables de porter le même moteur que la sleeve or, pour cesser de faire
+dépendre 80\,\% du résultat du portefeuille de trente-cinq trades sur un seul
+sous-jacent. Vingt-et-un instruments ont été passés au simulateur~; USD/JPY en
+est ressorti premier. Ce document regarde ses transactions une par une, parce
+qu'un classement par ratio ne dit pas \emph{d'où} vient le résultat --- et sur
+ce candidat, la réponse est inattendue.
+
+Le matériau est le journal d'exécution d'un \textbf{run de recherche} MT5~: la
+sleeve TSMOM jouée seule, à pleine allocation, facteur de risque~1,0, sur un
+dépôt de 100\,000~dollars, du 1\textsuperscript{er}~janvier~2021 au
+30~avril~2026. Trente-cinq positions y figurent, du 14~septembre~2021 au
+29~avril~2026, avec pour chacune le prix d'entrée, le prix de sortie, le volume
+en lots, le résultat, le portage, ainsi que le score de décision et le levier
+relevés dans le journal du simulateur. Tous les chiffres de ce document
+proviennent de cette source unique, et le total recolle au cent près sur le
+rapport du simulateur~: $+$176\,822,48\,\$.
+
+\subsection*{Cinq constats}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=0.45em]
+
+\item \textbf{Le portage fait les deux tiers du résultat.} Le mouvement du
+change n'a rapporté que $+$64\,557\,\$~; le différentiel de taux encaissé sur
+les positions en a ajouté $+$112\,266\,\$, soit \metric{63\,\%} du net. C'est
+l'exact miroir de la sleeve or, où le portage \emph{coûte} 28\,\% du résultat
+brut. Ici, être long dollar contre yen, c'est être payé pour attendre.
+
+\item \textbf{Une seule position fait tout --- et davantage.} Le trade ouvert
+le 24~septembre~2021 et tenu \metric{416~jours} rapporte $+$188\,374\,\$, soit
+\emph{plus} que le résultat total. Retiré, il ne reste pas un gain plus modeste
+mais une perte de $-$11\,551\,\$ sur les trente-quatre autres. La concentration
+est ici plus extrême que sur l'or.
+
+\item \textbf{Le taux de réussite est trompeusement équilibré.} Dix-huit trades
+sur trente-cinq finissent positifs, soit 51,4\,\%. Mais seulement
+\metric{quinze} sont gagnants \emph{sur le prix}~: le portage retourne le signe
+de trois d'entre eux. Le gain moyen ($+$25\,744\,\$) ne vaut que
+\metric{1,5~fois} la perte moyenne ($-$16\,857\,\$) --- l'asymétrie qui fait
+vivre l'or est ici bien plus faible.
+
+\item \textbf{Les mauvaises passes sont courtes mais violentes.} La plus longue
+série perdante ne compte que \textbf{trois} trades, contre dix sur l'or. Mais
+ces trois clôtures-là, du 21~mars au 3~mai~2023, coûtent $-$96\,940\,\$ ---
+c'est exactement le repli maximal de balance mesuré par le simulateur,
+\metric{33,8\,\%} du compte, encaissé en six semaines.
+
+\item \textbf{Le plafond de levier est la contrainte réelle.} La volatilité du
+yen évolue entre 2,9 et 18,1\,\% annualisés sur la période, médiane 8,2\,\%,
+très loin de la cible de 55\,\%. Le levier sature donc à 6,6$\times$ dès que la
+volatilité passe sous 8,3\,\% --- ce qui arrive une séance sur deux, et pour
+\metric{18~entrées sur 35}.
+
+\end{enumerate}
+
+\begin{warningbox}
+\textbf{Ce document décrit un candidat, pas une sleeve déployée.} Le run est un
+run de recherche~: sleeve isolée, allocation 100\,\%, facteur de risque~1,0,
+dépôt de 100\,000\,\$. Les montants ne sont comparables ni à ceux du
+portefeuille client ni à ceux de la sleeve or, qui tourne à 10\,\% d'allocation
+avec un facteur de risque de 4,5. Le simulateur a par ailleurs tourné en mode
+\emph{OHLC~1~minute}, qui interpole les exécutions et flatte les résultats.
+Trente-cinq observations ne permettent aucune conclusion statistique par
+sous-groupe. Le chapitre~\ref{sec:limites} détaille ce que ce document ne
+démontre pas.
+\end{warningbox}
+
+\input{tables/usdjpy_trades_summary.tex}

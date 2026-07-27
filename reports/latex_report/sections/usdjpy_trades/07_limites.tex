@@ -1,0 +1,116 @@
+\section{Ce que ce document ne démontre pas}
+\label{sec:limites}
+
+Un document qui descend au trade individuel donne une impression de précision
+qui peut tromper. Voir trente-cinq lignes détaillées avec des prix au millième
+ne rend pas l'échantillon plus grand ni le backtest plus réel. Cette section
+énumère ce qu'il faut retenir \emph{contre} les chiffres qui précèdent --- et
+sur ce candidat, la liste est plus lourde que sur l'or.
+
+\subsection*{Un seul trade porte tout le résultat}
+
+\textbf{Trente-cinq trades}, dont \textbf{un} produit davantage que le total.
+Retirer la position de septembre~2021 ne ramène pas le résultat net de
+$+$176\,822\,\$ à un gain plus modeste~: elle le fait passer à
+\textbf{$-$11\,551\,\$}. Tout le reste du document décrit donc, littéralement,
+un candidat qui perd de l'argent \emph{plus} un événement unique. Aucune
+statistique par sous-groupe --- par année, par régime, par durée --- ne dispose
+ici de la moindre puissance. Les ventilations présentées sont
+\emph{descriptives}.
+
+\subsection*{La fenêtre contient le mégatrend du yen}
+
+Le cours passe de 109 à 161~yens par dollar entre septembre~2021 et
+avril~2026, avec une jambe quasi ininterrompue en 2022. Un moteur de suivi de
+tendance long uniquement ne \emph{peut} que bien s'y comporter, et c'est
+exactement ce qui s'est produit --- une fois. La note du cycle a tenté de
+borner ce soupçon en vérifiant que le même moteur tient un ratio de 0,51 sur
+huit ans de données quotidiennes, y compris les années plates 2018--2020~; cela
+limite le doute, cela ne l'efface pas.
+
+\subsection*{Le simulateur a tourné en mode interpolé}
+
+Le run utilise le modèle \emph{OHLC 1~minute}, qui reconstitue les exécutions à
+l'intérieur des barres au lieu de rejouer les cotations réelles. Ce mode flatte
+systématiquement les résultats. \textbf{Tout chiffre d'exécution présenté ici
+est donc un majorant}, et non une mesure. Sur un candidat dont le glissement
+supposé pèse déjà 39\,\% du résultat de prix (chapitre~\ref{sec:carry}), cette
+réserve n'est pas cosmétique.
+
+\subsection*{Le repli affiché est une borne inférieure}
+
+Le repli de 33,8\,\% est calculé sur la balance, qui ne bouge qu'à la clôture
+des positions. Le simulateur, qui mesure tick par tick, rapporte
+\textbf{45,2\,\%} pour le même run. C'est aussi la raison pour laquelle
+\textbf{aucun ratio de Sharpe n'est reconstruit ici}~: une mesure de dispersion
+calculée sur une balance est fausse par construction. Le seul ratio cité est
+celui du simulateur, \metric{0,66} --- à comparer aux \metric{0,81} obtenus par
+le même moteur sur la fenêtre arrêtée fin 2025 lors du classement du cycle. Les
+quatre mois supplémentaires ont coûté 0,15 de ratio~: sur trente-cinq trades,
+un ratio n'est pas une quantité stable.
+
+\subsection*{Le moteur ne trade pas avant septembre 2021}
+
+Le moteur a besoin de 252~séances d'historique quotidien avant de produire un
+signal. La simulation démarre le 1\textsuperscript{er}~janvier~2021 avec
+34~barres disponibles~; la première position ne tombe que le
+\textbf{14~septembre~2021}. Les huit premiers mois et demi sont donc vides par
+construction, et non par décision du moteur. Toute performance annualisée
+calculée sur la fenêtre complète est mécaniquement diluée.
+
+\subsection*{La dernière position n'a pas été fermée par le signal}
+
+Le testeur liquide d'office les positions ouvertes à la fin de la fenêtre. La
+position du 3~mars~2026 est sortie ainsi, le 29~avril~2026, pour
+$+$37\,343\,\$. Ce résultat est réel, mais il ne provient pas d'une décision de
+la stratégie~: dans une exploitation réelle, cette position serait encore
+ouverte, et son résultat inconnu.
+
+\subsection*{La lecture hors échantillon ne confirme rien}
+
+La tranche gelée \textbf{2026-01 $\to$ 2026-04} du candidat a été consommée le
+27~juillet~2026, une seule fois, conformément à la politique de holdout du
+dossier. Elle demande une lecture attentive, parce que les deux moteurs
+paraissent se contredire~:
+
+\begin{itemize}[leftmargin=1.4em, itemsep=0.3em]
+\item la simulation de recherche, découpée \emph{par séance}, donne
+      \textbf{$-$12,0\,\%} sur 101~séances~;
+\item les cinq clôtures MT5 de la même tranche totalisent
+      \textbf{$+$42\,695\,\$}.
+\end{itemize}
+
+La contradiction n'en est pas une~: c'est un artefact d'attribution. Le
+découpage par date de sortie crédite à 2026 l'intégralité du résultat de
+positions ouvertes \emph{avant} la frontière --- celle d'octobre~2025
+($+$37\,700\,\$) --- et y ajoute la liquidation de fin de test
+($+$37\,343\,\$). Une fois ces deux lignes écartées, les quatre sorties
+réellement décidées par le signal dans la tranche pèsent \textbf{$+$5\,352\,\$}
+sur 100\,000, ce qui est cohérent avec le signe de la lecture quotidienne à
+l'échelle du bruit.
+
+La prédiction pré-gelée avant lecture était un rendement dans
+$[-15\,\%, +25\,\%]$~: elle n'est \textbf{pas contredite}, la borne basse étant
+approchée du côté quotidien. Quatre mois et quatre sorties n'ont aucune
+puissance statistique~: cette lecture ne confirme rien, elle se contente de ne
+pas invalider.
+
+\subsection*{Le classement du cycle ne prouve pas d'edge}
+
+La note du cycle est explicite sur ce point~: avec le nombre d'essais
+réellement effectués, \textbf{aucun survivant n'atteint un ratio de Sharpe
+déflaté positif}. Le criblage désigne des candidats à instruire, il ne
+démontre pas un avantage. Ce qui soutient USD/JPY est plus modeste et plus
+qualitatif~: la cohérence de deux moteurs indépendants, et une corrélation
+quotidienne à l'or quasi nulle ($-$0,13 au criblage, $-$0,005 en configuration
+de production), qui en ferait un diversifiant s'il était retenu.
+
+\begin{warningbox}
+\textbf{Conclusion opérationnelle.} Ce document éclaire le \emph{fonctionnement}
+du candidat USD/JPY~: comment il entre, combien de temps il tient, d'où vient
+son résultat, et ce qu'il faudrait être prêt à traverser. Il ne conclut pas.
+USD/JPY n'est pas déployé, aucune décision d'intégration n'est prise ici, et
+les trois réserves qui pèsent le plus --- un trade unique qui porte tout, deux
+tiers de résultat venus du portage, un dimensionnement calibré pour un autre
+actif --- devraient être instruites avant toute promotion.
+\end{warningbox}

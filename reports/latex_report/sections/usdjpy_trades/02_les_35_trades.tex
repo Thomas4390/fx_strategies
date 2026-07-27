@@ -1,0 +1,79 @@
+\section{Le catalogue des trente-cinq}
+
+\subsection{Durées et tailles}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_gantt}
+\caption{Chaque trade, du premier au dernier. La longueur de la barre est la
+durée de détention, son épaisseur le volume engagé, sa couleur le signe du
+résultat. Les résultats supérieurs à 20\,000\,\$ en valeur absolue sont
+annotés.}
+\end{figure}
+
+La lecture est brutale~: une barre longue tout en haut, puis trente-quatre
+barres courtes qui se pressent sur les trois dernières années. La durée médiane
+est de \metric{5~jours}, la durée moyenne de \metric{32~jours} --- un écart qui
+dit à lui seul que la distribution est dominée par sa queue. Les volumes, eux,
+varient peu~: de 7,85 à 24,60~lots, l'essentiel de la variation venant de la
+croissance du compte plutôt que d'une modulation du risque.
+
+\subsection{La cascade du résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_waterfall}
+\caption{Construction du résultat, dans l'ordre des clôtures. Chaque barre est
+un trade~; la ligne sombre suit la balance du sous-compte.}
+\end{figure}
+
+La forme n'a rien de commun avec celle de l'or. Ici le résultat est acquis
+\emph{d'emblée}~: la troisième clôture, le 14~novembre~2022, fait passer la
+balance de 98\,511 à 286\,884~dollars. Tout ce qui suit --- trente-deux trades,
+trois ans et demi --- est une oscillation autour de ce niveau, qui se termine à
+276\,822\,\$, soit \emph{plus bas} qu'elle n'a commencé. Un investisseur entré
+après novembre~2022 n'aurait rien gagné.
+
+\subsection{Durée contre résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_scatter_duration}
+\caption{Durée et résultat de chaque trade. La taille du point est le volume
+engagé. L'échelle des durées est logarithmique.}
+\end{figure}
+
+La relation avec la durée est nette, et de même sens que sur l'or. Les
+\metric{quatre} positions tenues plus de cent jours totalisent
+$+$333\,928\,\$, soit \metric{189\,\%} du résultat net~; les vingt-deux
+positions d'une semaine ou moins perdent ensemble $-$119\,524\,\$. Le moteur ne
+gagne pas en tradant, il gagne en tenant --- et il paie cher chacune de ses
+tentatives avortées.
+
+\begin{insightbox}
+Cette asymétrie a une conséquence opérationnelle directe~: sur ce candidat, ce
+n'est pas seulement le gain qui vient des tenues longues, c'est \emph{aussi}
+le portage, qui s'accumule jour après jour et ne rémunère que la durée. Les
+deux moteurs de résultat pointent dans le même sens, et toute modification qui
+raccourcirait les positions --- horizons plus courts, stop plus serré, prise de
+profit --- les attaquerait tous les deux à la fois.
+\end{insightbox}
+
+\subsection{La distribution}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_distribution}
+\caption{Distribution des résultats par trade, gagnants et perdants séparés,
+avec la dispersion en encart.}
+\end{figure}
+
+Le corps de la distribution est presque symétrique~: dix-huit gagnants,
+dix-sept perdants, une médiane à $+$273\,\$, c'est-à-dire pratiquement zéro. La
+moyenne, elle, s'établit à $+$5\,052\,\$ par trade. Tout l'écart entre les deux
+tient dans le point isolé à droite du graphique --- l'unique trade à
+$+$188\,374\,\$. Un lecteur qui jugerait ce candidat sur son trade médian
+conclurait qu'il ne fait rien~; un lecteur qui le jugerait sur sa moyenne
+extrapolerait un seul événement.
+
+\input{tables/usdjpy_trades_yearly.tex}

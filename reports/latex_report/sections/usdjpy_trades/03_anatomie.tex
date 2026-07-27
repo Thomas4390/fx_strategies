@@ -1,0 +1,88 @@
+\section{Anatomie des trades marquants}
+
+Les deux figures qui suivent isolent les quatre meilleures et les quatre pires
+positions. Le trait gris est le cours de clôture quotidien d'USD/JPY~; le trait
+coloré relie les deux prix réellement obtenus à l'exécution.
+
+Une convention mérite d'être posée avant de lire les chiffres. Sur l'or, le
+dollar est la devise de \emph{cotation}~: le rendement en dollars d'une
+position est simplement le rapport des deux cours. Sur USD/JPY, le dollar est
+la devise de \emph{base}~: un notionnel de un million de dollars reste un
+million de dollars quel que soit le cours, et le gain en dollars vaut
+$1 - \text{prix d'entrée} / \text{prix de sortie}$. C'est cette définition
+--- la seule qui reconstitue exactement le résultat du courtier --- qui est
+publiée partout dans ce document. Elle est légèrement plus basse que le rapport
+brut des deux cours~: le premier trade, entré à 110,761 et sorti à 139,677,
+affiche $+$20,7\,\% et non $+$26,1\,\%.
+
+\subsection{Les quatre qui ont fait le résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_best4}
+\caption{Les quatre plus gros gains. À eux seuls, ils rapportent près du double
+du résultat net du candidat.}
+\end{figure}
+
+Le trade du \textbf{24~septembre~2021}, tenu \metric{416~jours}, rapporte
+$+$188\,374\,\$ --- davantage que le résultat total. Il capte le mouvement du
+yen de 110,76 à 139,68, soit $+$20,7\,\% de gain de prix, auxquels s'ajoutent
+\metric{25\,863\,\$} de portage encaissé sur quatorze mois. C'est le cas d'école
+du momentum~: une entrée dix jours après le premier signal du run, une
+tenue qui traverse toute la tendance, une sortie une fois le mouvement épuisé.
+
+Les trois autres suivent le même schéma à plus petite échelle --- 132, 113 et
+57~jours --- mais avec une différence de nature~: leur gain de prix ne dépasse
+pas 3,2\,\%, et le portage y pèse entre 19 et 36\,\% du résultat. Sur ces
+trades-là, le moteur n'a pas gagné en attrapant un mouvement~: il a gagné
+parce qu'il a été payé pour rester en position pendant qu'il ne se passait pas
+grand-chose.
+
+\begin{insightbox}
+Le quatrième panneau porte une mention particulière~: la position du
+3~mars~2026 n'a pas été fermée par le signal, mais \textbf{liquidée par le
+testeur} à la fin de la fenêtre, le 29~avril~2026. Son résultat,
+$+$37\,343\,\$, est réel mais n'a pas été décidé par la stratégie~; il ne doit
+pas être lu comme une sortie réussie.
+\end{insightbox}
+
+\subsection{Les quatre plus coûteux}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_worst4}
+\caption{Les quatre plus grosses pertes. Aucune n'a été coupée par le stop de
+sécurité~: toutes sont des sorties de signal, sur des mouvements de change
+ordinaires.}
+\end{figure}
+
+La perte la plus lourde, $-$58\,262\,\$, est celle du \textbf{3~mars~2023}~:
+entrée à 135,839, sortie dix-huit jours plus tard à 132,445, soit
+\metric{$-$2,6\,\%} de prix. Deux points et demi de pourcentage sur un cours de
+change, c'est un mouvement banal --- et cela suffit à effacer 20\,\% du
+sous-compte.
+
+C'est le fait central de ce chapitre, et il ne se voit qu'au niveau du trade~:
+\textbf{le risque de ce candidat n'est pas dans l'amplitude de ses mouvements,
+il est entièrement dans son levier}. Les quatre pires pertes correspondent à
+des variations de $-$1,7 à $-$2,6\,\% du change. Multipliées par un levier de
+5,6 à 6,6$\times$ appliqué à un compte de l'ordre de trois cent mille dollars,
+elles
+deviennent des pertes à cinq chiffres.
+
+Le corollaire est que \textbf{le stop de sécurité à 4\,\% n'a jamais servi}.
+Sur l'or, il s'était déclenché une fois en quatre ans et demi, sur un décrochage
+intra-séance. Sur USD/JPY, aucune séance de la fenêtre ne fait bouger le change
+de 4\,\% dans le sens contraire à la position~: le garde-fou existe, il est
+simplement calibré pour un actif beaucoup plus nerveux. Les trente-cinq sorties
+de ce run sont toutes des sorties de signal, à l'exception de la liquidation
+finale du testeur.
+
+\begin{warningbox}
+Un stop qui ne se déclenche jamais n'est pas un stop qui protège~: c'est un
+stop hors d'échelle. Sur cet instrument, la perte maximale d'une position n'est
+pas bornée à 4\,\% du notionnel~; elle est bornée par la fréquence de décision
+du moteur, c'est-à-dire par la clôture de séance suivante. Toute intégration de
+ce candidat devrait rouvrir la question du niveau du stop, sans quoi le
+paramètre reste décoratif.
+\end{warningbox}

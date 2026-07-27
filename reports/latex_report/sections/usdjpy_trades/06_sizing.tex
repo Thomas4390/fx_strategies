@@ -1,0 +1,68 @@
+\section{Le dimensionnement à l'épreuve des faits}
+\label{sec:sizing}
+
+Le moteur ne choisit pas seulement \emph{quand} être investi, mais \emph{avec
+quelle taille}. Cette taille est censée être pilotée par la volatilité~: plus le
+marché s'agite, plus la position se réduit, de façon à viser une volatilité
+constante de 55\,\% annualisés. Ce réglage a été calibré sur l'or. La figure
+suivante montre ce qu'il devient sur une paire de change majeure.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_sizing}
+\caption{En haut, le levier retenu à l'entrée de chaque trade et son plafond.
+En bas, la volatilité réalisée d'USD/JPY sur 21~séances, annualisée, et le
+seuil sous lequel le plafond de levier devient contraignant.}
+\end{figure}
+
+\begin{insightbox}
+\textbf{Sur le change, c'est le plafond qui décide, pas la cible.} La
+volatilité réalisée d'USD/JPY évolue entre 2,9 et 18,1\,\% sur la période,
+médiane \metric{8,2\,\%} --- très loin de la cible de 55\,\%. À cette
+volatilité médiane, le mécanisme demanderait un levier de 6,7$\times$ qu'il
+n'obtient pas~: le
+plafond de 6,6$\times$ mord dès que la volatilité passe sous
+\metric{8,3\,\%}, c'est-à-dire une séance sur deux et pour \textbf{18~entrées
+sur 35}.
+\end{insightbox}
+
+Ce constat ressemble à celui de la sleeve or, mais il faut le lire plus
+finement. Le plafond mord souvent~; il ne mord pas fort. À la volatilité
+médiane du yen, $6{,}6 \times 8{,}2 = 54\,\%$~: la position délivre presque
+exactement la volatilité visée. Ce n'est que dans les épisodes de calme extrême
+--- fin 2021, la volatilité tombe à 2,9\,\% --- que la sleeve tourne loin sous
+son objectif, autour de 19\,\% de volatilité effective. Autrement dit, le
+couple \emph{(cible 55\,\%, plafond 6,6$\times$)}, calibré pour l'or, se trouve
+presque juste sur USD/JPY par coïncidence arithmétique.
+
+Cette coïncidence est un point de fragilité, pas un argument. Elle signifie que
+le comportement du dimensionnement sur ce candidat dépend de deux paramètres qui
+n'ont jamais été réglés pour lui~: relever la cible n'aurait presque aucun
+effet tant que le plafond ne bouge pas, et relever le plafond augmenterait
+directement le risque dans les phases calmes, c'est-à-dire précisément là où le
+signal se trompe le plus souvent.
+
+\subsection{Ce que le pas de lot impose --- et ce qu'il n'impose pas}
+
+Le simulateur ne peut pas exprimer un levier arbitraire~: il achète des lots
+par pas de 0,01. Sur la sleeve or, ce poste était un candidat sérieux pour
+expliquer les écarts entre moteurs, parce que les volumes y sont minuscules ---
+entre 0,09 et 0,26~lot, soit un pas qui représente jusqu'à 11\,\% de la
+position.
+
+Ici, ce n'est pas le cas. Les volumes vont de 7,85 à 24,60~lots~: le pas de
+0,01 représente entre \metric{0,04 et 0,13\,\%} de la position. L'écart entre
+le levier voulu et le levier obtenu est donc négligeable, et ce poste peut être
+écarté sans regret --- ce qui est une bonne nouvelle méthodologique~: sur ce
+candidat, l'écart éventuel entre recherche et exécution ne pourra pas être
+imputé à l'arrondi des volumes.
+
+\begin{warningbox}
+Le dimensionnement observé ici est celui d'un \textbf{run de recherche}~:
+sleeve seule, allocation 100\,\%, facteur de risque 1,0, dépôt 100\,000\,\$. En
+portefeuille, la sleeve or tourne à 10\,\% d'allocation avec un facteur de
+risque de 4,5, et le cycle a documenté qu'un facteur de risque non épinglé dans
+un run isolé ruine le compte. Les leviers et les montants de ce chapitre ne se
+transposent donc pas~: une intégration éventuelle de ce candidat imposerait de
+refaire le dimensionnement de bout en bout.
+\end{warningbox}

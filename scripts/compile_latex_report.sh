@@ -12,7 +12,8 @@
 #   scripts/compile_latex_report.sh pedagogical  # guide pédagogique
 #   scripts/compile_latex_report.sh setup        # guide d'installation
 #   scripts/compile_latex_report.sh goldtrades   # analyse des trades du moteur or
-#   scripts/compile_latex_report.sh all          # les cinq
+#   scripts/compile_latex_report.sh usdjpytrades # analyse des trades du candidat USD/JPY
+#   scripts/compile_latex_report.sh all          # les six
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -51,16 +52,18 @@ case "$target" in
     pedagogical) compile_one "reports/client_pedagogical_guide" "main" ;;
     setup)       compile_one "reports/client_setup_guide" "main" ;;
     goldtrades)  compile_one "reports/latex_report" "main_gold_trades" ;;
+    usdjpytrades) compile_one "reports/latex_report" "main_usdjpy_trades" ;;
     all)
         compile_one "reports/latex_report" "main"
         compile_one "reports/latex_report" "main_executive"
         compile_one "reports/client_pedagogical_guide" "main"
         compile_one "reports/client_setup_guide" "main"
         compile_one "reports/latex_report" "main_gold_trades"
+        compile_one "reports/latex_report" "main_usdjpy_trades"
         ;;
     *)
         echo "Cible inconnue : $target" >&2
-        echo "Attendu : report | executive | pedagogical | setup | goldtrades | all" >&2
+        echo "Attendu : report | executive | pedagogical | setup | goldtrades | usdjpytrades | all" >&2
         exit 2
         ;;
 esac

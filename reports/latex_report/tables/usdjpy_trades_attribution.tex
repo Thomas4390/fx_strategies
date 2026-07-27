@@ -1,0 +1,17 @@
+% Généré par scripts/build_usdjpy_trades_figures.py — NE PAS ÉDITER À LA MAIN.
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lrl@{}}
+\toprule
+Poste & USD & Part \\
+\midrule
+Résultat de prix (mesuré) & +64,557 & 36.5\,\% du net \\
+Portage (mesuré) & +112,266 & 63.5\,\% du net \\
+Commission (mesurée) & +0 & nulle sur ce compte \\
+\textbf{Résultat net} & \textbf{+176,822} & recolle au rapport MT5 \\
+\bottomrule
+\addlinespace[0.4em]
+\multicolumn{3}{@{}p{0.92\linewidth}@{}}{\footnotesize Le portage vaut 0.69\,pb par jour de notionnel porté et retourne le signe de 3 trades, perdants sur le prix et gagnants une fois le carry compté. Slippage estimé à 25,350\,\$ (2\,bps par côté sur 63.4\,M\$ de notionnel cumulé) : il est déjà contenu dans les prix d'exécution, ce n'est pas un poste additionnel. La dernière position a été liquidée par le testeur en fin de fenêtre pour +37,343\,\$ : ce n'est pas une sortie décidée par le signal.}
+\end{tabular}
+\caption{Décomposition du résultat : ce qui est mesuré, ce qui est estimé}
+\end{table}

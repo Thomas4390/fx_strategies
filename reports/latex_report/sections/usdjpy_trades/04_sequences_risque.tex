@@ -1,0 +1,87 @@
+\section{Séquences, replis et régimes}
+
+\subsection{Combien de pertes d'affilée faut-il supporter}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_streaks}
+\caption{Séries de gains et de pertes consécutifs, dans l'ordre des clôtures.
+Les séries de trois trades ou plus portent leur longueur.}
+\end{figure}
+
+À première vue, ce candidat est bien plus confortable que l'or~: la plus longue
+série perdante ne compte que \textbf{trois} trades, contre dix sur la sleeve or,
+et les alternances gain/perte se succèdent sans jamais former de longue
+traversée du désert. Un investisseur qui compterait ses pertes consécutives
+tiendrait sans difficulté.
+
+Ce serait la mauvaise métrique.
+
+\begin{warningbox}
+La plus longue série perdante --- trois clôtures, du 21~mars au 3~mai~2023 ---
+coûte \textbf{$-$96\,940\,\$}, soit \metric{33,8\,\%} du sous-compte en
+\textbf{six semaines}. Ce n'est pas la \emph{longueur} des séries qui fait le
+risque de ce candidat, c'est leur \emph{profondeur}~: trois erreurs consécutives
+suffisent, parce que chacune est portée par un levier proche du plafond. La
+deuxième plus mauvaise séquence, en septembre~2025, retire encore
+$-$45\,343\,\$ en trois semaines.
+\end{warningbox}
+
+C'est une différence de nature avec la sleeve or, et elle a une conséquence
+opérationnelle~: la douleur n'y est pas étalée sur huit mois d'ennui, elle est
+concentrée sur quelques semaines de pertes rapides. Les deux exigent la même
+discipline, mais elles ne se ressemblent pas et ne se rassurent pas de la même
+manière.
+
+\subsection{Le repli}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_equity_dd}
+\caption{Balance du sous-compte USD/JPY et repli associé. Les trois plus fortes
+descentes sont annotées.}
+\end{figure}
+
+Le repli maximal mesuré sur cette balance atteint \metric{33,8\,\%}, et il
+coïncide au dollar près avec le repli de balance rapporté par le simulateur
+(96\,940,43\,\$, soit 33,79\,\%). Deux précautions de lecture s'imposent malgré
+tout.
+
+Premièrement, la balance ne bouge \emph{qu'à la clôture} d'une position. Entre
+deux clôtures, le capital réellement exposé fluctue sans que cette courbe le
+montre. Le simulateur, qui mesure le repli tick par tick, rapporte pour le même
+run un repli d'équité de \textbf{45,2\,\%} --- onze points de plus. Le chiffre
+de 33,8\,\% est donc une borne \textbf{inférieure} du risque subi, et c'est
+45,2\,\% qu'il faut retenir.
+
+Deuxièmement, ce repli est celui d'une sleeve isolée jouée à pleine allocation
+avec un facteur de risque de 1,0. Il n'a pas de sens transposé tel quel à un
+portefeuille~: ni l'échelle, ni la pondération, ni la mutualisation avec les
+autres moteurs ne sont représentées ici.
+
+\subsection{Par année}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_yearly}
+\caption{Résultat net par année de clôture, avec le nombre de trades gagnants
+sur le total.}
+\end{figure}
+
+La ventilation annuelle est le meilleur résumé visuel du problème de ce
+candidat~: une barre, 2022, à $+$188\,374\,\$ pour \emph{un} trade~; et cinq
+autres années qui, ensemble, retirent 11\,551\,\$. 2025 est la plus mauvaise,
+avec neuf trades pour $-$79\,320\,\$ et trois gagnants seulement~; 2023 suit,
+avec dix trades pour $-$26\,247\,\$.
+
+Le découpage est fait par \emph{année de clôture}, ce qui déplace du résultat
+d'une barre à l'autre~: le trade de 2021 est crédité à 2022, celui d'octobre
+2025 à 2026. La barre 2026 ($+$42\,695\,\$) est particulièrement trompeuse~:
+elle contient une position ouverte en octobre~2025 et une autre liquidée par
+le testeur en fin de fenêtre. Le chapitre~\ref{sec:limites} y revient, parce
+que cette même ligne sert de lecture hors échantillon.
+
+Il faut enfin résister à la tentation d'y lire un régime. Avec six années
+civiles, trente-cinq trades et une seule position qui porte tout, chaque barre
+annuelle repose sur une poignée d'observations~; ces chiffres décrivent ce qui
+s'est produit, ils ne prédisent rien.

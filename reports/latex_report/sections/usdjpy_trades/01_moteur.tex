@@ -1,0 +1,90 @@
+\section{Le moteur, et ce qu'il a fait sur le yen}
+
+\subsection{La règle est celle de l'or, l'instrument ne l'est pas}
+
+Le moteur appliqué ici est \emph{exactement} celui de la sleeve or~: un
+momentum de série temporelle qui achète quand le passé récent monte et sort
+quand il cesse de monter. Il moyenne le \emph{signe} de quatre horizons fixes
+--- 40, 60, 120 et 250~séances --- plutôt que d'en choisir un, et la position
+s'ouvre quand le score devient positif, se ferme quand il redevient négatif. La
+taille est pilotée par la volatilité, avec la même cible de 55\,\% et le même
+plafond de 6,6$\times$.
+
+Rien n'a été réglé pour le yen. C'est délibéré~: la seule question posée à ce
+candidat était de savoir si le moteur \emph{existant} tient sur un autre
+sous-jacent, et tout réglage spécifique aurait transformé une vérification en
+recherche de paramètres. Le seul changement est l'entrée
+\code{Inp\_Gold\_Symbol=USDJPY}, qui pointe le même code sur un autre
+instrument~; c'est pourquoi les journaux du simulateur portent encore
+l'étiquette \code{Gold\_Momentum}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Paramètre & Valeur & Rôle \\
+\midrule
+Instrument        & USDJPY.c                     & CFD de change du courtier \\
+Horizons          & 40 / 60 / 120 / 250 séances  & moyennés, jamais sélectionnés \\
+Vente à découvert & désactivée                   & la jambe short a été tuée au cycle \\
+Cible de volatilité & 55\,\%                     & échelle de position \\
+Levier maximal    & 6,6$\times$                  & la contrainte effective ici \\
+Stop de sécurité  & 4\,\%                        & jamais déclenché sur ce run \\
+Glissement        & 2 points de base par côté    & hypothèse d'exécution \\
+Allocation        & 100\,\% (sleeve isolée)      & facteur de risque 1,0 \\
+Dépôt             & 100\,000\,\$                 & sous-compte de recherche \\
+Borne de séance   & 21{:}00 UTC                  & clôture de séance du courtier \\
+\bottomrule
+\end{tabular}
+\caption{Configuration du run de recherche USD/JPY --- ce n'est pas une
+configuration de production}
+\end{table}
+
+\subsection{Les trente-cinq trades dans leur contexte}
+
+La figure~\ref{fig:usdjpy-timeline} montre tout le run d'un coup~: le cours
+d'USD/JPY, les périodes en position, le score de décision et le levier
+appliqué.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{usdjpy_trades_timeline}
+\caption{Les 35 trades dans leur contexte de prix. Bandes vertes~: positions
+gagnantes~; bandes rouges~: perdantes. Panneau du milieu~: le score d'ensemble
+--- il passe par $\pm$0,25 et $\pm$0,5 parce qu'il moyenne quatre signes.
+Panneau du bas~: le levier calculé chaque séance, et sa valeur retenue à
+l'entrée de chaque trade.}
+\label{fig:usdjpy-timeline}
+\end{figure}
+
+Trois lectures se dégagent immédiatement.
+
+D'abord, \textbf{la fenêtre s'ouvre sur huit mois de silence}. La première
+position ne tombe que le 14~septembre~2021, alors que la simulation démarre le
+1\textsuperscript{er}~janvier. Ce n'est pas une décision du moteur mais une
+contrainte d'historique~: il lui faut 252~barres quotidiennes avant de calculer
+son horizon le plus long, et le journal l'annonce dès l'initialisation
+(«~34/252 D1 bars~; the sleeve stays flat until history accumulates~»).
+
+Ensuite, \textbf{tout le résultat tient dans la première bande verte}. Le
+mégatrend du yen de 2021--2022 --- de 110 à 140~yens par dollar --- est capté
+par une seule position, ouverte dix jours après le premier signal et tenue
+jusqu'en novembre~2022. Après elle, trente-quatre trades s'enchaînent sur
+trois ans et demi pour un résultat cumulé \emph{négatif}.
+
+Enfin, \textbf{le levier reste collé à son plafond}. Le panneau du bas ne
+descend jamais sous 3$\times$ et passe la moitié du temps à 6,6$\times$~: le
+change majeur est un actif peu volatil, et un mécanisme calibré pour viser
+55\,\% de volatilité annuelle y demande en permanence plus de levier qu'il n'en
+obtient. Le chapitre~\ref{sec:sizing} y revient.
+
+\begin{insightbox}
+Le score n'est presque jamais à son maximum~: \textbf{33~entrées sur~35} se
+font avec un score de \textbf{0,5} --- deux des quatre horizons positifs
+seulement --- et deux seulement avec les quatre horizons alignés. Comme sur
+l'or, le moteur n'attend pas la certitude, il prend position sur une majorité
+simple. Le score du yen oscille beaucoup~: la sleeve n'est en position que
+\metric{67\,\%} du temps --- 1\,133~jours sur les 1\,688 que couvre la série de
+trades --- et vingt-deux de ses trente-cinq allers-retours durent une semaine
+ou moins.
+\end{insightbox}

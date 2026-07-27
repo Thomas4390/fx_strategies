@@ -1,0 +1,116 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Apogee Quantitative Report --- Analyse des trades du candidat USD/JPY
+%  Document autonome réutilisant le préambule, les figures et les tables
+%  du rapport principal. Public visé : lecteur qui veut voir les trades du
+%  meilleur candidat du cycle d'expansion momentum 2026-H2.
+%
+%  Assets : scripts/extract_usdjpy_trades.py puis
+%           scripts/build_usdjpy_trades_figures.py
+%  Compilation : scripts/compile_latex_report.sh usdjpytrades
+% ═══════════════════════════════════════════════════════════════════════
+\documentclass[11pt, a4paper]{scrartcl}
+
+\input{preamble.tex}
+
+\hypersetup{
+  pdftitle={Stratégie FX Multi-Moteurs --- Analyse des trades du candidat USD/JPY},
+  pdfsubject={Analyse trade par trade de la sleeve TSMOM portée sur USDJPY},
+  pdfkeywords={USDJPY, yen, momentum, TSMOM, carry, MT5, vectorbtpro, recherche},
+}
+
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Candidat USD/JPY --- analyse des trades}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Note de recherche --- Juillet 2026}}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE
+% ═══════════════════════════════════════════════════════════════════════
+\thispagestyle{empty}
+\begin{center}
+
+\vspace*{-1.5cm}
+\noindent{\color{apogeeGold}\rule{\textwidth}{2pt}}
+
+\vspace{1.0cm}
+
+\includegraphics[width=3.6cm]{apogee_invest_logo}
+
+\vspace{0.3cm}
+
+{\interspaced\color{apogeeGold}\normalsize\bfseries APOGÉE INVEST\par}
+
+\vspace{0.3cm}
+
+{\color{apogeeGold}\rule{0.28\textwidth}{0.5pt}}
+
+\vspace{1.2cm}
+
+{\interspaced\color{slateGrey}\footnotesize NOTE DE RECHERCHE \enskip\textbullet\enskip ANALYSE DES TRANSACTIONS\par}
+
+\vspace{0.7cm}
+
+{\sffamily\color{primary}\huge\bfseries
+Le moteur TSMOM sur USD/JPY, trade par trade\par}
+
+\vspace{0.4cm}
+
+{\sffamily\color{accent}\Large\itshape
+Trente-cinq transactions d'un candidat de recherche\par}
+
+\end{center}
+
+\vspace{0.9cm}
+
+\noindent\begin{minipage}{\textwidth}
+\centering
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}\\[0.5em]
+\begin{tabular}{@{}rl@{}}
+  \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.18em]
+  \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{27 juillet 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Périmètre & \textbf{Sleeve TSMOM (moteur or) portée sur USDJPY} \\[0.18em]
+  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+\end{tabular}\\[0.7em]
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
+\end{minipage}
+
+\vspace{0.8cm}
+
+\begin{thesisbox}
+\textbf{En une ligne~:} sur un run de recherche en sleeve isolée, le moteur
+TSMOM appliqué à USD/JPY a pris \textbf{35~positions} entre septembre~2021 et
+avril~2026, pour un résultat net de \textbf{$+$176\,822\,\$} sur un dépôt de
+100\,000\,\$. Deux chiffres commandent la lecture~: \textbf{63\,\% de ce
+résultat est du portage} --- un long dollar contre yen est \emph{payé} pour
+attendre --- et \textbf{une seule position, tenue 416~jours, rapporte plus que
+le total} ($+$188\,374\,\$~; sans elle le candidat perd 11\,551\,\$). Le
+candidat est réel, la démonstration ne l'est pas encore.
+\end{thesisbox}
+
+\vspace{0.4cm}
+
+{\small\color{slateGrey}\sffamily
+Ce document est le livrable «~trade par trade du meilleur candidat~» du cycle
+d'expansion momentum 2026-H2. Il ne décrit \textbf{pas} une sleeve en
+production~: USD/JPY n'est pas déployé, et les montants proviennent d'un
+sous-compte de recherche isolé, sans rapport d'échelle avec le portefeuille
+client du rapport \texttt{main.pdf}.}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+\tableofcontents
+\clearpage
+
+\input{sections/usdjpy_trades/00_synthese.tex}
+\input{sections/usdjpy_trades/01_moteur.tex}
+\input{sections/usdjpy_trades/02_les_35_trades.tex}
+\input{sections/usdjpy_trades/03_anatomie.tex}
+\input{sections/usdjpy_trades/04_sequences_risque.tex}
+\input{sections/usdjpy_trades/05_carry.tex}
+\input{sections/usdjpy_trades/06_sizing.tex}
+\input{sections/usdjpy_trades/07_limites.tex}
+\input{sections/usdjpy_trades/annexe_trades.tex}
+
+\end{document}

@@ -1,0 +1,47 @@
+\clearpage
+\section*{Annexe --- Les trente-cinq trades}
+\addcontentsline{toc}{section}{Annexe --- Les trente-cinq trades}
+
+Extrait du journal d'exécution du run de recherche. Les prix sont ceux
+réellement obtenus par le courtier~; le score et le levier proviennent du
+journal du simulateur au moment de la décision. Le rendement de prix est
+calculé sur le notionnel en dollars, hors portage --- voir la convention
+exposée au chapitre~3. Le portage est ici une \emph{recette}~: il est positif
+sur les trente-cinq lignes. Le résultat net inclut le portage et la commission.
+
+\medskip
+
+{\footnotesize
+\input{tables/usdjpy_trades_full.tex}
+}
+
+\bigskip
+
+\subsection*{Reproduire ces chiffres}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=0.3em]
+\item \code{python scripts/extract\_usdjpy\_trades.py --expect 35} --- relit le
+      journal des transactions du simulateur et celui du testeur, apparie les
+      positions, puis écrit le tableau des trades et sa fiche de provenance
+      dans \code{reports/mt5/}.
+\item \code{python scripts/build\_usdjpy\_trades\_figures.py} --- produit les
+      figures et les tables de ce document.
+\item \code{scripts/compile\_latex\_report.sh usdjpytrades} --- compile le
+      présent document.
+\end{enumerate}
+
+La fiche de provenance \code{reports/mt5/usdjpy\_trades\_research.json}
+enregistre l'empreinte du fichier source, le journal utilisé et le nombre de
+runs USD/JPY qu'il contenait. L'extraction échoue plutôt que de produire un
+tableau incomplet si le nombre de positions ne correspond pas, si le journal du
+testeur ne contient pas le run attendu, ou si le total net des trades appariés
+ne retombe pas au cent près sur celui du rapport du simulateur.
+
+\medskip
+
+Une précaution est propre à ce candidat. Le sweep du cycle a rejoué
+vingt-et-un instruments dans la même journée, chacun écrasant l'export de deals
+du précédent~; la copie qui décrit ce run a donc été sécurisée dans le dépôt
+(\code{reports/mt5/oos\_usdjpy\_deals.csv}) et c'est ce chemin explicite que
+l'extraction lit. Chercher «~le dernier export~» rendrait ici les trades d'un
+autre instrument.
