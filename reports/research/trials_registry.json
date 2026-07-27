@@ -88,5 +88,11 @@
     "family": "mt5_phase4_checks",
     "n": 5,
     "note": "stress tv USDJPY (0.40/0.70) + indices depot 20k sous cap volume"
+  },
+  {
+    "ts": "2026-07-27T19:53:07.355308+00:00",
+    "family": "integration_weights",
+    "n": 11,
+    "note": "sweep poids sleeve momentum : baseline + 2 compositions x 5 poids (10-20%)"
   }
 ]
