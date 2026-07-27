@@ -1,5 +1,20 @@
 # Apogee Quantitative Report — MR80 / TS3p10 / RSI10
 
+> ⚠️ **DOCUMENT HISTORIQUE — décrit la configuration « Phase 18 », périmée depuis le
+> 2026-07-26.** Constaté par l'audit adverse (`docs/audit_resultats_2026-07-26.md`).
+>
+> Ce qu'il décrit et qui n'existe plus : l'allocation 80/10/10 sans la sleeve or (la
+> production est à 72/9/9/10 avec `Inp_RiskScale=4.5`), la sleeve `RSI_Daily_4p`
+> (remplacée par `RSI_Daily_3p` en Phase E.3), le script
+> `scripts/generate_phase18_report_artifacts.py` et la fonction `build_phase18_portfolio`
+> (tous deux supprimés), et le répertoire `results/phase18/` (renommé
+> `results/production_report/`).
+>
+> **Pour les chiffres qui font foi**, voir `reports/latex_report/main.pdf` (rapport
+> technique client) et `results/production_report/mt5_reference.json`. Ce document est
+> conservé pour la trace du raisonnement de Phase 18, pas comme référence chiffrée.
+
+
 **Auteur :** Thomas Vaudescal (avec assistance Claude)
 **Date :** 2026-04-14
 **Statut :** Recommandée pour paper-trade (pas encore live). Audit méthodologique complet + analyse de robustesse statistique avancée (bootstrap, DSR, PBO, Haircut Sharpe, SPA / StepM).

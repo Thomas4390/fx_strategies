@@ -1,6 +1,6 @@
 # CLAUDE.md — `src/mt5/` (FxMultiSleeve)
 
-> **Stratégie de trading FX algorithmique pour MetaTrader 5** : 3 sleeves (mean-reversion macro intraday + trend-following + RSI mean-reversion daily).
+> **Stratégie de trading FX algorithmique pour MetaTrader 5** : 5 sleeves compilées, **4 allouées** en production — mean-reversion macro intraday, trend-following daily, RSI mean-reversion daily, et suivi de tendance sur l'or (XAU-USD). La sleeve H1 Momentum est compilée mais à poids nul.
 > **Référence stratégie/risque/maths** : voir `README.md` (388 lignes, exhaustif).
 > **Ce fichier** : informations opérationnelles Windows (chemins absolus, broker, debug).
 >
@@ -15,20 +15,21 @@ Si tu reprends une nouvelle session, lis dans cet ordre :
 1. **Ce fichier** — environnement Windows + procédure drag-and-drop + codes d'erreur.
 2. [`SESSION_NOTES.md`](./SESSION_NOTES.md) — état d'avancement, baselines numériques, todo prioritaire, mise à jour 2026-05-04 sur l'infra Linux/Wine.
 3. [`docs/mt5/14_cli_backtest_linux.md`](../../docs/mt5/14_cli_backtest_linux.md) — pipeline CLI Wine, format `.ini` UTF-16, pièges connus.
-4. [`README.md`](./README.md) — théorie complète (3 sleeves, risk management, vol-targeting).
+4. [`README.md`](./README.md) — théorie complète (⚠️ décrit encore 3 sleeves : la sleeve or et la couche `Inp_RiskScale` n'y sont pas).
 
 **Investigations ouvertes** :
 - [`docs/investigations/rsi_daily_vbt_vs_mt5.md`](../../docs/investigations/rsi_daily_vbt_vs_mt5.md) — écart entre la référence VBT~Pro et le port MQL5 du sleeve RSI Daily, plan complet d'enquête (8 hypothèses).
 
 **Outils CLI clés** (Linux/Wine, mais transposable Windows) :
-- `bridge/run_backtest_cli.py` — backtest 5.4 ans en 22 s (Sharpe 1.15 baseline).
+- `bridge/run_backtest_cli.py` — backtest 5.4 ans en ~20 s. Référence 2026-07-26 : 851 trades, Sharpe 0.89, CAGR 35.44 %, repli d'équité 44.33 %.
+  ⚠️ Le run publié utilise `--model 1` ; le défaut du CLI est `--model 4` (ticks réels), qui ne tourne pas sur ce poste faute de ticks téléchargés.
 - `bridge/write_default_preset.py` — régénère `FxMultiSleeve_Default.set` depuis les défauts compilés.
 - `bridge/reset_tester_preset.py` — patch les `.set` cachés MT5 quand on change un défaut compilé.
 - `bridge/fx_macro_history.py` — régénère `macro_history.csv` (FRED API, à faire mensuellement).
 
 **Livrables client** :
-- [`reports/client_setup_guide/main.pdf`](../../reports/client_setup_guide/main.pdf) — guide client 11 pages plug-and-play.
-- [`reports/latex_report/main_executive.pdf`](../../reports/latex_report/main_executive.pdf) — synthèse exécutive 10 pages (rapport investissement).
+- [`reports/client_setup_guide/main.pdf`](../../reports/client_setup_guide/main.pdf) — guide d'installation client, 17 pages. Sa table de paramètres est **générée** par `scripts/build_setup_guide_tables.py` depuis `bridge/write_default_preset.PRESET_LINES` — ne jamais l'éditer à la main.
+- [`reports/latex_report/main_executive.pdf`](../../reports/latex_report/main_executive.pdf) — synthèse exécutive, 15 pages (rapport investissement).
 
 ---
 
@@ -92,7 +93,7 @@ Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSource
 |---|---|---|
 | `Common\Files\fred_api_key.txt` | NATIVE / HYBRID / AUTO-live | ✅ déployé — ⚠️ voir le piège de chemin ci-dessous |
 | `Common\Files\macro_cache.csv` | FILE / HYBRID-fallback | non requis (NATIVE par défaut) |
-| `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ généré pour 2019-2026 (1833 lignes) |
+| `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ 1400 lignes, 2020.09.23 → 2026.04.30 (état 2026-07-26) |
 | URL whitelist `https://api.stlouisfed.org` | NATIVE / HYBRID / AUTO-live | ✅ activé dans MT5 |
 
 **Pour obtenir une clé FRED (gratuit)** : https://fredaccount.stlouisfed.org/apikeys
@@ -127,7 +128,7 @@ Le script :
 
 Dans le Journal du tester, chercher au démarrage :
 ```
-CMacroSourceHistory: loaded 1833 rows from macro_history.csv [2019.01.02 ... 2026.04.30]
+CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]
 ```
 Et au fil du backtest, chaque refresh log : `Macro source=history spread=… macro_ok=…` avec une valeur qui change au cours du temps simulé (preuve que le binary search marche).
 
@@ -201,17 +202,19 @@ C:\Users\vaude\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF
 
 ## Architecture du code (rappel rapide)
 
-**EA principal** : `Experts/FxMultiSleeve.mq5` (268 lignes)
-- Orchestre 3 sleeves via `g_sleeve_mr`, `g_sleeve_ts`, `g_sleeve_rsi`
+**EA principal** : `Experts/FxMultiSleeve.mq5`
+- Orchestre 5 sleeves via `g_sleeve_mr`, `g_sleeve_ts`, `g_sleeve_rsi`, `g_sleeve_h1`, `g_sleeve_gold`
 - Risk management global via `CRiskManager` (`FxRiskManager.mqh`)
 - Macro filter via `CMacroFilter` (`FxMacroFilter.mqh`)
 
 **Allocations strictes** (somme = 1.0, validée à 1e-6) :
-- 0.80 → Sleeve 1 MR Macro (M1 intraday, 4 paires, fenêtre 6h-14h UTC)
-- 0.10 → Sleeve 2 TS Momentum (D1, 3 paires)
-- 0.10 → Sleeve 3 RSI Daily (D1, 4 paires)
+- 0.72 → Sleeve 1 MR Macro (M1 intraday, 4 paires, fenêtre 8h-16h UTC)
+- 0.09 → Sleeve 2 TS Momentum (D1, 3 paires)
+- 0.09 → Sleeve 3 RSI Daily (D1, **3** paires — USD/JPY retiré en Phase E.3)
+- 0.00 → Sleeve 4 H1 Momentum (compilée, inactive)
+- 0.10 → Sleeve 5 Gold Momentum (D1, XAU-USD) — **produit 79.8 % du résultat net**
 
-**Includes (13 fichiers `.mqh`)** :
+**Includes (16 fichiers `.mqh`)** :
 ```
 FxCommon.mqh                  Constantes, enums (EMacroSourceMode), helpers
 FxLogger.mqh                  Print + CSV logging
@@ -236,23 +239,27 @@ FxTradeHelpers.mqh            CTrade wrappers, sizing, stop level
 - `bridge/fx_macro_bridge.py` — live : 1 ligne CSV → `Common\Files\macro_cache.csv` (cron horaire si on veut le mode FILE)
 - `bridge/fx_macro_history.py` — backtest : N lignes CSV → `Common\Files\macro_history.csv` (one-shot, à relancer périodiquement)
 
-Les 2 scripts partagent le même schéma CSV ; la seule différence est le nombre de lignes (1 vs ~1800).
+Les 2 scripts partagent le même schéma CSV ; la seule différence est le nombre de lignes (1 vs ~1400).
 
 ## Inputs critiques de référence
 
 ```
 // Allocations (somme strict = 1.0)
-Inp_AllocMRMacro      = 0.80
-Inp_AllocTSMomentum   = 0.10
-Inp_AllocRSIDaily     = 0.10
+Inp_AllocMRMacro      = 0.72
+Inp_AllocTSMomentum   = 0.09
+Inp_AllocRSIDaily     = 0.09
+Inp_AllocH1Momentum   = 0.0       // sleeve compilée, non allouée
+Inp_AllocGoldMomentum = 0.10      // en production depuis 2026-07-26
 
-// Risk (Phase I 2026-05-05 leverage uplift)
-Inp_GlobalTargetVol   = 0.75      // 75% annualisé (vs 28% pré-Phase I)
-Inp_GlobalMaxLeverage = 64.0      // (vs 12.0 pré-Phase I)
+// Risk (retuné 2026-07-26 avec l'entrée de l'or)
+Inp_GlobalTargetVol   = 0.37      // (vs 0.75 Phase I)
+Inp_GlobalMaxLeverage = 31.0      // (vs 64.0 Phase I)
+Inp_RiskScale         = 4.5       // ⚠️ C'EST le paramètre qui dimensionne le risque :
+                                  //    rendement et repli y répondent quasi-proportionnellement
 Inp_EnableDDCap       = false     // Désactivé Phase A (pas de bénéfice OOS)
-Inp_DDCap             = 0.30
-Inp_EnableMarginCap   = false     // Désactivé Phase A (jamais touché en backtest)
-Inp_MarginCapPct      = 0.70
+Inp_DDCap             = 0.20
+Inp_EnableMarginCap   = true      // ACTIF : levier /2 à 50 % de marge, flatten à 85 %
+Inp_MarginCapPct      = 0.50
 
 // Broker (CRITIQUE)
 Inp_SymbolSuffix      = ".c"      // ⚠️ adapter au broker

@@ -1,3 +1,10 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  ANNEXE NON INCLUSE dans main.tex — conservée comme référence méthodologique.
+%  Constaté orphelin par l'audit du 2026-07-26 : aucune référence dans tout le
+%  dépôt, donc absente de tous les PDF livrés. Ses chiffres ont été remis à
+%  jour le 2026-07-26 pour qu'elle reste incluable telle quelle ; si vous
+%  l'incluez, revérifiez-les contre tables/robustness_*.tex.
+% ═══════════════════════════════════════════════════════════════════════
 \section{Principes méthodologiques du \textit{robustness report}}
 \label{app:robustness_methodology}
 
@@ -13,7 +20,7 @@ Un rapport de \emph{backtest} standard reporte typiquement trois statistiques po
 \sigma(\widehat{\mathrm{SR}}) \approx \sqrt{\frac{1 + 0.5\,\widehat{\mathrm{SR}}^{2}}{T}}
 \label{eq:lo_sharpe_std}
 \end{equation}
-Sur 7~ans de données journalières ($T \approx 1764$), un Sharpe réel nul peut produire un Sharpe observé de $\pm 0.25$ par pure chance. Le bruit d'estimation est loin d'être négligeable.
+Sur 7.5~ans de données journalières ($T = 1\,887$), un Sharpe réel nul peut produire un Sharpe observé de $\pm 0.25$ par pure chance. Le bruit d'estimation est loin d'être négligeable.
 
 \paragraph{Biais de sélection (\textsc{Bailey--L\'opez~de~Prado} 2014).} Lorsqu'on teste $N$~configurations et qu'on rapporte le meilleur résultat, l'espérance du maximum sous hypothèse nulle est approximativement~:
 \begin{equation}
@@ -90,7 +97,7 @@ où $\gamma = 0.5772\ldots$ est la constante d'Euler--Mascheroni et $\Phi^{-1}$ 
 \label{eq:dsr}
 \end{equation}
 
-\paragraph{Exemple numérique Apogee.} $N = 5$~essais (quatre composantes candidates + un combined), $\mathrm{Var}[\widehat{\mathrm{SR}}] \approx 0.089$, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 5] = 0.296$. Le Sharpe observé $\widehat{\mathrm{SR}} = 0.966$ dépasse ce seuil d'un facteur $3.26$, d'où DSR~$= 1.000$.
+\paragraph{Exemple numérique Apogee.} $N = 6$~essais (les six composantes candidates entrées en validation croisée), $\mathrm{Var}[\widehat{\mathrm{SR}}] \approx 0.089$, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 6] = 0.273$. Le Sharpe observé $\widehat{\mathrm{SR}} = 1.31$ dépasse ce seuil d'un facteur $4.8$, d'où DSR~$= 1.000$. Ce $N$ ne compte que les candidates de la validation croisée, pas les configurations explorées en amont~: c'est la limite du test.
 
 \subsection{Haircut Sharpe Ratio (\textsc{Harvey--Liu} 2015)}
 \label{app:haircut}
@@ -130,7 +137,7 @@ où $c(N)$ est le $N$-ème nombre harmonique.
 \mathrm{Haircut\ Ratio} = \frac{\mathrm{SR}_{\text{haircut}}}{\widehat{\mathrm{SR}}}
 \label{eq:haircut_ratio}
 \end{equation}
-qui représente la fraction de l'\emph{edge} qui survit à la correction. Un ratio supérieur à $80\,\%$ est un bon signe~--- l'\emph{edge} est grand relativement à la variance d'estimation et les corrections multi-test ont peu d'emprise. Pour le portefeuille Apogee, le ratio BHY est $86.94\,\%$.
+qui représente la fraction de l'\emph{edge} qui survit à la correction. Un ratio supérieur à $80\,\%$ est un bon signe~--- l'\emph{edge} est grand relativement à la variance d'estimation et les corrections multi-test ont peu d'emprise. Pour le portefeuille Apogee, le ratio BHY est $79.29\,\%$.
 
 \subsection{Minimum Backtest Length (\textsc{Bailey et al.} 2014)}
 \label{app:minbtl}
@@ -156,7 +163,7 @@ Le MinBTL répond à la question~: \emph{combien d'années de données sont néc
 
 \paragraph{Utilisation comme \emph{power calculation} a priori.} Avant de lancer un \emph{grid search} massif, le MinBTL répond à~: \emph{mon historique est-il assez long pour que le grid search produise un résultat statistiquement défendable ?}. Si on veut tester 1000~configurations et qu'on a 5~ans de données, le seul Sharpe qu'on peut espérer «~prouver~» est supérieur à $\sqrt{2 \ln 1000 / 5} \approx 1.66$. Tout ce qu'on trouvera en-dessous de ce seuil est susceptible d'être du bruit.
 
-Pour le portefeuille Apogee, le MinBTL affiché est $3.45$~ans pour $\mathrm{SR} = 0.97$ avec $N = 5$~essais. On dispose de 7~ans, soit le double du minimum statistique requis.
+Pour le portefeuille Apogee, le MinBTL affiché est $2.10$~ans pour $\mathrm{SR} = 1.31$ avec $N = 6$~essais. On dispose de 7.5~ans, soit plus de trois fois le minimum statistique requis.
 
 \subsection{Probability of Backtest Overfitting via CSCV (\textsc{Bailey et al.} 2015)}
 \label{app:pbo_cscv}
@@ -215,7 +222,7 @@ Tous trois répondent à la question~: \emph{est-ce qu'au moins une stratégie d
 \subsection{Stratégie de combinaison --- quelle hiérarchie de tests ?}
 \label{app:hierarchy}
 
-Les sept tests implémentés dans \texttt{framework.robustness} ne sont pas tous appliqués au même stade du \emph{workflow}. Voici la hiérarchie recommandée~:
+Les tests implémentés dans \texttt{framework.robustness} ne sont pas tous appliqués au même stade du \emph{workflow}. Voici la hiérarchie recommandée~:
 
 \paragraph{Stade~1 --- Backtest unique, zéro \emph{data snooping}.} Bootstrap CI sur les 14~métriques, PSR vs~0, \emph{equity fan chart} visuel. \textit{Verdict~: la stratégie a-t-elle un \emph{edge} observable~?}
 
