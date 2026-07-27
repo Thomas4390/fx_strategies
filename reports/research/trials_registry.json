@@ -46,5 +46,41 @@
     "family": "tsmom_universe",
     "n": 21,
     "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-27T18:44:59.898161+00:00",
+    "family": "allow_short",
+    "n": 3,
+    "note": "jambe short du TSMOM sur XAU/USDJPY/XAG, in-sample seulement (holdout or \u00e9puis\u00e9)"
+  },
+  {
+    "ts": "2026-07-27T18:45:38.684970+00:00",
+    "family": "donchian",
+    "n": 6,
+    "note": "N {55,100,252} x sortie {N/2, N/4}, selection par Sharpe agrege cross-instruments"
+  },
+  {
+    "ts": "2026-07-27T18:45:38.685373+00:00",
+    "family": "dual_momentum",
+    "n": 4,
+    "note": "4 variantes de filtre acceleration sur le score TSMOM"
+  },
+  {
+    "ts": "2026-07-27T18:45:38.685498+00:00",
+    "family": "xs_momentum",
+    "n": 6,
+    "note": "rank 3m/6m/12m skip1m x {long-only, long-short} \u2014 panier"
+  },
+  {
+    "ts": "2026-07-27T18:48:01.422617+00:00",
+    "family": "tsmom_stability",
+    "n": 36,
+    "note": "stress de stabilit\u00e9 passe 2 \u2014 aucune res\u00e9lection"
+  },
+  {
+    "ts": "2026-07-27T18:49:18.582061+00:00",
+    "family": "tsmom_stability",
+    "n": 36,
+    "note": "stress de stabilit\u00e9 passe 2 \u2014 aucune res\u00e9lection"
   }
 ]

@@ -150,6 +150,31 @@ ou 2022-11 (nouveaux) → 2025-12-31 :
   US100 ~30 → **la cible ~100+ trades agrégés est atteignable avec 3 sleeves
   additionnelles**, sans toucher à la fréquence du moteur.
 
+## 4.4 Passe 2 des survivants (`scripts/stress_tsmom_survivors.py`)
+
+- **Stabilité** (9 configs de voisinage par instrument, aucune resélection) :
+  plateau pour l'or (0,70-1,16), USD-JPY (0,76-0,95) et XAG (0,30-0,43) ; US100
+  plus sensible aux horizons (0,68 sur la grille 30/50/100/200 contre 1,03 en
+  production) — l'edge indices est réel sur 36 ans mais sa forme dépend plus du
+  choix d'horizons que celui des métaux/yen. Flag conservé au dossier.
+- **DSR** : avec le n_trials honnête du registre (~500 essais cumulés, rivaux =
+  la dispersion du classement MT5), **aucun survivant n'atteint un DSR > 0** —
+  le screening désigne des candidats, il ne prouve aucun edge. Ce qui soutient
+  réellement chaque candidat : US100 — 36 ans, 209 trades, t-stat ≈ 4,7
+  standalone ; USD-JPY — cohérence des deux moteurs et orthogonalité ; XAG —
+  le plus fragile des trois (2 ans propres + série longue polluée par les
+  rolls). Le registre sur-compte les re-runs du même stress (biais
+  conservateur, assumé).
+- **Corrélations quotidiennes** (config production, in-sample, alignement par
+  date calendaire) : USD-JPY orthogonal à tout (−0,005 vs or) ; US100
+  orthogonal (0,01 vs or) ; seul cluster réel : or-argent à 0,469 (sous le
+  seuil de 0,50, mais un poids commun « métaux » devra le refléter).
+- **allow_short (famille d) — TUÉE en 3 trials** : la jambe short détruit du
+  Sharpe sur les trois survivants (XAU −0,19, USD-JPY −0,32, XAG −0,23) tout en
+  doublant les trades. La volumétrie par le short est de la mauvaise
+  volumétrie. In-sample seulement (tranche holdout or épuisée), mais l'ampleur
+  et l'unanimité suffisent au kill.
+
 ## 5. Prochaines étapes
 
 1. Phase 3 — familles nouvelles (allow_short or in-sample seulement — tranche
