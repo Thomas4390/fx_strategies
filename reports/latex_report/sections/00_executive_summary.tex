@@ -1,34 +1,37 @@
 \section{Résumé exécutif}
 \label{sec:executive_summary}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} \textbf{Stratégie FX Tri-Signaux} est un portefeuille quantitatif sur paires de devises majeures qui combine trois moteurs de rendement structurellement indépendants~: une composante de \emph{retour à la moyenne} intraday filtrée par un régime macroéconomique, une composante de \emph{suivi de tendance} journalier sur trois paires, et une composante de \emph{retour à la moyenne} journalier sur l'indicateur RSI à quatre paires. L'ensemble est piloté par une couche unifiée de ciblage de volatilité assortie d'un plafond de levier à soixante-quatre fois (Phase~I, 2026-05-05~; les statistiques détaillées dans cette section restent celles de la Phase~E pré-uplift, en attente d'une refonte complète).
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} \textbf{Stratégie FX Multi-Moteurs} est un portefeuille quantitatif qui combine quatre moteurs de rendement structurellement indépendants~: une composante de \emph{retour à la moyenne} intraday filtrée par un régime macroéconomique, une composante de \emph{suivi de tendance} journalier sur trois paires, une composante de \emph{retour à la moyenne} journalier sur l'indicateur RSI, et une composante de \emph{suivi de tendance} sur l'or. L'ensemble est piloté par une couche unifiée de ciblage de volatilité.
 
-L'objectif poursuivi est de générer un rendement annualisé compris entre 10\,\% et 15\,\% avec un drawdown maximal contenu sous 35\,\%, tout en restant compatible avec les contraintes de levier ESMA pour la clientèle retail FX. Les trois sections suivantes démontrent que ces objectifs sont atteints simultanément sur la période de backtest et hors échantillon.
+Le mandat retenu vise un rendement annualisé de l'ordre de \textbf{40\,\%}. Le plafond de drawdown qui figurait dans les versions antérieures de ce document a été \textbf{retiré à la demande du mandant}~: le risque n'est plus une contrainte du programme, il en est une conséquence mesurée. Ce document énonce donc ce que ce niveau d'ambition coûte en repli, sans l'atténuer.
 
-\input{tables/metrics_summary.tex}
+\subsection*{Les chiffres qui font foi viennent du moteur qui exécute}
 
-\begin{insightbox}
-\textbf{Le test hors échantillon produit un Sharpe de 1.44, supérieur au 0.94 observé en période de conception.} Un phénomène de surajustement produirait à l'inverse une dégradation marquée des métriques hors échantillon. L'amélioration observée constitue donc une réfutation empirique de l'hypothèse de surajustement majeur. De plus, le \mbox{5\textsuperscript{e}} percentile du drawdown bootstrap ($-30.68\,\%$) reste strictement sous la contrainte utilisateur de 35\,\%, avec environ 4~points de pourcentage de marge de sécurité.
-\end{insightbox}
+Deux moteurs mesurent ce portefeuille et ils ne mesurent pas la même chose. Le moteur de recherche (\texttt{vectorbtpro}) applique un levier au poids de position~; le moteur d'exécution (MetaTrader~5) ouvre un notionnel borné par la distance au stop. Les chiffres publiés ici sont ceux de MetaTrader~5, parce que c'est lui qui passe les ordres. Les métriques de recherche restent en annexe de robustesse, où elles servent à éprouver la structure de la stratégie, pas à annoncer une performance.
 
-\begin{insightbox}
-\textbf{Robustesse statistique validée par sept tests avancés.} Le Sharpe observé ($0.97$ sur l'ensemble IS + OOS, $0.94$ sur l'IS seul) dépasse de plus de trois fois l'espérance du maximum sous l'hypothèse nulle d'absence d'\emph{edge}. La probabilité de surajustement calculée par validation croisée combinatoire est de $30.5\,\%$, bien sous le seuil de danger de $50\,\%$. Après correction pour tests multiples, le Sharpe effectif retombe seulement de $0.97$ à $0.84$ (ratio de survie $87\,\%$). Les intervalles de confiance bootstrap sur les métriques standard et l'analyse de stabilité temporelle sont détaillés en section~\ref{sec:advanced_robustness}.
-\end{insightbox}
+\input{tables/mt5_reference.tex}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{equity_combined_logscale.png}
-\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération de portefeuille ni ciblage de volatilité} (chacun à sa volatilité intrinsèque naturelle). La courbe épaisse bordeaux est le portefeuille combiné Apogée Invest après application des poids $80/10/10$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 75\,\%$, plafond de levier $64\times$). La différence de niveau entre les courbes fines et la courbe combinée reflète donc l'amplification par le levier, pas une quelconque supériorité intrinsèque du combiné. La ligne verticale pointillée marque le début de la fenêtre hors échantillon (1\textsuperscript{er}~avril 2025).}
+\includegraphics[width=\linewidth]{mt5_balance_curve.png}
+\caption{Solde du compte simulé dans le testeur MetaTrader~5, dépôt initial de 10\,000~USD, sur la totalité des données disponibles. La courbe intègre le \emph{spread} du courtier, l'arrondi des lots et les frais de portage.}
 \end{figure}
 
-\subsection*{Cinq conclusions pour la décision}
+\begin{insightbox}
+\textbf{Le résultat est concentré.} La sleeve or représente 10\,\% de l'allocation et près de 80\,\% du résultat net, pour 35~transactions sur 851. Cette concentration est le fait le plus important du document~: elle signifie que la performance annoncée dépend d'un petit nombre de positions, et que la période 2021--2026 a été exceptionnellement favorable à l'or. Aucune moyenne, aucun ratio de Sharpe ne rend visible cette dépendance --- la section~\ref{sec:limitations} en tire les conséquences.
+\end{insightbox}
+
+\input{tables/mt5_by_sleeve.tex}
+
+\subsection*{Quatre conclusions pour la décision}
 
 \begin{enumerate}
-\item \textbf{Sharpe hors échantillon supérieur à l'in-sample} (1.44 contre 0.94). L'amélioration hors période de conception valide la robustesse de la structure multi-moteurs.
-\item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, strictement sous la contrainte de 35\,\% retenue pour le mandat, avec environ 4~pp de marge.
-\item \textbf{Six années positives sur sept} en validation par fenêtres annuelles~--- seule 2019 reste marginalement négative dans un régime de fin de cycle défavorable à l'ensemble des sleeves.
-\item \textbf{Tous les garde-fous méthodologiques sont franchis}~: tests in-sample, hors échantillon, bootstrap de résistance, et rejeu de scénarios historiques.
-\item \textbf{Sept tests de robustesse statistique avancés validés}~: intervalles de confiance bootstrap, corrections pour biais de sélection et tests multiples, mesure de sur-ajustement par validation croisée combinatoire, et stabilité temporelle des métriques --- voir section~\ref{sec:advanced_robustness}.
+\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~: 35,4\,\% de croissance annualisée, pour un profit net de 40\,267~USD sur un dépôt de 10\,000~USD.
+\item \textbf{Le repli maximal d'équité atteint 44\,\%.} C'est le prix direct du niveau de risque choisi~: le dimensionnement des positions a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
+\item \textbf{La performance repose sur une sleeve.} Retirer l'or ramènerait le résultat à environ un cinquième de son niveau. La diversification annoncée par l'architecture à quatre moteurs ne s'est pas traduite par une diversification du résultat.
+\item \textbf{Deux années sur six sont négatives} (2021 et 2023), et le repli d'équité dépasse celui du solde sur toute la période --- signe que des positions restent longtemps ouvertes en territoire défavorable.
 \end{enumerate}
 
-Les sections suivantes développent le mandat, l'architecture du portefeuille, les trois moteurs de rendement, les résultats complets et les conditions de déploiement.
+\input{tables/mt5_yearly.tex}
+
+Les sections suivantes développent le mandat, l'architecture du portefeuille, les quatre moteurs de rendement, la couche de risque, les résultats de recherche avec leurs tests de robustesse, l'écart entre recherche et exécution, et les conditions de déploiement.

@@ -1,31 +1,63 @@
 #!/usr/bin/env bash
-# Compile the Phase 18 LaTeX report with xelatex (two passes for ToC/refs).
+# Compile un des documents LaTeX livrés au client (xelatex, deux passes).
+#
+# Ce script était codé en dur sur reports/latex_report/main.tex. Les trois
+# autres livrables — la synthèse exécutive et les deux guides client — n'avaient
+# aucun script de compilation et ont été produits à la main, ce qui explique
+# qu'ils aient dérivé chacun de leur côté.
+#
+# Usage:
+#   scripts/compile_latex_report.sh              # rapport technique (défaut)
+#   scripts/compile_latex_report.sh executive    # synthèse exécutive
+#   scripts/compile_latex_report.sh pedagogical  # guide pédagogique
+#   scripts/compile_latex_report.sh setup        # guide d'installation
+#   scripts/compile_latex_report.sh all          # les quatre
 set -euo pipefail
 
-REPORT_DIR="$(cd "$(dirname "$0")/.." && pwd)/reports/latex_report"
-cd "$REPORT_DIR"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "═══════════════════════════════════════════════════════════════"
-echo "  LaTeX report compilation"
-echo "═══════════════════════════════════════════════════════════════"
-echo "Working dir: $REPORT_DIR"
-echo ""
+compile_one() {
+    local dir="$1" stem="$2"
+    echo "═══════════════════════════════════════════════════════════════"
+    echo "  $stem.tex  ($dir)"
+    echo "═══════════════════════════════════════════════════════════════"
+    cd "$ROOT/$dir"
 
-echo "[1/2] First XeLaTeX pass..."
-xelatex -interaction=nonstopmode -halt-on-error main.tex > compile.log 2>&1 || {
-    echo "✗ First pass failed. Tail of compile.log:"
-    tail -40 compile.log
-    exit 1
+    # Deux passes : la seconde résout table des matières et références croisées.
+    echo "[1/2] First XeLaTeX pass..."
+    xelatex -interaction=nonstopmode -halt-on-error "$stem.tex" > "compile_$stem.log" 2>&1 || {
+        echo "✗ First pass failed. Tail of compile_$stem.log:"
+        tail -40 "compile_$stem.log"
+        return 1
+    }
+
+    echo "[2/2] Second XeLaTeX pass (ToC/refs resolution)..."
+    xelatex -interaction=nonstopmode -halt-on-error "$stem.tex" >> "compile_$stem.log" 2>&1 || {
+        echo "✗ Second pass failed. Tail of compile_$stem.log:"
+        tail -40 "compile_$stem.log"
+        return 1
+    }
+
+    echo "✓ $stem.pdf"
+    pdfinfo "$stem.pdf" 2>/dev/null | grep -E "Pages|File size|Title" || true
+    echo ""
 }
 
-echo "[2/2] Second XeLaTeX pass (ToC/refs resolution)..."
-xelatex -interaction=nonstopmode -halt-on-error main.tex >> compile.log 2>&1 || {
-    echo "✗ Second pass failed. Tail of compile.log:"
-    tail -40 compile.log
-    exit 1
-}
-
-echo ""
-echo "✓ Compilation successful"
-echo ""
-ls -lh main.pdf 2>/dev/null && pdfinfo main.pdf 2>/dev/null | grep -E "Pages|File size|Title|Author" || true
+target="${1:-report}"
+case "$target" in
+    report)      compile_one "reports/latex_report" "main" ;;
+    executive)   compile_one "reports/latex_report" "main_executive" ;;
+    pedagogical) compile_one "reports/client_pedagogical_guide" "main" ;;
+    setup)       compile_one "reports/client_setup_guide" "main" ;;
+    all)
+        compile_one "reports/latex_report" "main"
+        compile_one "reports/latex_report" "main_executive"
+        compile_one "reports/client_pedagogical_guide" "main"
+        compile_one "reports/client_setup_guide" "main"
+        ;;
+    *)
+        echo "Cible inconnue : $target" >&2
+        echo "Attendu : report | executive | pedagogical | setup | all" >&2
+        exit 2
+        ;;
+esac

@@ -58,6 +58,22 @@ from strategies.combined_portfolio_v2 import (  # noqa: E402
     PRODUCTION_TARGET_VOL,
     PRODUCTION_WEIGHTS,
 )
+from strategies.combined_portfolio import WF_PERIODS  # noqa: E402
+
+
+def wf_labels() -> list[str]:
+    """Libellés des fenêtres walk-forward, tels que le code les définit.
+
+    Elles étaient étiquetées par ``range(2019, 2019 + len(wf_sharpes))``, ce qui
+    suppose sept années civiles consécutives. La dernière fenêtre couvre en
+    réalité 2025 plus le premier trimestre 2026, et une origine calculée depuis
+    les données a déjà produit une ligne « 2018 » qui n'existe pas.
+    """
+    labels = []
+    for start, end in WF_PERIODS:
+        y_start, y_end = start[:4], end[:4]
+        labels.append(y_start if y_start == y_end else f"{y_start}--{end[:7]}")
+    return labels
 
 # Libellés publiés et couleur de tracé, une entrée par sleeve de production.
 # L'or manquait : il n'entrait dans aucune figure alors qu'il pèse 10 % du
@@ -219,10 +235,138 @@ def main() -> None:
     print("\n[4/6] Generating advanced-robustness assets (figures + tables)...")
     build_robustness_assets(result["pf_combined"], strat_rets, port_rets)
 
-    print("\n[5/6] Extracting trade examples from underlying backtests...")
+    print("\n[5/7] Extracting trade examples from underlying backtests...")
     build_trade_examples(sleeve_rets)
 
-    print("\n[6/6] Done.")
+    print("\n[6/7] Building MT5 execution assets...")
+    build_mt5_assets()
+
+    print("\n[7/7] Done.")
+
+
+# ────────────────────────────────────────────────────────────────────────
+# Exécution MetaTrader 5 — les chiffres qui font foi pour le compte
+# ────────────────────────────────────────────────────────────────────────
+def build_mt5_assets() -> None:
+    """Tables et figure du backtest MT5, source des chiffres publiés.
+
+    Le rapport ne décrivait que le backtest ``vectorbtpro``. Les deux moteurs
+    ne mesurent pas la même chose — vbt applique un levier au poids de
+    position, MT5 ouvre un notionnel borné par la distance au stop — et c'est
+    MT5 qui exécute. Ces assets viennent de ``mt5_reference.json``, produit par
+    ``scripts/parse_mt5_report.py``.
+    """
+    if not MT5_JSON.exists():
+        print(
+            f"  ⚠ {MT5_JSON.relative_to(_PROJECT_ROOT)} absent — "
+            "lancer scripts/parse_mt5_report.py"
+        )
+        return
+
+    with open(MT5_JSON) as fh:
+        mt5 = json.load(fh)
+    run, head = mt5["run"], mt5["headline"]
+    forced = mt5["forced_closes"]
+
+    # ── Table 1 : métriques de référence ────────────────────────────
+    rows = [
+        f"Profit net & \\${head['total_net_profit']:,.0f} "
+        f"(dépôt \\${run['initial_deposit']:,.0f}) \\\\",
+        f"CAGR & \\textbf{{{fmt_pct(head['cagr'], 2)}}} \\\\",
+        f"Sharpe (MetaTrader~5) & {fmt_num(head['sharpe_ratio_mt5'], 2)} \\\\",
+        f"Drawdown d'équité maximal & "
+        f"\\textbf{{{fmt_num(head['equity_dd_pct_mt5'], 2)}\\,\\%}} \\\\",
+        f"Facteur de profit & {fmt_num(head['profit_factor'], 2)} \\\\",
+        f"Nombre de transactions & {int(head['total_trades'])} \\\\",
+    ]
+    save_tex("mt5_reference", tex_table_wrap(
+        header=r"Métrique & Valeur \\",
+        rows=rows,
+        caption=(
+            f"Résultats du portefeuille de production dans le testeur "
+            f"MetaTrader~5 sur {run['symbol']}, "
+            f"{run['start']} à {run['end']}. "
+            r"Ce sont les chiffres qui font foi~: ils proviennent du moteur "
+            r"qui exécute réellement les ordres, avec le \emph{spread} du "
+            r"courtier, l'arrondi des lots et les frais de portage."
+        ),
+        label="tab:mt5_reference",
+        col_spec="lr",
+    ))
+
+    # ── Table 2 : d'où vient le résultat ────────────────────────────
+    rows = [
+        f"{row['sleeve']} & {row['trades']} & \\${row['net_profit']:,.0f} & "
+        f"{fmt_pct(row['share_of_net_pct'], 1)} & {fmt_pct(row['win_rate'], 1)} \\\\"
+        for row in mt5["by_sleeve"]
+    ]
+    top = mt5["by_sleeve"][0]
+    save_tex("mt5_by_sleeve", tex_table_wrap(
+        header=r"Sleeve & Transactions & Résultat net & Part & Taux de gain \\",
+        rows=rows,
+        caption=(
+            r"Décomposition du résultat par sleeve. "
+            f"« {top['sleeve']} » en concentre "
+            f"{fmt_pct(top['share_of_net_pct'], 1)} pour "
+            f"{top['trades']}~transactions~: le résultat du portefeuille "
+            r"dépend d'un petit nombre de positions, ce qu'aucune moyenne ne "
+            r"montre."
+        ),
+        label="tab:mt5_by_sleeve",
+        col_spec="lrrrr",
+    ))
+
+    # ── Table 3 : année par année ───────────────────────────────────
+    rows = [
+        f"{y['year']} & \\${y['balance_end']:,.0f} & {fmt_pct(y['return_pct'], 1)} & "
+        f"{fmt_pct(y['max_dd_pct'], 1)} & {y['closed_trades']} \\\\"
+        for y in mt5["yearly"]
+    ]
+    save_tex("mt5_yearly", tex_table_wrap(
+        header=(
+            r"Année & Solde de fin & Rendement & Repli maximal & Transactions \\"
+        ),
+        rows=rows,
+        caption=(
+            r"Résultat par année civile, mesuré sur le solde du compte. "
+            r"Le repli indiqué est celui du \emph{solde}~: il ne descend pas "
+            r"aussi bas que le repli d'équité, qui compte aussi les positions "
+            r"encore ouvertes."
+        ),
+        label="tab:mt5_yearly",
+        col_spec="lrrrr",
+    ))
+
+    # ── Figure : courbe de solde ────────────────────────────────────
+    curve = pd.Series(
+        mt5["balance_curve"]["balance"],
+        index=pd.to_datetime(mt5["balance_curve"]["dates"]),
+    )
+    fig, ax = plt.subplots(figsize=(9.5, 4.6))
+    ax.plot(curve.index, curve.values, color=PALETTE["combined"], linewidth=1.6)
+    ax.fill_between(
+        curve.index, curve.values, run["initial_deposit"],
+        color=PALETTE["combined"], alpha=0.12,
+    )
+    ax.axhline(
+        run["initial_deposit"], color="#707070", linewidth=0.9, linestyle="--",
+        label=f"Dépôt initial ({run['initial_deposit']:,.0f} USD)",
+    )
+    ax.set_title(
+        f"Solde du compte — testeur MetaTrader 5 ({run['start']} → {run['end']})",
+        color=PALETTE["primary"],
+    )
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Solde (USD)")
+    ax.legend(loc="upper left")
+    save_fig(fig, "mt5_balance_curve")
+
+    if forced["count"]:
+        print(
+            f"    ⓘ {forced['count']} position(s) liquidée(s) en fin de test "
+            f"pour {forced['net_profit']:,.0f} USD "
+            f"({forced['share_of_net_pct']:.1%} du résultat net)"
+        )
 
 
 # ────────────────────────────────────────────────────────────────────────
@@ -604,12 +748,11 @@ def build_figures(
     ax.legend(loc="upper left")
     save_fig(fig, "oos_zoom")
 
-    # ── 9-11. Per-sleeve standalone equity ──────────────────────────
-    for sleeve, color_key in [
-        ("MR_Macro", "mr"),
-        ("TS_Momentum_3p", "ts"),
-        ("RSI_Daily_3p", "rsi"),
-    ]:
+    # ── 9-12. Per-sleeve standalone equity ──────────────────────────
+    # Liste dérivée : écrite à la main, elle avait laissé la sleeve or sans
+    # figure d'équité alors qu'elle porte l'essentiel du résultat.
+    for sleeve in PRODUCTION_WEIGHTS:
+        color_key = SLEEVE_COLOR_KEY[sleeve]
         rets = sleeve_rets[sleeve]
         cum = (1 + rets).cumprod() * 100
         run_max = cum.cummax()
@@ -620,7 +763,7 @@ def build_figures(
         )
         ax1.plot(cum.index, cum.values, color=PALETTE[color_key], linewidth=1.4)
         ax1.set_title(
-            f"{sleeve.replace('_', ' ')} — équité standalone et drawdown",
+            f"{SLEEVE_DISPLAY[sleeve]} — équité standalone et drawdown",
             color=PALETTE["primary"],
         )
         ax1.set_ylabel("Équité (base 100)")
@@ -633,8 +776,8 @@ def build_figures(
         ax2.set_xlabel("Date")
         save_fig(fig, f"sleeve_{sleeve.lower()}_equity")
 
-    # ── 12. Walk-forward Sharpe per year ────────────────────────────
-    years = list(range(2019, 2019 + len(wf_sharpes)))
+    # ── 13. Walk-forward Sharpe per year ────────────────────────────
+    years = wf_labels()
     fig, ax = plt.subplots(figsize=(9.5, 4.0))
     colors_wf = [PALETTE["combined"] if s < 0 else PALETTE["rsi"] for s in wf_sharpes]
     bars = ax.bar(years, wf_sharpes, color=colors_wf, edgecolor="white", linewidth=1.2)
@@ -653,8 +796,8 @@ def build_figures(
         "Walk-forward Sharpe par année (portefeuille combiné)", color=PALETTE["primary"]
     )
     ax.set_ylabel("Sharpe")
-    ax.set_xlabel("Année")
-    ax.set_xticks(years)
+    ax.set_xlabel("Fenêtre")
+    ax.tick_params(axis="x", labelsize=8)
     save_fig(fig, "walkforward_sharpe")
 
 
@@ -871,7 +1014,7 @@ def build_metric_tables(
             "wf_sharpes manquant : il vient de build_production_portfolio(), "
             "pas du JSON de stress test."
         )
-    years = list(range(first_date.year, first_date.year + len(wf_sharpes)))
+    years = wf_labels()
     rows = [
         f"{y} & {fmt_num(s, 2)} & {'positive' if s > 0 else 'négative'} \\\\"
         for y, s in zip(years, wf_sharpes)

@@ -1,34 +1,34 @@
 \section{Rejeu de scénarios historiques}
 \label{sec:scenarios}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} rejeu de scénarios complète le bootstrap en testant la stratégie sur des fenêtres historiques réelles et identifiables~: crises, régimes de hausse de taux, années de rallye. Contrairement au bootstrap qui produit des séquences synthétiques, le rejeu de scénarios préserve la séquence macroéconomique originale et permet de vérifier le comportement de la stratégie dans des contextes précisément nommés.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} rejeu de scénarios complète le bootstrap en testant la stratégie sur des fenêtres historiques réelles et identifiables~: crises, régimes de hausse de taux, années de rallye. Contrairement au bootstrap qui produit des séquences synthétiques, le rejeu préserve la séquence macroéconomique originale et permet de vérifier le comportement de la stratégie dans des contextes précisément nommés.
 
 \input{tables/scenarios.tex}
 
 \subsection{Lecture détaillée des six scénarios}
 
 \begin{itemize}
-\item \textbf{2019 année complète ($-7.88\,\%$ CAGR, $-17.44\,\%$ MaxDD)}~: année structurelle la plus difficile de la série. Aucun moteur ne gagne. Le Moteur~1 à $-0.64$, le Moteur~2 à $-0.41$, le Moteur~3 à $+0.95$ mais à 10\,\% de poids il ne compense pas les 90\,\% négatifs. 2019 correspond à un régime de fin de cycle avec courbe des taux compressée~--- défavorable simultanément à la \emph{mean reversion} intraday et au suivi de tendance journalier.
+\item \textbf{2019 année complète (Sharpe $+1.77$, repli $-11.04\,\%$)}~: la meilleure fenêtre de la série, contrairement à ce que laissaient penser les configurations antérieures du portefeuille. L'ajout de la sleeve or et le relèvement de la cible de volatilité ont transformé une année autrefois négative en la plus rentable du lot.
 
-\item \textbf{2020 Q1 Covid ($-20.1\,\%$ CAGR annualisé, $-7.06\,\%$ MaxDD)}~: sur la fenêtre isolée de deux mois, le choc Covid provoque une perte. Mais sur l'année complète 2020 ($+4.80\,\%$ CAGR), la récupération est quasi-totale. \textbf{La stratégie absorbe le choc sans catastrophe}~: le drawdown maximal reste largement sous les $-35\,\%$ qui déclencheraient la contrainte utilisateur.
+\item \textbf{2020 Q1 Covid (Sharpe $-2.00$, repli $-27.45\,\%$)}~: la pire fenêtre. Le choc frappe simultanément les quatre moteurs, et le dimensionnement actuel amplifie la perte dans la même proportion qu'il amplifie les gains. C'est le scénario qui illustre le plus directement le coût du niveau de risque retenu.
 
-\item \textbf{2020 année complète ($+4.80\,\%$ CAGR, Sharpe $+0.59$)}~: récupération normale après le Q1. Le Moteur~1 ne trade quasiment pas (filtre macro actif) mais le Moteur~3 prend le relais sur les \emph{overshoots} post-Covid.
+\item \textbf{2020 année complète (Sharpe $-0.33$, repli $-41.28\,\%$)}~: la récupération post-Covid ne suffit pas à ramener l'année en territoire positif. Le repli sur douze mois atteint plus de 40\,\%~--- sans plafond de drawdown pour l'interrompre.
 
-\item \textbf{2022 Q3 crise GBP ($+35.65\,\%$ CAGR annualisé, Sharpe $+1.39$)} $\star$~: l'une des meilleures fenêtres de l'historique. La crise GBP (mini-budget Truss, effondrement de la livre) est \emph{exploitée} très fortement par le Moteur~2 (signal de tendance sur les mouvements EUR-GBP) et par le Moteur~1 (volatilité intraday élevée). Le drawdown reste limité à $-7.09\,\%$ malgré la volatilité macroéconomique extrême.
+\item \textbf{2022 Q3 crise GBP (Sharpe $-0.63$, repli $-16.42\,\%$)}~: la crise du \emph{mini-budget} britannique se solde par une perte. Les versions antérieures de ce document présentaient cette fenêtre comme l'une des meilleures de l'historique~; ce n'est plus vrai sous la configuration actuelle.
 
-\item \textbf{2023 année de hausses ($-0.33\,\%$ CAGR, Sharpe $+0.06$)}~: l'année neutre. Le Moteur~1 est bloqué par la courbe des taux inversée~; le Moteur~2 à trois paires compense juste assez pour rester proche de zéro. Contenu.
+\item \textbf{2023 année de hausses (Sharpe $+0.11$, repli $-25.69\,\%$)}~: l'année neutre en rendement, mais pas en risque~: le repli intermédiaire dépasse le quart du capital pour un résultat final quasi nul.
 
-\item \textbf{2024 année complète ($+18.15\,\%$ CAGR, Sharpe $+1.54$)} $\star$~: année la plus forte. Tous les moteurs sont alignés (rotation vers les marchés émergents, faiblesse JPY, pause de la Fed). Drawdown maximum de seulement $-6.77\,\%$.
+\item \textbf{2024 année complète (Sharpe $+1.58$, repli $-18.92\,\%$)}~: seconde meilleure fenêtre. Les quatre moteurs sont alignés.
 \end{itemize}
 
 \subsection{Observations transversales}
 
 \begin{insightbox}
-\textbf{Résistance validée dans les régimes de stress~:}
+\textbf{Ce que ces six fenêtres établissent~:}
 \begin{itemize}
-\item Covid 2020, crise GBP 2022, 2024~--- les régimes de stress sont soit gagnants, soit contenus.
-\item 2019 reste la vraie faiblesse structurelle. Aucun des trois moteurs n'est adapté aux régimes de fin de cycle \emph{range-bound} avec breakouts.
-\item 2023 reste marginalement négatif mais contenu~--- la fenêtre scenario ne capture pas tout l'effet de la diversification par rebalancement au niveau combiné, qui atteint finalement un Sharpe annuel de $+0.29$ en walk-forward.
+\item \textbf{La moitié des épisodes est négative.} Trois Sharpe sur six sont sous zéro. Le portefeuille n'est pas robuste \emph{à tous} les régimes~: il est rentable en moyenne parce que ses bonnes fenêtres sont plus amples que ses mauvaises.
+\item \textbf{Les épisodes de stress ne sont pas absorbés, ils sont subis.} Covid 2020 et la crise GBP 2022 produisent tous deux des pertes. Aucun mécanisme de la stratégie ne réduit l'exposition à l'entrée d'un régime défavorable~--- le ciblage de volatilité réagit à la volatilité réalisée, avec le retard que cela implique.
+\item \textbf{Le repli intermédiaire est systématiquement supérieur au résultat final.} Même l'année neutre 2023 traverse un repli de plus de 25\,\%. Un investisseur qui juge sur la trajectoire, et non sur le solde de fin d'année, aurait vécu une expérience très différente de celle que résume le rendement annuel.
 \end{itemize}
 \end{insightbox}
 
@@ -38,6 +38,7 @@
 \item Crise \emph{subprime} 2007--2008 (absence de données minute FX de qualité pour cette période).
 \item Choc pétrolier 1979--1980 (structurellement différent, non comparable au régime actuel).
 \item Sortie brutale d'un \emph{peg} monétaire (par exemple le CHF de janvier 2015)~--- extension envisageable à la demande.
+\item \textbf{Un marché baissier durable de l'or.} C'est l'omission la plus importante~: la période disponible ne contient aucun régime prolongé défavorable au moteur qui porte l'essentiel du résultat.
 \end{itemize}
-Le bootstrap par blocs mobiles agit comme compensation partielle à cette limite.
+Le bootstrap par blocs mobiles agit comme compensation partielle à cette limite, mais il réordonne le passé et n'invente pas de régime absent.
 \end{warningbox}

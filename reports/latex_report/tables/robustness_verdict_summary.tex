@@ -1,18 +1,18 @@
 \begin{table}[H]
 \centering
-\caption{Verdict consolidé sur les tests de robustesse statistique. Six tests passent sans réserve~; un test (P95 du Max Drawdown bootstrap) est proche de la limite utilisateur avec environ 2~pp de marge, déjà mitigé par la réserve cash 30\,\% recommandée en section d'analyse des risques.}
+\caption{Verdict consolidé sur les tests de robustesse statistique~: 5 test(s) sur 6 franchissent leur seuil. La dernière ligne est reportée sans verdict~: le plafond de drawdown ayant été retiré de la configuration de production, elle ne répond plus à une contrainte.}
 \label{tab:robustness_verdict_summary}
 \begin{tabular}{llrl}
 \toprule
 Test & Seuil & Résultat & Verdict \\
 \midrule
-Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & $[0.365,\ 1.546]$ & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & $[0.356,\ 1.841]$ & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
 Probabilité Sharpe vrai $> 0$ & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
 Sharpe corrigé pour biais de sélection & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Ratio de survie après tests multiples & $> 50\,\%$ & 72.24\,\% & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Longueur backtest $>$ minimum statistique & $<$ longueur observée & 2.38~ans $<$ 7~ans & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Probabilité de sur-ajustement & $< 0.5$ & 0.305 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Bootstrap P95 MaxDD & $<$ cap 35\,\% & 32.58\,\% & \textcolor{tsOrange}{\textbf{MARGE FINE}} \\
+Ratio de survie après tests multiples & $> 50\,\%$ & 79.29\,\% & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Longueur backtest $>$ minimum statistique & $<$ longueur observée & 2.10~ans $<$ 7.5~ans & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Probabilité de sur-ajustement & $< 0.5$ & 0.532 & \textcolor{tsOrange}{\textbf{ÉCHEC}} \\
+Bootstrap --- pire drawdown à 95\,\% & aucun plafond actif & -70.01\,\% & \emph{mesure} \\
 \bottomrule
 \end{tabular}
 \end{table}

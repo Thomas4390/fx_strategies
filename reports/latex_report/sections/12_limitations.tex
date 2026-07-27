@@ -1,64 +1,76 @@
 \section{Analyse des risques et limites méthodologiques}
 \label{sec:limitations}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Cinq avertissements} sont identifiés et divulgués ci-dessous avec leur impact quantifié. \textbf{Aucune erreur structurelle} n'a été détectée~--- pas de biais de look-ahead, pas de bug de calcul numérique, bootstrap méthodologiquement correct.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Six avertissements} sont identifiés et divulgués ci-dessous. Aucune erreur structurelle n'a été détectée dans la chaîne de calcul~--- pas de biais de \emph{look-ahead}, pas de bug numérique, bootstrap méthodologiquement correct~--- mais deux des avertissements ci-dessous portent sur la nature même de la performance, et non sur sa mesure.
 
 \begin{thesisbox}
-\textbf{Sept tests de robustesse statistique sont franchis.} La section~\ref{sec:advanced_robustness} documente les résultats du \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), du \textit{Probabilistic Sharpe Ratio} (1.000), du \textit{Deflated Sharpe Ratio} (1.000, facteur de dépassement $3.26\times$), du \textit{Haircut Sharpe} Benjamini--Hochberg--Yekutieli (ratio de survie $87\,\%$), du \textit{Minimum Backtest Length} (3.45~ans $<$ 7~ans disponibles), de la \textit{Probability of Backtest Overfitting} par validation croisée combinatoire (PBO $= 0.305$, seuil de danger $0.5$), et enfin des tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
+\textbf{Cinq tests de robustesse sur six sont franchis~; un échoue.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
 
-Les cinq avertissements ci-dessous sont les \emph{limites résiduelles} qui persistent \textbf{malgré} cette validation statistique rigoureuse. Ils n'invalident pas les résultats mais imposent la discipline de déploiement décrite en section~\ref{sec:production}.
+La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0.532$, au-dessus du seuil de danger de $0.5$~: \textbf{ce test échoue}. Les avertissements ci-dessous sont les limites résiduelles qui persistent malgré la validation statistique, et celles que cette validation elle-même signale.
 \end{thesisbox}
 
-\subsection{Avertissement 1 --- Data snooping résiduel}
+\subsection{Avertissement 1 --- Le résultat repose sur un seul moteur}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} la recherche préparatoire a itéré sur la même fenêtre temporelle 2019--2025. Chaque étape a informé la suivante~: retrait d'un moteur sous-performant, retrait d'une paire sous-contributrice, ajout d'un diversificateur anti-corrélé. Toutes ces décisions ont été prises en observant les résultats in-sample.
+\textbf{Nature du risque~:} à l'exécution, la sleeve or produit près de 80\,\% du résultat net du portefeuille pour 4\,\% de ses transactions et 10\,\% de son allocation. Les trois moteurs FX, qui portent 90\,\% de l'allocation, contribuent ensemble à un cinquième du gain.
 
-\textbf{Impact potentiel~:} le design est informé par le résultat 2019--2025, ce qui crée un risque théorique de surajustement.
+\textbf{Impact potentiel~:} le portefeuille est présenté comme diversifié sur quatre sources d'alpha, mais son \emph{résultat} ne l'est pas. Un régime durablement défavorable à l'or ne serait pas compensé par les trois autres moteurs à leur niveau de contribution actuel. La diversification a servi à rendre la cible de rendement atteignable, elle n'a pas réparti le risque de résultat.
 
-\textbf{Mitigation empirique~:} la fenêtre hors échantillon 2025-04 à 2026-04 donne un Sharpe de 1.44, contre 0.94 en in-sample~--- une \emph{amélioration}, pas une dégradation. Un surajustement authentique aurait produit le contraire.
+\textbf{Aggravant~:} 2019--2026 a été un marché haussier de l'or d'ampleur inhabituelle, et le Sharpe du portefeuille croît de façon monotone avec le poids accordé à ce moteur sur toute la plage testée --- l'optimum est \emph{à la borne} de la grille, signature d'un biais de période. Le poids a été volontairement arrêté à 10\,\% pour cette raison.
 
-\textbf{Action corrective~:} paper-trade d'un minimum de trois mois avant tout capital réel.
+\textbf{Action corrective~:} suivre la contribution par sleeve en production et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids de l'or sur une tranche de données réellement fraîche, postérieure à juillet~2026.
 \end{warningbox}
 
-\subsection{Avertissement 2 --- Coûts de transaction au niveau portefeuille}
+\subsection{Avertissement 2 --- Le test de sur-ajustement échoue}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} le calcul du rendement combiné applique une somme pondérée des trois moteurs et ne charge pas explicitement les coûts de rebalancement inter-moteurs. Les coûts intra-moteur (slippage 15~pb sur l'intraday, 10~pb sur le journalier, fees 5~pb) sont en revanche correctement chargés par chaque pipeline individuel.
+\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting} vaut $0.532$ contre un seuil de $0.5$. La procédure estime qu'une configuration sélectionnée sur une moitié des données a un peu plus d'une chance sur deux de se retrouver sous la médiane sur l'autre moitié.
 
-\textbf{Impact sur la stratégie~:} estimation de 5 à 10~points de base par an, négligeable face au rendement cible d'environ 13\,\% CAGR. Avec une allocation statique 80/10/10, le seul rebalancement quotidien est celui nécessaire pour maintenir les ratios face au drift de P\&L différentiel.
+\textbf{Origine~:} plus de deux cents configurations ont été évaluées au fil de la recherche sur la même fenêtre historique, chaque phase héritant des meilleurs points de la précédente. Aucune correction formelle pour tests multiples n'était appliquée avant l'introduction des tests de la section~\ref{sec:advanced_robustness}.
 
-\textbf{Action corrective~:} monitoring du slippage réel en live et comparaison systématique aux hypothèses du backtest.
+\textbf{Ce que cela ne dit pas~:} l'\emph{edge} n'est pas invalidé. Le \textit{Probabilistic} et le \textit{Deflated Sharpe Ratio} restent au maximum, et l'intervalle de confiance du Sharpe exclut zéro. C'est la \emph{sélection} de cette configuration précise qui a consommé une part importante du pouvoir statistique disponible.
+
+\textbf{Action corrective~:} une tranche de données a été gelée et retirée de la sélection de modèle. Le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation authentiquement pré-engagée dont ce portefeuille dispose.
 \end{warningbox}
 
-\subsection{Avertissement 3 --- Levier 12$\times$ et margin buffer}
+\subsection{Avertissement 3 --- Aucun coupe-circuit n'est actif}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} le plafond de levier à 12$\times$ est dans les clous de la régulation ESMA retail (cap à 30:1 sur les majors G10). \textbf{Ce n'est pas un obstacle réglementaire.}
+\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint 44\,\%~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-75\,\%$.
 
-\textbf{Le vrai enjeu est le \emph{margin buffer}~:} à 12$\times$ de levier, la marge requise par le broker est d'environ 8.3\,\% du notional. Si la stratégie subit un drawdown de 30\,\% (P5 bootstrap), la perte en capital propre représente $30\,\% \times 12 \approx 36\,\%$ du compte. Sans réserve de cash supplémentaire, le compte serait proche du \emph{margin call}.
+\textbf{Impact potentiel~:} il n'existe aucun mécanisme automatique pour interrompre une perte en cours. Le ciblage de volatilité réduit l'exposition \emph{après} que la volatilité réalisée a augmenté, avec le retard que cela implique~; ce n'est pas un dispositif de protection du capital.
 
-\textbf{Action impérative~:} tenir une réserve cash hors-broker d'au moins 30\,\% pour absorber les \emph{tails} au-delà du P5 bootstrap. Avec cette réserve, le compte broker voit un levier apparent de 12$\times$ mais le capital économique réel n'est \emph{leveragé} qu'à environ 8$\times$ ($12 \times 0.7 \approx 8.4$).
+\textbf{Action corrective~:} dimensionner la réserve de capital sur le repli constaté et non sur un plafond contractuel qui n'existe plus. Le plafonnement de drawdown peut être réactivé sans modification de code, au seuil que le mandant jugerait acceptable.
 \end{warningbox}
 
-\subsection{Avertissement 4 --- Corrélations glissantes vs. statiques}
+\subsection{Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} la matrice de corrélation rapportée (Moteur~1/Moteur~2 à $+0.056$, Moteur~1/Moteur~3 à $-0.027$, Moteur~2/Moteur~3 à $-0.251$) est calculée sur la période complète 2019--2026. Une corrélation glissante peut révéler des \emph{shifts} structurels pendant les transitions de régime.
+\textbf{Nature du risque~:} le facteur d'échelle appliqué aux budgets de risque à l'exécution a été calibré pour atteindre la cible de rendement. Le rendement y répond quasi linéairement --- et le repli aussi, dans la même proportion.
 
-\textbf{Mitigation~:} la figure de corrélation glissante à 63~jours (section~\ref{sec:in_sample}) confirme que la corrélation négative Moteur~2 / Moteur~3 reste majoritairement négative sur toute la période, avec de brefs passages à $+0.3$ en 2020-Q2 et 2023-Q4 qui se résolvent rapidement.
+\textbf{Impact potentiel~:} à échelle unitaire, le même portefeuille produirait un rendement environ quatre fois inférieur pour un repli réduit d'autant. Le niveau retenu est un choix de risque, pas une propriété de la stratégie.
 
-\textbf{Action corrective~:} monitoring live d'une corrélation glissante 63~jours, avec alerte si une paire dépasse $+0.5$ (signal potentiel de changement de régime).
+\textbf{Action corrective~:} ce paramètre est un point de réglage unique et documenté. Il peut être abaissé à tout moment sans toucher aux signaux~: le nombre de transactions reste identique.
 \end{warningbox}
 
-\subsection{Avertissement 5 --- Hyperparamètres des sub-stratégies}
+\subsection{Avertissement 5 --- Coûts de transaction au niveau portefeuille}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} les valeurs par défaut des indicateurs (Bollinger Bands 80 périodes, seuil spread macro 0.5, EMA 20/50, RSI à 7 périodes) sont issues d'analyses préparatoires conduites sur une période partiellement chevauchante avec la fenêtre in-sample. La documentation formelle d'un train/test split pour ces choix individuels est partielle.
+\textbf{Nature du risque~:} le calcul du rendement combiné en recherche applique une somme pondérée des moteurs et ne charge pas explicitement les coûts de rebalancement inter-moteurs. Les coûts intra-moteur (\emph{slippage} et frais) sont en revanche chargés par chaque pipeline individuel, et le backtest MetaTrader~5 intègre le \emph{spread} réel du courtier.
 
-\textbf{Mitigation partielle~:} ces paramètres sont stables sur les grilles de sensibilité~--- les \emph{heatmaps} Sharpe montrent un plateau robuste autour de ces valeurs, pas un pic isolé. Le risque de surajustement local est modéré.
+\textbf{Impact sur la stratégie~:} l'écart est de quelques points de base par an sur la mesure de recherche. Il est sans effet sur les chiffres publiés, qui proviennent du moteur d'exécution.
 
-\textbf{Action corrective~:} revalidation trimestrielle des \emph{heatmaps} grid de chaque sub-stratégie. Si le plateau reste stable, la robustesse est confirmée.
+\textbf{Action corrective~:} monitoring du \emph{slippage} réel en live et comparaison systématique aux hypothèses du backtest.
+\end{warningbox}
+
+\subsection{Avertissement 6 --- Hyperparamètres des sub-stratégies}
+
+\begin{warningbox}
+\textbf{Nature du risque~:} les valeurs par défaut des indicateurs (bandes de Bollinger, seuil de \emph{spread} macro, EMA 20/50, périodes RSI) sont issues d'analyses préparatoires conduites sur une période partiellement chevauchante avec la fenêtre in-sample. La documentation formelle d'un découpage entraînement/test pour ces choix individuels est partielle.
+
+\textbf{Mitigation partielle~:} ces paramètres sont stables sur les grilles de sensibilité~--- les \emph{heatmaps} de Sharpe montrent un plateau, pas un pic isolé.
+
+\textbf{Action corrective~:} revalidation périodique des grilles de chaque sub-stratégie. Si le plateau reste stable, la robustesse est confirmée.
 \end{warningbox}
 
 \subsection{Tableau récapitulatif des risques}
@@ -66,15 +78,16 @@ Les cinq avertissements ci-dessous sont les \emph{limites résiduelles} qui pers
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
 \small
-\begin{tabular}{lllp{4cm}}
+\begin{tabular}{lllp{4.4cm}}
 \toprule
 \textbf{\#} & \textbf{Risque} & \textbf{Gravité} & \textbf{Mitigation} \\
 \midrule
-1 & Data snooping résiduel & Modérée & Paper-trade 3~mois pré-engagé \\
-2 & Coûts de transaction non chargés & Faible ($<10$\,pb) & Monitoring live du slippage \\
-3 & Margin buffer 12$\times$ levier & Élevée (si sans cash) & Réserve cash hors-broker $\ge 30\,\%$ \\
-4 & Corrélation statique & Faible & Rolling 63j + alerte $>0.5$ \\
-5 & Surajustement hyperparamètres & Faible & Revalidation trimestrielle grid \\
+1 & Résultat concentré sur une sleeve & Élevée & Suivi de contribution, réexamen du poids sur données fraîches \\
+2 & Test de sur-ajustement en échec & Élevée & Tranche de données gelée, \emph{paper-trade} pré-engagé \\
+3 & Aucun coupe-circuit actif & Élevée & Réserve dimensionnée sur le repli réel, plafond réactivable \\
+4 & Dimensionnement agressif & Élevée (choisie) & Paramètre unique, abaissable sans toucher aux signaux \\
+5 & Coûts de rebalancement non chargés & Faible & Monitoring live du \emph{slippage} \\
+6 & Surajustement hyperparamètres & Faible & Revalidation périodique des grilles \\
 \bottomrule
 \end{tabular}
 \end{center}

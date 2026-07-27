@@ -38,13 +38,13 @@ Le deuxième bloc $(r_{4},r_{5},r_{6}) = (-2.1,+1.9,-1.7)$ est \textbf{copié in
 \end{figure}
 
 \begin{insightbox}
-\textbf{L'intervalle de confiance à 95\,\% du Sharpe est $[0.37,\ 1.55]$.} Le fait que la borne basse soit strictement positive --- et non seulement la moyenne --- est la condition statistique minimale pour qu'une stratégie soit considérée comme ayant un \emph{edge} distinguable du bruit avec un niveau de confiance de 95\,\%. Même dans le scénario pessimiste au 2.5\textsuperscript{e}~percentile, le Sharpe reste à $0.37$.
+\textbf{L'intervalle de confiance à 95\,\% du Sharpe est $[0.356,\ 1.841]$.} Le fait que la borne basse soit strictement positive --- et non seulement la moyenne --- est la condition statistique minimale pour qu'une stratégie soit considérée comme ayant un \emph{edge} distinguable du bruit avec un niveau de confiance de 95\,\%. Même dans le scénario pessimiste au 2.5\textsuperscript{e}~percentile, le Sharpe reste à $0.356$.
 \end{insightbox}
 
 \paragraph{Deux zones de vigilance identifiées.}
 \begin{itemize}
-\item Le \textbf{P95 du Max Drawdown bootstrap à $-32.58\,\%$} est inconfortablement proche du cap utilisateur de $35\,\%$. C'est cohérent avec le bootstrap de la section~\ref{sec:stress_test} qui reporte un P5 à $-30.68\,\%$.
-\item L'intervalle de confiance du \textbf{Tail Ratio} est $[1.00,\ 1.40]$ et descend juste sous~1 au 2.5\textsuperscript{e}~percentile. Un portefeuille idéal aurait ce ratio strictement supérieur à 1 sur toute la distribution~; la proximité du seuil~1 mérite une attention particulière lors du déploiement.
+\item L'intervalle de confiance du \textbf{Max Drawdown} s'étend de $-70.01\,\%$ à $-29.53\,\%$, pour une réalisation observée de $-58.49\,\%$. Il n'existe plus de plafond contractuel auquel comparer ces valeurs~: elles décrivent le risque encouru, elles ne signalent pas un dépassement.
+\item L'intervalle de confiance du \textbf{Tail Ratio} est $[1.051,\ 1.452]$. Il reste au-dessus de~1 sur toute la distribution, ce qui indique que les gains extrêmes dominent les pertes extrêmes --- propriété attendue d'un portefeuille dont le résultat vient d'un suivi de tendance.
 \end{itemize}
 
 \subsection{\emph{Equity fan chart} --- trajectoires bootstrap alternatives}
@@ -54,10 +54,10 @@ Le \emph{fan chart} condense les trajectoires d'équité bootstrap alternatives 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_equity_fan_chart.png}
-\caption{\emph{Fan chart} bootstrap --- trajectoires alternatives compressées en bandes de percentiles. La courbe observée (bourgogne) reste dans la partie supérieure du fan à partir de 2023. Sur la fenêtre hors échantillon, la courbe observée \emph{sort du fan P25--P75 vers le haut}~: le Sharpe OOS de $1.44$ dépasse la médiane bootstrap, confirmant que la stratégie n'est pas un artefact de l'échantillon d'entraînement.}
+\caption{\emph{Fan chart} bootstrap --- trajectoires alternatives compressées en bandes de percentiles. La courbe observée (bourgogne) reste dans la partie supérieure du fan à partir de 2023. Sur la fenêtre hors échantillon, la courbe observée \emph{sort du fan P25--P75 vers le haut}~: le Sharpe hors échantillon dépasse la médiane bootstrap, ce qui est cohérent avec une stratégie qui n'est pas un pur artefact de l'échantillon d'entraînement.}
 \end{figure}
 
-La bande P5 en 2019 est plate voire négative, ce qui reproduit correctement la réalité observée (Sharpe walk-forward $-0.59$, section~\ref{sec:in_sample}). Le bootstrap capture donc correctement la variance résiduelle de l'année la plus difficile de l'historique.
+La bande P5 reste plate voire négative sur les premières années, ce qui reproduit la réalité observée --- la seule fenêtre walk-forward négative est 2021 (section~\ref{sec:is_results}). Le bootstrap capture donc la variance résiduelle des années les plus difficiles de l'historique.
 
 \subsection{Tests d'\emph{overfitting}}
 
@@ -154,7 +154,7 @@ Avec la matrice des rendements des composantes candidates contre un \emph{benchm
 \end{figure}
 
 \begin{warningbox}
-\textbf{Les p-values élevées ici ne contredisent pas le DSR à $1.000$.} Les deux tests répondent à des questions différentes~: le DSR teste la \emph{stratégie combinée finale} contre un seuil tenant compte du nombre d'essais, tandis que ces tests évaluent chaque \emph{composante individuelle} contre un \emph{benchmark} nul. Les composantes individuelles ont des Sharpes modestes (MR~Macro $0.82$, TS~Momentum $0.57$, RSI~Daily $0.16$) et le test est conservateur~: il faudrait qu'une composante batte significativement les autres. \textbf{La force du portefeuille combiné vient de la diversification inter-composantes}, pas de la supériorité individuelle. C'est leur \emph{combinaison} (pondération fixe $80/10/10$ et ciblage de volatilité global) qui produit une stratégie statistiquement robuste.
+\textbf{Les p-values élevées ici ne contredisent pas le DSR à $1.000$.} Les deux tests répondent à des questions différentes~: le DSR teste la \emph{stratégie combinée finale} contre un seuil tenant compte du nombre d'essais, tandis que ces tests évaluent chaque \emph{composante individuelle} contre un \emph{benchmark} nul. Les composantes individuelles ont des Sharpes modestes (voir tableau~\ref{tab:sleeve_standalone}) et le test est conservateur~: il faudrait qu'une composante batte significativement les autres. \textbf{La force du portefeuille combiné vient de la diversification inter-composantes}, pas de la supériorité individuelle. C'est leur \emph{combinaison} (pondération fixe $72/9/9/10$ et ciblage de volatilité global) qui produit le profil mesuré ici.
 \end{warningbox}
 
 \subsection{Stabilité temporelle multi-métrique}
@@ -172,5 +172,7 @@ Une stratégie robuste doit avoir ses métriques de risque ajusté qui restent p
 \input{tables/robustness_verdict_summary.tex}
 
 \begin{thesisbox}
-\textbf{Sept tests sur huit passent sans réserve.} Le seul point de vigilance est le P95 du Max Drawdown bootstrap à $-32.58\,\%$, proche de la limite utilisateur de $35\,\%$. Cette marge fine est déjà connue via la section~\ref{sec:stress_test} et mitigée par la recommandation de réserve cash de 30\,\% documentée en section~\ref{sec:limitations}. \textbf{Le portefeuille Apogée Invest n'est pas un artefact statistique}~: il a un \emph{edge} qui survit à toutes les corrections méthodologiques standard (biais de sélection, tests multiples, non-normalité, dépendance temporelle).
+\textbf{Cinq tests sur six franchissent leur seuil~; un échoue.} La probabilité de sur-ajustement mesurée par validation croisée combinatoire vaut $0.532$ pour un seuil de danger fixé à $0.5$. C'est un échec, marginal mais réel, et il doit être lu pour ce qu'il est~: la procédure estime qu'une configuration sélectionnée sur une moitié des données a un peu plus d'une chance sur deux de se retrouver sous la médiane sur l'autre moitié.
+
+Ce résultat ne dit pas que la stratégie est sans \emph{edge} --- les tests de \emph{Probabilistic} et \emph{Deflated Sharpe Ratio} restent au maximum, et l'intervalle de confiance du Sharpe exclut zéro. Il dit que la \emph{sélection} qui a conduit à cette configuration précise a consommé une part importante du pouvoir statistique disponible, ce qui est cohérent avec l'historique du projet~: plus de deux cents configurations ont été évaluées sur la même fenêtre. C'est la raison pour laquelle une tranche de données a depuis été gelée, et pour laquelle le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité.
 \end{thesisbox}

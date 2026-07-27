@@ -752,7 +752,10 @@ def main() -> None:
     print("\n[1/5] Loading cached sleeves…")
     t0 = time.perf_counter()
     sleeves_all = get_strategy_daily_returns()
-    sleeves = {k: sleeves_all[k] for k in SLEEVE_KEYS}
+    # La sleeve or ne fait pas partie du balayage mais entre dans chaque
+    # portefeuille évalué : sans elle, le simplexe mesurerait un portefeuille
+    # qui n'est pas celui de production.
+    sleeves = {k: sleeves_all[k] for k in (*SLEEVE_KEYS, FIXED_KEY)}
     print(
         f"  Loaded {len(sleeves)} sleeves in {time.perf_counter() - t0:.1f}s: "
         f"{sorted(sleeves)}"

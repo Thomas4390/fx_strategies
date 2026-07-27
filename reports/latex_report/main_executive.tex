@@ -43,13 +43,13 @@
 
 % Main title
 {\sffamily\color{primary}\huge\bfseries
-Stratégie FX Tri-Signaux\par}
+Stratégie FX Multi-Moteurs\par}
 
 \vspace{0.4cm}
 
 % Subtitle
 {\sffamily\color{accent}\Large\itshape
-Un portefeuille à trois moteurs de rendement orthogonaux\par}
+Un portefeuille à quatre moteurs de rendement quasi orthogonaux\par}
 
 \end{center}
 
@@ -72,12 +72,13 @@ Un portefeuille à trois moteurs de rendement orthogonaux\par}
 \vspace{0.8cm}
 
 \begin{thesisbox}
-\textbf{En une ligne~:} portefeuille FX combinant mean reversion intraday filtré macro
-(80\,\%), momentum daily sur 3~paires (10\,\%) et mean reversion RSI daily sur 4~paires
-(10\,\%), avec ciblage de volatilité global et plafond de levier à 12$\times$. \textbf{Sharpe
-IS~0.94~/~OOS 1.44}, \textbf{Max Drawdown IS $-17.9\,\%$~/~OOS $-6.3\,\%$}, sept tests de
-robustesse statistique franchis. \textbf{Recommandée pour paper-trade} avant tout capital
-réel.
+\textbf{En une ligne~:} portefeuille combinant mean reversion intraday filtré macro
+(72\,\%), momentum daily sur 3~paires (9\,\%), mean reversion RSI daily sur 3~paires
+(9\,\%) et momentum sur l'or (10\,\%), avec ciblage de volatilité global.
+\textbf{À l'exécution~: 35.4\,\% de croissance annualisée, Sharpe
+0.89, repli d'équité maximal 44\,\%} sur
+851~transactions. Résultat concentré à près de 80\,\% sur la sleeve or.
+\textbf{Recommandée pour paper-trade} avant tout capital réel.
 \end{thesisbox}
 
 \vspace{0.4cm}
@@ -116,35 +117,43 @@ checklist de production complète, se référer au rapport principal \texttt{mai
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} stratégie Apogee est un
-portefeuille quantitatif sur paires de devises majeures qui combine trois moteurs de
-rendement structurellement indépendants. L'objectif est un rendement annualisé de
-\textbf{10--15\,\%} avec un drawdown maximal contenu sous \textbf{35\,\%}, tout en
-restant compatible avec les contraintes de levier ESMA pour la clientèle retail FX.
+portefeuille quantitatif qui combine quatre moteurs de rendement structurellement
+indépendants sur les devises majeures et l'or. Le mandat vise un rendement annualisé
+de l'ordre de \textbf{40\,\%}. Le plafond de repli des versions antérieures a été
+\textbf{retiré à la demande du mandant}~: le risque n'est plus une contrainte, il en
+est une conséquence mesurée.
 
-\input{tables/metrics_summary.tex}
+Les chiffres ci-dessous proviennent du moteur qui exécute réellement les ordres
+(MetaTrader~5), \emph{spread} du courtier et frais compris. Les métriques de
+recherche sont rapportées séparément~: les deux moteurs ne mesurent pas la même
+quantité et ne sont pas transposables l'un à l'autre.
+
+\input{tables/mt5_reference.tex}
 
 \begin{insightbox}
-\textbf{Le test hors échantillon produit un Sharpe de 1.44, supérieur au 0.94
-observé en période de conception.} Un surajustement authentique produirait à l'inverse
-une dégradation marquée des métriques hors échantillon. L'amélioration observée
-constitue donc une réfutation empirique de l'hypothèse de surajustement majeur.
-De plus, le \mbox{5\textsuperscript{e}}~percentile du drawdown bootstrap
-($-30.68\,\%$) reste strictement sous la contrainte utilisateur de 35\,\%, avec
-environ 4~points de pourcentage de marge de sécurité.
+\textbf{Le résultat est concentré.} La sleeve or représente 10\,\% de l'allocation et
+80\,\% du résultat net, pour 35~transactions sur
+851. La performance annoncée dépend donc d'un petit nombre de positions,
+et la période mesurée a été exceptionnellement favorable à l'or. Aucun ratio de Sharpe
+ne rend visible cette dépendance.
 \end{insightbox}
+
+\input{tables/mt5_by_sleeve.tex}
 
 \paragraph{Quatre conclusions pour la décision.}
 \begin{enumerate}
-\item \textbf{Sharpe hors échantillon supérieur à l'in-sample} (1.44 contre 0.94)~---
-amélioration qui valide la robustesse de la structure multi-moteurs.
-\item \textbf{Bootstrap P5 du drawdown à $-30.68\,\%$}, sous la contrainte de 35\,\%
-avec $\approx 4$~pp de marge de sécurité.
-\item \textbf{Six années positives sur sept} en walk-forward~--- seule 2019 reste
-marginalement négative dans un régime de fin de cycle défavorable.
-\item \textbf{Sept tests de robustesse statistique avancés franchis}~: intervalles
-de confiance bootstrap, corrections pour biais de sélection et tests multiples,
-mesure de sur-ajustement par validation croisée combinatoire, et stabilité
-temporelle des métriques~--- voir page~6.
+\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~:
+35.4\,\% de croissance annualisée, pour un profit net de
+\$40,267 sur un dépôt de \$10,000.
+\item \textbf{Le repli maximal d'équité atteint 44\,\%}~---
+prix direct du niveau de risque choisi, le dimensionnement multipliant le risque dans
+la proportion exacte où il multiplie le rendement.
+\item \textbf{La performance repose sur une sleeve}~: retirer l'or ramènerait le
+résultat à environ un cinquième de son niveau.
+\item \textbf{Cinq tests de robustesse sur six sont franchis}~; celui de
+sur-ajustement échoue de peu (probabilité $0.532$ pour un seuil de $0.5$), ce qui
+reflète le grand nombre de configurations évaluées sur la même fenêtre historique~---
+voir page~6.
 \end{enumerate}
 
 \clearpage
@@ -156,10 +165,11 @@ temporelle des métriques~--- voir page~6.
 \vspace{-0.4em}
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
-La stratégie repose sur \textbf{trois moteurs de rendement orthogonaux}, dont les
+La stratégie repose sur \textbf{quatre moteurs de rendement quasi orthogonaux}, dont les
 corrélations inter-moteurs sont structurellement faibles voire négatives. L'allocation
-est \emph{statique} ($80/10/10$) --- les tests d'allocations \emph{regime-adaptive}
-et \emph{risk-parity} sous-performent sur la période d'étude.
+est \emph{statique} ($72/9/9/10$) --- les tests d'allocations \emph{regime-adaptive}
+sous-performent sur la période d'étude, et le \emph{risk-parity} inverse-vol fait jeu
+égal sans être retenu à ce stade.
 
 \vspace{0.3em}
 \begin{center}
@@ -168,19 +178,24 @@ et \emph{risk-parity} sous-performent sur la période d'étude.
 \multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Moteur 1 --- MR Macro}}} &
 \multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Moteur 2 --- TS Momentum}}} &
 \multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Moteur 3 --- RSI Daily}}} \\[0.2em]
-\multicolumn{1}{c}{\small 80\,\% du portefeuille} &
-\multicolumn{1}{c}{\small 10\,\% du portefeuille} &
-\multicolumn{1}{c}{\small 10\,\% du portefeuille} \\
+\multicolumn{1}{c}{\small 72\,\% du portefeuille} &
+\multicolumn{1}{c}{\small 9\,\% du portefeuille} &
+\multicolumn{1}{c}{\small 9\,\% du portefeuille} \\
 \midrule
 Mean reversion intraday sur EUR-USD minute, filtre VWAP + Bollinger(80, 5$\sigma$)
 + session 6--14~UTC + filtre macro (courbe 10Y-2Y, chômage). &
 Suivi de tendance daily sur trois paires (EUR, GBP, JPY), EMA 20/50 + RSI(7)
 filtre, vol targeting par paire 10\,\%. USD-CAD explicitement exclu. &
-Mean reversion daily RSI(14) sur quatre paires equal-weight. Sharpe standalone
-modeste (0.16) mais diversificateur anti-corrélé clé. \\[0.5em]
-Sharpe 0.82 & Sharpe 0.57 & Sharpe 0.16 \\
+Mean reversion daily RSI(14) sur trois paires equal-weight. Sharpe standalone
+modeste mais diversificateur anti-corrélé. \\[0.5em]
 \end{tabular}
 \end{center}
+
+\vspace{0.4em}
+\noindent\small\textbf{Moteur 4 --- Momentum Or} (10\,\% du portefeuille)~: suivi de
+tendance journalier sur XAU-USD, dimensionnement plat, couche de volatilité propre.
+Quasi orthogonal au trio FX, il rend le mandat de rendement atteignable~--- et
+concentre à lui seul près de 80\,\% du résultat mesuré à l'exécution.\normalsize
 
 \begin{insightbox}
 \textbf{La leçon méthodologique centrale~:} un moteur à Sharpe standalone faible peut
@@ -191,27 +206,28 @@ Moteur~3 est positif exactement dans les années 2019, 2023 et 2026~YTD où les 
 autres moteurs perdent.
 \end{insightbox}
 
-\paragraph{Couche d'overlay.} Un ciblage de volatilité global s'applique aux trois
-moteurs combinés~: $\text{lev}_{t} = \min\!\left(\frac{\sigma^{*}}{\max(\sigma_{21}, \sigma_{63})},\ 12.0\right)$
-avec $\sigma^{*} = 0.28$ et lag d'un bar pour éviter tout look-ahead. Le plafond de
-levier à $12\times$ est confortablement sous la limite ESMA de $30\times$ pour les
-paires G10. Le drawdown cap (disponible dans le code) est volontairement désactivé
-sur cette configuration~: les tests empiriques ont montré qu'il \emph{dégrade} le
-Sharpe (0.88 $\rightarrow$ 0.62) parce qu'il déleverage pendant les phases de rebond.
+\paragraph{Couche d'overlay.} Un ciblage de volatilité global s'applique aux quatre
+moteurs combinés~: $\text{lev}_{t} = \min\!\left(\frac{\sigma^{*}}{\max(\sigma_{21}, \sigma_{63})},\ 31.0\right)$
+avec $\sigma^{*} = 0.37$ et lag d'un bar pour éviter tout look-ahead. Le niveau de
+levier requis doit être vérifié auprès du courtier~: il dépasse la limite ESMA de
+$30\times$ applicable aux paires G10 pour la clientèle retail. Le plafonnement de
+drawdown reste désactivé~: les tests ont montré qu'il dégrade le Sharpe en
+déleveragant pendant les phases de rebond, et le mandat ne fixe plus de seuil de repli
+à faire respecter. \textbf{Aucun coupe-circuit automatique n'est donc actif.}
 
 \clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 4 --- PERFORMANCE IS + WALK-FORWARD
 % ═══════════════════════════════════════════════════════════════════════
-\section*{3. Performance in-sample 2019--2025}
+\section*{3. Performance de recherche in-sample}
 \vspace{-0.4em}
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{equity_combined_logscale.png}
-\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération ni ciblage de volatilité}~; la courbe épaisse bordeaux est le portefeuille combiné après application des poids $80/10/10$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 28\,\%$, plafond $12\times$). La différence de niveau reflète l'amplification par le levier, pas une supériorité intrinsèque du combiné.}
+\caption{Courbes d'équité cumulative, base 100 au 1\textsuperscript{er}~avril 2019, échelle logarithmique. Les trois courbes fines représentent les moteurs individuels \emph{sans pondération ni ciblage de volatilité}~; la courbe épaisse bordeaux est le portefeuille combiné après application des poids $72/9/9/10$ \emph{et} de la couche de ciblage de volatilité (cible $\sigma^\star = 37\,\%$, plafond $31\times$). La différence de niveau reflète l'amplification par le levier, pas une supériorité intrinsèque du combiné.}
 \end{figure}
 
 \begin{minipage}{0.55\textwidth}
@@ -221,11 +237,11 @@ Sharpe (0.88 $\rightarrow$ 0.62) parce qu'il déleverage pendant les phases de r
 \toprule
 Métrique & Valeur \\
 \midrule
-CAGR & 13.33\,\% \\
-Volatilité annualisée & 14.36\,\% \\
-Max Drawdown & $-17.93\,\%$ \\
-Sharpe Ratio & 0.94 \\
-Années positives walk-forward & 6/7 \\
+CAGR & 25.75\,\% \\
+Volatilité annualisée & 36.82\,\% \\
+Max Drawdown & $-58.49\,\%$ \\
+Sharpe Ratio & 0.81 \\
+Fenêtres positives walk-forward & 6/7 \\
 \bottomrule
 \end{tabular}
 \end{minipage}
@@ -233,10 +249,10 @@ Années positives walk-forward & 6/7 \\
 \small
 \textbf{Commentaires par année} \\[0.3em]
 \begin{itemize}[leftmargin=0.8em]
-\item 2019 ($-0.59$)~: seule année négative, régime \emph{late-cycle} défavorable
-\item 2022 ($+2.73$)~: pic de performance, alignement des trois moteurs
-\item 2024 ($+2.31$)~: second pic, Moteur~1 dominant en sessions L/NY
-\item 2025 ($+1.80$)~: post-ECB/BoJ divergence captée par Moteur~2
+\item 2019 ($+2.14$)~: meilleure fenêtre de la série
+\item 2021 ($-0.56$)~: seule fenêtre négative
+\item 2024 ($+2.09$)~: quatre moteurs alignés
+\item 2025--2026-04 ($+3.71$)~: fenêtre de quinze mois, recouvre en partie la tranche gelée
 \end{itemize}
 \end{minipage}
 
@@ -251,15 +267,18 @@ Années positives walk-forward & 6/7 \\
 \vspace{-0.4em}
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
-\textbf{Fenêtre OOS 2025-04 $\rightarrow$ 2026-04.} Un vrai surajustement aurait
-typiquement produit une dégradation sévère (Sharpe qui passe de $>1$ à proche de zéro).
-Au contraire, \textbf{l'OOS produit un Sharpe de 1.44, supérieur à l'IS}. Le résultat
-réfute empiriquement l'hypothèse de \textit{data snooping} majeur.
+\textbf{Fenêtre hors échantillon.} Un vrai surajustement aurait typiquement produit
+une dégradation sévère (Sharpe qui passe de $>1$ à proche de zéro). Ici le Sharpe hors
+échantillon atteint 2.94 contre 0.81 en in-sample, et le repli
+maximal y est nettement plus faible. Cela réfute un surajustement \emph{majeur}, sans
+établir que la performance se reproduira~--- le test de sur-ajustement de la page~6
+échoue de peu. Le CAGR annualisé sur cette fenêtre courte n'est pas une prévision~: il
+extrapole quelques mois particulièrement favorables.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{oos_zoom.png}
-\caption{Zoom sur la fenêtre hors échantillon 2025-04 $\rightarrow$ 2026-04, rebasée à 100 au début de la fenêtre. Le drawdown maximal OOS reste très contenu à $-6.27\,\%$ contre $-17.93\,\%$ en in-sample.}
+\caption{Zoom sur la fenêtre hors échantillon, rebasée à 100 au début de la fenêtre. Le repli maximal y atteint $-19.37\,\%$ contre $-58.49\,\%$ en in-sample.}
 \end{figure}
 
 \textbf{Bootstrap historique par blocs mobiles sur la période complète.}
@@ -268,11 +287,14 @@ réfute empiriquement l'hypothèse de \textit{data snooping} majeur.
 
 \begin{insightbox}
 \textbf{Trois observations clés du stress test~:}
-(1) le P5 du Max Drawdown à $-30.68\,\%$ est strictement sous la contrainte utilisateur
-de 35\,\% avec $\approx 4$~pp de marge~;
-(2) 99.8\,\% des trajectoires bootstrap sont positives~;
-(3) la fraction \enquote{cible atteinte} est de 39\,\% ---~les 61\,\% restants sortent
-\emph{par le haut} (CAGR $>$15\,\%), ce qui est un \enquote{bon problème}.
+(1) le repli médian des trajectoires est de $-52.5\,\%$ et son
+5\textsuperscript{e}~percentile de $-74.7\,\%$~--- une trajectoire
+sur vingt perdrait environ trois quarts du capital, sans plafond pour l'interrompre~;
+(2) 97.7\,\% des trajectoires restent positives~: c'est l'amplitude
+du risque qui est en jeu, pas le signe de l'\emph{edge}~;
+(3) la fraction \enquote{cible atteinte} est de 18.9\,\%,
+le CAGR allant de $5.4\,\%$ à $67.6\,\%$ entre les
+5\textsuperscript{e} et 95\textsuperscript{e} percentiles.
 \end{insightbox}
 
 \clearpage
@@ -280,15 +302,14 @@ de 35\,\% avec $\approx 4$~pp de marge~;
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 6 --- ROBUSTESSE STATISTIQUE AVANCÉE (SYNTHÈSE)
 % ═══════════════════════════════════════════════════════════════════════
-\section*{5. Robustesse statistique --- sept tests avancés}
+\section*{5. Robustesse statistique --- six tests avancés}
 \vspace{-0.4em}
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
-La section~11 du rapport complet applique sept tests statistiques exigeants qui
-corrigent pour les trois biais classiques~: bruit d'estimation sur échantillon fini,
-biais de sélection lorsqu'on rapporte la meilleure configuration parmi plusieurs
-testées, et dépendance temporelle des rendements. Tous convergent vers un verdict
-favorable.
+Le rapport complet applique des tests statistiques exigeants qui corrigent les trois
+biais classiques~: bruit d'estimation sur échantillon fini, biais de sélection lorsqu'on
+rapporte la meilleure configuration parmi plusieurs testées, et dépendance temporelle
+des rendements. Cinq d'entre eux sont franchis~; celui de sur-ajustement échoue.
 
 \input{tables/robustness_verdict_summary.tex}
 
@@ -297,17 +318,19 @@ favorable.
 \includegraphics[width=0.85\linewidth]{robustness_metric_ci_forest.png}
 \caption{Intervalles de confiance bootstrap à 95\,\% sur les cinq métriques principales.
 Les diamants orange marquent les valeurs observées, les barres bleues représentent
-les intervalles de confiance. La borne basse du Sharpe ($0.365$) est strictement
+les intervalles de confiance. La borne basse du Sharpe est strictement
 positive, ce qui est la condition statistique minimale de présence d'un \emph{edge}.}
 \end{figure}
 
 \begin{insightbox}
-\textbf{Le portefeuille Apogee n'est pas un artefact statistique.} Le Sharpe observé
-dépasse de plus de trois fois l'espérance du maximum sous l'hypothèse nulle
-d'absence d'\emph{edge}. Après correction pour tests multiples, le Sharpe effectif
-retombe seulement de $0.97$ à $0.84$ (ratio de survie $87\,\%$). La probabilité
-de surajustement calculée par validation croisée combinatoire est de $30.5\,\%$,
-bien sous le seuil de danger de $50\,\%$.
+\textbf{L'\emph{edge} résiste, la sélection est en cause.} Le Sharpe observé dépasse
+largement l'espérance du maximum sous l'hypothèse nulle d'absence d'\emph{edge}, et il
+survit à la correction pour tests multiples (ratio de survie $79\,\%$). En revanche, la
+probabilité de surajustement calculée par validation croisée combinatoire atteint
+$53.2\,\%$, au-dessus du seuil de danger de $50\,\%$~: plus de deux cents configurations
+ont été évaluées sur la même fenêtre historique, et cela se paie. C'est la raison pour
+laquelle une tranche de données a été gelée et pour laquelle le \emph{paper-trade}
+préalable n'est pas une formalité.
 \end{insightbox}
 
 \clearpage
@@ -331,7 +354,7 @@ fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement de $0.31$ signifie que dans 69\,\% des découpages temporels possibles, le classement des composantes reste stable~--- loin sous le seuil de danger de $0.5$.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.532$~: dans un peu moins de la moitié des découpages temporels possibles seulement, le classement reste stable. C'est au-dessus du seuil de danger de $0.5$.}
 \end{figure}
 
 \clearpage
@@ -347,33 +370,36 @@ fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_rolling_stability.png}
 \caption{Sharpe, Sortino et Calmar glissants sur fenêtre 252~jours. Les trois
-courbes restent majoritairement positives sur 2019--2026, avec un creux en 2019
-(cohérent avec le Sharpe walk-forward $-0.59$) et un pic en 2022 ($+2.73$).}
+courbes restent majoritairement positives sur la période, avec un creux cohérent
+avec la seule fenêtre walk-forward négative.}
 \end{figure}
 
 \vspace{0.3em}
 
 \begin{thesisbox}
-\textbf{Sept tests de robustesse sont franchis.} Les cinq risques résiduels
-ci-dessous persistent \emph{malgré} cette validation statistique rigoureuse. Ils
-n'invalident pas les résultats mais imposent la discipline de déploiement de la
-page~9.
+\textbf{Cinq tests de robustesse sur six sont franchis~; celui de sur-ajustement
+échoue.} Les risques résiduels ci-dessous persistent \emph{malgré} cette validation, et
+deux d'entre eux portent sur la nature même de la performance plutôt que sur sa mesure.
+Ils imposent la discipline de déploiement de la page~9.
 \end{thesisbox}
 
-\paragraph{Cinq avertissements à retenir.}
+\paragraph{Six avertissements à retenir.}
 \begin{enumerate}[leftmargin=1.2em]
-\item \textbf{Data snooping résiduel} --- mitigé empiriquement par Sharpe OOS ($1.44$)
-$>$ IS ($0.94$). Action~: paper-trade $\geq 3$~mois avant capital réel.
-\item \textbf{Coûts de transaction au niveau portefeuille} --- estimés à 5--10~bp/an,
-négligeables face au CAGR cible. Surveillance live du \emph{slippage} réel requise.
-\item \textbf{Levier 12$\times$ et margin buffer} --- sous la limite ESMA de 30$\times$,
-mais impose une \textbf{réserve cash hors-broker $\geq 30\,\%$}. Capital~à~risque
-effectif $\approx 8\times$ (non $12\times$).
-\item \textbf{Corrélation inter-moteurs statique} --- calculée plein-période. Alerte
-rolling~63~jours si une paire dépasse $+0.5$ en live.
-\item \textbf{Hyperparamètres des sous-stratégies} --- issus de grid searches.
-Plateau visible autour des valeurs retenues~; risque d'\textit{overfit} local
-modéré. Revérification trimestrielle recommandée.
+\item \textbf{Le résultat repose sur une seule sleeve} --- l'or produit près de 80\,\%
+du profit pour 10\,\% de l'allocation, sur une période de hausse exceptionnelle du
+métal. Action~: suivi de la contribution par sleeve, réexamen du poids sur données
+fraîches.
+\item \textbf{Le test de sur-ajustement échoue} ($0.532$ contre un seuil de $0.5$).
+Action~: tranche de données gelée, \emph{paper-trade} $\geq 3$~mois avant capital réel.
+\item \textbf{Aucun coupe-circuit n'est actif} --- le plafonnement de drawdown est
+désactivé et le mandat ne fixe plus de seuil. Repli d'équité constaté~: 44\,\%.
+Action~: dimensionner la réserve sur ce chiffre, plafond réactivable à la demande.
+\item \textbf{Le dimensionnement multiplie risque et rendement à parts égales} ---
+paramètre unique, documenté, abaissable sans toucher aux signaux.
+\item \textbf{Le levier requis dépasse la limite ESMA retail} de 30$\times$ sur les
+paires G10. À vérifier auprès du courtier avant déploiement.
+\item \textbf{Hyperparamètres des sous-stratégies} --- issus de balayages de grille.
+Plateau visible autour des valeurs retenues~; revérification périodique recommandée.
 \end{enumerate}
 
 \clearpage

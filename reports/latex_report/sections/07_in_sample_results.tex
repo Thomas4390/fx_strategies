@@ -1,37 +1,51 @@
-\section{Performance historique in-sample (2019--2025)}
-\label{sec:in_sample}
+\section{Performance de recherche in-sample}
+\label{sec:is_results}
+
+\begin{warningbox}
+\textbf{Cette section mesure le moteur de recherche, pas le compte.} Les chiffres qui suivent proviennent du backtest \texttt{vectorbtpro}~; ils servent à éprouver la structure de la stratégie sur des trajectoires alternatives, pas à annoncer une performance. Les chiffres de performance publiés sont ceux de l'exécution MetaTrader~5 (section~\ref{sec:executive_summary}). Les deux ne sont pas transposables l'un à l'autre --- la section~\ref{sec:research_vs_execution} explique pourquoi.
+\end{warningbox}
 
 \subsection{Métriques agrégées}
+
+\input{tables/metrics_summary.tex}
 
 \input{tables/sleeve_standalone.tex}
 
 \begin{itemize}
-\item \textbf{CAGR}~: $13.33\,\%$
-\item \textbf{Volatilité annualisée}~: $14.36\,\%$
-\item \textbf{Max Drawdown}~: $-17.93\,\%$
-\item \textbf{Sharpe Ratio}~: $0.94$
-\item \textbf{Nombre de barres journalières}~: 2260
+\item \textbf{CAGR}~: $25.75\,\%$
+\item \textbf{Volatilité annualisée}~: $36.82\,\%$
+\item \textbf{Max Drawdown}~: $-58.49\,\%$
+\item \textbf{Sharpe Ratio}~: $0.81$
+\item \textbf{Nombre de barres journalières}~: 2647
 \end{itemize}
+
+\begin{insightbox}
+\textbf{Un repli de 58\,\% sur la mesure de recherche.} Ce n'est pas une anomalie de calcul~: c'est ce que produit mécaniquement une cible de volatilité de 37\,\% appliquée à un portefeuille dont la volatilité naturelle est de quelques points. Le moteur de recherche atteint cette cible~; le moteur d'exécution, dont le dimensionnement passe par un budget de risque borné par le stop, n'y parvient pas et réalise un repli plus faible. L'écart entre les deux chiffres est une différence de définition, pas une contradiction.
+\end{insightbox}
 
 \subsection{Validation par fenêtres annuelles (walk-forward)}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{walkforward_sharpe.png}
-\caption{Sharpe annuel du portefeuille combiné sur la période historique. Six années sur sept sont positives, seule 2019 reste marginalement négative.}
+\caption{Sharpe annuel du portefeuille combiné sur la période historique, tel que mesuré par le moteur de recherche. Le détail année par année figure au tableau~\ref{tab:walkforward_yearly}.}
 \end{figure}
 
 \input{tables/walkforward_yearly.tex}
 
 \begin{itemize}
-\item \textbf{2019 ($-0.59$)}~: seule année négative persistante. Le Moteur~1 enregistre 44~trades (le volume maximum de la série) mais un Sharpe de $-0.64$. 2019 était une année de fin de cycle avec courbe des taux compressée autour de zéro~--- le filtre macro laissait passer les entrées, mais la \emph{mean reversion} intraday ne fonctionnait pas dans le régime \emph{range-bound} avec \emph{breakouts} brusques.
-\item \textbf{2020 ($+0.67$)}~: le choc Covid a causé une chute rapide mais les stratégies à volatilité ciblée ont bien géré. Le Moteur~1 n'exécute que 3~trades (le filtre macro bloque la majorité du temps), mais le rendement standalone de $+0.69\,\%$ est propre.
-\item \textbf{2021 ($+0.80$)}~: année de transition macro, volatilité compressée. Le portefeuille reste positivement orienté sans pic marquant.
-\item \textbf{2022 ($+2.73$)}~: pic de performance annuelle. Le Moteur~1 atteint un Sharpe de 2.23, le Moteur~2 capte le cycle de hausses de la Fed et la parité EUR-USD. C'est l'année où les trois composantes s'alignent.
-\item \textbf{2023 ($+0.35$)}~: année charnière, où l'ajout du Moteur~3 bascule le portefeuille du négatif (configuration sans RSI) au positif. Le Moteur~3 produit un Sharpe de $+0.92$ qui comble exactement le trou laissé par les faiblesses du Moteur~1 ($-0.28$) et du Moteur~2 ($+0.55$ modeste).
-\item \textbf{2024 ($+2.31$)}~: second pic de la série. Les trois moteurs tournent simultanément, avec une contribution déterminante du Moteur~1 sur les sessions Londres--New~York.
-\item \textbf{2025 ($+1.80$)}~: meilleure année de la seconde moitié de période, grâce au Moteur~2 qui capte les divergences post-BCE et post-BoJ (EUR-USD à $+1.88$ Sharpe standalone en 2025).
+\item \textbf{2019 ($+2.14$)}~: la meilleure fenêtre de la série. Le régime de fin de cycle, longtemps présenté comme défavorable à la stratégie, lui est en réalité favorable sous la configuration actuelle.
+\item \textbf{2020 ($+0.13$)}~: année du choc Covid, tout juste positive. Le filtre macro bloque le Moteur~1 pendant l'essentiel de la période, le privant du rebond.
+\item \textbf{2021 ($-0.56$)}~: seule fenêtre négative de la série.
+\item \textbf{2022 ($+1.51$)}~: le cycle de hausses de la Fed et la parité EUR-USD alimentent le suivi de tendance.
+\item \textbf{2023 ($+0.42$)}~: année modeste au niveau agrégé.
+\item \textbf{2024 ($+2.09$)}~: seconde meilleure fenêtre, les quatre moteurs alignés.
+\item \textbf{2025 à mars 2026 ($+3.71$)}~: dernière fenêtre, plus longue que les autres (quinze mois). Elle recouvre en partie la tranche de données gelée par la politique de \emph{holdout}~--- elle est rapportée ici à titre de mesure, elle n'a servi à aucun choix de paramètre.
 \end{itemize}
+
+\begin{warningbox}
+\textbf{Ces Sharpe de fenêtre ne sont pas des rendements annuels.} Ils mesurent la régularité du signal à l'intérieur de chaque fenêtre, pas ce que le compte aurait gagné. Le résultat année par année du compte figure au tableau~\ref{tab:mt5_yearly}, et il raconte une histoire différente~: deux années négatives, et une concentration du gain sur 2024--2026.
+\end{warningbox}
 
 \subsection{Heatmap des rendements mensuels}
 
@@ -46,7 +60,7 @@
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{drawdown_underwater.png}
-\caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal de $-17.93\,\%$ est atteint en 2019, avec des drawdowns de second ordre en 2020 et début 2023. Les récupérations sont généralement rapides, à l'exception de 2019.}
+\caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal atteint $-58.49\,\%$ sur la fenêtre in-sample de recherche.}
 \end{figure}
 
 \subsection{Sharpe glissant sur 63 jours}
@@ -70,5 +84,5 @@
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{sleeve_monthly_contribution.png}
-\caption{Contribution mensuelle pondérée (80 / 10 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
+\caption{Contribution mensuelle pondérée (72 / 9 / 9 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
 \end{figure}

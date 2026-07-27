@@ -1,0 +1,40 @@
+\section{Recherche et exécution~: deux mesures, un seul compte}
+\label{sec:research_vs_execution}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{C}{e} portefeuille est mesuré par deux moteurs différents, et il est essentiel de comprendre pourquoi leurs chiffres ne se superposent pas. La recherche est conduite sous \texttt{vectorbtpro}, qui permet d'explorer rapidement des milliers de configurations. L'exécution est assurée par un \emph{Expert Advisor} MetaTrader~5, qui passe les ordres réels. Les deux ont été rapprochés ligne à ligne sur les signaux~--- ils déclenchent aux mêmes barres~--- mais ils ne dimensionnent pas les positions de la même manière.
+
+\subsection{Le mot « levier » ne désigne pas la même quantité}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{3.4cm}p{10.6cm}}
+\toprule
+\textbf{Recherche (vbt)} & Le levier multiplie directement le \textbf{poids de position}. Un levier de 12 signifie que le portefeuille est exposé à douze fois son capital sur la série de rendements considérée. \\
+\textbf{Exécution (MT5)} & Le levier multiplie un \textbf{budget de risque borné par la distance au stop}. Le notionnel ouvert vaut le pourcentage de capital risqué divisé par l'écart entre le prix d'entrée et le stop~--- un nombre volontairement petit, que le levier vient ensuite amplifier. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La conséquence est qu'à réglage nominal identique, les deux moteurs n'ouvrent pas la même taille. Le moteur de recherche atteint la volatilité qu'il vise~; le moteur d'exécution, dont le levier est plafonné par le rapport entre volatilité cible et plancher de volatilité, ne peut pas générer assez de notionnel pour l'atteindre. L'écart n'est pas un défaut de portage~: c'est une différence de définition, qu'aucun réglage de sleeve ne peut résorber.
+
+\begin{insightbox}
+\textbf{Sous ciblage de volatilité, aucun paramètre de dimensionnement d'une sleeve ne déplace la volatilité du portefeuille.} Diviser par six l'exposition d'un moteur fait mécaniquement monter le levier global d'autant, et les métriques agrégées ne bougent pas. Seuls les budgets de risque de base et le plafond de levier comptent. Ce résultat, contre-intuitif, a coûté une journée d'investigation avant d'être établi.
+\end{insightbox}
+
+\subsection{Comment l'échelle a été calibrée}
+
+Plutôt que de réconcilier deux définitions incompatibles, un facteur d'échelle unique (\texttt{Inp\_RiskScale}) a été introduit côté exécution~: il met à l'échelle les budgets de risque des quatre sleeves d'un même coefficient. Sa valeur a été mesurée dans le testeur, pas déduite d'une formule.
+
+Le rendement répond quasi linéairement à ce facteur, tandis que le nombre de transactions ne bouge pas d'une unité~: le paramètre dimensionne les positions sans toucher aux signaux. Le Sharpe s'érode lentement à mesure que la taille augmente, les coûts de transaction pesant plus lourd.
+
+\begin{warningbox}
+\textbf{Ce réglage multiplie le risque réellement pris dans la proportion exacte où il multiplie le rendement.} Il a été fixé sous instruction explicite du mandant, le risque ayant été déclaré non contraignant. À échelle unitaire, le même portefeuille produirait un rendement environ quatre fois inférieur, pour un repli réduit dans la même proportion.
+\end{warningbox}
+
+\subsection{Ce qu'il faut en retenir pour lire ce document}
+
+\begin{enumerate}
+\item \textbf{Les chiffres de performance publiés sont ceux de MetaTrader~5} (section~\ref{sec:executive_summary}). Ils incluent le \emph{spread} du courtier, l'arrondi des lots et les frais de portage.
+\item \textbf{Les chiffres de recherche servent à éprouver la structure}, pas à annoncer un rendement. Les sections~\ref{sec:is_results} à~\ref{sec:advanced_robustness} les emploient pour répondre à une question différente~: la stratégie tient-elle sur des trajectoires que l'histoire n'a pas produites~?
+\item \textbf{Les deux ne sont pas transposables l'un à l'autre.} Un rendement annualisé issu de la recherche ne préjuge pas de ce que le compte produirait, et ce document ne l'utilise jamais à cette fin.
+\end{enumerate}

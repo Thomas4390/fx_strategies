@@ -1,0 +1,43 @@
+\section{Moteur 4 --- Momentum sur l'Or (10\,\%)}
+\label{sec:gold_momentum}
+
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} quatrième moteur est le plus récent et le seul à sortir de l'univers des devises. Il suit la tendance de l'or (XAU-USD) sur données journalières. Son entrée en production répond à une contrainte précise~: sans lui, le mandat de rendement était hors d'atteinte.
+
+\subsection{Pourquoi l'or, et pourquoi maintenant}
+
+\begin{thesisbox}
+Le trio FX, combiné et non leviérié, rend 2,2\,\% par an pour une volatilité de 5,8\,\%. Le ciblage de volatilité peut amplifier ce résultat, mais pas indéfiniment~: au-delà d'un certain levier, le \emph{drag} de variance détruit plus de rendement composé qu'il n'en crée, et le rendement plafonne autour de 32\,\% avant de retomber. Un mandat à 40\,\% ne pouvait donc pas être servi par un levier plus élevé~--- il exigeait une source de rendement supplémentaire, faiblement corrélée aux trois autres.
+\end{thesisbox}
+
+L'or remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À 10\,\% de poids, il porte le Sharpe du portefeuille combiné de 0,66 à 1,08, ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+
+\subsection{Mécanique du signal}
+
+\begin{enumerate}
+\item \textbf{Signal de tendance} sur le cours de clôture journalier de XAU-USD, mesuré sur plusieurs horizons de \emph{lookback} dont les votes sont agrégés.
+\item \textbf{Séance de référence}~: la journée de trading est bornée à 17h00, heure de New York, conformément à la convention du courtier. Cette borne a fait l'objet d'un verrou de test dédié~--- une définition ambiguë de la séance est la manière habituelle dont deux portages d'une même stratégie divergent.
+\item \textbf{Dimensionnement plat}~: la taille de position ne varie ni avec les gains ni avec les pertes récentes. Les variantes progressives (martingale, anti-martingale) ont été évaluées et écartées~; leur classement s'inversait d'une fenêtre de données à la suivante, ce qui indique qu'elles mesurent la séquence d'une période plutôt qu'une propriété persistante.
+\item \textbf{Couche de risque propre}~: la sleeve porte son propre ciblage de volatilité avant d'entrer dans la couche globale. Elle n'est donc pas multipliée par le levier appliqué aux sleeves FX, sous peine d'empiler deux fois la même correction.
+\end{enumerate}
+
+\subsection{Performance historique}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{sleeve_gold_momentum_equity.png}
+\caption{Équité et drawdown du Moteur~4 pris isolément (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}
+\end{figure}
+
+\subsection{Épisodes représentatifs}
+
+\input{tables/trade_examples_gold_momentum.tex}
+
+\subsection{Ce que ce moteur doit à sa période}
+
+\begin{warningbox}
+\textbf{2019--2026 a été un marché haussier de l'or d'une ampleur inhabituelle.} Le prix du métal a plus que doublé sur la fenêtre. Un moteur de suivi de tendance y réalise mécaniquement sa meilleure performance possible, et rien dans les données disponibles ne permet de distinguer la part qui revient au signal de celle qui revient au régime.
+
+Deux constats l'illustrent. D'abord, le Sharpe du portefeuille croît de façon monotone avec le poids accordé à l'or sur toute la plage testée~: l'optimum est \emph{à la borne} de la grille, ce qui est la signature d'un biais de période et non d'un optimum. Le poids a été arrêté à 10\,\% pour cette raison, alors que l'optimisation en réclamait davantage. Ensuite, à l'exécution, ce moteur produit près de 80\,\% du résultat net du portefeuille pour 4\,\% de ses transactions.
+
+Le taux de gain de la sleeve est de 31\,\%~: elle perd deux fois sur trois. Sa rentabilité tient entièrement à l'amplitude de quelques positions gagnantes, ce qui est le comportement attendu d'un suivi de tendance --- et ce qui rend son résultat futur d'autant plus dépendant de la persistance de la tendance.
+\end{warningbox}

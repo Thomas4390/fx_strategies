@@ -1,17 +1,17 @@
 \begin{table}[H]
 \centering
-\caption{Sensibilité du Sharpe à (\texttt{target\_vol}, \texttt{max\_leverage}). Le plateau autour de 0.97 confirme la robustesse du choix (0.28, 12$\times$).}
+\caption{Sensibilité du Sharpe à (\texttt{target\_vol}, \texttt{max\_leverage}). Le point de production ($0.37$, $31\times$) y rend un Sharpe de 1.084, contre 1.084 au meilleur point de la grille ($0.50$, $31\times$).}
 \label{tab:sensitivity}
 \begin{tabular}{lrrr}
 \toprule
-Config & ml=10 & ml=15 & ml=20 \\
+Config & ml=20 & ml=31 & ml=45 \\
 \midrule
-tv=0.15 & 0.721 & 0.721 & 0.721 \\
-tv=0.18 & 0.721 & 0.721 & 0.721 \\
-tv=0.20 & 0.721 & 0.721 & 0.721 \\
-tv=0.22 & 0.727 & 0.721 & 0.721 \\
-tv=0.25 & 0.738 & 0.721 & 0.721 \\
-tv=0.28 & 0.752 & 0.721 & 0.721 \\
+tv=0.20 & 1.084 & 1.084 & 1.084 \\
+tv=0.28 & 1.084 & 1.084 & 1.084 \\
+tv=0.33 & 1.084 & 1.084 & 1.084 \\
+tv=0.37 & 1.084 & 1.084 & 1.084 \\
+tv=0.42 & 1.081 & 1.084 & 1.084 \\
+tv=0.50 & 1.065 & 1.084 & 1.084 \\
 \bottomrule
 \end{tabular}
 \end{table}
