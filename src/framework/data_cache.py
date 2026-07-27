@@ -82,7 +82,10 @@ _CACHE_KEY_JSON = _CACHE_DIR / "strategy_daily_returns.key.json"
 #               retuné, target_vol 0.55 / max_leverage 6.6. CAGR ~38% en vbt
 #               et ~41% en MT5 sur 2021-2025, contre 17% en MT5 pour la grille
 #               courte — voir gold_momentum.DEFAULT_LOOKBACKS.
-_SLEEVES_VERSION = "v10-gold-sizing"
+# v11-momentum-trio : la sleeve Gold_Momentum devient le trio or+JPY+argent
+#               ({XAU-USD, USD-JPY, XAG-USD} équipondéré sur les n configurés),
+#               à l'image de Inp_Gold_Symbols=XAUUSD,USDJPY,XAGUSD dans l'EA.
+_SLEEVES_VERSION = "v11-momentum-trio"
 
 
 # ═══════════════════════════════════════════════════════════════════════

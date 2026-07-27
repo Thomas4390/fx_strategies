@@ -30,11 +30,11 @@
 //============================================================ INPUTS
 
 // === Allocation & Risk =============================================
-input double Inp_AllocMRMacro       = 0.72;     // sum across all sleeves must equal 1.0
+input double Inp_AllocMRMacro       = 0.62;     // sum across all sleeves must equal 1.0
 input double Inp_AllocTSMomentum    = 0.09;
 input double Inp_AllocRSIDaily      = 0.09;
 input double Inp_AllocH1Momentum    = 0.0;      // optional sleeve, off by default
-input double Inp_AllocGoldMomentum  = 0.10;     // Sleeve 5 — in production since 2026-07-26
+input double Inp_AllocGoldMomentum  = 0.20;     // Sleeve 5 — multi-instrument trio since 2026-07-27
 
 // Tail-risk protections.
 //
@@ -144,7 +144,7 @@ input int    Inp_H1_SlippageBps     = 12;
 // Inp_Gold_Symbols is a CSV: the sub-equity is split equally across the
 // instruments listed, so the default single symbol keeps the sizing of the
 // mono-instrument sleeve untouched.
-input string Inp_Gold_Symbols       = "XAUUSD";
+input string Inp_Gold_Symbols      = "XAUUSD,USDJPY,XAGUSD";
 input int    Inp_Gold_LookbackA     = 40;      // 0 disables a slot
 input int    Inp_Gold_LookbackB     = 60;
 input int    Inp_Gold_LookbackC     = 120;

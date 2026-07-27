@@ -67,10 +67,13 @@ from strategies.combined_portfolio import (
 # near-orthogonal diversifiers whose 2019/2023 alpha plugs the two
 # weak years of the MR Macro standalone.
 PRODUCTION_WEIGHTS: dict[str, float] = {
-    "MR_Macro": 0.72,        # 0.80 x 0.90, le trio garde ses ratios internes
+    "MR_Macro": 0.62,        # 2026-07-27 : -10 pp, la réduction ne porte que sur MR
     "TS_Momentum_3p": 0.09,
     "RSI_Daily_3p": 0.09,    # Phase E.3 retire USDJPY (was RSI_Daily_4p)
-    "Gold_Momentum": 0.10,   # 2026-07-26 : la sleeve or entre en production
+    # 2026-07-27 : la sleeve momentum passe de l'or seul (0.10) au trio
+    # multi-instruments {XAU-USD, USD-JPY, XAG-USD} équipondéré et son poids
+    # double — cf. docs/research/momentum_integration_2026H2.md.
+    "Gold_Momentum": 0.20,
 }
 
 # 2026-07-26 — retunés sous mandat de CAGR 40% sur le portefeuille combiné.

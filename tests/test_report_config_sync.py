@@ -62,9 +62,16 @@ def test_weight_sensitivity_uses_the_production_risk_layer():
 
 
 def test_weight_sensitivity_points_sum_to_one():
+    """Le point de production du simplexe doit se reconstruire à l'identique.
+
+    Les parts internes sont lues dans ``PRODUCTION_WEIGHTS`` plutôt qu'écrites
+    en clair : le trio ne pesait 80/10/10 que tant que l'or était servi à 10 %,
+    et le passage de la sleeve momentum à 20 % (trio d'instruments, 2026-07-27)
+    aurait fait échouer ce test sur un littéral sans que rien ne soit cassé.
+    """
     import generate_weight_sensitivity_figures as wsf
 
-    weights = wsf.make_weights(0.8, 0.1, 0.1)
+    weights = wsf.make_weights(*(PRODUCTION_WEIGHTS[k] for k in wsf.SLEEVE_KEYS))
 
     assert sum(weights.values()) == pytest.approx(1.0)
     assert weights == pytest.approx(PRODUCTION_WEIGHTS)

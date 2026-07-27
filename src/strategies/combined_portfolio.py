@@ -34,12 +34,23 @@ from strategies.daily_momentum import (
     backtest_xs_momentum,
     load_daily_closes,
 )
-from strategies.gold_momentum import pipeline as gold_momentum_pipeline
 from strategies.mr_macro import backtest_mr_macro, load_all_fx_data
 from strategies.rsi_daily import pipeline as rsi_daily_pipeline
-from utils import apply_vbt_settings, load_fx_data, load_gold_data
+from strategies.tsmom import pipeline as tsmom_pipeline
+from utils import apply_vbt_settings, load_fx_data
 
 RSI_DAILY_PAIRS = ("EUR-USD", "GBP-USD", "USD-CAD")  # Phase E.3 (no USDJPY, drag -295 USD over 5.4y)
+
+# Momentum sleeve instruments — ``(symbol, loader_override)``, ``None`` keeping
+# the registry default of ``strategies.tsmom``. USD-JPY reads the long minute
+# export (2018→) rather than the broker daily (2020-11→), which would leave the
+# sleeve mute over the first third of the portfolio window — the same source
+# choice the screening and the weight sweep make.
+MOMENTUM_INSTRUMENTS: tuple[tuple[str, str | None], ...] = (
+    ("XAU-USD", None),
+    ("USD-JPY", "fx_minute"),
+    ("XAG-USD", None),
+)
 
 # Back-compat alias — strategies.combined_portfolio_v2 imports _INIT_CASH
 # directly. Left in place so that module keeps working until its import
@@ -74,6 +85,36 @@ def backtest_rsi_daily_portfolio(
         per_pair.append(pf.daily_returns)
     # skipna=True so the first pair's warmup doesn't drag the mean.
     return pd.concat(per_pair, axis=1).mean(axis=1, skipna=True)
+
+
+def backtest_momentum_sleeve(
+    instruments: tuple[tuple[str, str | None], ...] = MOMENTUM_INSTRUMENTS,
+) -> pd.Series:
+    """Equal-weight momentum sleeve across ``instruments`` — daily returns Series.
+
+    One TSMOM engine run on several tradables, not several sleeves: the MQL5
+    port splits a single ``sub_equity`` across ``Inp_Gold_Symbols``, so the
+    instruments share one risk budget. The combination reproduces that split —
+    the mean is taken over the *configured* instruments, an instrument without
+    a session that day counting 0 rather than redistributing its share (cf.
+    ``scripts/sweep_momentum_weights.momentum_sleeve``, locked by
+    ``tests/test_momentum_sleeve_returns.py``).
+
+    Every instrument runs at the module defaults of ``tsmom.pipeline``
+    (``fill="close"``, costs from ``vbt.yml``): the cache keeps the execution
+    conventions of the other sleeves, MT5 being the engine that arbitrates the
+    fill. The calendar date is the only axis the three series share — the
+    loaders do not timestamp their sessions alike.
+    """
+    per_instrument: dict[str, pd.Series] = {}
+    for symbol, loader in instruments:
+        pf, _ = tsmom_pipeline(symbol, loader_override=loader)
+        rets = pf.returns
+        per_instrument[symbol] = (
+            rets.set_axis(rets.index.normalize()).groupby(level=0).sum()
+        )
+    frame = pd.concat(per_instrument, axis=1, sort=True).fillna(0.0)
+    return frame.mean(axis=1)
 
 
 WF_PERIODS = [(f"{y}-01-01", f"{y}-12-31") for y in range(2019, 2025)] + [
@@ -166,18 +207,18 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
     print("  Running RSI Daily 3-pair (no USDJPY, Phase E.3) × MT5_LEV_AVG...")
     rsi_daily_3p = backtest_rsi_daily_portfolio() * MT5_LEV_AVG
 
-    # Gold Momentum — a fourth sleeve on a different asset class, which is
-    # where its value is: near-orthogonal to all three FX sleeves.
+    # Momentum trio — a fourth sleeve on other asset classes, which is where
+    # its value is: near-orthogonal to all three FX sleeves. 2026-07-27 it
+    # widens from gold alone to {XAU-USD, USD-JPY, XAG-USD} equal-weighted,
+    # matching Inp_Gold_Symbols=XAUUSD,USDJPY,XAGUSD in the deployed EA.
     #
     # NOT scaled by MT5_LEV_AVG, unlike TS and RSI above. Those are unleveraged
     # daily backtests that need lifting to MT5's global leverage; this sleeve
-    # carries its own vol-target layer (25% target, 3x cap) and already sizes
+    # carries its own vol-target layer (55% target, 6.6x cap) and already sizes
     # itself. Multiplying again would stack two leverage layers — the Phase L
     # mistake Phase M.1 was written to undo.
-    print("  Running Gold Momentum (own vol-target, no MT5_LEV_AVG scaling)...")
-    _, gold_data = load_gold_data()
-    pf_gold, _ = gold_momentum_pipeline(gold_data)
-    gold_rets = pf_gold.returns
+    print("  Running Momentum trio (XAU/JPY/XAG, own vol-target, no MT5_LEV_AVG)...")
+    momentum_rets = backtest_momentum_sleeve()
 
     return {
         "MR_Macro": mr_rets,
@@ -185,7 +226,8 @@ def _compute_strategy_daily_returns() -> dict[str, pd.Series]:
         "TS_Momentum_RSI": ts_rets,
         "TS_Momentum_3p": ts_rets_3p,
         "RSI_Daily_3p": rsi_daily_3p,
-        "Gold_Momentum": gold_rets,
+        # Key kept as "Gold_Momentum": historical label of the EA sleeve (magic 835).
+        "Gold_Momentum": momentum_rets,
     }
 
 

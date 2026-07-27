@@ -20,9 +20,9 @@ Why nothing caught it — and what each test below locks:
 
 2. **The weights kept reading 80/10/10 the whole time.** What moved was the
    *risk* budget: MR Macro fell to 39.4% of portfolio risk while a 10%-weight
-   sleeve took 55.1%. ``test_production_risk_budget_follows_weights`` asserts
-   the dominant-weight sleeve also dominates the risk, which is the invariant a
-   nominal weight is supposed to express.
+   sleeve took 55.1%. ``test_production_risk_budget_follows_weights`` asserts no
+   sleeve's risk share runs away from its nominal weight, which is the
+   proportionality a nominal weight is supposed to express.
 
 Both run off the disk cache, so they are cheap on a warm cache and ~2 min after
 a ``_SLEEVES_VERSION`` bump.
@@ -44,6 +44,12 @@ _VOL_TARGET_TOLERANCE = 3.0
 # Below this, a sleeve has effectively stopped trading and the vol check would
 # pass vacuously.
 _VOL_FLOOR = 0.005
+
+# A sleeve may carry more risk than its nominal weight — sleeves do not target
+# the same vol — but not by an arbitrary factor. Same spirit as the tolerance
+# above: catch a stacked leverage layer (the defect ran at 5.5x), not the
+# ordinary spread between a 55%-vol-target sleeve and a 7%-vol one.
+_RISK_SHARE_TOLERANCE = 3.0
 
 
 @pytest.fixture(scope="module")
@@ -113,11 +119,20 @@ def test_vol_targeted_sleeves_realize_their_target(
 def test_production_risk_budget_follows_weights(
     strategy_returns: dict[str, pd.Series],
 ) -> None:
-    """The 80%-weight sleeve must also carry most of the portfolio risk.
+    """No sleeve may carry a risk share disproportionate to its weight.
 
     Risk contribution is ``w_i * (Σw)_i / σ_p``, so it tracks ``w_i * σ_i``:
     re-scaling one sleeve moves the risk budget while every nominal weight — and
     every table built from them — keeps reading 80/10/10.
+
+    The assertion is a *ratio* rather than « the heaviest sleeve dominates the
+    risk »: since 2026-07-27 the momentum sleeve weighs 20 % and carries ~53 %
+    of the risk **by design** — it vol-targets at 55 % against ~7 % for MR
+    Macro, and the sweep that sized it published that contribution before the
+    allocation was acted (``reports/research/momentum_weights_sweep_2026H2.csv``,
+    48 % at w=0,20 under the cycle's execution conventions). The stacked-leverage
+    defect still trips the ratio: 10 % of the weight for 55,1 % of the risk is
+    5,5x.
     """
     from strategies.combined_portfolio_v2 import PRODUCTION_WEIGHTS
 
@@ -133,12 +148,15 @@ def test_production_risk_budget_follows_weights(
     contributions = weights * ((cov @ weights) / port_vol) / port_vol
     shares = dict(zip(rets.columns, contributions))
 
-    dominant = max(PRODUCTION_WEIGHTS, key=PRODUCTION_WEIGHTS.get)
     detail = ", ".join(
         f"{c}: w={PRODUCTION_WEIGHTS[c]:.0%} risk={s:.1%}" for c, s in shares.items()
     )
-    assert shares[dominant] > 0.5, (
-        f"{dominant} weighs {PRODUCTION_WEIGHTS[dominant]:.0%} but carries only "
-        f"{shares[dominant]:.1%} of portfolio risk — the nominal allocation no "
-        f"longer describes the risk taken ({detail})"
-    )
+    for sleeve, share in shares.items():
+        weight = PRODUCTION_WEIGHTS[sleeve]
+        assert share <= weight * _RISK_SHARE_TOLERANCE, (
+            f"{sleeve} weighs {weight:.0%} but carries {share:.1%} of portfolio "
+            f"risk, more than {_RISK_SHARE_TOLERANCE:.0f}x its nominal share — the "
+            f"allocation no longer describes the risk taken ({detail}). Check for a "
+            f"stacked leverage factor in "
+            f"combined_portfolio._compute_strategy_daily_returns()."
+        )
