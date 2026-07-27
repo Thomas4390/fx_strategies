@@ -1,0 +1,176 @@
+{
+  "generated": "2026-07-27T18:10:03+00:00",
+  "method": "corr of daily log returns on calendar-date alignment, common window",
+  "results": [
+    {
+      "instrument": "XAG-USD",
+      "corr_daily_lag0": 0.8156,
+      "corr_daily_best": 0.8156,
+      "best_lag": 0,
+      "corr_weekly": 0.9603,
+      "vol_long_ann": 0.4322,
+      "vol_broker_ann": 0.4276,
+      "vol_ratio": 1.0106,
+      "common_days": 907,
+      "coverage_of_broker": 0.8084,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "FLAGGED"
+    },
+    {
+      "instrument": "XTI-USD",
+      "corr_daily_lag0": 0.8026,
+      "corr_daily_best": 0.8026,
+      "best_lag": 0,
+      "corr_weekly": 0.9587,
+      "vol_long_ann": 0.3869,
+      "vol_broker_ann": 0.3707,
+      "vol_ratio": 1.0437,
+      "common_days": 907,
+      "coverage_of_broker": 0.8105,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "FLAGGED"
+    },
+    {
+      "instrument": "XBR-USD",
+      "corr_daily_lag0": 0.8523,
+      "corr_daily_best": 0.8523,
+      "best_lag": 0,
+      "corr_weekly": 0.9625,
+      "vol_long_ann": 0.3658,
+      "vol_broker_ann": 0.3306,
+      "vol_ratio": 1.1063,
+      "common_days": 908,
+      "coverage_of_broker": 0.9478,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "FLAGGED"
+    },
+    {
+      "instrument": "XNG-USD",
+      "corr_daily_lag0": 0.6943,
+      "corr_daily_best": 0.6943,
+      "best_lag": 0,
+      "corr_weekly": 0.8347,
+      "vol_long_ann": 0.8377,
+      "vol_broker_ann": 0.5795,
+      "vol_ratio": 1.4455,
+      "common_days": 908,
+      "coverage_of_broker": 0.8225,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "BROKER_ONLY"
+    },
+    {
+      "instrument": "US500",
+      "corr_daily_lag0": 0.9006,
+      "corr_daily_best": 0.9006,
+      "best_lag": 0,
+      "corr_weekly": 0.9735,
+      "vol_long_ann": 0.1535,
+      "vol_broker_ann": 0.1581,
+      "vol_ratio": 0.971,
+      "common_days": 905,
+      "coverage_of_broker": 0.8066,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "LONG_OK"
+    },
+    {
+      "instrument": "US100",
+      "corr_daily_lag0": 0.8951,
+      "corr_daily_best": 0.8951,
+      "best_lag": 0,
+      "corr_weekly": 0.9763,
+      "vol_long_ann": 0.207,
+      "vol_broker_ann": 0.2117,
+      "vol_ratio": 0.9779,
+      "common_days": 905,
+      "coverage_of_broker": 0.8066,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "LONG_OK"
+    },
+    {
+      "instrument": "US30",
+      "corr_daily_lag0": 0.9178,
+      "corr_daily_best": 0.9178,
+      "best_lag": 0,
+      "corr_weekly": 0.9734,
+      "vol_long_ann": 0.137,
+      "vol_broker_ann": 0.1421,
+      "vol_ratio": 0.9641,
+      "common_days": 905,
+      "coverage_of_broker": 0.8066,
+      "window": [
+        "2022-11-07",
+        "2026-06-18"
+      ],
+      "verdict": "LONG_OK"
+    },
+    {
+      "instrument": "GER40",
+      "corr_daily_lag0": 0.8125,
+      "corr_daily_best": 0.8125,
+      "best_lag": 0,
+      "corr_weekly": 0.9649,
+      "vol_long_ann": 0.1518,
+      "vol_broker_ann": 0.1487,
+      "vol_ratio": 1.021,
+      "common_days": 916,
+      "coverage_of_broker": 0.8617,
+      "window": [
+        "2022-11-07",
+        "2026-06-19"
+      ],
+      "verdict": "FLAGGED"
+    },
+    {
+      "instrument": "JPN225",
+      "corr_daily_lag0": 0.2066,
+      "corr_daily_best": 0.5832,
+      "best_lag": -1,
+      "corr_weekly": 0.7446,
+      "vol_long_ann": 0.2355,
+      "vol_broker_ann": 0.2202,
+      "vol_ratio": 1.0691,
+      "common_days": 880,
+      "coverage_of_broker": 0.7907,
+      "window": [
+        "2022-11-07",
+        "2026-06-19"
+      ],
+      "verdict": "BROKER_ONLY"
+    },
+    {
+      "instrument": "UK100",
+      "corr_daily_lag0": 0.6737,
+      "corr_daily_best": 0.6737,
+      "best_lag": 0,
+      "corr_weekly": 0.9369,
+      "vol_long_ann": 0.1142,
+      "vol_broker_ann": 0.1188,
+      "vol_ratio": 0.9613,
+      "common_days": 912,
+      "coverage_of_broker": 0.8406,
+      "window": [
+        "2022-11-07",
+        "2026-06-19"
+      ],
+      "verdict": "FLAGGED"
+    }
+  ]
+}

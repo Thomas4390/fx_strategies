@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-25T16:22:54.371012+00:00",
+  "generated_at": "2026-07-27T18:05:38.750080+00:00",
   "project_root": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies",
   "files": {
     "AAA10Y_daily.parquet": {
@@ -29,8 +29,8 @@
       "index_end": "2026-03-01 00:00:00"
     },
     "AUD-USD_daily_mt5.parquet": {
-      "sha256": "47586bd3efb9802d3ec76a9e1174a717c5fed292914fd55c4df21f69ba2f3891",
-      "size_bytes": 90636,
+      "sha256": "2926519ff67599b2ab92844695d50699f245d477b74af31ef5a251b260aa9fcc",
+      "size_bytes": 90193,
       "size_mb": 0.086,
       "row_count": 1697,
       "column_count": 7,
@@ -47,9 +47,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "AUD-USD_minute_mt5.parquet": {
-      "sha256": "250a3c5098b511df2de1614f833511f77d88cf62dbf4ebfd1fe7760e75956b15",
-      "size_bytes": 1718020,
-      "size_mb": 1.638,
+      "sha256": "5a3a798e4502405b4cd6b3e7dc6bbffd16e64f34b7f254fae14e47d22409987d",
+      "size_bytes": 1620359,
+      "size_mb": 1.545,
       "row_count": 97315,
       "column_count": 7,
       "columns": [
@@ -338,8 +338,8 @@
       "index_end": "2026-05-01 00:00:00"
     },
     "EUR-GBP_daily_mt5.parquet": {
-      "sha256": "585684a64d4d6e123f2571a5e7b90e0d542c5ccb29b9c98afab333c7e28f78ac",
-      "size_bytes": 58748,
+      "sha256": "8e9a4ed54dd200adb87865086301922758395a61fa6fe26f4e0ac1c6808b4a45",
+      "size_bytes": 58466,
       "size_mb": 0.056,
       "row_count": 1088,
       "column_count": 7,
@@ -356,9 +356,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "EUR-GBP_minute_mt5.parquet": {
-      "sha256": "5e278ec7e16db9266db31ef0fe938f4b810b4f90e04f6b112f6d7f8020af25f4",
-      "size_bytes": 1626504,
-      "size_mb": 1.551,
+      "sha256": "2e0a8a64ac2984e7f09654147e0e8582fc1b912a87e23fd7dc6775265896839c",
+      "size_bytes": 1528874,
+      "size_mb": 1.458,
       "row_count": 97284,
       "column_count": 7,
       "columns": [
@@ -374,8 +374,8 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "EUR-JPY_daily_mt5.parquet": {
-      "sha256": "10c5b308e813e06460a1727ce6e856ba74874063c77698435d9fe1dbeb9b7bc8",
-      "size_bytes": 49737,
+      "sha256": "47057a2522125a51202c223c58828d4b20ae552021b9fa04352bc8bb0b39a3e9",
+      "size_bytes": 49455,
       "size_mb": 0.047,
       "row_count": 1088,
       "column_count": 7,
@@ -392,9 +392,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "EUR-JPY_minute_mt5.parquet": {
-      "sha256": "67d1d1238f84fab16c2a91d8d375a2dd180ac875ede24cd9614a6e1f2c29e773",
-      "size_bytes": 1793032,
-      "size_mb": 1.71,
+      "sha256": "8e55b61b4c293549e776af8c0366c324ad4a68a4f6770b7304b4c8d6c68c199c",
+      "size_bytes": 1695395,
+      "size_mb": 1.617,
       "row_count": 97285,
       "column_count": 7,
       "columns": [
@@ -410,8 +410,8 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "EUR-USD_daily_mt5.parquet": {
-      "sha256": "b16e876415dfe22bcf193a4967e8f4f6d85e78fa51cd893ebf36d4871efe73fb",
-      "size_bytes": 91592,
+      "sha256": "5d5266eb9e765674e633ade2320a984c14b96eae2a26d11aa68fca499e2163c0",
+      "size_bytes": 91149,
       "size_mb": 0.087,
       "row_count": 1697,
       "column_count": 7,
@@ -444,9 +444,9 @@
       "index_end": "2026-04-01 00:00:00"
     },
     "EUR-USD_minute_mt5.parquet": {
-      "sha256": "41e53b596f82a01f989722edb8b06d9bc86e7fd33d188b31cf4a5e3de8a6153a",
-      "size_bytes": 1827216,
-      "size_mb": 1.743,
+      "sha256": "8caf81ef8145c078e4255a6c3f4960d2a577b3a0be199b96c926bb0635b80816",
+      "size_bytes": 1729408,
+      "size_mb": 1.649,
       "row_count": 97446,
       "column_count": 7,
       "columns": [
@@ -475,9 +475,9 @@
       "index_end": "2026-04-01 00:00:00"
     },
     "GBP-JPY_daily_mt5.parquet": {
-      "sha256": "fa30355968cf3a079307a1fef3326a9f6f0db6880b1b3a746d1003dde2c7272d",
-      "size_bytes": 73996,
-      "size_mb": 0.071,
+      "sha256": "cd62a272f220f3d511e09212dd0b11d6b53f7839bfcf980a7442310a7d685455",
+      "size_bytes": 73553,
+      "size_mb": 0.07,
       "row_count": 1697,
       "column_count": 7,
       "columns": [
@@ -493,9 +493,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "GBP-JPY_minute_mt5.parquet": {
-      "sha256": "15843d772619c0dd083cdee59a1ffdf569313a1ee87a601367cd4eecd371cc70",
-      "size_bytes": 1862833,
-      "size_mb": 1.777,
+      "sha256": "a01039d725822bae4bd2677619e7331554693ee506ab93cd9c9b7fdc427440c1",
+      "size_bytes": 1765207,
+      "size_mb": 1.683,
       "row_count": 97277,
       "column_count": 7,
       "columns": [
@@ -511,8 +511,8 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "GBP-USD_daily_mt5.parquet": {
-      "sha256": "363dfe1fbeef274ec95d2b62815f81add80bc9063d226301a0bd15cda0482194",
-      "size_bytes": 92290,
+      "sha256": "90e70c8e7ff05ebcd315412e413b1c04fcb078359bd0bdd3ef9eeea77c099997",
+      "size_bytes": 91847,
       "size_mb": 0.088,
       "row_count": 1697,
       "column_count": 7,
@@ -545,9 +545,9 @@
       "index_end": "2026-04-01 00:00:00"
     },
     "GBP-USD_minute_mt5.parquet": {
-      "sha256": "5ad4c42b39175907d43f636632ce17f55ed1f640ebcc5df6c9ad67daf92a1262",
-      "size_bytes": 1860633,
-      "size_mb": 1.774,
+      "sha256": "8110ec68ab1b98c428b4770f2ea730bcdc6cf455f62a743362673068694db8dd",
+      "size_bytes": 1762833,
+      "size_mb": 1.681,
       "row_count": 97446,
       "column_count": 7,
       "columns": [
@@ -588,6 +588,57 @@
       "index_start": "1947-01-01 00:00:00",
       "index_end": "2026-01-01 00:00:00"
     },
+    "GER40_daily_mt5.parquet": {
+      "sha256": "dc180764c6af379629bfdbaf6726c339de268141ab421341c45006027fe97210",
+      "size_bytes": 48249,
+      "size_mb": 0.046,
+      "row_count": 1064,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-06 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "GER40_daily_yahoo.parquet": {
+      "sha256": "c0231da83bd14033d5699e6a94dcb76d365c254eb67c23751b88ad189c1a9a63",
+      "size_bytes": 352368,
+      "size_mb": 0.336,
+      "row_count": 9251,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1990-01-02 08:00:00+00:00",
+      "index_end": "2026-07-27 07:00:00+00:00"
+    },
+    "GER40_minute_mt5.parquet": {
+      "sha256": "496d6c41f81b66ab02b74616bd45a17e909b62bf8c4c329a7a5aa41d16e606af",
+      "size_bytes": 2405455,
+      "size_mb": 2.294,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-02-25 14:23:00+00:00",
+      "index_end": "2026-06-19 19:59:00+00:00"
+    },
     "HOUST_monthly.parquet": {
       "sha256": "7699b133d4cf8d1f2c4b368853b3a05395e08c366121a370a833e322a6a7ab30",
       "size_bytes": 12709,
@@ -626,6 +677,57 @@
       ],
       "index_start": "1919-01-01 00:00:00",
       "index_end": "2026-03-01 00:00:00"
+    },
+    "JPN225_daily_mt5.parquet": {
+      "sha256": "edd9c966b36b93be349a15ad325c6e1df758386d99febbf67b22eae674841b24",
+      "size_bytes": 49417,
+      "size_mb": 0.047,
+      "row_count": 1114,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "JPN225_daily_yahoo.parquet": {
+      "sha256": "21ffa484bca1e3919a72c413548fcf98e38855b11b86adf35e5caa95bdbcb347",
+      "size_bytes": 341847,
+      "size_mb": 0.326,
+      "row_count": 8971,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1990-01-04 00:00:00+00:00",
+      "index_end": "2026-07-24 00:00:00+00:00"
+    },
+    "JPN225_minute_mt5.parquet": {
+      "sha256": "8a9b1fd8de3553557d971469e3bcfea2136944872e934974ef42a41cb0e515d9",
+      "size_bytes": 2090712,
+      "size_mb": 1.994,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-02 15:53:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
     },
     "JPY_LT_monthly.parquet": {
       "sha256": "99c5a7667ca6872c97ba147b3fa00f3dcd69fae18338a4e006ecd2ec037232af",
@@ -693,9 +795,9 @@
       "index_end": "2026-03-01 00:00:00"
     },
     "NZD-USD_daily_mt5.parquet": {
-      "sha256": "c083f9f318e6f0197c28280d2872f3386bda7446a945bd47b2415259a7a7651f",
-      "size_bytes": 91017,
-      "size_mb": 0.087,
+      "sha256": "35f5f7a4673a6adac4055918264f1de70a8e9144bd168e3ab1b5dde0ce7a17d9",
+      "size_bytes": 90574,
+      "size_mb": 0.086,
       "row_count": 1697,
       "column_count": 7,
       "columns": [
@@ -711,9 +813,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "NZD-USD_minute_mt5.parquet": {
-      "sha256": "e16c1ca0221378a28978894df00cdb9e017a1453079f4676d7da0871981672b5",
-      "size_bytes": 1733637,
-      "size_mb": 1.653,
+      "sha256": "ce3c1c09515f1ac026ee73c663efdd3b618f42f02ffff0b70520ea3290ed357e",
+      "size_bytes": 1635978,
+      "size_mb": 1.56,
       "row_count": 97293,
       "column_count": 7,
       "columns": [
@@ -818,6 +920,57 @@
       "index_start": "1993-12-31 00:00:00",
       "index_end": "2026-04-24 00:00:00"
     },
+    "UK100_daily_mt5.parquet": {
+      "sha256": "919892196a39d855cad22dc7f3673bfd68f2e40cc974eb5f627ede118fdbec6f",
+      "size_bytes": 48921,
+      "size_mb": 0.047,
+      "row_count": 1086,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "UK100_daily_yahoo.parquet": {
+      "sha256": "7c58fad21f9165a227012dca4aca65e877627eae568b670b900989a951bddbf1",
+      "size_bytes": 326340,
+      "size_mb": 0.311,
+      "row_count": 9236,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1990-01-02 08:00:00+00:00",
+      "index_end": "2026-07-27 07:00:00+00:00"
+    },
+    "UK100_minute_mt5.parquet": {
+      "sha256": "083751eb95f63ac8c8a3d4325dce0accbefd4a4431085516da3d45c599f984a5",
+      "size_bytes": 2043886,
+      "size_mb": 1.949,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-02-24 21:10:00+00:00",
+      "index_end": "2026-06-19 20:00:00+00:00"
+    },
     "UMCSENT_monthly.parquet": {
       "sha256": "9deda1925daa6c23dafc044f20c6e7cf8fcf4b1981166756baec932d48cd89bb",
       "size_bytes": 10263,
@@ -843,9 +996,162 @@
       "index_start": "2019-12-06 00:00:00",
       "index_end": "2026-04-03 00:00:00"
     },
+    "US100_daily_mt5.parquet": {
+      "sha256": "81fda27e8ee608e6144e8a952de66568ba652040af19dd31d6b6b44a212508b0",
+      "size_bytes": 51983,
+      "size_mb": 0.05,
+      "row_count": 1123,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "US100_daily_yahoo.parquet": {
+      "sha256": "781113d983ee2e7bc80ab54160e98dc12866b5ba84aec6c94ea8e68a237d6548",
+      "size_bytes": 350204,
+      "size_mb": 0.334,
+      "row_count": 9208,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1990-01-02 14:30:00+00:00",
+      "index_end": "2026-07-27 13:30:00+00:00"
+    },
+    "US100_minute_mt5.parquet": {
+      "sha256": "236fcee994aec0d041def3ce192eeb2629ae68cdf94c087e78b685ca6ba2ca2d",
+      "size_bytes": 2738521,
+      "size_mb": 2.612,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-03 07:01:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
+    },
+    "US30_daily_mt5.parquet": {
+      "sha256": "33bcc19ee6ebb04ebc3e9a41e23127dd1103536897babddc9f6b7a00b74db14b",
+      "size_bytes": 50079,
+      "size_mb": 0.048,
+      "row_count": 1123,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "US30_daily_yahoo.parquet": {
+      "sha256": "d242ef9c9da67e45b3ffe1e09249b8606afd87c9deded320c767aee783b44676",
+      "size_bytes": 327782,
+      "size_mb": 0.313,
+      "row_count": 8702,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1992-01-02 14:30:00+00:00",
+      "index_end": "2026-07-27 13:30:00+00:00"
+    },
+    "US30_minute_mt5.parquet": {
+      "sha256": "a27eff401164b25999d1d5e855d4eae002462b2336cef99e19517f9bd0d46fa2",
+      "size_bytes": 2277657,
+      "size_mb": 2.172,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-03 05:13:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
+    },
+    "US500_daily_mt5.parquet": {
+      "sha256": "f369cfab736773796d26f899dd5f2410ef449daa22098d6086148f2d5d51ec70",
+      "size_bytes": 49985,
+      "size_mb": 0.048,
+      "row_count": 1123,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "US500_daily_yahoo.parquet": {
+      "sha256": "4969ee6f30c617c6a99b2db78510bf3e77dff8e6a6d3009ec3db5de06e615fff",
+      "size_bytes": 344243,
+      "size_mb": 0.328,
+      "row_count": 9208,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "1990-01-02 14:30:00+00:00",
+      "index_end": "2026-07-27 13:30:00+00:00"
+    },
+    "US500_minute_mt5.parquet": {
+      "sha256": "2f84906dae95a2fa454a160a2c23256813800da488ae0c5eb370d733ebbd65c1",
+      "size_bytes": 2259339,
+      "size_mb": 2.155,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-03 06:23:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
+    },
     "USD-CAD_daily_mt5.parquet": {
-      "sha256": "90fb759b1f21fdee9c39cdef9014f46e0342a74b319812657890c5029ba335a7",
-      "size_bytes": 91571,
+      "sha256": "0d94372db87243694c7a29a168c1a37f1688cde557d9f6c4bce7da048992cccd",
+      "size_bytes": 91128,
       "size_mb": 0.087,
       "row_count": 1697,
       "column_count": 7,
@@ -878,9 +1184,9 @@
       "index_end": "2026-04-01 00:00:00"
     },
     "USD-CAD_minute_mt5.parquet": {
-      "sha256": "d58c8a50f70b9ad9b5b3e07c96e776a670d171e490d20b918c404a7edb96e578",
-      "size_bytes": 1787053,
-      "size_mb": 1.704,
+      "sha256": "4ae7e43214016fa6e1694b25e131a1f522e4936074884469941be8360cab04f1",
+      "size_bytes": 1689260,
+      "size_mb": 1.611,
       "row_count": 97447,
       "column_count": 7,
       "columns": [
@@ -896,9 +1202,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "USD-CHF_daily_mt5.parquet": {
-      "sha256": "2100e787404ae81485a8d04f6587722ef7cbbf61c144839f4560f60affd445b2",
-      "size_bytes": 90980,
-      "size_mb": 0.087,
+      "sha256": "ea66705728787c87a889f5d9761ad5d042e2c81604784d9931867941ccc3e2b6",
+      "size_bytes": 90537,
+      "size_mb": 0.086,
       "row_count": 1697,
       "column_count": 7,
       "columns": [
@@ -914,9 +1220,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "USD-CHF_minute_mt5.parquet": {
-      "sha256": "9934c515aee843d790e0517fcaf5b4616c62833724a289c3cc8fb3c20a34e7c4",
-      "size_bytes": 1737356,
-      "size_mb": 1.657,
+      "sha256": "1c1316ce1f1ec00eeef9902439bfb0ce2e51e65c54b73494aaa3f6260de91c64",
+      "size_bytes": 1639719,
+      "size_mb": 1.564,
       "row_count": 97283,
       "column_count": 7,
       "columns": [
@@ -932,9 +1238,9 @@
       "index_end": "2026-05-01 00:00:00+00:00"
     },
     "USD-JPY_daily_mt5.parquet": {
-      "sha256": "c08c683c96105362ece0c464c042a6d2a481219bf483dd791aa25d6d253ba27d",
-      "size_bytes": 73040,
-      "size_mb": 0.07,
+      "sha256": "0e44377eeb0b1daa6760d70dcb4e867d29aecd9c39f846e6c73ffd7330e5e6ff",
+      "size_bytes": 72597,
+      "size_mb": 0.069,
       "row_count": 1697,
       "column_count": 7,
       "columns": [
@@ -966,9 +1272,9 @@
       "index_end": "2026-04-01 00:00:00"
     },
     "USD-JPY_minute_mt5.parquet": {
-      "sha256": "ae66cd8bd7fe161cb887ceb4290c3cf727ab240f58e7f47d217c4b4e0fa57ecf",
-      "size_bytes": 1795919,
-      "size_mb": 1.713,
+      "sha256": "f48c383f5fa5dc4118b6c034398db052afa9d74b99cb95a7c8e45ae7f3f590ff",
+      "size_bytes": 1698115,
+      "size_mb": 1.619,
       "row_count": 97446,
       "column_count": 7,
       "columns": [
@@ -1009,6 +1315,57 @@
       "index_start": "1986-01-02 00:00:00",
       "index_end": "2026-04-27 00:00:00"
     },
+    "XAG-USD_daily_mt5.parquet": {
+      "sha256": "c93fd152aff47c1969c00c49e981aede7271ccd8e6d23d4b9121038d8ce08313",
+      "size_bytes": 51449,
+      "size_mb": 0.049,
+      "row_count": 1123,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "XAG-USD_daily_yahoo.parquet": {
+      "sha256": "560951166fd3b032fc2a64d2a230784baa8d229a7b71356a1e29300cf3ac289d",
+      "size_bytes": 211629,
+      "size_mb": 0.202,
+      "row_count": 6501,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2000-08-30 04:00:00+00:00",
+      "index_end": "2026-07-27 04:00:00+00:00"
+    },
+    "XAG-USD_minute_mt5.parquet": {
+      "sha256": "2cb71f8d0d9bb18f2c4dad583eb974be1f57912f26d98ebe29dc9504650c60a8",
+      "size_bytes": 2178607,
+      "size_mb": 2.078,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-02 17:11:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
+    },
     "XAU-USD_minute_qc.parquet": {
       "sha256": "7c272f08796172e90927cfe6c138a4eda40c071376efa6c712384eeccf95c6c8",
       "size_bytes": 62005803,
@@ -1023,7 +1380,160 @@
       ],
       "index_start": "2019-01-01 23:04:00+00:00",
       "index_end": "2026-07-24 03:59:00+00:00"
+    },
+    "XBR-USD_daily_mt5.parquet": {
+      "sha256": "79123077da184f41d29bc4797317e2b53c623d56f3b95023b3a7ec30b1bcbd34",
+      "size_bytes": 40993,
+      "size_mb": 0.039,
+      "row_count": 959,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "XBR-USD_daily_yahoo.parquet": {
+      "sha256": "f3a80375dd0a80e9d69722a346a849ccc7369a5c641046e3a2718f6585057a6d",
+      "size_bytes": 151265,
+      "size_mb": 0.144,
+      "row_count": 4726,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2007-07-30 04:00:00+00:00",
+      "index_end": "2026-07-27 04:00:00+00:00"
+    },
+    "XBR-USD_minute_mt5.parquet": {
+      "sha256": "634d2cc38271f5779a082c187a1deb2298a5fbf082f369db4874614fff1a554c",
+      "size_bytes": 1853472,
+      "size_mb": 1.768,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-02-19 01:28:00+00:00",
+      "index_end": "2026-06-19 17:29:00+00:00"
+    },
+    "XNG-USD_daily_mt5.parquet": {
+      "sha256": "53c769c335c5a395204439b51c9ad872b6fd795b5411826c2ba9291e21ce1026",
+      "size_bytes": 43213,
+      "size_mb": 0.041,
+      "row_count": 1105,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "XNG-USD_daily_yahoo.parquet": {
+      "sha256": "667e3be95b4332c514fc6eadf9858e203d4bccb87e0b1c1987bf0e6b6e235da4",
+      "size_bytes": 178059,
+      "size_mb": 0.17,
+      "row_count": 6505,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2000-08-30 04:00:00+00:00",
+      "index_end": "2026-07-27 04:00:00+00:00"
+    },
+    "XNG-USD_minute_mt5.parquet": {
+      "sha256": "3a3c7050e8df67ccf8b17c87df21423d2a6adaa73ea96f7cd0044a03bfc9cb35",
+      "size_bytes": 1458595,
+      "size_mb": 1.391,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-02-11 23:44:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
+    },
+    "XTI-USD_daily_mt5.parquet": {
+      "sha256": "1c8844bf1e39d08c7ff341c65fbcb0d991872a8accccef73687ea165fab7c922",
+      "size_bytes": 47957,
+      "size_mb": 0.046,
+      "row_count": 1120,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2022-11-04 00:00:00+00:00",
+      "index_end": "2026-06-19 00:00:00+00:00"
+    },
+    "XTI-USD_daily_yahoo.parquet": {
+      "sha256": "054c0dc9347a21fa33161e5f38e1aade3e60fb6370199d5580de48756d45e393",
+      "size_bytes": 199728,
+      "size_mb": 0.19,
+      "row_count": 6508,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2000-08-23 04:00:00+00:00",
+      "index_end": "2026-07-27 04:00:00+00:00"
+    },
+    "XTI-USD_minute_mt5.parquet": {
+      "sha256": "529a2ee421ee9e16babc5df3c684f45edaadcf30d182d63cecf7c4f6724986cc",
+      "size_bytes": 1889546,
+      "size_mb": 1.802,
+      "row_count": 100000,
+      "column_count": 7,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+      ],
+      "index_start": "2026-03-02 15:27:00+00:00",
+      "index_end": "2026-06-19 16:59:00+00:00"
     }
   },
-  "combined_fingerprint": "50ba28bb1e6be3d1424d9474c5d0d4e25502c3bd372d40d7addedb9c1408e33e"
+  "combined_fingerprint": "82fd533f49ab2cfb795f3ffe79cdc5c0d09c497a722d86f9c2973dfaa5b658bf"
 }

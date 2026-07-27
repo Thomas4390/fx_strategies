@@ -48,8 +48,25 @@ TF_LABEL_TO_PERIOD = {
 }
 
 
+# Broker symbols that do not follow the 6-letter pair convention. Mapped to the
+# short names used in data/ file stems (no dash: these are not currency pairs).
+NON_PAIR_SYMBOLS = {
+    "US500Cash": "US500",
+    "US100Cash": "US100",
+    "US30Cash": "US30",
+    "GER40Cash": "GER40",
+    "JPN225Cash": "JPN225",
+    "UK100Cash": "UK100",
+}
+
+
 def parse_pair(symbol: str) -> str:
-    """Convert broker symbol like ``EURUSD.c`` → ``EUR-USD`` (project convention)."""
+    """Convert broker symbol like ``EURUSD.c`` → ``EUR-USD`` (project convention).
+
+    Non-pair symbols (index CFDs) resolve through ``NON_PAIR_SYMBOLS``.
+    """
+    if symbol in NON_PAIR_SYMBOLS:
+        return NON_PAIR_SYMBOLS[symbol]
     base = symbol.split(".")[0]  # strip suffix
     if len(base) != 6:
         raise ValueError(f"unexpected symbol format: {symbol!r}")
@@ -114,8 +131,8 @@ def main() -> int:
 
     if not args.src.exists():
         print(f"ERROR: source dir not found: {args.src}", file=sys.stderr)
-        print(f"  Run the MQL5 script `Scripts/FxExportRates` from MT5 first, "
-              f"or pass --src to point to your export dir.", file=sys.stderr)
+        print("  Run the MQL5 script `Scripts/FxExportRates` from MT5 first, "
+              "or pass --src to point to your export dir.", file=sys.stderr)
         return 1
 
     csvs = sorted(args.src.glob("*.csv"))
