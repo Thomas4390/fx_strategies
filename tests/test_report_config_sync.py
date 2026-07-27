@@ -150,6 +150,35 @@ def test_published_mt5_reference_covers_every_allocated_sleeve():
     )
 
 
+def test_published_mt5_reference_ran_with_the_production_allocations():
+    """Les allocations DU RUN doivent égaler celles de la production.
+
+    Incident du 2026-07-27 : un run de référence « aux défauts compilés »
+    a hérité des allocations périmées du ``.set`` dernier-utilisé que le
+    tester fusionne par-dessus le binaire — 0.72/0.10 au lieu de 0.62/0.20,
+    avec les symboles trio (absents du ``.set``) venus du ``.ex5`` frais.
+    Le JSON publié décrivait donc un portefeuille qui n'était ni l'ancien ni
+    le nouveau, et rien ne le signalait : ``by_sleeve`` comptait le bon
+    nombre de sleeves. La provenance porte les inputs réels du run — les
+    comparer aux constantes ferme cette classe de défaut.
+    """
+    payload = json.loads(MT5_JSON.read_text())
+    ea = payload["provenance"]["ea_inputs"]
+    input_for = {
+        "MR_Macro": "Inp_AllocMRMacro",
+        "TS_Momentum_3p": "Inp_AllocTSMomentum",
+        "RSI_Daily_3p": "Inp_AllocRSIDaily",
+        "Gold_Momentum": "Inp_AllocGoldMomentum",
+    }
+    for sleeve, key in input_for.items():
+        assert abs(float(ea[key]) - PRODUCTION_WEIGHTS[sleeve]) < 1e-9, (
+            f"{key}={ea[key]} dans le run publié contre "
+            f"PRODUCTION_WEIGHTS[{sleeve!r}]={PRODUCTION_WEIGHTS[sleeve]}. "
+            f"Le run de référence n'a pas tourné avec les allocations de "
+            f"production — épingler les Inp_Alloc* en --input et relancer."
+        )
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Marqueur « production » des figures de sensibilité aux poids
 # ═══════════════════════════════════════════════════════════════════════
