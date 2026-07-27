@@ -1,0 +1,20 @@
+% Généré par scripts/build_setup_guide_tables.py — NE PAS ÉDITER À LA MAIN.
+% Valeurs dérivées de write_default_preset.PRESET_LINES.
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_TS\_Pairs} & \metric{EUR, GBP, JPY} & Univers de 3~paires. USD/CAD est exclu (régime historiquement défavorable). \\
+\code{Inp\_TS\_FastEMA} & \metric{20} & EMA rapide du signal de tendance. \\
+\code{Inp\_TS\_SlowEMA} & \metric{50} & EMA lente~; position longue si EMA rapide $>$ EMA lente, courte sinon. \\
+\code{Inp\_TS\_RSIPeriod} & \metric{7} & Période du RSI servant de filtre. \\
+\code{Inp\_TS\_RSILow} & \metric{40} & Seuil RSI bas~; filtre les ventes en survente extrême. \\
+\code{Inp\_TS\_RSIHigh} & \metric{60} & Seuil RSI haut~; filtre les achats en surachat extrême. \\
+\code{Inp\_TS\_TargetVol} & \metric{0.1} & Volatilité cible par paire, avant la couche globale. \\
+\code{Inp\_TS\_MaxLeverage} & \metric{3.0} & Levier maximal interne à la sleeve (faible~: signal journalier). \\
+\code{Inp\_TS\_SlippageBps} & \metric{10} & Slippage modélisé en points de base. \\
+\bottomrule
+\end{tabular}
+\end{center}

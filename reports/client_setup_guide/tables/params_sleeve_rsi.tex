@@ -1,0 +1,18 @@
+% Généré par scripts/build_setup_guide_tables.py — NE PAS ÉDITER À LA MAIN.
+% Valeurs dérivées de write_default_preset.PRESET_LINES.
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_RSI\_Pairs} & \metric{EUR, GBP, CAD} & Univers de 3~paires equal-weight. \\
+\code{Inp\_RSI\_Period} & \metric{14} & Période du RSI (standard de Wilder). \\
+\code{Inp\_RSI\_Oversold} & \metric{25.0} & Seuil d'entrée longue~: RSI inférieur à 25.0. \\
+\code{Inp\_RSI\_Overbought} & \metric{75.0} & Seuil d'entrée courte~: RSI supérieur à 75.0. \\
+\code{Inp\_RSI\_ExitMid} & \metric{50.0} & Sortie quand le RSI repasse 50.0 (retour à la moyenne). \\
+\code{Inp\_RSI\_TimeStopDays} & \metric{21} & Durée maximale de détention, en jours. Au-delà, le \emph{swap} cumulé annule l'edge du signal. \\
+\code{Inp\_RSI\_SlippageBps} & \metric{10} & Slippage modélisé en points de base. \\
+\bottomrule
+\end{tabular}
+\end{center}

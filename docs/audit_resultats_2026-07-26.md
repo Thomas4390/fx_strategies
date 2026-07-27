@@ -107,6 +107,10 @@ ne consomme **aucun** asset généré — il est intégralement écrit à la mai
 structurellement incapable de suivre la config. Générer sa table de paramètres depuis
 `write_default_preset.PRESET_LINES` fermerait la classe entière de défauts.
 
+> **Fait.** Les sept tables de la section 6 sont générées et testées — voir « Génération de
+> la table de paramètres du guide d'installation » plus bas. Le §3 n'est plus seulement
+> corrigé, il ne peut plus se reproduire silencieusement.
+
 ---
 
 ### 4. Le guide pédagogique annonce quatre moteurs et n'en décrit que trois — GRAVE
@@ -487,8 +491,22 @@ mise en production (l. 811), et la table du guide pédagogique (l. 783-784). La 
 guide pédagogique décrivait déjà correctement les seuils 50/85 — c'était sa propre table de
 paramètres qui la contredisait ; un `\label{sec:margin_cap}` relie désormais les deux.
 
-Vérification : 0 écart réel sur 31 inputs cités dans le guide d'installation et 20 dans le
-guide pédagogique.
+> **Correction — cette vérification était défectueuse.** Elle annonçait « 0 écart réel sur
+> 31 inputs cités ». Le motif d'extraction, `\\code\{Inp\\_(\w+)\}`, s'arrêtait au premier
+> `\_` échappé : `Inp\_MR\_SessionStart` était lu comme `Inp_MR`. Sur les **64** paramètres
+> réellement cités par le guide, seuls 31 noms — tronqués — étaient comparés. Trois écarts
+> réels avaient donc échappé au contrôle, tous corrigés depuis (voir « Génération de la
+> table de paramètres » ci-dessous) :
+>
+> | Paramètre | Guide | `.mq5` |
+> |---|---|---|
+> | `Inp_MR_SessionStart` | 6 | **8** |
+> | `Inp_MR_SessionEnd` | 14 | **16** |
+> | `Inp_RSI_Pairs` | 4 paires (EUR, GBP, JPY, CAD) | **3** (EURUSD, GBPUSD, USDCAD) |
+>
+> Le guide publiait une fenêtre de session décalée de deux heures et une paire de trop sur
+> le Sleeve 3. La leçon est la même que celle du §2 : un contrôle qui ne peut pas voir ce
+> qu'il prétend couvrir est plus dangereux qu'aucun contrôle, parce qu'il clôt la question.
 
 ### §4 — Moteur 4 dans le guide pédagogique
 
@@ -511,6 +529,45 @@ du guide d'installation.
 
 Le guide passe de 30 à 34 pages ; les mentions de l'or y passent de 2 à 30.
 
+### Génération de la table de paramètres du guide d'installation
+
+Correctif de fond appliqué après les quatre précédents. Le guide listait ses 64 paramètres
+à la main : c'est ce qui a produit l'erreur sur le plafond de marge, puis les trois écarts
+que ma vérification défectueuse avait manqués. Rien ne reliait le `.tex` à une source de
+vérité, donc aucun test ne pouvait voir la dérive.
+
+`scripts/build_setup_guide_tables.py` génère désormais les sept tables de la section 6
+depuis `write_default_preset.PRESET_LINES` — que `tests/test_mt5_preset_sync.py` asservit
+déjà aux défauts compilés du `.mq5`. La chaîne est fermée :
+`.mq5` → `PRESET_LINES` → `tables/*.tex` → PDF.
+
+Choix de conception :
+
+- **Seule la prose vit dans le script.** Le rôle de chaque paramètre est le seul contenu
+  qu'aucune source de vérité ne porte. Les valeurs, elles, sont le littéral exact du preset
+  — ce que MT5 reçoit, donc la seule chose défendable à publier.
+- **Les décomptes sont dérivés.** « Univers de {n} paires » est calculé depuis la liste
+  réelle. Écrire « 4 paires » en toutes lettres est précisément ce qui avait permis au
+  guide d'en annoncer 4 pour un univers qui en compte 3.
+- **Aucun paramètre ne peut être oublié.** Les 87 inputs du preset sont soit décrits (71),
+  soit dans `EXCLUDED` avec une raison (16 : sleeve H1 non allouée, horizons or regroupés,
+  coûts traités ailleurs). Un input ajouté sans description fait échouer la suite.
+
+Six tests dans `tests/test_setup_guide_tables.py`, tous vérifiés par mutation testing —
+chacun rougit quand on casse ce qu'il protège :
+
+| Mutation | Test attendu rouge | Résultat |
+|---|---|---|
+| `Inp_MarginCapPct` 0.50 → 0.70 dans le `.mq5` | valeurs vs défauts compilés | ✅ RED |
+| `Inp_MR_SessionStart` 8 → 6 dans `PRESET_LINES` | tables en phase + valeurs | ✅ RED (2) |
+| suppression d'un `.tex` généré | tables en phase | ✅ RED (échoue, ne saute pas) |
+| input ajouté au preset sans description | couverture des descriptions | ✅ RED |
+| valeur recodée en dur dans `main.tex` | absence de littéraux + inclusions | ✅ RED (2) |
+
+Le troisième point est délibéré : `test_published_stress_json_matches_the_current_config`
+*saute* quand son fichier manque, et c'est ce qui l'a rendu inopérant en CI. Ces tests-ci
+échouent.
+
 ### Vérification des correctifs
 
 | Contrôle | Résultat |
@@ -519,8 +576,9 @@ Le guide passe de 30 à 34 pages ; les mentions de l'or y passent de 2 à 30.
 | Références non résolues en 2\ieme passe | ✅ 0 sur les 4 documents |
 | « convergent vers un verdict favorable » | ✅ 0 occurrence |
 | « sept tests » | ✅ 0 occurrence |
-| Inputs des guides vs `.mq5` | ✅ 0 écart réel |
-| Suite de tests | ✅ 203 passés |
+| Inputs du guide vs `.mq5` (extraction corrigée, 64 params) | ✅ 0 écart, et désormais dérivés |
+| Générateur idempotent (`--check`) | ✅ 7 tables en phase |
+| Suite de tests | ✅ 209 passés (203 + 6) |
 | Tables/figures hors légende corrigée | ✅ identiques au bit près |
 
 ---

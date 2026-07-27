@@ -1,0 +1,20 @@
+% Généré par scripts/build_setup_guide_tables.py — NE PAS ÉDITER À LA MAIN.
+% Valeurs dérivées de write_default_preset.PRESET_LINES.
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_Gold\_Symbol} & \metric{XAUUSD} & Symbole de base~; le suffixe broker est ajouté automatiquement. \\
+\code{Inp\_Gold\_LookbackA..D} & \metric{40 / 60 / 120 / 250} & Horizons de tendance, en séances, dont les votes sont agrégés. Mettre un horizon à $0$ le désactive. \\
+\code{Inp\_Gold\_AllowShort} & \metric{false} & Positions courtes désactivées~: l'or présente une dérive haussière structurelle. \\
+\code{Inp\_Gold\_TargetVol} & \metric{0.55} & Volatilité cible propre à la sleeve, appliquée avant la couche globale. \\
+\code{Inp\_Gold\_MaxLeverage} & \metric{6.6} & Plafond de levier interne à la sleeve. \\
+\code{Inp\_Gold\_SafetySL} & \metric{0.04} & Stop de sécurité~; l'or est environ deux fois plus volatil que les paires FX. \\
+\code{Inp\_Gold\_SlippageBps} & \metric{2} & Spread CFD XAU-USD et commission, en points de base. \\
+\code{Inp\_Gold\_Trace} & \metric{false} & Trace journalière de réconciliation (diagnostic uniquement). \\
+\code{Inp\_Gold\_TraceFile} & \metric{gold\_trace.csv} & Fichier de la trace ci-dessus. \\
+\bottomrule
+\end{tabular}
+\end{center}

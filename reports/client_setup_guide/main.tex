@@ -498,69 +498,21 @@ broker.
 Allocations strictes entre sleeves (somme $= 1.0$, validée à $10^{-6}$) et
 gardes-fous de risque agrégés au niveau portefeuille.
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{2.3cm}p{8.0cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_AllocMRMacro}     & \metric{0.72}  & Part de l'équity pilotée par le Sleeve~1 (MR Macro). \\
-\code{Inp\_AllocTSMomentum}  & \metric{0.09}  & Part allouée au Sleeve~2 (TS Momentum). \\
-\code{Inp\_AllocRSIDaily}    & \metric{0.09}  & Part allouée au Sleeve~3 (RSI Daily). \\
-\code{Inp\_AllocGoldMomentum} & \metric{0.10} & Part allouée au Sleeve~4 (Gold Momentum, XAU-USD). \\
-\code{Inp\_RiskScale}        & \metric{4.5}   & Facteur d'échelle appliqué aux budgets de risque des quatre sleeves. \textbf{C'est le paramètre qui dimensionne le risque}~: le rendement et le repli y répondent de façon quasi proportionnelle. \\
-\code{Inp\_EnableDDCap}      & \metric{false} & Circuit-breaker DD désactivé par défaut (Phase~A 2026-05-04, freinait 24\,\% configs IS sans bénéfice OOS). \\
-\code{Inp\_DDCap}            & \metric{0.20}  & Seuil DD relatif (utilisé seulement si \code{EnableDDCap=true}). \\
-\code{Inp\_ResetDDState}     & \metric{false} & Force le reset de l'état DD persisté (debug uniquement). \\
-\code{Inp\_EnableMarginCap}  & \metric{true}  & Cap marge \textbf{actif}. Jamais déclenché sur le backtest de référence, mais il protège en conditions réelles. \\
-\code{Inp\_MarginCapPct}     & \metric{0.50}  & Seuil d'utilisation de marge au-delà duquel le levier global est divisé par deux. Une fermeture forcée de toutes les positions intervient séparément à $85\,\%$. \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_alloc.tex}
 
 \subsection*{6.2 Vol-targeting global}
 
 Pilote le levier brut agrégé (somme des notionnels / équity) pour viser une
 volatilité annualisée cible.
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{2.3cm}p{8.0cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_GlobalTargetVol}    & \metric{0.37}  & Volatilité annualisée cible du portefeuille. \\
-\code{Inp\_GlobalMaxLeverage}  & \metric{31.0}  & Plafond dur du levier brut (31$\times$). \\
-\code{Inp\_GlobalVolFloor}     & \metric{0.02}  & Plancher vol estimée~; évite un levier explosif si vol $< 2\,\%$. \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_voltarget.tex}
 
 \subsection*{6.3 Sleeve 1 --- MR Macro (intraday M1)}
 
 Mean reversion intraday sur la déviation VWAP, gatée par un filtre macro
 (courbe 10Y--2Y + chômage US).
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_MR\_Pairs}          & \metric{EUR, GBP, JPY, CAD} & Univers 4~paires equal-weight (USD-quoted). \\
-\code{Inp\_MR\_BBWindow}       & \metric{80}              & Fenêtre Bollinger sur la déviation VWAP (barres M1). \\
-\code{Inp\_MR\_BBAlpha}        & \metric{5.0}             & Largeur de bande en $\sigma$~; entrée si $|z|>5\sigma$. \\
-\code{Inp\_MR\_TPStop}         & \metric{0.006}           & Take-profit par trade (0.6\,\%). \\
-\code{Inp\_MR\_SLStop}         & \metric{0.005}           & Stop-loss par trade (0.5\,\%). \\
-\code{Inp\_MR\_SessionStart}   & \metric{6}               & Heure UTC d'ouverture de la fenêtre (overlap Londres). \\
-\code{Inp\_MR\_SessionEnd}     & \metric{14}              & Heure UTC de fermeture (avant ouverture US active). \\
-\code{Inp\_MR\_TimeStopHours}  & \metric{6}               & Time-stop~: clôture forcée après 6\,h sans TP/SL. \\
-\code{Inp\_MR\_ForcedCloseHr}  & \metric{21}              & Heure UTC du flatten total intraday (kill-switch quotidien). \\
-\code{Inp\_MR\_SpreadThresh}   & \metric{0.5}             & Seuil sur spread 10Y--2Y pour le gating macro. \\
-\code{Inp\_MR\_SlippageBps}    & \metric{15}              & Slippage modélisé en basis~points (backtest). \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_sleeve_mr.tex}
 
 \clearpage
 
@@ -570,45 +522,14 @@ Suivi de tendance daily sur EMA croisées, filtré par un RSI court pour exclure
 les extrêmes de surachat/survente. USD/CAD explicitement exclu (régime
 historiquement défavorable).
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_TS\_Pairs}        & \metric{EUR, GBP, JPY} & Univers 3~paires (USD/CAD exclu). \\
-\code{Inp\_TS\_FastEMA}      & \metric{20}          & EMA rapide pour le signal de tendance. \\
-\code{Inp\_TS\_SlowEMA}      & \metric{50}          & EMA lente~; long si EMA$_{20}>$EMA$_{50}$, short inverse. \\
-\code{Inp\_TS\_RSIPeriod}    & \metric{7}           & Période du RSI filtre momentum. \\
-\code{Inp\_TS\_RSILow}       & \metric{40}          & Seuil RSI bas~; filtre les shorts en survente extrême. \\
-\code{Inp\_TS\_RSIHigh}      & \metric{60}          & Seuil RSI haut~; filtre les longs en surachat extrême. \\
-\code{Inp\_TS\_TargetVol}    & \metric{0.10}        & Vol cible par paire (10\,\% annualisé). \\
-\code{Inp\_TS\_MaxLeverage}  & \metric{3.0}         & Levier max au sein du sleeve (faible, signal daily). \\
-\code{Inp\_TS\_SlippageBps}  & \metric{10}          & Slippage modélisé en bps. \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_sleeve_ts.tex}
 
 \subsection*{6.5 Sleeve 3 --- RSI Daily (daily D1)}
 
 Mean reversion daily sur RSI(14), sleeve diversificateur anti-corrélé en années
 difficiles.
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_RSI\_Pairs}       & \metric{EUR, GBP, JPY, CAD} & Univers 4~paires equal-weight. \\
-\code{Inp\_RSI\_Period}      & \metric{14}              & Période RSI standard. \\
-\code{Inp\_RSI\_Oversold}    & \metric{25.0}            & Seuil long (entrée si RSI~$<25$). \\
-\code{Inp\_RSI\_Overbought}  & \metric{75.0}            & Seuil short (entrée si RSI~$>75$). \\
-\code{Inp\_RSI\_ExitMid}     & \metric{50.0}            & Sortie~: RSI repasse 50 (retour à la moyenne). \\
-\code{Inp\_RSI\_SlippageBps} & \metric{10}              & Slippage modélisé en bps. \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_sleeve_rsi.tex}
 
 \subsection*{6.6 Sleeve 4 --- Gold Momentum (daily D1)}
 
@@ -616,23 +537,7 @@ Suivi de tendance sur l'or, quasi orthogonal aux trois sleeves FX. C'est la slee
 qui rend la cible de rendement atteignable~--- et, sur le backtest de référence,
 celle qui produit l'essentiel du résultat.
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_Gold\_Symbol}       & \metric{XAUUSD}   & Symbole de base~; le suffixe broker est ajouté automatiquement. \\
-\code{Inp\_Gold\_LookbackA..D} & \metric{40 / 60 / 120 / 250} & Horizons de tendance dont les votes sont agrégés. Mettre à $0$ désactive un horizon. \\
-\code{Inp\_Gold\_AllowShort}   & \metric{false}    & Positions courtes désactivées~: l'or présente une dérive haussière structurelle. \\
-\code{Inp\_Gold\_TargetVol}    & \metric{0.55}     & Volatilité cible propre à la sleeve, appliquée avant la couche globale. \\
-\code{Inp\_Gold\_MaxLeverage}  & \metric{6.6}      & Plafond de levier interne à la sleeve. \\
-\code{Inp\_Gold\_SafetySL}     & \metric{0.04}     & Stop de sécurité à $4\,\%$~: l'or est environ deux fois plus volatil que les paires FX. \\
-\code{Inp\_Gold\_SlippageBps}  & \metric{2}        & Spread CFD XAU-USD $+$ commission, en points de base. \\
-\code{Inp\_Gold\_Trace}        & \metric{false}    & Trace journalière de réconciliation (diagnostic uniquement). \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_sleeve_gold.tex}
 
 \begin{warningbox}
 \textbf{Vérifiez que votre courtier propose XAU-USD} avec le même suffixe que vos
@@ -646,34 +551,7 @@ l'essentiel du résultat.
 Paramètres d'environnement, identifiants de deals et configuration de la
 source de données macro (5~modes, voir~4.4).
 
-\begin{center}
-\small
-\begin{tabular}{@{}p{4.6cm}>{\footnotesize\ttfamily}p{3.4cm}p{6.9cm}@{}}
-\toprule
-\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
-\midrule
-\code{Inp\_SymbolSuffix}          & \metric{.c}                 & Suffixe broker (\textbf{critique}, voir~3.4). \\
-\code{Inp\_MagicMR}               & \metric{831}                & Magic number Sleeve~1 (audit deals). \\
-\code{Inp\_MagicTS}               & \metric{832}                & Magic number Sleeve~2. \\
-\code{Inp\_MagicRSI}              & \metric{833}                & Magic number Sleeve~3. \\
-\code{Inp\_MagicGold}             & \metric{835}                & Magic number Sleeve~4. \\
-\code{Inp\_ExportDeals}           & \metric{false}              & Écrit un CSV par transaction (avec magic et sleeve) en fin de backtest. \\
-\code{Inp\_LogVerbose}            & \metric{false}              & Active les logs \emph{DEBUG} (désactiver en prod). \\
-\code{Inp\_LogToFile}             & \metric{true}               & Écrit dans \code{MQL5\textbackslash Files\textbackslash fx\_log.csv}. \\
-\code{Inp\_DailyRecomputeHr}      & \metric{21}                 & Heure UTC du recompute daily (vol-targeting + sleeves D1). \\
-\addlinespace
-\code{Inp\_MacroSourceMode}       & \metric{AUTO}               & Mode dispatch macro (FILE / NATIVE / HYBRID / HISTORY / AUTO). \\
-\code{Inp\_MacroCacheFile}        & \metric{macro\_cache.csv}   & Cache 1~ligne (mode FILE). \\
-\code{Inp\_MacroUseCommon}        & \metric{true}               & Lecture dans \code{Common\textbackslash Files} (sinon \code{MQL5\textbackslash Files}). \\
-\code{Inp\_MacroMaxAgeHours}      & \metric{168}                & Fraîcheur max macro (7~jours)~; au-delà, sleeve~1 désactivé. \\
-\code{Inp\_FREDApiKeyFile}        & \metric{fred\_api\_key.txt} & Nom du fichier contenant la clé FRED. \\
-\code{Inp\_FREDKeyUseCommon}      & \metric{true}               & Lit la clé dans \code{Common\textbackslash Files}. \\
-\code{Inp\_FREDSeriesId}          & \metric{T10Y2Y}             & Série FRED utilisée (spread courbe 10Y--2Y). \\
-\code{Inp\_MacroHistoryFile}      & \metric{macro\_history.csv} & Fichier multi-lignes (mode HISTORY). \\
-\code{Inp\_MacroHistoryUseCommon} & \metric{true}               & Lit l'historique dans \code{Common\textbackslash Files}. \\
-\bottomrule
-\end{tabular}
-\end{center}
+\input{tables/params_ops.tex}
 
 \begin{warningbox}
 Modifier les paramètres au-delà du suffixe broker (\code{Inp\_SymbolSuffix})

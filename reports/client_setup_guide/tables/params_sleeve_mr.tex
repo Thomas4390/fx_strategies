@@ -1,0 +1,24 @@
+% Généré par scripts/build_setup_guide_tables.py — NE PAS ÉDITER À LA MAIN.
+% Valeurs dérivées de write_default_preset.PRESET_LINES.
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{3.4cm}p{6.9cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_MR\_Pairs} & \metric{EUR, GBP, JPY, CAD} & Univers de 4~paires equal-weight (cotées en USD). \\
+\code{Inp\_MR\_BBWindow} & \metric{80} & Fenêtre Bollinger sur la déviation au VWAP, en barres M1. \\
+\code{Inp\_MR\_BBAlpha} & \metric{5.0} & Largeur de bande en $\sigma$~; entrée si $|z| > 5.0\sigma$. \\
+\code{Inp\_MR\_TPStop} & \metric{0.006} & Take-profit par transaction. \\
+\code{Inp\_MR\_SLStop} & \metric{0.005} & Stop-loss par transaction. \\
+\code{Inp\_MR\_SessionStart} & \metric{8} & Heure UTC d'ouverture de la fenêtre de trading. \\
+\code{Inp\_MR\_SessionEnd} & \metric{16} & Heure UTC de fermeture de la fenêtre~; aucune entrée au-delà. \\
+\code{Inp\_MR\_TimeStopHours} & \metric{6} & Time-stop~: clôture forcée après 6\,h sans take-profit ni stop-loss. \\
+\code{Inp\_MR\_ForcedCloseHr} & \metric{21} & Heure UTC du flatten intraday total (kill-switch quotidien). \\
+\code{Inp\_MR\_SpreadThresh} & \metric{0.5} & Seuil sur le spread 10Y--2Y pour le filtre macro. \\
+\code{Inp\_MR\_SlippageBps} & \metric{15} & Slippage modélisé en points de base. \\
+\code{Inp\_MR\_DisableMacroFilter} & \metric{false} & Neutralise le filtre macro (diagnostic uniquement). \\
+\code{Inp\_MR\_NewsFilterEnabled} & \metric{true} & Suspend les entrées autour des publications macro à fort impact. \\
+\bottomrule
+\end{tabular}
+\end{center}

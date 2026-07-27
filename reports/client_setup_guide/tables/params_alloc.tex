@@ -1,0 +1,25 @@
+% Généré par scripts/build_setup_guide_tables.py — NE PAS ÉDITER À LA MAIN.
+% Valeurs dérivées de write_default_preset.PRESET_LINES.
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.6cm}p{2.3cm}p{8.0cm}@{}}
+\toprule
+\textbf{Paramètre} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\code{Inp\_AllocMRMacro} & \metric{0.72} & Part de l'équity pilotée par le Sleeve~1 (MR Macro). \\
+\code{Inp\_AllocTSMomentum} & \metric{0.09} & Part allouée au Sleeve~2 (TS Momentum). \\
+\code{Inp\_AllocRSIDaily} & \metric{0.09} & Part allouée au Sleeve~3 (RSI Daily). \\
+\code{Inp\_AllocGoldMomentum} & \metric{0.1} & Part allouée au Sleeve~4 (Gold Momentum, XAU-USD). \\
+\code{Inp\_AllocH1Momentum} & \metric{0.0} & Part allouée au Sleeve~5 (H1 Momentum). À~0.0, la sleeve est compilée mais inactive~: elle ne prend aucune position. \\
+\addlinespace
+\code{Inp\_RiskScale} & \metric{4.5} & Facteur d'échelle appliqué aux budgets de risque des quatre sleeves. \textbf{C'est le paramètre qui dimensionne le risque}~: le rendement et le repli y répondent de façon quasi proportionnelle. \\
+\addlinespace
+\code{Inp\_EnableDDCap} & \metric{false} & Circuit-breaker de \emph{drawdown}. Désactivé (Phase~A 2026-05-04~: freinait 24\,\% des configurations in-sample sans bénéfice hors échantillon). \\
+\code{Inp\_DDCap} & \metric{0.2} & Seuil de repli relatif, utilisé seulement si \code{EnableDDCap=true}. \\
+\code{Inp\_ResetDDState} & \metric{false} & Force la réinitialisation de l'état de repli persisté (diagnostic uniquement). \\
+\addlinespace
+\code{Inp\_EnableMarginCap} & \metric{true} & Plafond d'utilisation de marge, \textbf{actif}. Jamais déclenché sur le backtest de référence, mais il protège en conditions réelles. \\
+\code{Inp\_MarginCapPct} & \metric{0.5} & Seuil d'utilisation de marge au-delà duquel le levier global est divisé par deux. Une fermeture forcée de toutes les positions intervient séparément à $85\,\%$. \\
+\bottomrule
+\end{tabular}
+\end{center}
