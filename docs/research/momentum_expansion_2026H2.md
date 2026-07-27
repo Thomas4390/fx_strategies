@@ -212,6 +212,39 @@ ou 2022-11 (nouveaux) → 2025-12-31 :
 multi-instruments (USD-JPY, XAG-USD, US100) est la voie du cycle.** Aucune
 famille nouvelle n'ajoute un pari à la fois distinct, positif et exécutable.
 
+## 4.6 Vérifications MT5 ciblées (Phase 4)
+
+- **USD-JPY — CONFIRMÉ.** Stress de cible MT5 (lookbacks de production fixes) :
+  Sharpe 0,903 / 0,814 / 0,730 pour tv 0,40 / 0,55 / 0,70 — décroissance douce
+  par le drag de variance, aucun pic. 31 trades dans tous les cas.
+- **US100 — DIFFÉRÉ.** À 10 k, 20 k et 100 k de dépôt, le Sharpe MT5 reste
+  ~0,12 : ce n'était pas (que) le cap de volume, c'est la fenêtre broker
+  2023-2025 qui ne montre pas l'edge de long terme (0,78 sur 36 ans vbt). Le
+  promouvoir sur le vbt seul contredirait la doctrine du moteur exécutant —
+  candidat à revoir quand une fenêtre d'exécution plus longue existera.
+- **JPN225 — NON EXÉCUTABLE** chez ce broker : notionnel symbolique quel que
+  soit le dépôt (CAGR 0,25 %, dd 0,67 % à 20 k) — plafond de volume structurel
+  face à un tick value JPY minuscule. Hors liste.
+
+## 4.7 Pré-gel de la lecture FROZEN_OOS (écrit AVANT toute lecture)
+
+Candidats consommant leur tranche : **USD-JPY** et **XAG-USD**. Pas de lecture
+pour US100 (différé — ne pas brûler la tranche d'un candidat non promu) ni
+pour l'or (tranche 2025-07→2026-07 épuisée, cf. HOLDOUT_POLICY.md).
+
+Configuration figée : TSMOM 40/60/120/250, long-only, tv 0,55, cap 6,6,
+`RiskScale=1.0`, sleeve isolée. Fenêtre gelée : 2026-01-01 → fin des données
+(broker : 2026-05-01 pour USDJPY, 2026-06-19 pour XAG ; vbt : idem sources).
+~4-5 mois, 2-4 trades attendus par instrument : **une lecture de
+non-contradiction, pas une confirmation** (puissance quasi nulle).
+
+Prédictions (à confronter, pas à ajuster) :
+- USD-JPY : in-sample MT5 Sharpe 0,81, ~6 trades/an. Attendu OOS : 1-3 trades,
+  et un rendement dans [−15 %, +25 %] du sous-compte. Contradiction si perte
+  > 20 % ou si la sleeve cesse structurellement de trader.
+- XAG-USD : in-sample MT5 0,44. Attendu OOS : 2-4 trades, rendement dans
+  [−20 %, +30 %]. Contradiction si perte > 25 %.
+
 ## 5. Prochaines étapes
 
 1. Phase 3 — familles nouvelles (allow_short or in-sample seulement — tranche

@@ -82,5 +82,11 @@
     "family": "tsmom_stability",
     "n": 36,
     "note": "stress de stabilit\u00e9 passe 2 \u2014 aucune res\u00e9lection"
+  },
+  {
+    "ts": "2026-07-27T19:06:23.147601+00:00",
+    "family": "mt5_phase4_checks",
+    "n": 5,
+    "note": "stress tv USDJPY (0.40/0.70) + indices depot 20k sous cap volume"
   }
 ]
