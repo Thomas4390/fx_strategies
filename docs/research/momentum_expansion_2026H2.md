@@ -245,6 +245,26 @@ Prédictions (à confronter, pas à ajuster) :
 - XAG-USD : in-sample MT5 0,44. Attendu OOS : 2-4 trades, rendement dans
   [−20 %, +30 %]. Contradiction si perte > 25 %.
 
+## 4.8 Lecture FROZEN_OOS — CONSOMMÉE le 2026-07-27
+
+Une lecture par candidat, fenêtre 2026-01-01 → 2026-04-30 (bornée par
+`macro_history.csv` ; 4 mois au lieu des 5,5 disponibles côté XAG).
+
+- **Attribution** : le découpage MT5 par date de sortie attribue tout le P&L
+  d'une position chevauchant la frontière à la tranche OOS (l'apparent
+  « +165 k OOS » de XAG est une position ouverte fin 2025) — la lecture qui
+  fait foi est la scission **quotidienne** vbt, complétée par les deals MT5
+  fermés.
+- **USD-JPY** : vbt −12,0 % sur la tranche (101 séances, 85 en position) ;
+  MT5 +5 352 $ sur 100 k en deals fermés (4 sorties). Prédiction pré-gelée
+  [−15 %, +25 %] : **non contredit** (borne basse approchée côté vbt).
+- **XAG-USD** : vbt −2,4 % (82 séances) ; 6 sorties MT5. Prédiction
+  [−20 %, +30 %] : **non contredit**.
+- Conclusion conforme au pré-gel : 4 mois n'ont aucune puissance — la lecture
+  ne contredit pas les candidats, elle ne les confirme pas. Les tranches
+  USD-JPY et XAG-USD 2026-01→2026-04 sont désormais **consommées** (une
+  lecture chacune) et consignées dans `HOLDOUT_POLICY.md`.
+
 ## 5. Prochaines étapes
 
 1. Phase 3 — familles nouvelles (allow_short or in-sample seulement — tranche

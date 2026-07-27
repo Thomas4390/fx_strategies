@@ -176,6 +176,15 @@ arbitrate, so reads are recorded here rather than left to memory.
 |---|---|---|---|---|
 | `2025-07-01 → 2026-07` | gold sizing regimes (`sweep_gold_sizing.py --holdout`) | **2** | 2026-07-25 | **spent** |
 | `2026-01-01 → 2026-07` | gold lookback retune (CAGR mandate) | **1** | 2026-07-26 | at risk |
+| `2026-01-01 → 2026-04-30` | USDJPY TSMOM sleeve (momentum expansion cycle) | **1** | 2026-07-27 | at risk |
+| `2026-01-01 → 2026-04-30` | XAGUSD TSMOM sleeve (momentum expansion cycle) | **1** | 2026-07-27 | at risk |
+
+**Momentum expansion, USDJPY & XAGUSD, read #1 each** (2026-07-27) —
+`FROZEN_OOS_RESULT`, single inference pass, predictions pre-frozen and committed
+before the read (`docs/research/momentum_expansion_2026H2.md` §4.7-4.8). Daily
+vbt attribution: USDJPY −12.0 %, XAGUSD −2.4 % over 2026-01→2026-04 — inside the
+pre-frozen non-contradiction ranges; MT5 closed-deal view: USDJPY +5.4 % on the
+sub-account. Four months carry no power: the read neither confirms nor kills.
 
 **Gold lookback retune, read #1** (2026-07-26) — `FROZEN_OOS_RESULT`, single inference
 pass, no re-selection. Under an explicit CAGR mandate the sleeve was retuned to
