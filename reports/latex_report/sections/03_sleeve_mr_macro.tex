@@ -25,7 +25,7 @@ Techniquement, la stratégie exploite deux asymétries micro-structurelles bien 
 \begin{enumerate}
 \item \textbf{VWAP ancré à la journée}~: le calcul est réinitialisé à 00h00 UTC chaque jour, et reprend de façon cumulative.
 \item \textbf{Bandes de Bollinger} à 80 périodes et 5 écarts-types, calculées sur la déviation prix moins VWAP. Les bandes ainsi obtenues définissent des seuils dynamiques de retour à la moyenne.
-\item \textbf{Filtre session}~: uniquement entre 6h et 14h~UTC, correspondant au chevauchement Londres et New~York où la liquidité atteint son maximum.
+\item \textbf{Filtre session}~: uniquement entre 8h et 16h~UTC, correspondant au chevauchement Londres et New~York où la liquidité atteint son maximum.
 \item \textbf{Filtre macro à deux étages}~:
   \begin{itemize}
   \item Spread de courbe des taux 10~ans moins 2~ans inférieur à 0.5~(proxy de stress cyclique)~;
@@ -37,7 +37,7 @@ Techniquement, la stratégie exploite deux asymétries micro-structurelles bien 
 
 \subsection{Performance historique}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{sleeve_mr_macro_equity.png}
 \caption{Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}
@@ -76,5 +76,5 @@ Techniquement, la stratégie exploite deux asymétries micro-structurelles bien 
 \input{tables/trade_examples_mr_macro.tex}
 
 \begin{examplebox}
-\textbf{Anatomie d'un trade gagnant~:} le trade long du 12~février 2025 à 08h31~UTC est entré lorsque le \emph{close} EUR-USD a touché la bande inférieure calculée sur la déviation au VWAP. La session étant ouverte (8h~UTC supérieur à 6h) et le spread 10Y--2Y à $0.32$ (sous le seuil 0.5), les deux filtres étaient passants. Le retour du prix vers le VWAP a déclenché la sortie par take-profit à 11h59~UTC, pour une durée totale de 3~heures~30 et un rendement de $+0.57\,\%$, soit un P\&L de 6\,236~USD sur un capital nominal d'un million.
+\textbf{Anatomie d'un trade gagnant~:} le trade long du 12~février 2025 à 08h31~UTC est entré lorsque le \emph{close} EUR-USD a touché la bande inférieure calculée sur la déviation au VWAP. La session étant ouverte (08h31 tombe dans la fenêtre 8h--16h~UTC) et le spread 10Y--2Y à $0.32$ (sous le seuil 0.5), les deux filtres étaient passants. Le retour du prix vers le VWAP a déclenché la sortie par take-profit à 11h59~UTC, pour une durée totale de 3~heures~30 et un rendement de $+0.57\,\%$, soit un P\&L de 6\,236~USD sur un capital nominal d'un million.
 \end{examplebox}

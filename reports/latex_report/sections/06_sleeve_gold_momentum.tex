@@ -12,17 +12,246 @@ Le trio FX, combiné et non leviérié, rend 2,2\,\% par an pour une volatilité
 L'or remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À 10\,\% de poids, il porte le Sharpe du portefeuille combiné de 0,66 à 1,08, ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
 
 \subsection{Mécanique du signal}
+\label{sec:gold_signal}
+
+Le signal est un \emph{time series momentum} au sens de Moskowitz, Ooi et Pedersen (\emph{Journal of Financial Economics}, 2012)~: le rendement passé d'un actif prédit le signe de son rendement futur sur des horizons de un à douze mois. La difficulté pratique de cette famille de signaux n'est pas de la mettre en \oe uvre, mais de choisir l'horizon sans le sur-ajuster. Ce moteur résout le problème en refusant de choisir.
 
 \begin{enumerate}
-\item \textbf{Signal de tendance} sur le cours de clôture journalier de XAU-USD, mesuré sur plusieurs horizons de \emph{lookback} dont les votes sont agrégés.
-\item \textbf{Séance de référence}~: la journée de trading est bornée à 17h00, heure de New York, conformément à la convention du courtier. Cette borne a fait l'objet d'un verrou de test dédié~--- une définition ambiguë de la séance est la manière habituelle dont deux portages d'une même stratégie divergent.
-\item \textbf{Dimensionnement plat}~: la taille de position ne varie ni avec les gains ni avec les pertes récentes. Les variantes progressives (martingale, anti-martingale) ont été évaluées et écartées~; leur classement s'inversait d'une fenêtre de données à la suivante, ce qui indique qu'elles mesurent la séquence d'une période plutôt qu'une propriété persistante.
-\item \textbf{Couche de risque propre}~: la sleeve porte son propre ciblage de volatilité avant d'entrer dans la couche globale. Elle n'est donc pas multipliée par le levier appliqué aux sleeves FX, sous peine d'empiler deux fois la même correction.
+\item \textbf{Quatre horizons, un vote de signe.} À la clôture de chaque séance, le rendement de l'or est mesuré sur $40$, $60$, $120$ et $250$~séances. De chacun, on ne retient que le \emph{signe}~--- pas l'amplitude, nettement plus bruitée. Le signal est la moyenne des quatre signes, donc une valeur dans $\{-1;\,-0{,}5;\,0;\,+0{,}5;\,+1\}$. La position s'ouvre quand cette moyenne devient strictement positive et se ferme quand elle cesse de l'être.
+
+\item \textbf{Aucun horizon n'est optimisé.} Les quatre valeurs sont fixées \emph{a priori} d'après la littérature, jamais ajustées sur l'historique. Moyenner remplace un paramètre choisi par un agrégat, ce qui retire une surface d'ajustement au lieu d'en ajouter une. Un raccourcissement de la grille à $(15,30,60)$ a bien été évalué~: il paraissait supérieur en simulation Python, et le backtest sur le moteur d'exécution MetaTrader~5 l'a réfuté~--- $17{,}3\,\%$ de rendement annualisé contre $36{,}4\,\%$ pour la grille d'origine. Les horizons longs ont été conservés.
+
+\item \textbf{Long-only.} Il n'y a pas de vente à découvert sur l'or~: quand le vote est négatif, le moteur est hors marché. Autoriser les positions courtes coûtait $3{,}8$~points de rendement annualisé et doublait le repli maximal ($-66{,}8\,\%$ contre $-23{,}3\,\%$ sur la fenêtre de recherche).
+
+\item \textbf{La séance est bornée à 17h00, heure de New York}, conformément à la convention du courtier sur les CFD. Ce détail n'en est pas un~: borner la journée à minuit fabrique $392$~fausses séances~--- les dimanches soir, longs de six heures au lieu de treize~--- et gonfle le décompte de séances de $20\,\%$, ce qui raccourcit d'autant tous les horizons exprimés en séances. Cette borne fait l'objet d'un verrou de test dédié.
+
+\item \textbf{Le moteur est lent.} Le vote ne bascule qu'une dizaine de fois par an. Sur la fenêtre d'exécution de référence, cela représente $35$~positions en cinq ans et quatre mois~--- $4\,\%$ des transactions du portefeuille. Les positions se comptent en semaines, et le coût de rotation est négligeable~: environ $0{,}2\,\%$ par an.
 \end{enumerate}
+
+\subsection{Du signal à la taille de position}
+
+Le signal dit \emph{quand} être exposé~; il ne dit pas \emph{combien}. La taille est fixée par une couche de ciblage de volatilité propre au moteur, appliquée avant la couche globale du portefeuille.
+
+\begin{equation*}
+\text{levier}_t \;=\; \min\!\left(\frac{\sigma^{\text{cible}}}{\hat{\sigma}_t},\; L^{\max}\right),
+\qquad \sigma^{\text{cible}} = 0{,}55, \quad L^{\max} = 6{,}6
+\end{equation*}
+
+où $\hat{\sigma}_t$ est la volatilité annualisée récemment réalisée par l'or. Le mécanisme est contra-cyclique par construction~: l'exposition se réduit quand le marché s'agite et augmente quand il se calme. Le plafond $L^{\max}$ existe pour le cas inverse~--- une volatilité réalisée qui s'effondre produirait sinon un levier arbitrairement grand.
+
+Trois précisions sur ces valeurs~:
+
+\begin{itemize}
+\item La cible de $55\,\%$ est élevée dans l'absolu, et volontairement. Ce moteur est borné en aval par son allocation de $10\,\%$~: c'est à ce niveau, et non à l'intérieur du moteur, que son risque est contenu.
+\item Un \textbf{stop de sécurité à $4\,\%$} du prix d'entrée complète le dispositif. Ce n'est pas un stop de stratégie~--- le signal sort de lui-même~--- mais un garde-fou contre un décrochage brutal. Sur la fenêtre de référence, il ne s'est déclenché qu'une fois.
+\item Le coût modélisé est de \textbf{2 points de base par côté}, spread et commission compris. C'est moins que sur les paires FX de la stratégie, ce qui reflète la profondeur du marché de l'or spot aux volumes traités ici.
+\end{itemize}
+
+\subsection{Dimensionnement progressif~: ce qui a été testé, et pourquoi il est écarté}
+\label{sec:gold_sizing}
+
+La question posée au départ de ce moteur était explicite~: un dimensionnement progressif de type martingale ou grille peut-il améliorer le résultat~? Elle méritait une réponse mesurée plutôt qu'une opinion. Quatre familles de règles ont donc été implémentées, testées et comparées selon un protocole fixé à l'avance.
+
+\subsubsection*{Les quatre règles, en clair}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{5pt}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{5.4cm}>{\raggedright\arraybackslash}p{6.1cm}}
+\toprule
+\textbf{Règle} & \textbf{Ce qu'elle fait} & \textbf{L'intuition qui la motive} \\
+\midrule
+\textbf{Plate} \emph{(témoin)} & La taille ne dépend pas des résultats passés. & Aucune~: c'est la référence contre laquelle les autres doivent démontrer un gain. \\
+\textbf{Martingale} & Après une perte, la taille suivante est multipliée par $m$ (ici $1{,}5$ ou $2$), jusqu'à $n$~doublements au plus. & \enquote{Une série de pertes finit par s'arrêter~; en misant plus gros au retournement, on récupère le terrain perdu.} \\
+\textbf{Anti-martingale} & L'inverse~: on augmente après un gain, on réduit après une perte. & \enquote{Les tendances persistent~; il faut charger quand ça marche et se retirer quand ça ne marche pas.} \\
+\textbf{Grille} & Des paliers d'achat supplémentaires sont ajoutés à mesure que le prix évolue \emph{contre} la position, tous les $k$ écarts-types. & \enquote{Moyenner à la baisse abaisse le prix de revient~; le rebond ramène l'ensemble en profit plus vite.} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Ces règles ont une propriété commune qu'il faut énoncer avant tout chiffre~: \textbf{aucune ne modifie le signal}. Elles ne changent ni le moment d'entrer, ni celui de sortir. Elles ne peuvent donc pas créer de rendement là où le signal n'en produit pas~--- elles ne font que redistribuer les résultats dans le temps.
+
+Les deux figures suivantes montrent ce que chacune aurait réellement fait sur l'historique du moteur, en appliquant la règle telle qu'elle est codée à la séquence de transactions effectivement produite par le signal de production.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_martingale.png}
+\caption{\textbf{Martingale ×2 appliquée aux $47$~transactions réelles du moteur or.} En haut, la taille exigée sur tout l'historique~: elle repart à $1\times$ après chaque gain et double à chaque perte. En bas, le détail de la plus longue série de pertes réellement observée~--- sept pertes consécutives, à l'issue desquelles la règle réclame $2^{7} = 128$~fois la mise initiale pour une huitième position. Le trait orange indique où le plafond de sécurité de $4\times$ coupe l'escalade~: à partir de la troisième perte, la martingale ne fait plus ce qu'elle promet.}
+\label{fig:gold_martingale}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_grid.png}
+\caption{\textbf{Grille $k = 0{,}5$ appliquée aux mêmes positions.} En haut, l'exposition maximale atteinte position par position~: la grille ajoute au moins un palier sur $20$~des $47$~positions et sature son plafond de $4\times$ sur sept d'entre elles. En bas, la mécanique sur une position réelle de $84$~séances~: trois paliers se déclenchent en deux jours lorsque le cours passe sous les seuils dérivés de l'ATR, l'exposition passe de $1\times$ à $4\times$, et le prix de revient moyen descend de \$$1\,974$ à \$$1\,953$. Ici le cours est ensuite remonté~--- c'est le cas favorable, celui qui rend la règle séduisante.}
+\label{fig:gold_grid}
+\end{figure}
+
+\subsubsection*{Le protocole de test}
+
+Quatre exigences ont été fixées avant de mesurer quoi que ce soit.
+
+\begin{enumerate}
+\item \textbf{Comparer à risque égal.} C'est la précaution décisive. Une martingale prend mécaniquement des positions plus grosses en moyenne~: sur la fenêtre de sélection, son exposition moyenne atteint $125\,\%$ contre $69\,\%$ pour le témoin. Comparée telle quelle, elle \enquote{gagne} simplement parce qu'elle est plus levierée, ce qui ne démontre rien. Chaque règle a donc été renormalisée à une volatilité réalisée identique de $25\,\%$ avant toute comparaison.
+
+\item \textbf{Balayer les variantes, pas un réglage.} $24$~configurations ont été évaluées~: multiplicateurs, nombres de paliers, seuils de déclenchement, et les combinaisons martingale~$\times$~grille.
+
+\item \textbf{Séparer sélection et validation.} La comparaison a été conduite sur 2019--2025, puis relue sur une fenêtre aveugle de $333$~séances (juillet~2025 à juillet~2026) réservée depuis le départ. Cette fenêtre a été choisie parce qu'elle contient à la fois l'envolée de l'or et le repli de $-28\,\%$ qui a suivi~: une règle de dimensionnement ne se juge que contre le régime qui la met en difficulté.
+
+\item \textbf{Juger sur la queue, pas sur le Sharpe.} Pour chaque règle, la distribution des résultats a été reconstruite par \emph{bootstrap} stationnaire par blocs, d'où sont tirées la probabilité de perdre plus de la moitié du capital, le repli au 95\textsuperscript{e}~centile, l'asymétrie et l'aplatissement de la distribution.
+\end{enumerate}
+
+\subsubsection*{Ce que les données disaient avant même le premier backtest}
+
+Une martingale suppose qu'une perte rende la perte suivante moins probable~--- autrement dit, que les résultats successifs soient liés. Cette hypothèse est testable directement sur la séquence des transactions, sans simuler quoi que ce soit.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{7.2cm}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{3.8cm}}
+\toprule
+\textbf{Test} & \textbf{Résultat} & \textbf{Lecture} \\
+\midrule
+Autocorrélation du résultat des transactions (décalage~1) & $\rho = -0{,}004$, $p = 0{,}86$ & Aucun lien détectable \\
+Gain moyen après une perte \emph{vs} après un gain & $+4{,}70$ contre $+0{,}53$~bps, $p = 0{,}11$ & Écart non significatif \\
+Rendement après une excursion adverse de $-0{,}5$ à $-1\,\%$ & $-0{,}44$~bps, $t = -4{,}17$ & Moyenner à la baisse a une espérance \textbf{négative} \\
+Rendement lorsque la position est en profit de plus de $+0{,}3\,\%$ & $+2{,}48$~bps, $t = +24{,}46$ & Renforcer les gains est mieux fondé \\
+Plus longue série de pertes consécutives du moteur livré & $\mathbf{7}$ & Une martingale $\times 2$ y aurait exigé $2^{7} = 128$ fois la mise initiale \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+\textbf{L'avant-dernière ligne est celle qui condamne la grille}, et elle mérite d'être lue lentement~: sur cet actif, plus le prix s'éloigne contre la position, plus la suite est \emph{défavorable}, pas favorable. Moyenner à la baisse ajoute donc du capital exactement là où l'espérance est la plus mauvaise. La dernière ligne, elle, mesure la distance entre l'idée de martingale et la réalité d'un compte~: onze pertes consécutives se sont produites sur la période étudiée.
+\end{insightbox}
+
+\subsubsection*{Résultats sur la fenêtre de sélection (2019--2025)}
+
+Toutes les lignes sont ramenées à la même volatilité réalisée. \emph{ann.} est le rendement annualisé, \emph{MAR} le rapport du rendement au repli maximal, et $P(\text{perte} > 50\,\%)$ la probabilité, estimée par \emph{bootstrap}, de perdre plus de la moitié du capital.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Règle} & \textbf{ann.} & \textbf{Sharpe} & \textbf{repli max} & \textbf{MAR} & \textbf{asymétrie} & $\mathbf{P(\text{perte}>50\,\%)}$ \\
+\midrule
+Anti-martingale $m{=}1{,}5$ & $20{,}25\,\%$ & $0{,}81$ & $-46{,}0\,\%$ & $0{,}44$ & $+0{,}01$ & $0{,}25\,\%$ \\
+Grille $k{=}2{,}0$ & $16{,}15\,\%$ & $0{,}65$ & $-48{,}1\,\%$ & $0{,}34$ & $-0{,}53$ & $0{,}30\,\%$ \\
+Grille $k{=}0{,}5$ & $15{,}66\,\%$ & $0{,}63$ & $-47{,}8\,\%$ & $0{,}33$ & $-0{,}53$ & $0{,}45\,\%$ \\
+\textbf{Plate (témoin)} & $15{,}06\,\%$ & $0{,}60$ & $-54{,}3\,\%$ & $0{,}28$ & $-0{,}57$ & $0{,}60\,\%$ \\
+Martingale $m{=}2$, $n{=}3$ & $9{,}49\,\%$ & $0{,}38$ & $-60{,}0\,\%$ & $0{,}16$ & $-0{,}80$ & $\mathbf{4{,}70\,\%}$ \\
+Martingale $\times$ grille & $7{,}34\,\%$ & $0{,}29$ & $-63{,}1\,\%$ & $0{,}12$ & $-0{,}84$ & $\mathbf{8{,}05\,\%}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Deux observations. La martingale est la plus mauvaise règle de la liste sur cette fenêtre, et sa combinaison avec la grille est pire encore~: la probabilité de perdre plus de la moitié du capital passe de $0{,}60\,\%$ pour le témoin à $8{,}05\,\%$, soit un facteur $13$. Et il ne s'agit pas d'un réglage extrême~: les résultats sont \emph{identiques} pour $n = 2$, $3$ ou $4$ paliers, parce qu'avec $43$~transactions en six ans et demi les séries de pertes ne dépassent jamais deux. C'est donc le mécanisme dans sa version la plus douce qui sous-performe, ce qui est un constat bien plus solide que si seule la version extrême avait échoué.
+
+\subsubsection*{La même mesure sur la fenêtre aveugle (2025--2026)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Règle} & \textbf{ann.} & \textbf{Sharpe} & \textbf{repli max} & \textbf{MAR} & \textbf{asymétrie} & $\mathbf{P(\text{perte}>50\,\%)}$ \\
+\midrule
+Martingale $m{=}1{,}5$, $n{=}3$ & $39{,}0\,\%$ & $1{,}56$ & $-18{,}4\,\%$ & $2{,}11$ & $-1{,}08$ & $0{,}00\,\%$ \\
+Martingale $m{=}2{,}0$, $n{=}3$ & $38{,}6\,\%$ & $1{,}54$ & $-18{,}4\,\%$ & $2{,}10$ & $-1{,}08$ & $0{,}00\,\%$ \\
+\textbf{Plate (témoin)} & $35{,}5\,\%$ & $1{,}42$ & $-19{,}1\,\%$ & $1{,}86$ & $-1{,}16$ & $0{,}00\,\%$ \\
+Grille $k{=}2{,}0$ & $35{,}5\,\%$ & $1{,}42$ & $-19{,}1\,\%$ & $1{,}86$ & $-1{,}16$ & $0{,}00\,\%$ \\
+Anti-martingale $m{=}1{,}5$ & $33{,}8\,\%$ & $1{,}35$ & $-18{,}6\,\%$ & $1{,}81$ & $-1{,}08$ & $0{,}00\,\%$ \\
+Grille $k{=}0{,}5$ & $33{,}7\,\%$ & $1{,}35$ & $-18{,}7\,\%$ & $1{,}80$ & $-1{,}08$ & $0{,}00\,\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Le classement s'inverse presque exactement}, et c'est le résultat central de toute cette étude~:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Règle} & \textbf{Sharpe 2019--2025} & \textbf{rang} & \textbf{Sharpe 2025--2026} & \textbf{rang} \\
+\midrule
+Anti-martingale $m{=}1{,}5$ & $0{,}81$ & \textbf{1\textsuperscript{er}} & $1{,}35$ & \textbf{6\textsuperscript{e}} \\
+Plate (témoin) & $0{,}60$ & 7\textsuperscript{e} & $1{,}42$ & 4\textsuperscript{e} \\
+Martingale $m{=}2{,}0$ & $0{,}38$ & \textbf{dernier} & $1{,}54$ & \textbf{2\textsuperscript{e}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Même code, mêmes signaux, deux périodes adjacentes~--- et une conclusion opposée. La règle classée première devient sixième~; la dernière devient deuxième. Le témoin, lui, reste au milieu du tableau dans les deux cas. La figure~\ref{fig:gold_outcome} donne à voir cette inversion sur les courbes d'équité elles-mêmes.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_outcome.png}
+\caption{\textbf{Le même signal passé dans les quatre règles, à volatilité réalisée identique.} À gauche la fenêtre de sélection, à droite la fenêtre aveugle. L'anti-martingale (vert) domine la première et se retrouve dernière sur la seconde~; la martingale (rouge) fait exactement l'inverse. Le dimensionnement plat (bleu marine) reste au milieu dans les deux cas. C'est cette instabilité, et non le niveau atteint par l'une ou l'autre, qui a décidé du choix retenu.}
+\label{fig:gold_outcome}
+\end{figure}
+
+\begin{thesisbox}
+\textbf{Une hiérarchie qui s'inverse entre deux fenêtres voisines ne mesure pas une propriété de la règle~; elle mesure la séquence de transactions que chaque période contenait.} C'est la définition même d'un résultat non reproductible. La fenêtre aveugle contenait par hasard exactement la séquence pour laquelle une martingale est construite~--- des pertes pendant la baisse, puis un rebond capté avec une position agrandie. La fenêtre de sélection ne la contenait pas.
+\end{thesisbox}
+
+\subsubsection*{Pourquoi la fenêtre favorable ne peut pas servir d'argument}
+
+Il serait tentant de retenir la martingale sur la foi de la seconde fenêtre. Deux raisons l'interdisent.
+
+D'abord, cette fenêtre est \textbf{aveugle au risque qui décide}. Sur les $24$~configurations testées, elle rapporte $P(\text{perte} > 50\,\%) = 0{,}00\,\%$ pour toutes sans exception, une probabilité de ruine nulle partout, et un écart de repli maximal de $0{,}7$~point entre la meilleure et la pire. Elle classe donc les règles sur le seul rendement, sur une période sans véritable épisode de stress. Adopter la martingale sur cette base reviendrait à la choisir précisément sur l'axe que cette période ne peut pas mesurer.
+
+Ensuite, ce qui est stable d'une fenêtre à l'autre n'est pas le classement~: c'est la \textbf{forme de la distribution}.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{2019--2025} & \textbf{2025--2026} \\
+\midrule
+Repli au 95\textsuperscript{e} centile --- martingale & $62{,}8\,\%$ & $45{,}3\,\%$ \\
+Repli au 95\textsuperscript{e} centile --- \emph{plate} & $\mathbf{54{,}8\,\%}$ & $\mathbf{32{,}2\,\%}$ \\
+\addlinespace
+$P(\text{perte} > 50\,\%)$ --- martingale & $1{,}40\,\%$ & $0{,}20\,\%$ \\
+$P(\text{perte} > 50\,\%)$ --- \emph{plate} & $\mathbf{0{,}10\,\%}$ & $\mathbf{0{,}00\,\%}$ \\
+\addlinespace
+Asymétrie / aplatissement --- martingale & $-1{,}15$ / $19{,}4$ & $-0{,}57$ / $6{,}7$ \\
+Asymétrie / aplatissement --- \emph{plate} & $\mathbf{-0{,}66}$ / $\mathbf{10{,}6}$ & $-0{,}69$ / $\mathbf{8{,}2}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Dans chaque fenêtre sans exception, la martingale porte une queue de pertes nettement plus lourde pour un rendement qui n'est pas fiablement supérieur.} Y compris sur la fenêtre qui lui est favorable, où sa probabilité de perte majeure reste le double de celle du témoin.
+
+\begin{warningbox}
+\textbf{Ce que cela signifie concrètement pour un compte réel.} Une martingale ne déplace pas l'espérance de gain~: elle échange \enquote{beaucoup de petits gains} contre \enquote{une perte rare et lourde}. La moyenne bouge peu, la queue gauche s'allonge. La conséquence pratique est qu'un Sharpe élevé mesuré sur un historique de martingale n'est pas une preuve de qualité~--- c'est un tirage dans une distribution très dispersée. \textbf{Une martingale peut afficher un excellent résultat jusqu'à la transaction qui l'anéantit.} C'est exactement ce que la seconde fenêtre montre, et c'est pourquoi elle n'a pas été retenue comme argument.
+\end{warningbox}
+
+\subsubsection*{Conclusion retenue}
+
+\begin{thesisbox}
+\textbf{Le moteur est livré en dimensionnement plat.} Les trois raisons, par ordre de poids~:
+
+\smallskip
+\begin{enumerate}
+\item \textbf{Aucune règle progressive n'est stable.} Le classement s'inverse entre deux fenêtres adjacentes~; ce qu'elles mesurent ne persiste pas.
+\item \textbf{La seule fenêtre qui les favorise est aveugle au risque qui les disqualifie.} Elle ne distingue aucune des $24$~règles sur la probabilité de perte majeure ni sur le repli.
+\item \textbf{Le dimensionnement plat n'offre aucune prise à l'ajustement.} Pas de multiplicateur, pas de nombre de paliers, pas de seuil~: il ne peut pas être sur-ajusté, et il se classe au milieu du tableau dans les deux fenêtres plutôt que premier dans l'une et dernier dans l'autre.
+\end{enumerate}
+\end{thesisbox}
+
+Le dossier de l'anti-martingale était réel et méritait d'être instruit~: c'était la seule règle à corriger la forme de la distribution sur la fenêtre de sélection, avec une asymétrie ramenée à $+0{,}01$ contre $-0{,}57$ pour le témoin. Elle n'a simplement pas survécu au contact d'une seconde période. Les quatre règles restent implémentées et couvertes par des tests unitaires dans le code livré, mais elles sont désactivées.
+
+\begin{warningbox}
+\textbf{Une réserve de méthode, énoncée pour ce qu'elle vaut.} La fenêtre aveugle a été relue une seconde fois pour arbitrer cette question, après qu'une correction de la définition des séances eut modifié le classement de sélection. Elle est donc \enquote{dépensée}~: une troisième lecture reviendrait à sélectionner sur la période de validation. Toute proposition ultérieure de dimensionnement progressif exigera une tranche de données réellement nouvelle, et non celle-ci.
+\end{warningbox}
 
 \subsection{Performance historique}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{sleeve_gold_momentum_equity.png}
 \caption{Équité et drawdown du Moteur~4 pris isolément (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}

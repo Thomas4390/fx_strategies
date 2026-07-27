@@ -13,7 +13,7 @@
 
 % Override paths/headers pour ce document
 \graphicspath{{figures/}{../../docs/logo/}{../latex_report/figures/}}
-\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide pédagogique client --- Mai 2026}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide pédagogique client --- Juillet 2026}}
 \fancyhead[L]{\footnotesize\color{slateGrey}\textsf{FxMultiSleeve --- Comprendre la stratégie}}
 
 \hypersetup{
@@ -69,9 +69,9 @@ Logique, paramètres et gestion du risque\par}
 \begin{tabular}{@{}rl@{}}
   \color{slateGrey}\sffamily Document & \textbf{Guide pédagogique de la stratégie} \\[0.18em]
   \color{slateGrey}\sffamily Public & \textbf{Client final --- Onboarding et compréhension} \\[0.18em]
-  \color{slateGrey}\sffamily Date & \textbf{Mai 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{27 juillet 2026} \\[0.18em]
   \color{slateGrey}\sffamily Statut & \textbf{Pédagogie --- complément du guide d'installation} \\[0.18em]
-  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+  \color{slateGrey}\sffamily Version & \textbf{2.0} \\
 \end{tabular}\\[0.7em]
 {\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
 \end{minipage}
@@ -93,7 +93,7 @@ défendre les choix de conception devant un investisseur ou une banque déposita
 {\small\color{slateGrey}\sffamily
 Ce guide complète : (i)~le \emph{guide d'installation} qui détaille la procédure
 opérationnelle, (ii)~le \emph{rapport exécutif} qui synthétise les performances
-en 10~pages pour un comité d'investissement, et (iii)~le \emph{rapport
+à l'intention d'un comité d'investissement, et (iii)~le \emph{rapport
 quantitatif complet} qui documente la méthodologie de validation. Le présent
 document se concentre sur la pédagogie de la stratégie elle-même : intuition
 économique, mécanique des signaux, signification de chaque paramètre.}
@@ -123,7 +123,6 @@ document se concentre sur la pédagogie de la stratégie elle-même : intuition
 \renewcommand{\contentsname}{\sffamily\Large\bfseries\color{primary}Table des matières}
 \tableofcontents}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 1 — VUE D'ENSEMBLE
@@ -174,8 +173,9 @@ Le portefeuille combine les quatre moteurs avec une allocation statique et une c
 \textbf{Moteur} & \textbf{Allocation} & \textbf{Timeframe} & \textbf{Style} & \textbf{Univers} \\
 \midrule
 \rowcolor{softBlue} Moteur 1 --- MR Macro & $72\,\%$ & M1 intraday & Mean reversion & 4 majors \\
-\rowcolor{softYellow} Moteur 2 --- TS Momentum & $10\,\%$ & D1 swing & Trend following & 3 majors \\
-\rowcolor{softGreen} Moteur 3 --- RSI Daily & $10\,\%$ & D1 swing & Mean reversion & 3 majors \\
+\rowcolor{softYellow} Moteur 2 --- TS Momentum & $9\,\%$ & D1 swing & Trend following & 3 majors \\
+\rowcolor{softGreen} Moteur 3 --- RSI Daily & $9\,\%$ & D1 swing & Mean reversion & 3 majors \\
+\rowcolor{lightGrey} Moteur 4 --- Gold Momentum & $10\,\%$ & D1 swing & Trend following & XAU/USD \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -190,7 +190,6 @@ stratégie reste opérationnelle mais le \emph{return on equity} est mécaniquem
 réduit. Le sizing s'adapte automatiquement au levier maximum disponible.
 \end{warningbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 2 — ARCHITECTURE
@@ -212,25 +211,31 @@ Chaque moteur est une stratégie autonome avec son propre univers de paires, ses
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
-\small
-\begin{tabular}{p{3.2cm}p{3.5cm}p{3.5cm}p{3.5cm}}
+\setlength{\tabcolsep}{4pt}
+\footnotesize
+\begin{tabular}{p{2.4cm}p{3.0cm}p{3.0cm}p{3.0cm}p{3.0cm}}
 \toprule
- & \cellcolor{softBlue}\textbf{Moteur 1} & \cellcolor{softYellow}\textbf{Moteur 2} & \cellcolor{softGreen}\textbf{Moteur 3} \\
- & \cellcolor{softBlue}MR Macro & \cellcolor{softYellow}TS Momentum & \cellcolor{softGreen}RSI Daily \\
+ & \cellcolor{softBlue}\textbf{Moteur 1} & \cellcolor{softYellow}\textbf{Moteur 2} & \cellcolor{softGreen}\textbf{Moteur 3} & \cellcolor{lightGrey}\textbf{Moteur 4} \\
+ & \cellcolor{softBlue}MR Macro & \cellcolor{softYellow}TS Momentum & \cellcolor{softGreen}RSI Daily & \cellcolor{lightGrey}Gold Momentum \\
 \midrule
-Allocation & 72\,\% & 9\,\% & 9\,\% \\
-Timeframe & M1 (1 minute) & D1 (1 jour) & D1 (1 jour) \\
-Type & Mean reversion intraday & Suivi de tendance & Mean reversion swing \\
-Indicateurs & VWAP + Bollinger 5\,$\sigma$ & EMA 20/50 + RSI(7) & RSI(14) \\
-Univers & EUR/USD, GBP/USD, USD/JPY, USD/CAD & EUR/USD, GBP/USD, USD/JPY & EUR/USD, GBP/USD, USD/CAD \\
-Filtres & Session 8-16 UTC, macro, news USD & --- & --- \\
-Sortie & Stop, take-profit, time-stop 6h, EOD 21h & Inversion du signal & Retour RSI vers 50, time-stop 21j \\
-Trades / an & $\sim 60$ & $\sim 90$ & $\sim 7$ \\
-Win rate & $\sim 58\,\%$ & $\sim 64\,\%$ & $\sim 71\,\%$ \\
-Rôle dans le P\&L & \emph{Workhorse} ($\sim 56\,\%$) & Marginal ($\sim 8\,\%$) & Diversificateur ($\sim 39\,\%$) \\
+Allocation & 72\,\% & 9\,\% & 9\,\% & 10\,\% \\
+Timeframe & M1 (1 minute) & D1 (1 jour) & D1 (1 jour) & D1 (1 jour) \\
+Type & Mean reversion intraday & Suivi de tendance & Mean reversion swing & Suivi de tendance \\
+Indicateurs & VWAP + Bollinger 5\,$\sigma$ & EMA 20/50 + RSI(7) & RSI(14) & Ensemble de signes 40/60/120/250 \\
+Univers & EUR/USD, GBP/USD, USD/JPY, USD/CAD & EUR/USD, GBP/USD, USD/JPY & EUR/USD, GBP/USD, USD/CAD & XAU/USD \\
+Filtres & Session 8-16 UTC, macro, news USD & --- & --- & Long-only, séance bornée à 17h~NY \\
+Sortie & Stop, take-profit, time-stop 6h, EOD 21h & Inversion du signal & Retour RSI vers 50, time-stop 21j & Ensemble redevenu négatif~; stop de sécurité 4\,\% \\
+Trades / an & $\sim 57$ & $\sim 90$ & $\sim 6$ & $\sim 7$ \\
+Win rate & $58\,\%$ & $63\,\%$ & $67\,\%$ & $31\,\%$ \\
+Part du P\&L mesuré & $8{,}3\,\%$ & $8{,}8\,\%$ & $3{,}0\,\%$ & $\mathbf{79{,}8\,\%}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\noindent\footnotesize Chiffres mesurés sur le backtest d'exécution MetaTrader~5 de
+référence (2021-01-01 $\rightarrow$ 2026-04-30, $851$~transactions). La dernière ligne est
+la part du profit net réalisée par chaque moteur~--- à ne pas confondre avec l'allocation,
+qui dimensionne une exposition et ne prédit pas un résultat.\normalsize
 
 \subsection{Pourquoi cette répartition de poids ?}
 
@@ -257,19 +262,18 @@ Cette logique \emph{vol-équipondérée}, classique en construction de portefeui
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{equity_combined_logscale.png}
-\caption{Courbe d'équité log-scale du portefeuille combiné FxMultiSleeve sur 2020--2026, avec décomposition par moteur. Les trois courbes ne se déplacent pas en synchrone~--- c'est précisément ce que permet la diversification.}
+\caption{Courbe d'équité log-scale du portefeuille combiné FxMultiSleeve sur 2020--2026, avec décomposition par moteur. Les courbes ne se déplacent pas en synchrone~--- c'est précisément ce que permet la diversification.}
 \end{figure}
 
 \begin{insightbox}
 \textbf{La courbe combinée est plus régulière que chacune des composantes prise
-séparément.} Lorsque l'un des moteurs traverse un creux, les deux autres compensent
+séparément.} Lorsque l'un des moteurs traverse un creux, les autres compensent
 souvent. C'est le profil que recherche un comité d'investissement~: un Sharpe
 élevé n'a de valeur que s'il est stable dans le temps. Une stratégie unique à
 Sharpe $1.5$ avec drawdowns de $30\,\%$ tous les 2~ans est moins attrayante qu'une
 combinaison à Sharpe $1.3$ avec drawdowns plafonnés à $10\,\%$.
 \end{insightbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 3 — MOTEUR 1 : MR MACRO
@@ -371,7 +375,6 @@ détruit la performance des autres années. Le \emph{silence sélectif} est une
 propriété désirable du filtre, pas un bug.
 \end{warningbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 4 — MOTEUR 2 : TS MOMENTUM
@@ -470,7 +473,6 @@ moteur de tendance dans le portefeuille même lorsque son Sharpe in-sample para�
 modeste, car son rôle se révèle exactement quand on en a besoin.
 \end{insightbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 5 — MOTEUR 3 : RSI DAILY
@@ -582,7 +584,6 @@ directement de la corrélation. Un signal à Sharpe $0{,}16$ anti-corrélé bat
 fréquemment un signal à Sharpe $0{,}60$ fortement corrélé.
 \end{insightbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 6 — MOTEUR 4 : GOLD MOMENTUM
@@ -710,7 +711,213 @@ prudent des deux. Augmenter cette part serait une décision à prendre sur des
 données futures, pas sur celles qui ont servi à la calibrer.
 \end{insightbox}
 
-\newpage
+\subsection{Pourquoi ce moteur n'utilise ni martingale ni grille}
+\label{sec:gold_sizing_pedago}
+
+La taille des positions de ce moteur ne dépend jamais de ce qui vient de se
+passer. Après trois gains ou après trois pertes, la règle est la même. Ce choix
+n'a rien d'évident~--- il est même contraire à ce que proposent la plupart des
+robots vendus sur l'or~--- et il a été tranché par la mesure, pas par principe.
+Cette sous-section explique ce qui a été testé et ce qui a été trouvé.
+
+\subsubsection*{Les trois règles progressives, en langage clair}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{5pt}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{6.3cm}}
+\toprule
+\textbf{Règle} & \textbf{Ce qu'elle fait} & \textbf{Ce qu'on espère en obtenir} \\
+\midrule
+\textbf{Martingale} & Après une perte, la position suivante est plus grosse (ici $\times 1{,}5$ ou $\times 2$). & Récupérer d'un coup le terrain perdu quand le marché se retourne enfin. \\
+\textbf{Anti-martingale} & L'inverse~: on augmente après un gain, on réduit après une perte. & Charger quand la tendance porte, s'effacer quand elle ne porte plus. \\
+\textbf{Grille} & On rachète par paliers à mesure que le prix baisse contre la position. & Abaisser le prix de revient moyen pour repasser en profit plus vite au rebond. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+\textbf{Le point commun de ces trois règles, et il est essentiel~:} aucune ne
+touche au signal. Elles ne changent ni le moment d'acheter, ni le moment de
+vendre~--- seulement le \emph{montant}. Une règle de taille ne peut donc pas
+rendre rentable un signal qui ne l'est pas. Elle ne fait que redistribuer dans le
+temps le résultat que le signal produit déjà.
+\end{insightbox}
+
+\subsubsection*{Ce que chaque règle aurait réellement fait}
+
+Les deux figures ci-après ne sont pas des schémas de principe~: chaque règle a été
+appliquée, telle qu'elle est codée, à la suite réelle des $47$~positions prises par
+le moteur sur l'or entre 2019 et 2026.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_martingale.png}
+\caption{\textbf{La martingale double la mise après chaque perte.} En haut, sur
+tout l'historique~: la taille repart à $1\times$ après un gain, et grimpe à chaque
+perte. En bas, le détail de la plus longue série de pertes réellement subie~---
+sept d'affilée. À la huitième position, la règle réclame $128$~fois la mise de
+départ. Le résultat de chaque position est indiqué sous l'axe.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_grid.png}
+\caption{\textbf{La grille rachète par paliers quand le prix descend.} En haut,
+l'exposition atteinte position par position~: la grille ajoute au moins un palier
+sur $20$~des $47$~positions, et atteint son plafond de $4\times$ sur sept d'entre
+elles. En bas, la mécanique détaillée sur une position réelle~: trois rachats en
+deux jours, exposition multipliée par quatre, prix de revient moyen abaissé de
+\$$1\,974$ à \$$1\,953$. Ici le cours est remonté ensuite~--- c'est le scénario
+qui rend la méthode attirante, et il est réel. Le problème est ce qui se passe
+quand il ne remonte pas.}
+\end{figure}
+
+\subsubsection*{Ce que dit l'arithmétique avant même de tester}
+
+\begin{examplebox}
+\textbf{Une martingale suppose qu'une série de pertes s'arrête vite.} Sur
+l'historique réel de ce moteur, la plus longue série de positions perdantes
+consécutives a été de \textbf{sept}.
+
+\smallskip
+Avec un doublement à chaque perte et une première position de
+$1\,000$~€, la huitième aurait dû engager $2^{7} = 128$~fois la mise
+initiale, soit \textbf{128\,000~€} --- pour une stratégie à qui l'on avait
+alloué $1\,000$~€ au départ. Le compte aurait été liquidé bien avant~--- non pas
+parce que le signal avait tort, mais parce que la règle de taille exige un
+capital qui n'existe pas.
+\end{examplebox}
+
+Une deuxième vérification, tout aussi simple, condamne la grille. Elle consiste à
+regarder ce qui se passe \emph{après} que le prix se soit déplacé contre la
+position. Si moyenner à la baisse était fondé, la suite devrait être favorable en
+moyenne. C'est l'inverse qui est mesuré~: après une excursion adverse de $-0{,}5$
+à $-1\,\%$, le rendement suivant est \textbf{négatif} ($-0{,}44$~point de base,
+très significatif statistiquement). À l'inverse, quand la position est déjà en
+profit de plus de $0{,}3\,\%$, la suite est nettement positive ($+2{,}48$~points
+de base). \textbf{Sur cet actif, ajouter du capital quand ça va mal revient à en
+ajouter là où l'espérance est la plus mauvaise.}
+
+\subsubsection*{Comment les règles ont été comparées}
+
+Trois précautions, sans lesquelles la comparaison n'aurait rien voulu dire.
+
+\begin{enumerate}
+\item \textbf{À risque égal.} Une martingale prend des positions plus grosses en
+      moyenne~--- $125\,\%$ d'exposition contre $69\,\%$ pour la règle plate. Si
+      on la compare telle quelle, elle \enquote{gagne} simplement parce qu'elle
+      risque davantage. Chaque règle a donc été ramenée au même niveau de risque
+      avant d'être jugée.
+\item \textbf{Sur deux périodes distinctes.} Une période pour comparer
+      (2019--2025), puis une période mise de côté dès le départ et jamais
+      utilisée pendant la mise au point (2025--2026), qui contient le repli de
+      $-28\,\%$ de l'or.
+\item \textbf{En regardant les pertes extrêmes, pas seulement la moyenne.} Pour
+      chaque règle, on estime la probabilité de perdre plus de la moitié du
+      capital, et l'ampleur du repli dans les $5\,\%$ de scénarios les plus
+      défavorables.
+\end{enumerate}
+
+\subsubsection*{Le résultat, et pourquoi il est décisif}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Règle} & \multicolumn{2}{c}{\textbf{Période 2019--2025}} & \multicolumn{2}{c}{\textbf{Période 2025--2026}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+ & Sharpe & rang & Sharpe & rang \\
+\midrule
+\rowcolor{softYellow} Anti-martingale & $0{,}81$ & \textbf{1\textsuperscript{er}} & $1{,}35$ & \textbf{6\textsuperscript{e}} \\
+Plate (celle qui est livrée) & $0{,}60$ & 7\textsuperscript{e} & $1{,}42$ & 4\textsuperscript{e} \\
+\rowcolor{softYellow} Martingale & $0{,}38$ & \textbf{dernière} & $1{,}54$ & \textbf{2\textsuperscript{e}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{gold_sizing_outcome.png}
+\caption{\textbf{Le même signal passé dans les quatre règles, ramenées au même
+niveau de risque.} À gauche la période de comparaison, à droite la période mise de
+côté. L'anti-martingale (vert) domine la première et finit dernière sur la
+seconde~; la martingale (rouge) fait exactement l'inverse. La règle plate (bleu
+marine) reste au milieu dans les deux cas.}
+\end{figure}
+
+\begin{thesisbox}
+\textbf{La règle la meilleure sur la première période devient l'une des pires sur
+la seconde, et réciproquement.} Même code, mêmes signaux d'achat et de vente,
+deux périodes qui se suivent~--- et un classement qui s'inverse.
+
+\smallskip
+C'est \emph{le} résultat de cette étude. Un classement qui s'inverse entre deux
+périodes voisines ne mesure pas une qualité de la règle~: il mesure la suite de
+gains et de pertes que chaque période contenait par hasard. Autrement dit, ces
+règles ne sont pas reproductibles, et un bon résultat passé n'y annonce rien.
+\end{thesisbox}
+
+Il serait tentant de retenir la martingale sur la foi de la seconde période, où
+elle finit deuxième. Deux raisons l'interdisent.
+
+D'abord, cette période ne contient aucun épisode de stress~: elle donne une
+probabilité de perte majeure nulle pour \emph{toutes} les règles testées, et un
+écart de repli maximal de $0{,}7$~point entre la meilleure et la pire. Elle est
+donc incapable de distinguer les règles sur le risque~--- précisément l'axe qui
+disqualifie la martingale.
+
+Ensuite, ce qui reste stable d'une période à l'autre n'est pas le classement,
+c'est la \textbf{forme des pertes extrêmes}.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{Martingale} & \textbf{Plate} \\
+\midrule
+Repli dans les $5\,\%$ de scénarios les pires (2019--2025) & $62{,}8\,\%$ & $\mathbf{54{,}8\,\%}$ \\
+Repli dans les $5\,\%$ de scénarios les pires (2025--2026) & $45{,}3\,\%$ & $\mathbf{32{,}2\,\%}$ \\
+Probabilité de perdre plus de la moitié du capital (2019--2025) & $1{,}40\,\%$ & $\mathbf{0{,}10\,\%}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+\textbf{Ce qu'une martingale fait réellement.} Elle ne fait pas gagner davantage
+en moyenne. Elle échange \enquote{beaucoup de petits gains} contre \enquote{une
+perte rare et très lourde}. C'est pourquoi elle affiche souvent d'excellents
+résultats sur un historique~: la perte qui la caractérise ne s'est pas encore
+produite. \textbf{Une martingale peut présenter une courbe impeccable jusqu'à la
+transaction qui l'anéantit.}
+
+\smallskip
+C'est exactement ce que montre la seconde période de test, et c'est la raison
+pour laquelle son bon classement n'a pas été retenu comme argument.
+\end{warningbox}
+
+\begin{insightbox}
+\textbf{Conclusion~: le moteur est livré en taille plate.} Trois raisons, par
+ordre d'importance~:
+\begin{enumerate}
+\item aucune règle progressive ne se comporte de la même façon d'une période à
+      l'autre~;
+\item la seule période qui les favorise est aveugle au risque qui les
+      disqualifie~;
+\item la taille plate n'a aucun réglage~--- ni multiplicateur, ni nombre de
+      paliers, ni seuil. Elle ne peut donc pas être sur-ajustée, et elle se situe
+      au milieu du classement dans les deux périodes plutôt que première dans
+      l'une et dernière dans l'autre.
+\end{enumerate}
+
+\smallskip
+Les trois règles restent présentes dans le code livré, testées et sécurisées,
+mais désactivées. Le détail chiffré complet figure au rapport d'investissement.
+\end{insightbox}
+
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 7 — GESTION DU RISQUE
@@ -732,7 +939,7 @@ où~:
 \begin{itemize}
 \item $\sigma_{21}$ est la volatilité réalisée du portefeuille sur 21 jours,
 \item $\sigma_{63}$ idem sur 63 jours,
-\item $\text{target\_vol} = 0{,}75$ (la cible),
+\item $\text{target\_vol} = 0{,}37$ (la cible),
 \item $\text{vol\_floor} = 0{,}02$ (plancher pour éviter une division par zéro),
 \item $\text{max\_leverage} = 31$ (plafond dur).
 \end{itemize}
@@ -796,7 +1003,6 @@ Les quatre disjoncteurs s'enchaînent de la moins agressive à la plus agressive
 
 Cette hiérarchie est volontairement \emph{conservatrice et redondante}~: chaque couche peut compenser une défaillance de la précédente.
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 7 — COÛTS D'EXÉCUTION
@@ -872,7 +1078,7 @@ Moteur~1.
 
 \subsection{Contribution totale des frais}
 
-Sur la fenêtre de validation 2020-11 à 2026-04 (5{,}4~ans), la décomposition des coûts du portefeuille combiné~:
+Sur la fenêtre de validation 2021-01 à 2026-04 (5{,}33~ans), la décomposition des coûts du portefeuille combiné~:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
@@ -889,9 +1095,8 @@ Slippage round-trip     & absorbé via décalage SL/TP \\
 \end{tabular}
 \end{center}
 
-Le \emph{swap} est concentré sur les Moteurs~2 et~3 ($-408$ USD à eux deux) ; le Moteur~1 (intraday) le ramène à zéro. Sur un capital initial de \$10\,000, $\$410$ de swap sur 5{,}4~ans représente un drag annuel de l'ordre de $0{,}8\,\%$~--- significatif mais maîtrisé.
+Le \emph{swap} est concentré sur les Moteurs~2 et~3 ($-408$ USD à eux deux) ; le Moteur~1 (intraday) le ramène à zéro. Sur un capital initial de \$10\,000, $\$410$ de swap sur 5{,}33~ans représente un drag annuel de l'ordre de $0{,}8\,\%$~--- significatif mais maîtrisé.
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 8 — PARAMÈTRES : RÉFÉRENCE COMPLÈTE
@@ -995,7 +1200,6 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \end{tabular}
 \end{center}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 9 — LECTURE DES RÉSULTATS BACKTEST
@@ -1061,7 +1265,6 @@ d'autres possibles. La validation rigoureuse passe par les tests \emph{walk-forw
 quantitatif complet~--- le présent guide ne les détaille pas.
 \end{warningbox}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 10 — QUAND INTERVENIR MANUELLEMENT
@@ -1136,7 +1339,6 @@ Trade individuel \enquote{bizarre} ?                    & Continuer & Continuer 
 \end{tabular}
 \end{center}
 
-\newpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  § 11 — ANNEXES
@@ -1210,7 +1412,7 @@ R : C'est normal pour le Moteur~1 si le filtre macro est déclenché (cf. 2021).
 
 \begin{itemize}
 \item \textbf{Guide d'installation client} (\texttt{client\_setup\_guide/main.pdf})~: procédure pas-à-pas pour déployer la stratégie sur MetaTrader~5 Windows en moins de 30~minutes.
-\item \textbf{Rapport exécutif} (\texttt{latex\_report/main\_executive.pdf})~: synthèse en 10~pages destinée aux comités d'investissement.
+\item \textbf{Rapport exécutif} (\texttt{latex\_report/main\_executive.pdf})~: synthèse destinée aux comités d'investissement.
 \item \textbf{Rapport quantitatif complet} (\texttt{latex\_report/main.pdf})~: documentation exhaustive de la méthodologie de validation, incluant les tests \emph{walk-forward}, \emph{bootstrap}, \emph{deflated Sharpe}, \emph{probability of backtest overfitting}, \emph{Hansen SPA}.
 \item \textbf{Audit critique du code MQL5} (\texttt{docs/investigations/mql5\_realism\_audit.md})~: documentation des $60+$ vérifications effectuées sur le code et leurs corrections, pour les lecteurs souhaitant comprendre la chaîne de validation logicielle.
 \end{itemize}
@@ -1218,7 +1420,7 @@ R : C'est normal pour le Moteur~1 si le filtre macro est déclenché (cf. 2021).
 \vspace{2cm}
 
 \begin{center}
-{\interspaced\color{apogeeGold}\footnotesize APOGÉE INVEST \enskip\textbullet\enskip GUIDE PÉDAGOGIQUE CLIENT \enskip\textbullet\enskip MAI 2026\par}
+{\interspaced\color{apogeeGold}\footnotesize APOGÉE INVEST \enskip\textbullet\enskip GUIDE PÉDAGOGIQUE CLIENT \enskip\textbullet\enskip JUILLET 2026\par}
 
 \vspace{0.3cm}
 

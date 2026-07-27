@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 00:08
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 09:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -530,7 +530,7 @@ Package: longtable 2025-10-13 v4.24 Multi-page Table package (DPC)
 \c@LT@chunks=\count320
 \LT@p@ftn=\toks26
 )
-Class scrartcl Info: longtable captions redefined on input line 78.
+Class scrartcl Info: longtable captions redefined on input line 96.
 
 (/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
 Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
@@ -764,7 +764,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 109.
+(scrartcl)              package `titlesec' on input line 127.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 Package: titlesec 2025/01/04 v2.17 Sectioning titles
@@ -811,7 +811,7 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 130.
+(scrartcl)              package `fancyhdr' on input line 148.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
@@ -1649,9 +1649,9 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 )
 File: figures/mt5_balance_curve.png Graphic file (type bmp)
 <figures/mt5_balance_curve.png>
- [1
+ (./tables/mt5_by_sleeve.tex) [1
 
-] (./tables/mt5_by_sleeve.tex) [2] (./tables/mt5_yearly.tex))
+] (./tables/mt5_yearly.tex) [2])
 (./sections/01_introduction.tex
 Underfull \hbox (badness 3612) in paragraph at lines 10--10
 []|\TU/LatinModernRoman(0)/b/n/10.95 Univers d’investisse-
@@ -1687,9 +1687,15 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
 [7]
+Overfull \hbox (0.13771pt too wide) in paragraph at lines 28--29
+[]\TU/LatinModernRoman(0)/b/n/10.95 Filtre session \TU/LatinModernRoman(0)/m/sc
+/10.95 : uniquement entre 8h et 16h UTC, correspondant au chevauchement Londres
+
+ []
+
 File: figures/sleeve_mr_macro_equity.png Graphic file (type bmp)
 <figures/sleeve_mr_macro_equity.png>
- [8] (./tables/trade_examples_mr_macro.tex) [9])
+[8] (./tables/trade_examples_mr_macro.tex) [9])
 (./sections/04_sleeve_ts_momentum.tex
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
@@ -1703,8 +1709,8 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 [10]
 File: figures/sleeve_ts_momentum_3p_equity.png Graphic file (type bmp)
 <figures/sleeve_ts_momentum_3p_equity.png>
- [11] (./tables/trade_examples_ts_momentum.tex))
-(./sections/05_sleeve_rsi_daily.tex [12]
+ (./tables/trade_examples_ts_momentum.tex) [11])
+(./sections/05_sleeve_rsi_daily.tex
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `\leavevmode@ifvmode' on input line 1.
@@ -1714,11 +1720,11 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                \kern 1.82538pt
 (hyperref)                removed on input line 1.
 
-[13]
+[12]
 File: figures/sleeve_rsi_daily_3p_equity.png Graphic file (type bmp)
 <figures/sleeve_rsi_daily_3p_equity.png>
- [14] (./tables/trade_examples_rsi_daily.tex))
-(./sections/06_sleeve_gold_momentum.tex [15]
+ (./tables/trade_examples_rsi_daily.tex) [13])
+(./sections/06_sleeve_gold_momentum.tex [14]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `\leavevmode@ifvmode' on input line 1.
@@ -1732,25 +1738,43 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
+[15] [16]
+File: figures/gold_sizing_martingale.png Graphic file (type bmp)
+<figures/gold_sizing_martingale.png>
+File: figures/gold_sizing_grid.png Graphic file (type bmp)
+<figures/gold_sizing_grid.png>
+ [17] [18]
+Overfull \hbox (3.60478pt too wide) in paragraph at lines 136--148
+ [] 
+ []
+
+[19]
+Overfull \hbox (1.55493pt too wide) in paragraph at lines 157--169
+ [] 
+ []
+
+File: figures/gold_sizing_outcome.png Graphic file (type bmp)
+<figures/gold_sizing_outcome.png>
+[20] [21]
 File: figures/sleeve_gold_momentum_equity.png Graphic file (type bmp)
 <figures/sleeve_gold_momentum_equity.png>
-[16] (./tables/trade_examples_gold_momentum.tex))
-(./sections/06b_research_vs_execution.tex [17]
+ (./tables/trade_examples_gold_momentum.tex) [22] [23])
+(./sections/06b_research_vs_execution.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (C);
 (lettrine.sty)             reported on input line 4.
- [18]
+
 Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
 []\TU/LatinModernRoman(0)/m/sc/10.95 Plutôt que de réconcilier deux définitions
  incompatibles, un facteur d’échelle unique (\TU/LatinModernMono(0)/m/n/10.95 I
 np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
  []
 
-) (./sections/06_overlay_layer.tex [19] (./tables/sensitivity.tex
+[24]) (./sections/06_overlay_layer.tex [25] (./tables/sensitivity.tex
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/it' will be
 (Font)              scaled to size 10.0pt on input line 3.
-) [20]
+) [26]
 File: figures/leverage_timeline.png Graphic file (type bmp)
 <figures/leverage_timeline.png>
 
@@ -1759,7 +1783,7 @@ Overfull \hbox (64.0469pt too wide) in paragraph at lines 5--14
  [][] 
  []
 
-) [21] [22]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+) [27] [28]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/it' will be
 (Font)              scaled to size 10.0pt on input line 3.
 
@@ -1767,11 +1791,11 @@ Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
  []
 
-) [23] (./tables/sleeve_standalone.tex)
+) (./tables/sleeve_standalone.tex) [29]
 File: figures/walkforward_sharpe.png Graphic file (type bmp)
 <figures/walkforward_sharpe.png>
- [24] (./tables/walkforward_yearly.tex)
-[25]
+ (./tables/walkforward_yearly.tex)
+[30]
 File: figures/monthly_heatmap.png Graphic file (type bmp)
 <figures/monthly_heatmap.png>
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/it' will be
@@ -1780,12 +1804,11 @@ File: figures/drawdown_underwater.png Graphic file (type bmp)
 <figures/drawdown_underwater.png>
 File: figures/rolling_sharpe_63d.png Graphic file (type bmp)
 <figures/rolling_sharpe_63d.png>
- [26]
 File: figures/rolling_correlation_63d.png Graphic file (type bmp)
 <figures/rolling_correlation_63d.png>
 File: figures/sleeve_monthly_contribution.png Graphic file (type bmp)
 <figures/sleeve_monthly_contribution.png>
-) (./sections/08_out_of_sample.tex [27]
+) (./sections/08_out_of_sample.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
@@ -1795,14 +1818,15 @@ Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
  []
 
-[28]
+[31] [32] [33]
 File: figures/oos_zoom.png Graphic file (type bmp)
 <figures/oos_zoom.png>
-) (./sections/09_stress_test.tex [29] (./tables/bootstrap_percentiles.tex)
+ [34]) (./sections/09_stress_test.tex
+(./tables/bootstrap_percentiles.tex) [35]
 File: figures/bootstrap_scatter.png Graphic file (type bmp)
 <figures/bootstrap_scatter.png>
-
-[30] [31]) (./sections/10_advanced_robustness.tex [32]
+ [36])
+(./sections/10_advanced_robustness.tex [37]
 (./tables/robustness_bootstrap_ci.tex
 Overfull \hbox (30.67487pt too wide) in paragraph at lines 5--24
  [][] 
@@ -1811,47 +1835,39 @@ Overfull \hbox (30.67487pt too wide) in paragraph at lines 5--24
 )
 File: figures/robustness_metric_ci_forest.png Graphic file (type bmp)
 <figures/robustness_metric_ci_forest.png>
- [33]
+ [38]
 File: figures/robustness_bootstrap_sharpe.png Graphic file (type bmp)
 <figures/robustness_bootstrap_sharpe.png>
- [34]
+ [39]
 File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
 <figures/robustness_equity_fan_chart.png>
- [35] (./tables/robustness_overfitting.tex) [36] [37]
+ (./tables/robustness_overfitting.tex [40]) [41] [42]
 File: figures/robustness_pbo_logits.png Graphic file (type bmp)
 <figures/robustness_pbo_logits.png>
- [38]
-(./tables/robustness_arch_tests.tex)
+
+(./tables/robustness_arch_tests.tex) [43]
 File: figures/robustness_spa_pvalues.png Graphic file (type bmp)
 <figures/robustness_spa_pvalues.png>
- [39]
 File: figures/robustness_rolling_stability.png Graphic file (type bmp)
 <figures/robustness_rolling_stability.png>
- [40]
+
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
  [][] 
  []
 
-)) (./sections/11_scenarios.tex [41]
+) [44] [45]) (./sections/11_scenarios.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
- (./tables/scenarios.tex) [42])
+ (./tables/scenarios.tex) [46])
 (./sections/12_limitations.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (U);
 (lettrine.sty)             reported on input line 4.
-
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 43.
-(lettrine)                Missing vertical space: 42.22546pt. 
-(lettrine)                Reported on input line 4.
-
-[43] [44] [45]
+ [47] [48] [49]
 Underfull \hbox (badness 1314) in paragraph at lines 86--87
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
  []
@@ -1871,22 +1887,22 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.80363pt (A);
 (lettrine.sty)             reported on input line 4.
- [46]
+
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
  []
 
-) [47] (./sections/appendix_a_inventory.tex [48] [49])
-(./sections/appendix_b_trade_walkthrough.tex
+[50]) (./sections/appendix_a_inventory.tex [51] [52])
+(./sections/appendix_b_trade_walkthrough.tex [53]
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (P);
 (lettrine.sty)             reported on input line 4.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
 (Font)              scaled to size 8.64523pt on input line 32.
- [50])
-(./sections/appendix_c_weight_sensitivity.tex
+)
+(./sections/appendix_c_weight_sensitivity.tex [54]
 Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
 risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
@@ -1902,10 +1918,10 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 1/cmr/m/n/10.95 ) :
  []
 
-(./tables/weight_sensitivity_named.tex) [51]
+(./tables/weight_sensitivity_named.tex) [55]
 File: figures/weight_sensitivity_named_bars.png Graphic file (type bmp)
 <figures/weight_sensitivity_named_bars.png>
- [52]
+ [56]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -1942,10 +1958,10 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_1d_mr.png Graphic file (type bmp)
 <figures/weight_sensitivity_1d_mr.png>
-[53]
+[57]
 File: figures/weight_sensitivity_simplex_ternary.png Graphic file (type bmp)
 <figures/weight_sensitivity_simplex_ternary.png>
- (./tables/weight_sensitivity_extremes.tex) [54]
+ (./tables/weight_sensitivity_extremes.tex) [58]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -1960,7 +1976,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_pareto_frontier.png Graphic file (type bmp)
 <figures/weight_sensitivity_pareto_frontier.png>
-) [55] [56] (./main.aux)
+[59]) [60] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1971,12 +1987,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 42135 strings out of 468173
- 968006 string characters out of 5435520
- 1539603 words of memory out of 5000000
- 70085 multiletter control sequences out of 15000+600000
+ 42200 strings out of 468173
+ 969756 string characters out of 5435520
+ 1543544 words of memory out of 5000000
+ 70147 multiletter control sequences out of 15000+600000
  638094 words of font info for 151 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,14n,118p,11207b,1282s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,14n,118p,11207b,1411s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (60 pages).
+Output written on main.pdf (64 pages).

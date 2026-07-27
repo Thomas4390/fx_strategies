@@ -76,7 +76,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 109.
+(scrartcl)              package `titlesec' on input line 127.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 
@@ -112,7 +112,7 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 130.
+(scrartcl)              package `fancyhdr' on input line 148.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
@@ -317,188 +317,231 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
 1.
 
 
-Underfull \hbox (badness 4954) in paragraph at lines 141--143
-\TU/LatinModernRoman(0)/m/n/10 sur 4 paires, fenêtre 6–
+Underfull \hbox (badness 4582) in paragraph at lines 143--145
+\TU/LatinModernRoman(0)/m/n/10 la déviation VWAP,
 
-Underfull \hbox (badness 5008) in paragraph at lines 144--146
-\TU/LatinModernRoman(0)/m/n/10 vol-targeting par paire à
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+[]|\TU/LatinModernRoman(0)/m/n/10 Suivi de tendance
 
-Underfull \hbox (badness 1360) in paragraph at lines 144--146
-\OT1/cmr/m/n/10 10 []$\TU/LatinModernRoman(0)/m/n/10 . USD/CAD explicite-
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 daily sur 3 paires
 
-Underfull \hbox (badness 1960) in paragraph at lines 147--150
-\TU/LatinModernRoman(0)/m/n/10 sur 4 paires equal-weight,
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 (EUR, GBP, JPY),
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 RSI(7), vol-targeting
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 par paire à $\OT1/cmr/m/n/10 10 []$\TU/LatinMode
+rnRoman(0)/m/n/10 .
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 USD/CAD explicite-
+
+Underfull \hbox (badness 1577) in paragraph at lines 149--151
+[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion daily
+
+Underfull \hbox (badness 1178) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 RSI(14) sur 3 paires
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 equal-weight (EUR,
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 GBP, CAD), over-
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 sold/overbought
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 25/75, exit à 50.
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 Sleeve diversificateur
+
+Underfull \hbox (badness 1226) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 de signe sur 4 hori-
+
+Underfull \hbox (badness 1642) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 zons (40/60/120/250
+
+Underfull \hbox (badness 10000) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 séances), long-only,
+
+Overfull \hbox (52.02687pt too wide) in paragraph at lines 133--156
+ [] 
 [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 202--203
+Overfull \hbox (10.95pt too wide) in paragraph at lines 206--207
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 202--203
+Underfull \hbox (badness 10000) in paragraph at lines 206--207
 
 
 LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
-(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 217
+(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 221
 .
 
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 267--268
+
+Overfull \hbox (10.95pt too wide) in paragraph at lines 270--271
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 267--268
+Underfull \hbox (badness 10000) in paragraph at lines 270--271
 
-
-Overfull \hbox (24.89749pt too wide) in paragraph at lines 280--282
+[3]
+Overfull \hbox (24.89749pt too wide) in paragraph at lines 283--285
 []\TU/LatinModernRoman(0)/m/sc/10.95 Confirmer dans \TU/LatinModernMono(0)/b/n/
 10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Options $\OMS/cmsy
 /m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Server \TU/LatinModernRoman(0)/m/sc/10
 .95 que le serveur indique bien \TU/LatinModernMono(0)/b/n/10 SquaredFinancialS
 C-MT5
-[4] [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 343--344
+[4]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 346--347
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 343--344
+Underfull \hbox (badness 10000) in paragraph at lines 346--347
 
 
-Overfull \hbox (15.42374pt too wide) in paragraph at lines 385--387
+Overfull \hbox (15.42374pt too wide) in paragraph at lines 388--390
 []\TU/LatinModernRoman(0)/m/sc/10.95 Installer Python 3.10$\OT1/cmr/m/n/10.95 +
 $ \TU/LatinModernRoman(0)/m/sc/10.95 et la dépendance requise : \TU/LatinModern
 Mono(0)/b/n/10 pip install pandas requests python-dotenv\TU/LatinModernRoman(0)
 /m/sc/10.95 . 
-[6] [7]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 416--417
+[5]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 418--419
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 416--417
+Underfull \hbox (badness 10000) in paragraph at lines 418--419
 
-[8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 487--488
+[6]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 488--489
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 487--488
+Underfull \hbox (badness 10000) in paragraph at lines 488--489
 
 (./tables/params_alloc.tex
 Underfull \hbox (badness 10000) in paragraph at lines 18--19
 []|\TU/LatinModernRoman(0)/m/n/10 Seuil de repli relatif, utilisé seulement si
-) (./tables/params_voltarget.tex [9]) (./tables/params_sleeve_mr.tex) [10]
+) [7] (./tables/params_voltarget.tex) (./tables/params_sleeve_mr.tex) [8]
 (./tables/params_sleeve_ts.tex) (./tables/params_sleeve_rsi.tex)
-(./tables/params_sleeve_gold.tex [11]) (./tables/params_ops.tex
+(./tables/params_sleeve_gold.tex [9]) (./tables/params_ops.tex
 Underfull \hbox (badness 2828) in paragraph at lines 18--19
 []|\TU/LatinModernRoman(0)/m/n/10 Heure UTC du recalcul journalier (vol-
 
 Underfull \hbox (badness 5302) in paragraph at lines 22--23
 []|\TU/LatinModernRoman(0)/m/n/10 Lecture dans \TU/LatinModernMono(0)/b/n/10 Co
 mmon\Files \TU/LatinModernRoman(0)/m/n/10 plutôt que
-[12]) [13]
+[10])
 Overfull \hbox (10.95pt too wide) in paragraph at lines 571--572
 [][][] 
 
 Underfull \hbox (badness 10000) in paragraph at lines 571--572
 
-[14]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 643--644
+[11]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 642--643
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 643--644
+Underfull \hbox (badness 10000) in paragraph at lines 642--643
 
 
-Overfull \hbox (11.23999pt too wide) in paragraph at lines 648--650
+Overfull \hbox (11.23999pt too wide) in paragraph at lines 647--649
 []\TU/LatinModernRoman(0)/m/sc/10.95 Activer le trading algo global : \TU/Latin
 ModernMono(0)/b/n/10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 
 Options $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Expert Advisors $\OM
 S/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Allow Algo Trading
-
-Overfull \hbox (1.0441pt too wide) in paragraph at lines 681--681
+[12]
+Overfull \hbox (1.0441pt too wide) in paragraph at lines 680--680
 []|\TU/LatinModernRoman(0)/b/n/10 #| 
-[15]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 703--704
+
+Overfull \hbox (10.95pt too wide) in paragraph at lines 701--702
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 703--704
+Underfull \hbox (badness 10000) in paragraph at lines 701--702
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 711--711
+Underfull \hbox (badness 10000) in paragraph at lines 709--709
 []|\TU/LatinModernMono(0)/b/n/10 cannot add EURUSD
 
-Underfull \hbox (badness 10000) in paragraph at lines 712--713
+Underfull \hbox (badness 10000) in paragraph at lines 710--711
 []|\TU/LatinModernRoman(0)/m/n/10 Modifier \TU/LatinModernMono(0)/b/n/10 Inp_Sy
 mbolSuffix
 
-Underfull \hbox (badness 10000) in paragraph at lines 714--714
+Underfull \hbox (badness 10000) in paragraph at lines 712--712
 []|\TU/LatinModernMono(0)/b/n/10 WebRequest err=4014
 
-Underfull \hbox (badness 10000) in paragraph at lines 714--714
+Underfull \hbox (badness 10000) in paragraph at lines 712--712
 \TU/LatinModernRoman(0)/m/n/10 en boucle / \TU/LatinModernMono(0)/b/n/10 FRED f
 etch
 
-Underfull \hbox (badness 10000) in paragraph at lines 715--716
+Underfull \hbox (badness 10000) in paragraph at lines 713--714
 []|\TU/LatinModernRoman(0)/m/n/10 URL
 
-Overfull \hbox (8.4626pt too wide) in paragraph at lines 715--716
+Overfull \hbox (8.4626pt too wide) in paragraph at lines 713--714
 \TU/LatinModernMono(0)/b/n/10 https://api.stlouisfed.org
 
-Underfull \hbox (badness 10000) in paragraph at lines 717--719
+Underfull \hbox (badness 10000) in paragraph at lines 715--717
 \TU/LatinModernRoman(0)/m/n/10 ré-attacher l’EA. Si ensuite
 
-Underfull \hbox (badness 3525) in paragraph at lines 717--719
+Underfull \hbox (badness 3525) in paragraph at lines 715--717
 \TU/LatinModernMono(0)/b/n/10 HTTP 400/403 \TU/LatinModernRoman(0)/m/n/10 : \TU
 /LatinModernRoman(0)/m/it/10 là \TU/LatinModernRoman(0)/m/n/10 c’est la clé
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--720
+Underfull \hbox (badness 10000) in paragraph at lines 718--718
 []|\TU/LatinModernMono(0)/b/n/10 cannot open
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--720
+Underfull \hbox (badness 10000) in paragraph at lines 718--718
 \TU/LatinModernMono(0)/b/n/10 macro_history.csv
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--721
+Underfull \hbox (badness 10000) in paragraph at lines 718--719
 []|\TU/LatinModernRoman(0)/m/n/10 Fichier absent du
 
-Underfull \hbox (badness 10000) in paragraph at lines 724--724
+Underfull \hbox (badness 10000) in paragraph at lines 722--722
 []|\TU/LatinModernMono(0)/b/n/10 loaded 70 rows \TU/LatinModernRoman(0)/m/n/10 
 dans le
 
-Underfull \hbox (badness 10000) in paragraph at lines 725--728
+Underfull \hbox (badness 10000) in paragraph at lines 723--726
 []|\TU/LatinModernRoman(0)/m/n/10 Régénérer avec
 
-Underfull \hbox (badness 2285) in paragraph at lines 735--735
+Underfull \hbox (badness 2285) in paragraph at lines 733--733
 []|\TU/LatinModernRoman(0)/m/it/10 Algo Trading \TU/LatinModernRoman(0)/m/n/10 
 désactivé ou
 
-Underfull \hbox (badness 4156) in paragraph at lines 739--739
+Underfull \hbox (badness 4156) in paragraph at lines 737--737
 []|\TU/LatinModernRoman(0)/m/n/10 Configuration broker diffé-
 
-Underfull \hbox (badness 1077) in paragraph at lines 740--742
+Underfull \hbox (badness 1077) in paragraph at lines 738--740
 []|\TU/LatinModernRoman(0)/m/n/10 Vérifier suffixe symbole, leverage,
 
-Underfull \hbox (badness 10000) in paragraph at lines 740--742
+Underfull \hbox (badness 10000) in paragraph at lines 738--740
 \TU/LatinModernRoman(0)/m/n/10 modèle de simulation, \TU/LatinModernRoman(0)/m/
 it/10 Forward
 
-Underfull \hbox (badness 10000) in paragraph at lines 746--747
+Underfull \hbox (badness 10000) in paragraph at lines 744--745
 []|\TU/LatinModernRoman(0)/m/n/10 Filtre fraîcheur macro
-[16]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 778--779
+[13]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 775--776
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 778--779
+Underfull \hbox (badness 10000) in paragraph at lines 775--776
 
-
-Overfull \hbox (41.5665pt too wide) in paragraph at lines 780--785
+[14]
+Overfull \hbox (41.5665pt too wide) in paragraph at lines 777--782
 [] []\TU/LatinModernRoman(0)/b/n/10.95 Reproductibilité.[] \TU/LatinModernRoman
 (0)/m/sc/10.95 Cette stratégie a été validée sur le broker SquaredFinancial Dem
 o, MT5 build 5836,
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 803--817
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 800--814
 [][][][][][] 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 820--839
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 817--836
 [][][][][][] 
-[17] (./main.aux)
+[15] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (17 pages).
+Output written on main.pdf (15 pages).
 Transcript written on main.log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
@@ -578,7 +621,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 109.
+(scrartcl)              package `titlesec' on input line 127.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 
@@ -614,7 +657,7 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 130.
+(scrartcl)              package `fancyhdr' on input line 148.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
@@ -819,186 +862,229 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
 1.
 
 
-Underfull \hbox (badness 4954) in paragraph at lines 141--143
-\TU/LatinModernRoman(0)/m/n/10 sur 4 paires, fenêtre 6–
+Underfull \hbox (badness 4582) in paragraph at lines 143--145
+\TU/LatinModernRoman(0)/m/n/10 la déviation VWAP,
 
-Underfull \hbox (badness 5008) in paragraph at lines 144--146
-\TU/LatinModernRoman(0)/m/n/10 vol-targeting par paire à
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+[]|\TU/LatinModernRoman(0)/m/n/10 Suivi de tendance
 
-Underfull \hbox (badness 1360) in paragraph at lines 144--146
-\OT1/cmr/m/n/10 10 []$\TU/LatinModernRoman(0)/m/n/10 . USD/CAD explicite-
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 daily sur 3 paires
 
-Underfull \hbox (badness 1960) in paragraph at lines 147--150
-\TU/LatinModernRoman(0)/m/n/10 sur 4 paires equal-weight,
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 (EUR, GBP, JPY),
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 RSI(7), vol-targeting
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 par paire à $\OT1/cmr/m/n/10 10 []$\TU/LatinMode
+rnRoman(0)/m/n/10 .
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--148
+\TU/LatinModernRoman(0)/m/n/10 USD/CAD explicite-
+
+Underfull \hbox (badness 1577) in paragraph at lines 149--151
+[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion daily
+
+Underfull \hbox (badness 1178) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 RSI(14) sur 3 paires
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 equal-weight (EUR,
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 GBP, CAD), over-
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 sold/overbought
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 25/75, exit à 50.
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--151
+\TU/LatinModernRoman(0)/m/n/10 Sleeve diversificateur
+
+Underfull \hbox (badness 1226) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 de signe sur 4 hori-
+
+Underfull \hbox (badness 1642) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 zons (40/60/120/250
+
+Underfull \hbox (badness 10000) in paragraph at lines 152--155
+\TU/LatinModernRoman(0)/m/n/10 séances), long-only,
+
+Overfull \hbox (52.02687pt too wide) in paragraph at lines 133--156
+ [] 
 [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 202--203
+Overfull \hbox (10.95pt too wide) in paragraph at lines 206--207
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 202--203
+Underfull \hbox (badness 10000) in paragraph at lines 206--207
 
 
 LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
-(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 217
+(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 221
 .
 
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 267--268
+
+Overfull \hbox (10.95pt too wide) in paragraph at lines 270--271
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 267--268
+Underfull \hbox (badness 10000) in paragraph at lines 270--271
 
-
-Overfull \hbox (24.89749pt too wide) in paragraph at lines 280--282
+[3]
+Overfull \hbox (24.89749pt too wide) in paragraph at lines 283--285
 []\TU/LatinModernRoman(0)/m/sc/10.95 Confirmer dans \TU/LatinModernMono(0)/b/n/
 10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Options $\OMS/cmsy
 /m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Server \TU/LatinModernRoman(0)/m/sc/10
 .95 que le serveur indique bien \TU/LatinModernMono(0)/b/n/10 SquaredFinancialS
 C-MT5
-[4] [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 343--344
+[4]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 346--347
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 343--344
+Underfull \hbox (badness 10000) in paragraph at lines 346--347
 
 
-Overfull \hbox (15.42374pt too wide) in paragraph at lines 385--387
+Overfull \hbox (15.42374pt too wide) in paragraph at lines 388--390
 []\TU/LatinModernRoman(0)/m/sc/10.95 Installer Python 3.10$\OT1/cmr/m/n/10.95 +
 $ \TU/LatinModernRoman(0)/m/sc/10.95 et la dépendance requise : \TU/LatinModern
 Mono(0)/b/n/10 pip install pandas requests python-dotenv\TU/LatinModernRoman(0)
 /m/sc/10.95 . 
-[6] [7]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 416--417
+[5]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 418--419
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 416--417
+Underfull \hbox (badness 10000) in paragraph at lines 418--419
 
-[8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 487--488
+[6]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 488--489
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 487--488
+Underfull \hbox (badness 10000) in paragraph at lines 488--489
 
 (./tables/params_alloc.tex
 Underfull \hbox (badness 10000) in paragraph at lines 18--19
 []|\TU/LatinModernRoman(0)/m/n/10 Seuil de repli relatif, utilisé seulement si
-) (./tables/params_voltarget.tex [9]) (./tables/params_sleeve_mr.tex) [10]
+) [7] (./tables/params_voltarget.tex) (./tables/params_sleeve_mr.tex) [8]
 (./tables/params_sleeve_ts.tex) (./tables/params_sleeve_rsi.tex)
-(./tables/params_sleeve_gold.tex [11]) (./tables/params_ops.tex
+(./tables/params_sleeve_gold.tex [9]) (./tables/params_ops.tex
 Underfull \hbox (badness 2828) in paragraph at lines 18--19
 []|\TU/LatinModernRoman(0)/m/n/10 Heure UTC du recalcul journalier (vol-
 
 Underfull \hbox (badness 5302) in paragraph at lines 22--23
 []|\TU/LatinModernRoman(0)/m/n/10 Lecture dans \TU/LatinModernMono(0)/b/n/10 Co
 mmon\Files \TU/LatinModernRoman(0)/m/n/10 plutôt que
-[12]) [13]
+[10])
 Overfull \hbox (10.95pt too wide) in paragraph at lines 571--572
 [][][] 
 
 Underfull \hbox (badness 10000) in paragraph at lines 571--572
 
-[14]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 643--644
+[11]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 642--643
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 643--644
+Underfull \hbox (badness 10000) in paragraph at lines 642--643
 
 
-Overfull \hbox (11.23999pt too wide) in paragraph at lines 648--650
+Overfull \hbox (11.23999pt too wide) in paragraph at lines 647--649
 []\TU/LatinModernRoman(0)/m/sc/10.95 Activer le trading algo global : \TU/Latin
 ModernMono(0)/b/n/10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 
 Options $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Expert Advisors $\OM
 S/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Allow Algo Trading
-
-Overfull \hbox (1.0441pt too wide) in paragraph at lines 681--681
+[12]
+Overfull \hbox (1.0441pt too wide) in paragraph at lines 680--680
 []|\TU/LatinModernRoman(0)/b/n/10 #| 
-[15]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 703--704
+
+Overfull \hbox (10.95pt too wide) in paragraph at lines 701--702
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 703--704
+Underfull \hbox (badness 10000) in paragraph at lines 701--702
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 711--711
+Underfull \hbox (badness 10000) in paragraph at lines 709--709
 []|\TU/LatinModernMono(0)/b/n/10 cannot add EURUSD
 
-Underfull \hbox (badness 10000) in paragraph at lines 712--713
+Underfull \hbox (badness 10000) in paragraph at lines 710--711
 []|\TU/LatinModernRoman(0)/m/n/10 Modifier \TU/LatinModernMono(0)/b/n/10 Inp_Sy
 mbolSuffix
 
-Underfull \hbox (badness 10000) in paragraph at lines 714--714
+Underfull \hbox (badness 10000) in paragraph at lines 712--712
 []|\TU/LatinModernMono(0)/b/n/10 WebRequest err=4014
 
-Underfull \hbox (badness 10000) in paragraph at lines 714--714
+Underfull \hbox (badness 10000) in paragraph at lines 712--712
 \TU/LatinModernRoman(0)/m/n/10 en boucle / \TU/LatinModernMono(0)/b/n/10 FRED f
 etch
 
-Underfull \hbox (badness 10000) in paragraph at lines 715--716
+Underfull \hbox (badness 10000) in paragraph at lines 713--714
 []|\TU/LatinModernRoman(0)/m/n/10 URL
 
-Overfull \hbox (8.4626pt too wide) in paragraph at lines 715--716
+Overfull \hbox (8.4626pt too wide) in paragraph at lines 713--714
 \TU/LatinModernMono(0)/b/n/10 https://api.stlouisfed.org
 
-Underfull \hbox (badness 10000) in paragraph at lines 717--719
+Underfull \hbox (badness 10000) in paragraph at lines 715--717
 \TU/LatinModernRoman(0)/m/n/10 ré-attacher l’EA. Si ensuite
 
-Underfull \hbox (badness 3525) in paragraph at lines 717--719
+Underfull \hbox (badness 3525) in paragraph at lines 715--717
 \TU/LatinModernMono(0)/b/n/10 HTTP 400/403 \TU/LatinModernRoman(0)/m/n/10 : \TU
 /LatinModernRoman(0)/m/it/10 là \TU/LatinModernRoman(0)/m/n/10 c’est la clé
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--720
+Underfull \hbox (badness 10000) in paragraph at lines 718--718
 []|\TU/LatinModernMono(0)/b/n/10 cannot open
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--720
+Underfull \hbox (badness 10000) in paragraph at lines 718--718
 \TU/LatinModernMono(0)/b/n/10 macro_history.csv
 
-Underfull \hbox (badness 10000) in paragraph at lines 720--721
+Underfull \hbox (badness 10000) in paragraph at lines 718--719
 []|\TU/LatinModernRoman(0)/m/n/10 Fichier absent du
 
-Underfull \hbox (badness 10000) in paragraph at lines 724--724
+Underfull \hbox (badness 10000) in paragraph at lines 722--722
 []|\TU/LatinModernMono(0)/b/n/10 loaded 70 rows \TU/LatinModernRoman(0)/m/n/10 
 dans le
 
-Underfull \hbox (badness 10000) in paragraph at lines 725--728
+Underfull \hbox (badness 10000) in paragraph at lines 723--726
 []|\TU/LatinModernRoman(0)/m/n/10 Régénérer avec
 
-Underfull \hbox (badness 2285) in paragraph at lines 735--735
+Underfull \hbox (badness 2285) in paragraph at lines 733--733
 []|\TU/LatinModernRoman(0)/m/it/10 Algo Trading \TU/LatinModernRoman(0)/m/n/10 
 désactivé ou
 
-Underfull \hbox (badness 4156) in paragraph at lines 739--739
+Underfull \hbox (badness 4156) in paragraph at lines 737--737
 []|\TU/LatinModernRoman(0)/m/n/10 Configuration broker diffé-
 
-Underfull \hbox (badness 1077) in paragraph at lines 740--742
+Underfull \hbox (badness 1077) in paragraph at lines 738--740
 []|\TU/LatinModernRoman(0)/m/n/10 Vérifier suffixe symbole, leverage,
 
-Underfull \hbox (badness 10000) in paragraph at lines 740--742
+Underfull \hbox (badness 10000) in paragraph at lines 738--740
 \TU/LatinModernRoman(0)/m/n/10 modèle de simulation, \TU/LatinModernRoman(0)/m/
 it/10 Forward
 
-Underfull \hbox (badness 10000) in paragraph at lines 746--747
+Underfull \hbox (badness 10000) in paragraph at lines 744--745
 []|\TU/LatinModernRoman(0)/m/n/10 Filtre fraîcheur macro
-[16]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 778--779
+[13]
+Overfull \hbox (10.95pt too wide) in paragraph at lines 775--776
 [][][] 
 
-Underfull \hbox (badness 10000) in paragraph at lines 778--779
+Underfull \hbox (badness 10000) in paragraph at lines 775--776
 
-
-Overfull \hbox (41.5665pt too wide) in paragraph at lines 780--785
+[14]
+Overfull \hbox (41.5665pt too wide) in paragraph at lines 777--782
 [] []\TU/LatinModernRoman(0)/b/n/10.95 Reproductibilité.[] \TU/LatinModernRoman
 (0)/m/sc/10.95 Cette stratégie a été validée sur le broker SquaredFinancial Dem
 o, MT5 build 5836,
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 803--817
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 800--814
 [][][][][][] 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 820--839
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 817--836
 [][][][][][] 
-[17] (./main.aux)
+[15] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (17 pages).
+Output written on main.pdf (15 pages).
 Transcript written on main.log.

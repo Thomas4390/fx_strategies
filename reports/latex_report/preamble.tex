@@ -73,6 +73,24 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}{../../docs/logo/}}
 \usepackage{float}
+
+% ── Placement des flottants ───────────────────────────────────────
+% Les figures d'équité font ~60 % de la hauteur de page. Avec les réglages
+% LaTeX par défaut (topfraction 0.7, textfraction 0.2), elles sont exilées
+% seules sur une page de flottants, ce qui produit une page à moitié blanche.
+% On autorise une plus grande part de la page aux flottants et on abaisse le
+% minimum de texte exigé, pour qu'une grande figure cohabite avec du texte.
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.75}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.80}
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+
+% Veuves et orphelines : jamais une ligne isolée en haut ou en bas de page.
+\widowpenalty=10000
+\clubpenalty=10000
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -132,7 +150,7 @@
 \fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Stratégie FX Multi-Moteurs}}
 \fancyhead[R]{\footnotesize\color{slateGrey}\textsf{\leftmark}}
 \fancyfoot[C]{\footnotesize\color{slateGrey}\thepage}
-\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Rapport d'investissement --- Avril 2026}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Rapport d'investissement --- Juillet 2026}}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.0pt}
 \renewcommand{\headrule}{\color{primary}\hrule width\headwidth height\headrulewidth}
@@ -145,6 +163,7 @@
 
 \newtcolorbox{insightbox}[1][]{
   enhanced,
+  breakable,
   colback=softBlue,
   colframe=primary,
   boxrule=0.8pt,
@@ -166,6 +185,7 @@
 
 \newtcolorbox{warningbox}[1][]{
   enhanced,
+  breakable,
   colback=softRed,
   colframe=combinedBurgundy,
   boxrule=0.8pt,
@@ -187,6 +207,7 @@
 
 \newtcolorbox{examplebox}[1][]{
   enhanced,
+  breakable,
   colback=softYellow,
   colframe=accent,
   boxrule=0.7pt,
@@ -208,6 +229,7 @@
 
 \newtcolorbox{thesisbox}[1][]{
   enhanced,
+  breakable,
   colback=softGreen,
   colframe=rsiGreen,
   boxrule=0.7pt,

@@ -37,7 +37,7 @@
 \vspace{1.2cm}
 
 % Category label
-{\interspaced\color{slateGrey}\footnotesize RAPPORT D'INVESTISSEMENT \enskip\textbullet\enskip SYNTHÈSE 10 PAGES\par}
+{\interspaced\color{slateGrey}\footnotesize RAPPORT D'INVESTISSEMENT \enskip\textbullet\enskip SYNTHÈSE EXÉCUTIVE\par}
 
 \vspace{0.7cm}
 
@@ -62,9 +62,9 @@ Un portefeuille à quatre moteurs de rendement quasi orthogonaux\par}
 \begin{tabular}{@{}rl@{}}
   \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.18em]
   \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.18em]
-  \color{slateGrey}\sffamily Date & \textbf{14 avril 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{27 juillet 2026} \\[0.18em]
   \color{slateGrey}\sffamily Statut & \textbf{Prêt pour déploiement contrôlé} \\[0.18em]
-  \color{slateGrey}\sffamily Version & \textbf{1.0 --- synthèse exécutive} \\
+  \color{slateGrey}\sffamily Version & \textbf{2.0 --- synthèse exécutive} \\
 \end{tabular}\\[0.7em]
 {\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
 \end{minipage}
@@ -84,7 +84,7 @@ Un portefeuille à quatre moteurs de rendement quasi orthogonaux\par}
 \vspace{0.4cm}
 
 {\small\color{slateGrey}\sffamily
-Ce document est une synthèse condensée du rapport complet de 43~pages. Pour le détail
+Ce document est une synthèse condensée du rapport d'investissement complet. Pour le détail
 méthodologique, les tests de résistance exhaustifs, les scénarios historiques et la
 checklist de production complète, se référer au rapport principal \texttt{main.pdf}.}
 
@@ -153,10 +153,9 @@ résultat à environ un cinquième de son niveau.
 \item \textbf{Cinq tests de robustesse sur six sont franchis}~; celui de
 sur-ajustement échoue de peu (probabilité $0.532$ pour un seuil de $0.5$), ce qui
 reflète le grand nombre de configurations évaluées sur la même fenêtre historique~---
-voir page~6.
+voir section~5.
 \end{enumerate}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 3 --- ARCHITECTURE TRI-SIGNAUX
@@ -183,7 +182,7 @@ sous-performent sur la période d'étude, et le \emph{risk-parity} inverse-vol f
 \multicolumn{1}{c}{\small 9\,\% du portefeuille} \\
 \midrule
 Mean reversion intraday sur EUR-USD minute, filtre VWAP + Bollinger(80, 5$\sigma$)
-+ session 6--14~UTC + filtre macro (courbe 10Y-2Y, chômage). &
++ session 8--16~UTC + filtre macro (courbe 10Y-2Y, chômage). &
 Suivi de tendance daily sur trois paires (EUR, GBP, JPY), EMA 20/50 + RSI(7)
 filtre, vol targeting par paire 10\,\%. USD-CAD explicitement exclu. &
 Mean reversion daily RSI(14) sur trois paires equal-weight. Sharpe standalone
@@ -215,7 +214,6 @@ drawdown reste désactivé~: les tests ont montré qu'il dégrade le Sharpe en
 déleveragant pendant les phases de rebond, et le mandat ne fixe plus de seuil de repli
 à faire respecter. \textbf{Aucun coupe-circuit automatique n'est donc actif.}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 4 --- PERFORMANCE IS + WALK-FORWARD
@@ -258,7 +256,6 @@ Fenêtres positives walk-forward & 6/7 \\
 
 \input{tables/walkforward_yearly.tex}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 5 --- OUT-OF-SAMPLE + STRESS TEST SOMMAIRE
@@ -271,7 +268,7 @@ Fenêtres positives walk-forward & 6/7 \\
 une dégradation sévère (Sharpe qui passe de $>1$ à proche de zéro). Ici le Sharpe hors
 échantillon atteint 2.94 contre 0.81 en in-sample, et le repli
 maximal y est nettement plus faible. Cela réfute un surajustement \emph{majeur}, sans
-établir que la performance se reproduira~--- le test de sur-ajustement de la page~6
+établir que la performance se reproduira~--- le test de sur-ajustement de la section~5
 échoue de peu. Le CAGR annualisé sur cette fenêtre courte n'est pas une prévision~: il
 extrapole quelques mois particulièrement favorables.
 
@@ -297,7 +294,6 @@ le CAGR allant de $5.4\,\%$ à $67.6\,\%$ entre les
 5\textsuperscript{e} et 95\textsuperscript{e} percentiles.
 \end{insightbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 6 --- ROBUSTESSE STATISTIQUE AVANCÉE (SYNTHÈSE)
@@ -333,7 +329,6 @@ laquelle une tranche de données a été gelée et pour laquelle le \emph{paper-
 préalable n'est pas une formalité.
 \end{insightbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 7 --- FIGURES DE ROBUSTESSE COMPLÉMENTAIRES
@@ -357,7 +352,6 @@ fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
 \caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.532$~: dans un peu moins de la moitié des découpages temporels possibles seulement, le classement reste stable. C'est au-dessus du seuil de danger de $0.5$.}
 \end{figure}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 8 --- STABILITÉ TEMPORELLE + LIMITATIONS SYNTHÈSE
@@ -380,7 +374,7 @@ avec la seule fenêtre walk-forward négative.}
 \textbf{Cinq tests de robustesse sur six sont franchis~; celui de sur-ajustement
 échoue.} Les risques résiduels ci-dessous persistent \emph{malgré} cette validation, et
 deux d'entre eux portent sur la nature même de la performance plutôt que sur sa mesure.
-Ils imposent la discipline de déploiement de la page~9.
+Ils imposent la discipline de déploiement de la section~8.
 \end{thesisbox}
 
 \paragraph{Six avertissements à retenir.}
@@ -402,7 +396,6 @@ paires G10. À vérifier auprès du courtier avant déploiement.
 Plateau visible autour des valeurs retenues~; revérification périodique recommandée.
 \end{enumerate}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 9 --- CHECKLIST PRODUCTION
@@ -450,7 +443,6 @@ risk/ops/compliance et de la mécanique de reprise après incident, se référer
 sections~11 à~13 et à l'annexe~B du rapport complet \texttt{main.pdf}.
 \end{warningbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 10 --- SIGNATURE / VERSION / CONTACT
@@ -459,11 +451,12 @@ sections~11 à~13 et à l'annexe~B du rapport complet \texttt{main.pdf}.
 \vspace{-0.4em}
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
-\paragraph{À propos de ce document.} Cette synthèse condense en dix pages les
-résultats clés du rapport complet Apogee (43~pages, \texttt{main.pdf}). Le contenu
-détaillé~--- description des trois moteurs, dérivation de la couche d'overlay,
-rejeu de scénarios historiques, inventaire des tests statistiques et exemple de
-trade illustré~--- se trouve dans le document principal.
+\paragraph{À propos de ce document.} Cette synthèse condense les résultats clés du
+rapport d'investissement complet (\texttt{main.pdf}). Le contenu détaillé~---
+description des quatre moteurs, protocole de test des règles de dimensionnement,
+dérivation de la couche d'overlay, rejeu de scénarios historiques, inventaire des
+tests statistiques et exemple de trade illustré~--- se trouve dans le document
+principal.
 
 \paragraph{Reproductibilité.} Toutes les métriques reportées dans cette synthèse sont
 issues d'un pipeline de backtest vectorisé avec discipline anti look-ahead stricte et
@@ -481,7 +474,7 @@ version du code et des données.
       \textbf{Contact.} Thomas Vaudescal --- \texttt{thomas.vaudescal@example.com}\\
       \textbf{Repository.} \texttt{fx\_strategies} (privé) ---
       branche \texttt{main}, commit référencé dans le rapport complet.\\
-      \textbf{Version de ce document.} 1.0 --- synthèse exécutive, 14~avril~2026.
+      \textbf{Version de ce document.} 2.0 --- synthèse exécutive, 27~juillet~2026.
       \vspace{0.4cm}
     }
   }

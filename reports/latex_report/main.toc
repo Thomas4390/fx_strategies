@@ -11,87 +11,89 @@
 \contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{6}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{7}{subsection.3.4}%
 \contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (72\,\%)}{7}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Intuition économique}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.1}Intuition économique}{7}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Mécanique du signal}{8}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Performance historique}{9}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{10}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.3}Performance historique}{8}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{9}{subsection.4.4}%
 \contentsline {section}{\numberline {5}Moteur 2 --- Momentum Journalier Multi-Paires (9\,\%)}{10}{section.5}%
 \contentsline {subsection}{\numberline {5.1}Intuition économique}{10}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Mécanique du signal}{11}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Justification du choix des trois paires}{11}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Performance historique}{12}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.2}Mécanique du signal}{10}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Justification du choix des trois paires}{10}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Performance historique}{11}{subsection.5.4}%
 \contentsline {subsection}{\numberline {5.5}Épisodes représentatifs}{12}{subsection.5.5}%
-\contentsline {section}{\numberline {6}Moteur 3 --- Mean Reversion Journalière par RSI (9\,\%)}{13}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Intuition économique}{13}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Mécanique du signal}{13}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Le paradoxe du Sharpe standalone}{14}{subsection.6.3}%
-\contentsline {subsection}{\numberline {6.4}Performance historique}{15}{subsection.6.4}%
-\contentsline {subsection}{\numberline {6.5}Épisodes représentatifs}{15}{subsection.6.5}%
-\contentsline {section}{\numberline {7}Moteur 4 --- Momentum sur l'Or (10\,\%)}{16}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Pourquoi l'or, et pourquoi maintenant}{16}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Mécanique du signal}{16}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Performance historique}{17}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}Épisodes représentatifs}{17}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}Ce que ce moteur doit à sa période}{18}{subsection.7.5}%
-\contentsline {section}{\numberline {8}Recherche et exécution~: deux mesures, un seul compte}{18}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Le mot « levier » ne désigne pas la même quantité}{18}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Comment l'échelle a été calibrée}{19}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}Ce qu'il faut en retenir pour lire ce document}{19}{subsection.8.3}%
-\contentsline {section}{\numberline {9}Architecture de pondération et gestion du risque}{19}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Allocation statique 72 / 9 / 9 / 10}{19}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}Couche de ciblage de volatilité}{20}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Impact du levier sur les métriques}{21}{subsection.9.3}%
-\contentsline {subsection}{\numberline {9.4}Protection drawdown --- disponible, désactivée, et non remplacée}{22}{subsection.9.4}%
-\contentsline {section}{\numberline {10}Performance de recherche in-sample}{23}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Métriques agrégées}{23}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Validation par fenêtres annuelles (walk-forward)}{25}{subsection.10.2}%
-\contentsline {subsection}{\numberline {10.3}Heatmap des rendements mensuels}{26}{subsection.10.3}%
-\contentsline {subsection}{\numberline {10.4}Courbe \emph {underwater} du drawdown}{26}{subsection.10.4}%
-\contentsline {subsection}{\numberline {10.5}Sharpe glissant sur 63 jours}{27}{subsection.10.5}%
-\contentsline {subsection}{\numberline {10.6}Corrélations glissantes entre moteurs}{27}{subsection.10.6}%
-\contentsline {subsection}{\numberline {10.7}Contribution mensuelle par moteur}{28}{subsection.10.7}%
-\contentsline {section}{\numberline {11}Validation hors échantillon}{28}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Comparaison directe}{28}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{29}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{30}{subsection.11.3}%
-\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{30}{section.12}%
-\contentsline {subsection}{\numberline {12.1}Méthodologie}{30}{subsection.12.1}%
-\contentsline {subsection}{\numberline {12.2}Résultats}{30}{subsection.12.2}%
-\contentsline {subsection}{\numberline {12.3}Interprétations critiques}{31}{subsection.12.3}%
-\contentsline {subsection}{\numberline {12.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{31}{subsection.12.4}%
-\contentsline {section}{\numberline {13}Robustesse statistique avancée}{32}{section.13}%
-\contentsline {subsection}{\numberline {13.1}Pourquoi un Sharpe ponctuel ne suffit pas}{32}{subsection.13.1}%
-\contentsline {subsection}{\numberline {13.2}Intervalles de confiance bootstrap sur les métriques}{32}{subsection.13.2}%
-\contentsline {paragraph}{Deux zones de vigilance identifiées.}{35}{paragraph*.33}%
-\contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{35}{subsection.13.3}%
-\contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{36}{subsection.13.4}%
-\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{39}{subsection.13.5}%
-\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{40}{subsection.13.6}%
-\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{41}{subsection.13.7}%
-\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{42}{section.14}%
-\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{42}{subsection.14.1}%
-\contentsline {subsection}{\numberline {14.2}Observations transversales}{43}{subsection.14.2}%
-\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{44}{section.15}%
-\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{44}{subsection.15.1}%
-\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{45}{subsection.15.2}%
-\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{45}{subsection.15.3}%
-\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{45}{subsection.15.4}%
-\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{46}{subsection.15.5}%
-\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{46}{subsection.15.6}%
-\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{46}{subsection.15.7}%
-\contentsline {section}{\numberline {16}Conditions de déploiement}{46}{section.16}%
-\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{47}{subsection.16.1}%
-\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{48}{appendix.A}%
-\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{50}{appendix.B}%
-\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{51}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}La question posée}{51}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{51}{subsection.C.2}%
-\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{52}{subsection.C.3}%
-\contentsline {paragraph}{Trois observations saillantes.}{52}{paragraph*.44}%
-\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{53}{subsection.C.4}%
-\contentsline {paragraph}{Lecture du plateau.}{53}{paragraph*.46}%
-\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{54}{subsection.C.5}%
-\contentsline {paragraph}{Distance au maximum.}{54}{paragraph*.49}%
-\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{55}{subsection.C.6}%
-\contentsline {paragraph}{Lecture de la frontière.}{55}{paragraph*.51}%
+\contentsline {section}{\numberline {6}Moteur 3 --- Mean Reversion Journalière par RSI (9\,\%)}{12}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Intuition économique}{12}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Mécanique du signal}{12}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Le paradoxe du Sharpe standalone}{13}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Performance historique}{13}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Épisodes représentatifs}{14}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Moteur 4 --- Momentum sur l'Or (10\,\%)}{15}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Pourquoi l'or, et pourquoi maintenant}{15}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Mécanique du signal}{15}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Du signal à la taille de position}{16}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Dimensionnement progressif~: ce qui a été testé, et pourquoi il est écarté}{16}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Performance historique}{22}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Épisodes représentatifs}{23}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}Ce que ce moteur doit à sa période}{23}{subsection.7.7}%
+\contentsline {section}{\numberline {8}Recherche et exécution~: deux mesures, un seul compte}{24}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Le mot « levier » ne désigne pas la même quantité}{24}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Comment l'échelle a été calibrée}{25}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Ce qu'il faut en retenir pour lire ce document}{25}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Architecture de pondération et gestion du risque}{25}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Allocation statique 72 / 9 / 9 / 10}{25}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Couche de ciblage de volatilité}{26}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Impact du levier sur les métriques}{27}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Protection drawdown --- disponible, désactivée, et non remplacée}{28}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Performance de recherche in-sample}{29}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Métriques agrégées}{29}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Validation par fenêtres annuelles (walk-forward)}{30}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Heatmap des rendements mensuels}{31}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Courbe \emph {underwater} du drawdown}{31}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Sharpe glissant sur 63 jours}{31}{subsection.10.5}%
+\contentsline {subsection}{\numberline {10.6}Corrélations glissantes entre moteurs}{31}{subsection.10.6}%
+\contentsline {subsection}{\numberline {10.7}Contribution mensuelle par moteur}{31}{subsection.10.7}%
+\contentsline {section}{\numberline {11}Validation hors échantillon}{31}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Comparaison directe}{32}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{34}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{34}{subsection.11.3}%
+\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{35}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Méthodologie}{35}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Résultats}{36}{subsection.12.2}%
+\contentsline {subsection}{\numberline {12.3}Interprétations critiques}{37}{subsection.12.3}%
+\contentsline {subsection}{\numberline {12.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{37}{subsection.12.4}%
+\contentsline {section}{\numberline {13}Robustesse statistique avancée}{37}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Pourquoi un Sharpe ponctuel ne suffit pas}{37}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}Intervalles de confiance bootstrap sur les métriques}{38}{subsection.13.2}%
+\contentsline {paragraph}{Deux zones de vigilance identifiées.}{40}{paragraph*.36}%
+\contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{40}{subsection.13.3}%
+\contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{41}{subsection.13.4}%
+\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{43}{subsection.13.5}%
+\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{44}{subsection.13.6}%
+\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{45}{subsection.13.7}%
+\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{46}{section.14}%
+\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{46}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.2}Observations transversales}{47}{subsection.14.2}%
+\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{47}{section.15}%
+\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur}{48}{subsection.15.1}%
+\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- Le test de sur-ajustement échoue}{48}{subsection.15.2}%
+\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{49}{subsection.15.3}%
+\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{49}{subsection.15.4}%
+\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{49}{subsection.15.5}%
+\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{50}{subsection.15.6}%
+\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{50}{subsection.15.7}%
+\contentsline {section}{\numberline {16}Conditions de déploiement}{50}{section.16}%
+\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{51}{subsection.16.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{51}{appendix.A}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{54}{appendix.B}%
+\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{55}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}La question posée}{55}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{55}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{56}{subsection.C.3}%
+\contentsline {paragraph}{Trois observations saillantes.}{56}{paragraph*.47}%
+\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{57}{subsection.C.4}%
+\contentsline {paragraph}{Lecture du plateau.}{57}{paragraph*.49}%
+\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{58}{subsection.C.5}%
+\contentsline {paragraph}{Distance au maximum.}{58}{paragraph*.52}%
+\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{59}{subsection.C.6}%
+\contentsline {paragraph}{Lecture de la frontière.}{59}{paragraph*.54}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

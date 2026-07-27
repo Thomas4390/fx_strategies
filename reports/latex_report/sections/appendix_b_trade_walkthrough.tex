@@ -9,7 +9,7 @@
 \item \textbf{Calcul du VWAP ancré au jour courant} depuis l'ouverture à 00h00~UTC jusqu'à la minute courante.
 \item \textbf{Calcul de la déviation} entre le prix de clôture actuel et le VWAP, puis comparaison à la bande inférieure calculée à partir de l'écart-type glissant sur les 80 dernières minutes.
 \item Si la déviation est \emph{sous} la bande inférieure, cela signale une sur-vente intraday exploitable.
-\item \textbf{Filtre session}~: l'heure courante 10h30~UTC est bien dans la fenêtre de chevauchement Londres~+~New~York (6h--14h~UTC) où la liquidité est maximale.
+\item \textbf{Filtre session}~: l'heure courante 10h30~UTC est bien dans la fenêtre de chevauchement Londres~+~New~York (8h--16h~UTC) où la liquidité est maximale.
 \item \textbf{Filtre macro premier étage}~: le spread 10Y--2Y des bons du Trésor américain à cette date est inférieur à 0.5, donc pas de stress cyclique majeur.
 \item \textbf{Filtre macro second étage}~: le taux de chômage américain sur trois mois n'est pas en hausse, donc pas de fin de cycle d'expansion.
 \item Les trois filtres sont passants, et la position longue est ouverte.

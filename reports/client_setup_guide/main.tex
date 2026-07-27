@@ -8,7 +8,7 @@
 
 % Override paths/headers pour ce document
 \graphicspath{{figures/}{../../docs/logo/}{../latex_report/figures/}}
-\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide d'installation client --- Mai 2026}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Guide d'installation client --- Juillet 2026}}
 \fancyhead[L]{\footnotesize\color{slateGrey}\textsf{FxMultiSleeve --- Setup MT5}}
 
 \hypersetup{
@@ -64,9 +64,9 @@ Déploiement clé en main sur Windows\par}
 \begin{tabular}{@{}rl@{}}
   \color{slateGrey}\sffamily Document & \textbf{Guide de setup et reproduction des backtests} \\[0.18em]
   \color{slateGrey}\sffamily Public & \textbf{Client final --- Windows / MetaTrader 5} \\[0.18em]
-  \color{slateGrey}\sffamily Date & \textbf{Mai 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{27 juillet 2026} \\[0.18em]
   \color{slateGrey}\sffamily Statut & \textbf{Plug \& play --- prêt à déployer} \\[0.18em]
-  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+  \color{slateGrey}\sffamily Version & \textbf{2.0} \\
 \end{tabular}\\[0.7em]
 {\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
 \end{minipage}
@@ -130,30 +130,35 @@ un plafond de levier à $31\times$ et un facteur d'échelle de risque
 
 \begin{center}
 \small
-\begin{tabular}{@{}p{4.4cm}@{\hspace{0.5cm}}p{4.4cm}@{\hspace{0.5cm}}p{4.4cm}@{}}
+\begin{tabular}{@{}p{3.5cm}@{\hspace{0.33cm}}p{3.5cm}@{\hspace{0.33cm}}p{3.5cm}@{\hspace{0.33cm}}p{3.5cm}@{}}
 \multicolumn{1}{c}{\textcolor{mrBlue}{\textbf{Sleeve 1 --- MR Macro}}} &
 \multicolumn{1}{c}{\textcolor{tsOrange}{\textbf{Sleeve 2 --- TS Momentum}}} &
-\multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Sleeve 3 --- RSI Daily}}} \\[0.2em]
+\multicolumn{1}{c}{\textcolor{rsiGreen}{\textbf{Sleeve 3 --- RSI Daily}}} &
+\multicolumn{1}{c}{\textcolor{apogeeGold}{\textbf{Sleeve 4 --- Gold}}} \\[0.2em]
 \multicolumn{1}{c}{\small \textbf{72~\%} du portefeuille} &
 \multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} &
-\multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} \\
+\multicolumn{1}{c}{\small \textbf{9~\%} du portefeuille} &
+\multicolumn{1}{c}{\small \textbf{10~\%} du portefeuille} \\
 \midrule
-Mean reversion intraday M1 sur 4~paires, fenêtre 6--14~UTC, filtre
+Mean reversion intraday M1 sur 4~paires, fenêtre 8--16~UTC, filtre
 Bollinger(80, 5$\sigma$) sur la déviation VWAP, gating macro (courbe
 10Y--2Y, taux de chômage US). &
 Suivi de tendance daily sur 3~paires (EUR, GBP, JPY), EMA~20/50
 $+$ filtre RSI(7), vol-targeting par paire à $10\,\%$. USD/CAD
 explicitement exclu. &
-Mean reversion daily RSI(14) sur 4~paires equal-weight,
+Mean reversion daily RSI(14) sur 3~paires equal-weight (EUR, GBP, CAD),
 oversold/overbought 25/75, exit à 50. Sleeve diversificateur
-anti-corrélé en années difficiles. \\
+anti-corrélé en années difficiles. &
+Suivi de tendance daily sur XAU/USD, vote de signe sur 4~horizons
+(40/60/120/250 séances), long-only, vol-targeting propre à $55\,\%$.
+Produit $80\,\%$ du résultat net. \\
 \end{tabular}
 \end{center}
 
 \vspace{0.6em}
 
 \paragraph{Métriques de référence du backtest.}
-Période 2020-11-23 $\rightarrow$ 2026-04-30 (5.43~ans), broker SquaredFinancial Demo,
+Période 2021-01-01 $\rightarrow$ 2026-04-30 (5.33~ans), broker SquaredFinancial Demo,
 EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
 
 \begin{center}
@@ -191,7 +196,6 @@ multi-symboles avec ticks réels, et l'accès direct au broker via DOM. La
 stratégie utilise exclusivement les API natives MQL5~--- aucune DLL externe,
 aucun indicateur custom à installer.
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 3 — CONTENU DU PACKAGE
@@ -257,7 +261,6 @@ sauvegarde non chiffrée. Cette clé est personnelle (votre compte FRED) et son
 exposition entraîne un usage frauduleux du quota d'API.
 \end{warningbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 4 — INSTALLATION MT5 + DÉPLOIEMENT CODE
@@ -279,10 +282,11 @@ suffixe \code{.c} (les autres suffixes nécessitent un ajustement, voir~3.4).
 \item Se connecter au compte démo broker (login + password reçus par email).
 \item Confirmer dans \code{Outils $\rightarrow$ Options $\rightarrow$ Server} que le
 serveur indique bien \code{SquaredFinancialSC-MT5 Demo} (ou équivalent).
-\item Vérifier que les 4~paires sont visibles dans \emph{Market Watch} avec le
-suffixe \code{.c}~: \code{EURUSD.c}, \code{GBPUSD.c}, \code{USDJPY.c},
-\code{USDCAD.c}. Si un symbole est absent, clic-droit dans Market Watch
-$\rightarrow$ \emph{Show All}.
+\item Vérifier que les \textbf{cinq symboles} sont visibles dans \emph{Market Watch}
+avec le suffixe \code{.c}~: \code{EURUSD.c}, \code{GBPUSD.c}, \code{USDJPY.c},
+\code{USDCAD.c} et \code{XAUUSD.c}. Si un symbole est absent, clic-droit dans
+Market Watch $\rightarrow$ \emph{Show All}. \textbf{L'or ne doit pas être oublié}~:
+c'est le symbole du Sleeve~4, qui produit l'essentiel du résultat.
 \end{enumerate}
 
 \subsection*{3.2 Localiser le \emph{Data Folder} de MT5}
@@ -333,7 +337,6 @@ compiler. Résultat attendu en bas de l'éditeur~:
 Le suffixe est visible dans le nom des paires de \emph{Market Watch}.
 \end{warningbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 5 — CLÉ FRED + macro_history.csv
@@ -406,7 +409,6 @@ binaire), en live il utilise \emph{NATIVE} (FRED API + Calendar~MT5).
 \textbf{Aucune action manuelle requise~--- le mode AUTO couvre les
 deux usages.}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 6 — LANCER LE BACKTEST
@@ -429,7 +431,7 @@ Dans MT5~: \code{Ctrl+R} (ou \code{View $\rightarrow$ Strategy Tester}). Onglet
 Expert      & \code{FxMultiSleeve} \\
 Symbol      & \code{EURUSD.c} (ou EURUSD$\langle$suffixe$\rangle$) \\
 Period      & \code{M1} \\
-Date        & \code{2020.11.23} $\rightarrow$ \code{2026.04.30} \\
+Date        & \code{2021.01.01} $\rightarrow$ \code{2026.04.30} \\
 Forward     & \code{No} (laisser à zéro pour la baseline) \\
 Modeling    & \code{1 minute OHLC} (rapide) ou \code{Every tick based on real ticks} \\
 Deposit     & \code{10\,000~USD} \\
@@ -477,7 +479,6 @@ la dernière date est postérieure à votre \code{ToDate}. Sinon, retourner
 en section~4.3 pour régénérer.
 \end{warningbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 7 — RÉFÉRENCE DES PARAMÈTRES
@@ -557,11 +558,10 @@ source de données macro (5~modes, voir~4.4).
 Modifier les paramètres au-delà du suffixe broker (\code{Inp\_SymbolSuffix})
 \textbf{invalide la reproductibilité} des métriques de la section~7. Toute
 recalibration doit être validée par un nouveau backtest sur la même fenêtre
-2020-11-23 $\rightarrow$ 2026-04-30 et comparée aux tolérances de la
+2021-01-01 $\rightarrow$ 2026-04-30 et comparée aux tolérances de la
 section~7.
 \end{warningbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 8 — RÉSULTATS ATTENDUS
@@ -632,7 +632,6 @@ Sharpe live de $0.85$--$0.95$ après 3~mois de paper-trade est donc
 considéré comme un succès de transition.
 \end{insightbox}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 8 — TRADING LIVE (DRAG-AND-DROP)
@@ -692,7 +691,6 @@ souriant} (icône \enquote{:-)}), et dans le \emph{Journal} la ligne~:
 \end{tabular}
 \end{center}
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 9 — TROUBLESHOOTING
@@ -734,7 +732,7 @@ Vérifier la dernière date du CSV vs \code{ToDate} du tester. \\
 \addlinespace
 0~trade en live & \emph{Algo~Trading} désactivé ou hors session &
 Vérifier le bouton \emph{Algo~Trading} vert + sleeve~1 ne trade que
-6h-14h~UTC. \\
+8h-16h~UTC. \\
 \addlinespace
 Sharpe $< 0.7$ ou trades $< 750$ & Configuration broker différente &
 Vérifier suffixe symbole, leverage, modèle de simulation, \emph{Forward}
@@ -768,7 +766,6 @@ Trois fichiers à connaître~:
 Dans tous les fichiers, chercher \code{[INIT]}, \code{[ERROR]}, \code{[DEINIT]}
 pour les messages structurels de l'EA.
 
-\clearpage
 
 % ═══════════════════════════════════════════════════════════════════════
 %  PAGE 10 — DISCLAIMER + CONTACT
@@ -778,7 +775,7 @@ pour les messages structurels de l'EA.
 {\color{accent}\rule{\linewidth}{1.0pt}}\\[0.4em]
 
 \paragraph{Reproductibilité.} Cette stratégie a été validée sur le
-broker SquaredFinancial Demo, MT5~build~5836, période 2020-11-23~$\rightarrow$~2026-04-30.
+broker SquaredFinancial Demo, MT5~build~5836, période 2021-01-01~$\rightarrow$~2026-04-30.
 Les métriques rapportées en section~7 sont reproduites à l'identique en relançant
 le backtest sur la même configuration~--- aux variations microscopiques près
 des flux de ticks broker.
@@ -807,7 +804,7 @@ broker ou modification des paramètres.
       \small\color{primary}\sffamily
       \textbf{Support technique.} Thomas Vaudescal~---
       \href{mailto:vaudescal.t@gmail.com}{\texttt{vaudescal.t@gmail.com}}\\
-      \textbf{Version de ce document.} 1.0~--- mai~2026.\\
+      \textbf{Version de ce document.} 2.0~--- 27~juillet~2026.\\
       \textbf{Compatibilité.} MetaTrader~5 build~$\geq 4885$ sur Windows~10/11.
       Linux/Wine supporté --- voir documentation interne séparée.
       \vspace{0.4cm}

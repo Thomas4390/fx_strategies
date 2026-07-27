@@ -33,7 +33,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Validation par fenêtres annuelles (walk-forward)}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{walkforward_sharpe.png}
 \caption{Sharpe annuel du portefeuille combiné sur la période historique, tel que mesuré par le moteur de recherche. Le détail année par année figure au tableau~\ref{tab:walkforward_yearly}.}
@@ -57,7 +57,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Heatmap des rendements mensuels}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{monthly_heatmap.png}
 \caption{Rendements mensuels du portefeuille combiné. Les mois verts dominent la distribution~; les mois rouges restent généralement contenus à quelques points de pourcentage.}
@@ -65,7 +65,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Courbe \emph{underwater} du drawdown}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{drawdown_underwater.png}
 \caption{Courbe de drawdown du portefeuille combiné. Le drawdown maximal atteint $-58.49\,\%$ sur la fenêtre in-sample de recherche.}
@@ -73,7 +73,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Sharpe glissant sur 63 jours}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{rolling_sharpe_63d.png}
 \caption{Sharpe Ratio calculé sur une fenêtre glissante de 63~jours (environ un trimestre). La ligne pointillée orange représente le seuil de 1.0. Le Sharpe reste majoritairement positif, avec des pics au-dessus de 2.5 en 2022 et 2024 et de brefs passages sous zéro en 2019 et début 2023.}
@@ -81,7 +81,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Corrélations glissantes entre moteurs}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{rolling_correlation_63d.png}
 \caption{Corrélation glissante à 63~jours entre paires de moteurs. La corrélation Moteur~2 $\times$ Moteur~3 (verte) reste majoritairement négative, confirmant la stabilité du levier de diversification identifié sur la moyenne pleine période.}
@@ -89,7 +89,7 @@ de ce document. La section~\ref{sec:out_of_sample} le détaille.
 
 \subsection{Contribution mensuelle par moteur}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{sleeve_monthly_contribution.png}
 \caption{Contribution mensuelle pondérée (72 / 9 / 9 / 10) de chaque moteur au rendement du portefeuille combiné. Le Moteur~1 domine la contribution positive la majorité du temps, avec des compléments décisifs du Moteur~3 lors des années difficiles pour le Moteur~1.}
