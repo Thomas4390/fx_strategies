@@ -1,0 +1,69 @@
+\section{Ce que ce document ne démontre pas}
+\label{sec:limites}
+
+Un document qui descend au trade individuel donne une impression de précision
+qui peut tromper. Voir trente-cinq lignes détaillées avec des prix au centième
+ne rend pas l'échantillon plus grand ni le backtest plus réel. Cette section
+énumère ce qu'il faut retenir \emph{contre} les chiffres qui précèdent.
+
+\subsection*{L'échantillon est minuscule}
+
+\textbf{Trente-cinq trades}, dont \textbf{cinq} portent l'intégralité du
+résultat. Retirer la seule position d'août~2025 ramène le résultat net de
+$+$32\,141\,\$ à $+$10\,490\,\$. Aucune statistique par sous-groupe --- par
+année, par régime, par durée --- ne dispose ici de la moindre puissance. Les
+ventilations présentées sont \emph{descriptives}~: elles racontent ce qui s'est
+passé, elles ne fondent aucune inférence.
+
+\subsection*{Le simulateur a tourné en mode interpolé}
+
+Le backtest utilise le modèle \emph{OHLC 1~minute}, qui reconstitue les
+exécutions à l'intérieur des barres au lieu de rejouer les cotations réelles.
+Ce mode flatte systématiquement les résultats. \textbf{Tout chiffre
+d'exécution présenté ici est donc un majorant}, et non une mesure. Le passage
+au mode «~toutes cotations réelles~» suppose de télécharger l'historique de
+cotations depuis une session connectée au courtier.
+
+\subsection*{Le repli affiché est une borne inférieure}
+
+Le repli de 46,1\,\% est calculé sur la balance, qui ne bouge qu'à la clôture
+des positions. Le capital réellement exposé fluctue entre deux clôtures sans
+apparaître sur cette courbe. C'est aussi la raison pour laquelle \textbf{aucun
+ratio de Sharpe n'est publié ici pour le moteur or seul}~: une mesure de
+dispersion calculée sur une balance est fausse par construction. Les ratios de
+Sharpe du dossier proviennent du simulateur lui-même, sur le portefeuille
+complet.
+
+\subsection*{Le moteur ne trade pas avant novembre 2021}
+
+Le moteur a besoin de 252~séances d'historique quotidien avant de produire un
+signal. Sur ce backtest, l'historique du courtier ne le permet qu'à partir du
+\textbf{9~novembre~2021}, alors que la simulation démarre le
+1\textsuperscript{er}~janvier~2021. Les dix premiers mois sont donc vides par
+construction, et non par décision du moteur. Toute performance annualisée
+calculée sur la fenêtre complète est mécaniquement diluée.
+
+\subsection*{Deux postes restent non attribués}
+
+L'attribution du résultat est exacte pour le prix, le portage et la commission.
+En revanche, l'effet de l'\textbf{arrondi des volumes} et celui du
+\textbf{stop de sécurité} sur la distribution des trades ne sont pas
+chiffrables à partir des artefacts disponibles. Ils sont nommés, leur ordre de
+grandeur est indiqué quand il est connu, et ils ne sont dilués dans aucun
+résidu.
+
+\subsection*{Le passé de l'or n'est pas une promesse}
+
+La fenêtre étudiée couvre une hausse historique de l'or, de 1\,800 à plus de
+5\,000~dollars l'once. Un moteur de suivi de tendance long uniquement ne
+\emph{peut} que bien s'y comporter. Rien dans ces trente-cinq trades ne
+démontre que le moteur produirait un résultat comparable sur une décennie de
+marché sans direction --- et les années 2022 et 2023, plates à négatives,
+donnent un aperçu de ce à quoi ressemblerait cette période.
+
+\begin{warningbox}
+\textbf{Conclusion opérationnelle.} Ce document éclaire le \emph{fonctionnement}
+du moteur or~: comment il entre, combien de temps il tient, ce qu'il paie, où
+il diverge de sa version de recherche. Il ne modifie en rien la recommandation
+du dossier, qui reste un déploiement en simulation avant tout capital réel.
+\end{warningbox}

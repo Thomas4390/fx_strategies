@@ -1,0 +1,78 @@
+\section{Séquences, replis et régimes}
+
+\subsection{Combien de pertes d'affilée faut-il supporter}
+
+Un moteur qui gagne une fois sur trois enchaîne nécessairement les pertes. La
+question opérationnelle n'est pas de savoir \emph{si} cela arrive, mais
+combien de temps cela dure --- car c'est cette durée, et non le résultat final,
+qui décide si une stratégie est tenable en pratique.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_streaks}
+\caption{Séries de gains et de pertes consécutifs, dans l'ordre des clôtures.
+Les séries de trois trades ou plus portent leur longueur.}
+\end{figure}
+
+\begin{warningbox}
+La plus longue série perdante compte \textbf{dix trades consécutifs}, du
+12~juin~2023 au 22~février~2024 --- soit \textbf{255~jours}, plus de huit mois
+sans un seul gain, pour une perte cumulée de 2\,132\,\$. Symétriquement, la
+plus longue série \emph{gagnante} ne compte que \textbf{deux} trades~: ce
+moteur n'enchaîne jamais les succès, il en produit un gros de temps à autre.
+
+Sur une cadence de huit positions par an, cela signifie qu'un investisseur qui
+coupe après quatre ou cinq pertes d'affilée --- une réaction ordinaire ---
+n'obtiendra jamais le résultat affiché dans ce document. La capacité à traverser
+une année blanche est ici une condition d'accès au rendement, pas un détail de
+tempérament.
+\end{warningbox}
+
+\subsection{Le repli}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_equity_dd}
+\caption{Balance de la sleeve or et repli associé. Les trois plus fortes
+descentes sont annotées.}
+\end{figure}
+
+Le repli maximal mesuré sur cette balance atteint \metric{46,1\,\%}. Ce chiffre
+demande deux précautions de lecture.
+
+Premièrement, la balance ne bouge \emph{qu'à la clôture} d'une position. Entre
+deux clôtures, le capital réellement exposé fluctue sans que cette courbe le
+montre. Le repli ci-dessus est donc une borne \textbf{inférieure} du risque
+subi~: le repli d'équité réel, mesuré tick par tick par le simulateur sur
+l'ensemble du portefeuille, est de 44\,\%, et le moteur or seul, isolé et joué à
+pleine allocation, a été mesuré à $-$76\,\% lors du réglage du dimensionnement.
+
+Deuxièmement, ce repli est le prix explicitement accepté du mandat de rendement.
+Le dimensionnement a été calibré pour viser environ 40\,\% de croissance
+annualisée, et la note de décision correspondante déclare le risque non
+contraignant. Ce n'est pas un effet de bord~: c'est un arbitrage assumé.
+
+\subsection{Par année}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_yearly}
+\caption{Résultat net par année de clôture, avec le nombre de trades gagnants
+sur le total.}
+\end{figure}
+
+La ventilation annuelle confirme la concentration~: les années 2021 à 2023 sont
+neutres à négatives --- 2023 est même la pire, avec treize trades pour
+$-$3\,013\,\$ --- puis 2024 devient positive et le résultat s'envole sur les
+deux dernières années.
+
+Un point de lecture s'impose ici~: ce découpage est fait par \emph{année de
+clôture}. La plus grosse position du moteur, ouverte en août~2025, n'est
+refermée qu'en mars~2026~: son gain est donc porté au crédit de 2026, qui
+affiche $+$18\,780\,\$ contre $+$12\,016\,\$ pour 2025. En réalité, ces deux
+barres décrivent un seul et même mouvement de l'or étalé sur dix-huit mois.
+
+Il faut résister à la tentation d'en tirer une lecture de régime. Avec cinq
+années civiles et trente-cinq trades au total, chaque barre annuelle repose sur
+une poignée d'observations dont une ou deux dominent~; ces chiffres décrivent
+ce qui s'est produit, ils ne prédisent rien.

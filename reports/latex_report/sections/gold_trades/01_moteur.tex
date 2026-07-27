@@ -1,0 +1,74 @@
+\section{Le moteur, et ce qu'il a fait}
+
+\subsection{La règle en trois phrases}
+
+Le moteur applique un \emph{momentum de série temporelle} sur l'or~: il achète
+quand le passé récent monte, il sort quand il cesse de monter. Plutôt que de
+choisir une période d'observation --- le piège classique du surajustement ---
+il moyenne le \emph{signe} de quatre horizons fixes~: 40, 60, 120 et
+250~séances. Le score qui en résulte vit dans $[-1, +1]$~; la position s'ouvre
+quand il devient positif et se ferme quand il redevient négatif.
+
+La taille est pilotée par la volatilité~: le levier vise une volatilité annuelle
+de 55\,\%, plafonné à 6,6$\times$. Le moteur ne vend jamais à découvert --- l'or
+porte une dérive haussière structurelle, et un short soutenu combattrait cette
+dérive au lieu d'en récolter une prime.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Paramètre & Valeur & Rôle \\
+\midrule
+Horizons          & 40 / 60 / 120 / 250 séances & moyennés, jamais sélectionnés \\
+Vente à découvert & désactivée                   & la dérive de l'or est haussière \\
+Cible de volatilité & 55\,\%                     & échelle de position \\
+Levier maximal    & 6,6$\times$                  & 12$\times$ la cible, comme avant \\
+Stop de sécurité  & 4\,\%                        & garde-fou, pas un stop de stratégie \\
+Glissement        & 2 points de base par côté    & hypothèse d'exécution \\
+Allocation        & 10\,\% du portefeuille       & avec facteur de risque 4,5 \\
+Borne de séance   & 17{:}00 New York             & convention CFD \\
+\bottomrule
+\end{tabular}
+\caption{Configuration du moteur or telle qu'exécutée dans le backtest publié}
+\end{table}
+
+\subsection{Les trente-cinq trades dans leur contexte}
+
+La figure~\ref{fig:gold-timeline} montre tout le backtest d'un coup~: le cours
+de l'or, les périodes en position, le score de décision et le levier appliqué.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_timeline}
+\caption{Les 35 trades dans leur contexte de prix. Bandes vertes~: positions
+gagnantes~; bandes rouges~: perdantes. Panneau du milieu~: le score d'ensemble
+--- il passe par $\pm$0,25 et $\pm$0,5 parce qu'il moyenne quatre signes.
+Panneau du bas~: le levier calculé chaque séance, et sa valeur retenue à
+l'entrée de chaque trade.}
+\label{fig:gold-timeline}
+\end{figure}
+
+Trois lectures se dégagent immédiatement.
+
+D'abord, \textbf{la période 2022 est une traversée du désert}~: le score passe
+durablement sous zéro de mai à novembre, le moteur reste à l'écart, et il a
+raison --- l'or recule. Ne pas être en position est ici une décision, pas une
+absence de décision.
+
+Ensuite, \textbf{à partir de 2024 le moteur est presque toujours investi}, et
+c'est là qu'il gagne. La hausse de l'or de 2\,000 à 5\,000~dollars l'once est
+capturée par une poignée de positions très longues.
+
+Enfin, \textbf{le levier décroît quand le prix monte}. Ce n'est pas un
+comportement de prudence discrétionnaire mais le ciblage de volatilité~: la
+hausse de 2025--2026 s'accompagne d'une volatilité plus élevée, donc d'un
+levier réduit --- de plus de 6$\times$ au début à moins de 2$\times$ à la fin.
+
+\begin{insightbox}
+Le score n'est presque jamais à son maximum. Trente-quatre trades sur
+trente-cinq sont entrés avec un score de \textbf{0,5} --- deux des quatre
+horizons positifs seulement. Un seul est entré avec les quatre horizons
+alignés. Le moteur n'attend pas la certitude~: il prend position sur une
+majorité simple, et c'est la tenue qui fait le reste.
+\end{insightbox}

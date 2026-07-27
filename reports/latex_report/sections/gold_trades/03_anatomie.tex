@@ -1,0 +1,68 @@
+\section{Anatomie des trades marquants}
+
+Les deux figures qui suivent isolent les quatre meilleures et les quatre pires
+positions. Le trait gris est le cours de clôture du flux de recherche~; le
+trait coloré relie les deux prix réellement obtenus par le courtier. L'écart
+entre les deux est la matière du chapitre~\ref{sec:comparaison}.
+
+\subsection{Les quatre qui ont fait le résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_best4}
+\caption{Les quatre plus gros gains. Ensemble, ils rapportent plus que le
+résultat net total du moteur.}
+\end{figure}
+
+Le trade du \textbf{21~août~2025}, tenu \metric{214~jours}, rapporte à lui seul
+$+$21\,652\,\$ --- soit les deux tiers du résultat net. Le prix d'entrée est
+3\,339\,\$ l'once, celui de sortie 4\,405\,\$~: un gain de prix de 31,9\,\%,
+sur lequel le portage prélève 2\,874\,\$.
+
+Les trois autres suivent le même schéma~: entrée discrète, tenue de plusieurs
+mois, sortie quand le score bascule. Aucun n'a été «~bien~» chronométré au sens
+où l'entrée aurait capté un point bas --- sur les quatre panneaux, le cours
+monte souvent bien avant l'entrée et continue parfois après la sortie. Le moteur
+ne prétend pas attraper les extrêmes~: il prend le milieu du mouvement.
+
+\begin{insightbox}
+Sur les quatre panneaux, la sortie intervient nettement après le sommet. C'est
+inhérent à un signal de momentum, qui a besoin d'une dégradation confirmée pour
+basculer. Ce retard à la sortie est le coût structurel de la méthode, et il est
+payé sur chaque grand trade.
+\end{insightbox}
+
+\subsection{Les quatre plus coûteux}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_worst4}
+\caption{Les quatre plus grosses pertes. La plus lourde est la seule sortie
+déclenchée par le stop de sécurité.}
+\end{figure}
+
+La perte la plus lourde, $-$1\,955\,\$, est celle du \textbf{1\textsuperscript{er}~avril~2026}~:
+la position est ouverte à 4\,759\,\$ et coupée le lendemain à 4\,565\,\$, soit
+$-$4,1\,\%. C'est le \textbf{seul} déclenchement du stop de sécurité sur toute
+la période, et il se voit dans l'horodatage --- la sortie tombe à 06{:}08~UTC
+au lieu de la clôture de séance habituelle.
+
+Ce cas mérite d'être regardé de près, car il illustre ce que le stop fait et ne
+fait pas. D'abord, il s'est déclenché sur un creux de séance que le cours de
+clôture ne montre pas~: la sortie tombe à 4\,565\,\$ alors que l'or clôture ce
+jour-là à 4\,676\,\$. Un examen mené sur données journalières ne verrait tout
+simplement pas cet événement.
+
+Ensuite, il a coupé au plus mauvais moment~: le cours revient à 4\,720\,\$ six
+jours plus tard et dépasse 4\,840\,\$ à la mi-avril. Le stop n'a donc pas
+protégé le résultat sur ce trade précis --- il l'a dégradé. Sa fonction est
+ailleurs~: il borne la perte maximale d'une position unique en cas de
+décrochage violent, ce qu'aucun autre mécanisme du moteur ne fait. Sur un
+moteur qui utilise jusqu'à 6,6$\times$ de levier, c'est une assurance dont on
+paie la prime --- ici 1\,955\,\$ pour un seul déclenchement en quatre ans et
+demi.
+
+Les trois autres pertes sont ordinaires~: des positions ouvertes sur un score
+tout juste positif, refermées en quelques jours quand le mouvement ne se
+confirme pas. Aucune ne dépasse 1\,150\,\$. C'est le fonctionnement nominal ---
+le moteur teste, se trompe, et sort vite.

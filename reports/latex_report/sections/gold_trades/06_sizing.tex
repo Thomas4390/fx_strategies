@@ -1,0 +1,60 @@
+\section{Le dimensionnement à l'épreuve des faits}
+
+Le moteur ne choisit pas seulement \emph{quand} être investi, mais \emph{avec
+quelle taille}. Cette taille est censée être pilotée par la volatilité~: plus le
+marché s'agite, plus la position se réduit, de façon à viser une volatilité
+constante de 55\,\% annualisés. La figure suivante confronte cette intention aux
+trente-cinq décisions réellement prises.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_sizing}
+\caption{En haut, le levier retenu à l'entrée de chaque trade et son plafond.
+En bas, la volatilité réalisée de l'or sur 21~séances, annualisée, et la cible
+visée.}
+\end{figure}
+
+\begin{insightbox}
+\textbf{La cible de volatilité n'est jamais atteinte, et ne peut pas l'être.}
+Sur toute la période, la volatilité réalisée de l'or évolue entre 8 et 33\,\%,
+c'est-à-dire toujours \emph{sous} la cible de 55\,\%. Le mécanisme demande donc
+en permanence plus de levier qu'il n'en obtient~: le levier médian s'établit à
+5,2$\times$ et bute onze fois sur trente-cinq contre le plafond de 6,6$\times$.
+\end{insightbox}
+
+Cette observation change la façon de lire le paramètre. La «~cible de
+volatilité à 55\,\%~» ne fonctionne pas comme un objectif que le moteur
+atteindrait~: elle fonctionne comme un \textbf{multiplicateur}, et c'est le
+plafond de 6,6$\times$ qui exerce la contrainte effective la plupart du temps.
+Régler la cible à la hausse n'aurait presque aucun effet tant que le plafond ne
+bouge pas~; c'est bien le couple des deux paramètres qui détermine le risque
+porté, et il a été calibré comme tel.
+
+On voit également le mécanisme fonctionner correctement là où il compte. En
+avril~2026, la volatilité de l'or dépasse 30\,\% --- la seule période de la
+fenêtre où elle s'approche de la cible --- et le levier tombe sous 2$\times$ sur
+les quatre trades concernés. Le dimensionnement a donc bien réduit l'exposition
+dans le seul épisode d'agitation marquée, ce qui est précisément ce qu'on lui
+demande.
+
+\subsection{Ce que le pas de lot impose}
+
+Le simulateur ne peut pas exprimer un levier arbitraire~: il achète des lots
+par pas de 0,01, soit une once d'or par cran. Sur les volumes en jeu ici ---
+entre 0,09 et 0,26~lot --- ce pas représente entre 3,8 et 11,1\,\% de la
+position. L'écart entre le levier voulu et le levier effectivement obtenu est
+donc structurellement non nul, et il croît quand le capital diminue.
+
+Ce poste avait été identifié comme un candidat sérieux pour expliquer l'écart de
+repli entre les deux moteurs. Les artefacts disponibles ne permettent pas de le
+chiffrer --- il faudrait la trace du levier voulu avant arrondi, que le
+simulateur ne produit pas. Il reste donc \textbf{non attribué}, et il serait
+malhonnête de le présenter autrement.
+
+\begin{warningbox}
+Le dimensionnement retenu vise environ 40\,\% de croissance annualisée et a été
+calibré sous ce mandat, le risque ayant été déclaré non contraignant. Ce n'est
+\textbf{pas} le point qui maximise le rendement~: au-delà du levier optimal, la
+traînée de variance l'emporte et le rendement rechute. Augmenter encore la
+cible achèterait du repli, pas du rendement.
+\end{warningbox}

@@ -1,0 +1,57 @@
+\section{Ce que les trente-cinq trades racontent}
+
+\lettrine{L}{e} moteur or est le contributeur dominant du portefeuille~: il pèse
+10\,\% de l'allocation et produit près de 80\,\% du résultat net. Une telle
+concentration mérite qu'on regarde les transactions une par une plutôt que de
+s'arrêter aux agrégats. C'est l'objet de ce document.
+
+Le matériau est le journal d'exécution du backtest MT5 publié --- le même run
+que celui du rapport d'investissement, vérifié par empreinte du fichier de
+transactions. Trente-cinq positions y figurent, du 9~novembre~2021 au
+21~avril~2026, avec pour chacune le prix d'entrée, le prix de sortie, le volume
+en lots, le résultat, le portage, ainsi que le score de décision et le levier
+relevés dans le journal du testeur.
+
+\subsection*{Cinq constats}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=0.45em]
+
+\item \textbf{Le moteur perd deux fois sur trois et gagne quand même.} Onze
+trades gagnants sur trente-cinq, soit 31,4\,\%. Ce n'est pas un défaut~: le gain
+moyen ($+$3\,933\,\$) vaut \metric{8,5~fois} la perte moyenne ($-$463\,\$). Un
+momentum se paie en petites pertes fréquentes contre de rares grands gains, et
+c'est exactement la forme observée.
+
+\item \textbf{Cinq trades font tout le résultat.} Les cinq positions tenues plus
+de cent jours rapportent $+$41\,096\,\$, soit \metric{128\,\%} du résultat net
+total. Les vingt-et-une positions de moins d'une semaine perdent ensemble
+$-$6\,188\,\$. Le moteur ne gagne pas en tradant~: il gagne en \emph{tenant}.
+
+\item \textbf{Le portage coûte 28\,\% du résultat brut.} Le gain de prix
+s'élève à $+$44\,926\,\$~; le swap en retire $-$12\,784\,\$. C'est le prix
+mécanique de la tenue longue, et il n'est pas modélisé du côté recherche.
+
+\item \textbf{Les deux moteurs occupent les mêmes fenêtres mais découpent
+autrement.} Le moteur de recherche (vbt) et celui d'exécution (MT5) sont en
+position les mêmes jours à 90\,\% près, pour une exposition identique de
+75\,\%. Mais dix positions MT5 sont fractionnées en deux ou trois côté vbt.
+L'égalité «~35~trades de part et d'autre~» relevée lors de la réconciliation est
+une coïncidence de comptage, pas une correspondance de transactions.
+
+\item \textbf{Le ciblage de volatilité ne cible jamais sa cible.} La volatilité
+réalisée de l'or oscille entre 8 et 33\,\% sur la période, toujours sous
+l'objectif de 55\,\%. Le levier reste donc structurellement haut --- médiane
+5,2$\times$, plafond de 6,6$\times$ atteint onze fois. C'est ce qui produit le
+rendement annoncé, et c'est aussi ce qui produit le repli.
+
+\end{enumerate}
+
+\begin{warningbox}
+Ces trente-cinq trades proviennent d'un backtest, pas d'un historique réel, et
+le simulateur a tourné en mode \emph{OHLC~1~minute}, qui interpole les
+exécutions et flatte les résultats. Trente-cinq observations ne permettent
+aucune conclusion statistique par sous-groupe. Le chapitre~\ref{sec:limites}
+détaille ce que ce document ne démontre pas.
+\end{warningbox}
+
+\input{tables/gold_trades_summary.tex}

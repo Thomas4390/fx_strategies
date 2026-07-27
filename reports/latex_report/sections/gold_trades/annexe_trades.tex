@@ -1,0 +1,36 @@
+\clearpage
+\section*{Annexe --- Les trente-cinq trades}
+\addcontentsline{toc}{section}{Annexe --- Les trente-cinq trades}
+
+Extrait du journal d'exécution du backtest publié. Les prix sont ceux
+réellement obtenus par le courtier~; le score et le levier proviennent du
+journal du simulateur au moment de la décision. Le rendement de prix est
+calculé de prix d'entrée à prix de sortie, hors portage. Le résultat net inclut
+le portage et la commission.
+
+\medskip
+
+{\footnotesize
+\input{tables/gold_trades_full.tex}
+}
+
+\bigskip
+
+\subsection*{Reproduire ces chiffres}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=0.3em]
+\item \code{python scripts/extract\_gold\_trades.py --expect 35} --- relit le
+      journal des transactions du simulateur et celui du testeur, apparie les
+      positions, puis écrit le tableau des trades et sa fiche de provenance
+      dans \code{reports/mt5/}.
+\item \code{python scripts/build\_gold\_trades\_figures.py} --- rejoue le
+      moteur côté recherche et produit les figures et tables de ce document.
+\item \code{scripts/compile\_latex\_report.sh goldtrades} --- compile le
+      présent document.
+\end{enumerate}
+
+La fiche de provenance \code{reports/mt5/gold\_trades\_production.json}
+enregistre l'empreinte du fichier source et vérifie qu'il s'agit bien du
+backtest publié dans le rapport d'investissement. L'extraction échoue plutôt
+que de produire un tableau incomplet si le nombre de positions ne correspond
+pas ou si le journal du testeur ne contient pas le run attendu.

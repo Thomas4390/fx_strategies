@@ -1,0 +1,112 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Apogee Quantitative Report --- Analyse des trades du Moteur Or
+%  Document autonome réutilisant le préambule, les figures et les tables
+%  du rapport principal. Public visé : lecteur qui veut voir les trades.
+%
+%  Assets : scripts/extract_gold_trades.py puis
+%           scripts/build_gold_trades_figures.py
+%  Compilation : scripts/compile_latex_report.sh goldtrades
+% ═══════════════════════════════════════════════════════════════════════
+\documentclass[11pt, a4paper]{scrartcl}
+
+\input{preamble.tex}
+
+\hypersetup{
+  pdftitle={Stratégie FX Multi-Moteurs --- Analyse des trades du Moteur Or},
+  pdfsubject={Analyse trade par trade de la sleeve Gold Momentum (XAUUSD)},
+  pdfkeywords={XAUUSD, or, momentum, MT5, vectorbtpro, backtest, trades},
+}
+
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Moteur Or --- analyse des trades}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Analyse des trades --- Juillet 2026}}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE
+% ═══════════════════════════════════════════════════════════════════════
+\thispagestyle{empty}
+\begin{center}
+
+\vspace*{-1.5cm}
+\noindent{\color{apogeeGold}\rule{\textwidth}{2pt}}
+
+\vspace{1.0cm}
+
+\includegraphics[width=3.6cm]{apogee_invest_logo}
+
+\vspace{0.3cm}
+
+{\interspaced\color{apogeeGold}\normalsize\bfseries APOGÉE INVEST\par}
+
+\vspace{0.3cm}
+
+{\color{apogeeGold}\rule{0.28\textwidth}{0.5pt}}
+
+\vspace{1.2cm}
+
+{\interspaced\color{slateGrey}\footnotesize RAPPORT TECHNIQUE \enskip\textbullet\enskip ANALYSE DES TRANSACTIONS\par}
+
+\vspace{0.7cm}
+
+{\sffamily\color{primary}\huge\bfseries
+Le Moteur Or, trade par trade\par}
+
+\vspace{0.4cm}
+
+{\sffamily\color{accent}\Large\itshape
+Trente-cinq transactions passées au microscope, sur les deux moteurs\par}
+
+\end{center}
+
+\vspace{0.9cm}
+
+\noindent\begin{minipage}{\textwidth}
+\centering
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}\\[0.5em]
+\begin{tabular}{@{}rl@{}}
+  \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.18em]
+  \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.18em]
+  \color{slateGrey}\sffamily Date & \textbf{27 juillet 2026} \\[0.18em]
+  \color{slateGrey}\sffamily Périmètre & \textbf{Sleeve Gold Momentum (XAUUSD)} \\[0.18em]
+  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
+\end{tabular}\\[0.7em]
+{\color{apogeeGold}\rule{0.45\textwidth}{0.4pt}}
+\end{minipage}
+
+\vspace{0.8cm}
+
+\begin{thesisbox}
+\textbf{En une ligne~:} sur le backtest de production, le moteur or a pris
+\textbf{35~positions} entre novembre~2021 et avril~2026 pour un résultat net de
+\textbf{$+$32\,141\,\$}, soit \textbf{près de 80\,\% du résultat du portefeuille
+entier}. Trois chiffres résument le mécanisme~: \textbf{31\,\% de trades
+gagnants}, un gain moyen \textbf{8,5~fois} supérieur à la perte moyenne, et
+\textbf{cinq positions de plus de 100~jours} qui produisent à elles seules
+\emph{plus} que le résultat total. Le portage en prélève \textbf{28\,\%}.
+\end{thesisbox}
+
+\vspace{0.4cm}
+
+{\small\color{slateGrey}\sffamily
+Ce document complète le rapport d'investissement \texttt{main.pdf}, dont la
+section~6 décrit le moteur or au niveau agrégé. Il descend ici au trade
+individuel, à partir du journal d'exécution du backtest MT5 publié.}
+
+\clearpage
+
+% ═══════════════════════════════════════════════════════════════════════
+\tableofcontents
+\clearpage
+
+\input{sections/gold_trades/00_synthese.tex}
+\input{sections/gold_trades/01_moteur.tex}
+\input{sections/gold_trades/02_les_35_trades.tex}
+\input{sections/gold_trades/03_anatomie.tex}
+\input{sections/gold_trades/04_sequences_risque.tex}
+\input{sections/gold_trades/05_vbt_vs_mt5.tex}
+\input{sections/gold_trades/06_sizing.tex}
+\input{sections/gold_trades/07_limites.tex}
+\input{sections/gold_trades/annexe_trades.tex}
+
+\end{document}

@@ -1,0 +1,17 @@
+% Généré par scripts/build_gold_trades_figures.py — NE PAS ÉDITER À LA MAIN.
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lrl@{}}
+\toprule
+Poste & USD & Source \\
+\midrule
+Résultat de prix (mesuré) & +44,926 & CSV des deals \\
+Swap (mesuré) & -12,784 & 28.5\,\% du brut \\
+Commission (mesurée) & +0 & nulle sur ce compte \\
+\textbf{Résultat net} & \textbf{+32,141} & recolle au rapport MT5 \\
+\bottomrule
+\addlinespace[0.4em]
+\multicolumn{3}{@{}p{0.92\linewidth}@{}}{\footnotesize Slippage estimé à 545\,\$ (2\,bps par côté sur 1.4\,M\$ de notionnel cumulé) : il est déjà contenu dans les prix d'exécution, ce n'est pas un poste additionnel. Le stop de sécurité a coupé 1 position pour -1,955\,\$. L'arrondi de lots au pas de 0,01 n'est pas chiffrable depuis les artefacts disponibles et reste \emph{non attribué}.}
+\end{tabular}
+\caption{Décomposition du résultat : ce qui est mesuré, ce qui est estimé}
+\end{table}

@@ -1,0 +1,75 @@
+\section{Le catalogue des trente-cinq}
+
+\subsection{Durées et tailles}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_gantt}
+\caption{Chaque trade, du premier au dernier. La longueur de la barre est la
+durée de détention, son épaisseur le volume engagé, sa couleur le signe du
+résultat. Les résultats supérieurs à 3\,000\,\$ en valeur absolue sont
+annotés.}
+\end{figure}
+
+La lecture est frappante~: l'essentiel des barres est court et rouge, et
+quelques barres très longues sont vertes. La durée médiane est de
+\metric{5~jours}, la durée moyenne de \metric{34~jours} --- un écart qui dit à
+lui seul que la distribution est dominée par sa queue.
+
+\subsection{La cascade du résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_waterfall}
+\caption{Construction du résultat, dans l'ordre des clôtures. Chaque barre est
+un trade~; la ligne sombre suit la balance de la sleeve.}
+\end{figure}
+
+Pendant les trois premières années, la balance oscille autour de son point de
+départ~: le moteur ne gagne rien de significatif entre novembre~2021 et
+fin~2024. Tout le résultat se construit en 2025 et au premier trimestre~2026,
+sur deux positions. C'est une propriété du momentum, pas un accident~: la
+stratégie attend une tendance et ne produit rien tant qu'il n'y en a pas.
+
+\subsection{Durée contre résultat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_scatter_duration}
+\caption{Durée et résultat de chaque trade. La taille du point est le volume
+engagé. L'échelle des durées est logarithmique.}
+\end{figure}
+
+La relation est nette. Les vingt-trois positions de moins de dix jours n'ont
+jamais rapporté plus de \metric{529\,\$} l'une --- le vingt-et-un trades d'une
+semaine ou moins totalisent $-$6\,188\,\$. À l'inverse, les cinq positions de
+plus de cent jours totalisent $+$41\,096\,\$, et quatre d'entre elles portent
+la quasi-totalité du résultat. La cinquième, ouverte en janvier~2022 et tenue
+104~jours, perd 226\,\$~: la tenue longue n'est pas une garantie, c'est une
+condition nécessaire.
+
+\begin{insightbox}
+Cette asymétrie est le mécanisme même du moteur, et elle a une conséquence
+opérationnelle directe~: toute modification qui raccourcirait les positions ---
+horizons plus courts, stop plus serré, sortie anticipée sur profit --- attaque
+la seule partie de la distribution qui rapporte. C'est précisément ce qui avait
+été observé lors du réglage des horizons~: la grille courte (15/30/60) semblait
+meilleure côté recherche et s'effondrait à l'exécution.
+\end{insightbox}
+
+\subsection{La distribution}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gold_trades_distribution}
+\caption{Distribution des résultats par trade, gagnants et perdants séparés,
+avec la dispersion en encart.}
+\end{figure}
+
+La forme est celle attendue d'un moteur de suivi de tendance~: un amas dense de
+petites pertes près de zéro, et une queue droite très étirée. La moyenne
+($+$918\,\$ par trade) se situe loin au-dessus de la médiane, qui est
+\emph{négative}. Un lecteur qui jugerait ce moteur sur son trade médian
+conclurait qu'il perd de l'argent.
+
+\input{tables/gold_trades_yearly.tex}

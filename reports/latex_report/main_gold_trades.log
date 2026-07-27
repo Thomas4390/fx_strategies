@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 12:40
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 12:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main_executive.tex
-(./main_executive.tex
+**main_gold_trades.tex
+(./main_gold_trades.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -1391,7 +1391,7 @@ Class scrartcl Info: loading recommended package `bookmark'.
 (scrartcl)           `bookmarkpackage=false' before \begin{document} and
 (scrartcl)           you can avoid this message adding:
 (scrartcl)             \usepackage{bookmark}
-(scrartcl)           before \begin{document} on input line 10.
+(scrartcl)           before \begin{document} on input line 23.
 
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
@@ -1400,38 +1400,38 @@ Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count416
 ))
-(./main_executive.aux)
-\openout1 = `main_executive.aux'.
+(./main_gold_trades.aux)
+\openout1 = `main_gold_trades.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-Package scrbase Info: activating french \abstractname on input line 10.
-Package scrbase Info: activating french \partname on input line 10.
-Package scrbase Info: activating french \figurename on input line 10.
-Package scrbase Info: activating french \tablename on input line 10.
-Package scrbase Info: activating french \contentsname on input line 10.
-Package scrbase Info: activating french \listfigurename on input line 10.
-Package scrbase Info: activating french \listtablename on input line 10.
-Package scrbase Info: activating french \refname on input line 10.
-Package scrbase Info: activating french \indexname on input line 10.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+Package scrbase Info: activating french \abstractname on input line 23.
+Package scrbase Info: activating french \partname on input line 23.
+Package scrbase Info: activating french \figurename on input line 23.
+Package scrbase Info: activating french \tablename on input line 23.
+Package scrbase Info: activating french \contentsname on input line 23.
+Package scrbase Info: activating french \listfigurename on input line 23.
+Package scrbase Info: activating french \listtablename on input line 23.
+Package scrbase Info: activating french \refname on input line 23.
+Package scrbase Info: activating french \indexname on input line 23.
 
 Package fontspec Info: 
 (fontspec)             Adjusting the maths setup (use [no-math] to avoid
@@ -1439,65 +1439,65 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup6
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 10.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 10.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 10.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 10.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 10.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 10.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 10.
-LaTeX Font Info:    Redeclaring math accent \check on input line 10.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 10.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 10.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 10.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 10.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 10.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 23.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 23.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 23.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 23.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 23.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 23.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 23.
+LaTeX Font Info:    Redeclaring math accent \check on input line 23.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 23.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 23.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 23.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 23.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 23.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 10.
+(Font)              `operators' in the math version `normal' on input line 23.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> TU/LatinModernRoman(0)/m/n on input lin
-e 10.
+e 23.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 10.
+(Font)              `operators' in the math version `bold' on input line 23.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  OT1/cmr/bx/n --> TU/LatinModernRoman(0)/m/n on input li
-ne 10.
+ne 23.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  TU/LatinModernRoman(0)/m/n --> TU/LatinModernRoman(0)/m
-/n on input line 10.
+/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 (Font)                  OT1/cmr/m/it --> TU/LatinModernRoman(0)/m/it on input l
-ine 10.
+ine 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
 (Font)                  OT1/cmr/bx/n --> TU/LatinModernRoman(0)/b/n on input li
-ne 10.
+ne 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/Inter(0)/m/n on input line 10.
+(Font)                  OT1/cmss/m/n --> TU/Inter(0)/m/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
 (Font)                  OT1/cmtt/m/n --> TU/LatinModernMono(0)/m/n on input lin
-e 10.
+e 23.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  TU/LatinModernRoman(0)/m/n --> TU/LatinModernRoman(0)/b
-/n on input line 10.
+/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> TU/LatinModernRoman(0)/b/it on input 
-line 10.
+line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/Inter(0)/b/n on input line 10.
+(Font)                  OT1/cmss/bx/n --> TU/Inter(0)/b/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> TU/LatinModernMono(0)/b/n on input lin
-e 10.
+e 23.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -1544,7 +1544,7 @@ File: translations-basic-dictionary-french.trsl (french translation file `trans
 lations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `french'. on input line 10.
+or `french'. on input line 23.
 
 (/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
 nary-english.trsl
@@ -1552,11 +1552,11 @@ File: translations-basic-dictionary-english.trsl (english translation file `tra
 nslations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 10.
+or `english'. on input line 23.
 \c@lstlisting=\count417
-Package tocbasic Info: setting babel extension for `lol' on input line 10.
+Package tocbasic Info: setting babel extension for `lol' on input line 23.
 \scr@dte@lstlisting@maxnumwidth=\skip96
-Package hyperref Info: Link coloring ON on input line 10.
+Package hyperref Info: Link coloring ON on input line 23.
 
 
 Package polyglossia Warning: Failed to patch part for French
@@ -1564,237 +1564,136 @@ Package polyglossia Warning: Failed to patch part for French
 File: ../../docs/logo/apogee_invest_logo.jpeg Graphic file (type bmp)
 <../../docs/logo/apogee_invest_logo.jpeg>
 LaTeX Font Info:    Font shape `TU/Inter(1)/m/n' will be
-(Font)              scaled to size 8.64523pt on input line 30.
+(Font)              scaled to size 8.64523pt on input line 40.
 LaTeX Font Info:    Font shape `TU/Inter(1)/b/n' will be
-(Font)              scaled to size 8.64523pt on input line 30.
+(Font)              scaled to size 8.64523pt on input line 40.
 LaTeX Font Info:    Font shape `TU/Inter(1)/m/n' will be
-(Font)              scaled to size 7.10568pt on input line 40.
+(Font)              scaled to size 7.10568pt on input line 48.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 8.64523pt on input line 45.
+(Font)              scaled to size 8.64523pt on input line 52.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 16.37465pt on input line 45.
+(Font)              scaled to size 16.37465pt on input line 52.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 16.37465pt on input line 45.
+(Font)              scaled to size 16.37465pt on input line 52.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 11.36908pt on input line 51.
+(Font)              scaled to size 11.36908pt on input line 57.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 11.36908pt on input line 51.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 62.
+(Font)              scaled to size 11.36908pt on input line 57.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 67.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 62.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 67.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 8.64523pt on input line 75.
+(Font)              scaled to size 8.64523pt on input line 80.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 7.8952pt on input line 86.
+(Font)              scaled to size 7.8952pt on input line 91.
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 89.
-LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 7.10568pt on input line 104.
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.10568pt on input line 104.
-LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 7.10568pt on input line 104.
-
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 93--105
-[][][][][][] 
- []
-
-[1
+(Font)              scaled to size 10.0pt on input line 92.
+ [1
 
 ]
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 11.36908pt on input line 115.
+(Font)              scaled to size 11.36908pt on input line 99.
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 117--118
-[][][] 
- []
+(./main_gold_trades.toc
 
+Package polyglossia Warning: Failed to patch part for French
 
-Underfull \hbox (badness 10000) in paragraph at lines 117--118
+)
+\tf@toc=\write4
+\openout4 = `main_gold_trades.toc'.
 
- []
+LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
+(Font)              scaled to size 7.10568pt on input line 100.
+ [2
 
+] (./sections/gold_trades/00_synthese.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 11
-9.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 3.
+
 
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
-(lettrine.sty)             reported on input line 119.
-(./tables/mt5_reference.tex
+(lettrine.sty)             reported on input line 3.
+LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
+(Font)              scaled to size 9.47424pt on input line 15.
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
+(Font)              scaled to size 9.47424pt on input line 15.
+(./tables/gold_trades_summary.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 3.
+(Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 24
+.
 
-
-) (./tables/mt5_by_sleeve.tex) [2
+)) (./sections/gold_trades/01_moteur.tex [3
 
 ]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 165--166
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 165--166
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 184--185
-[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion intraday
- []
-
-
-Underfull \hbox (badness 7256) in paragraph at lines 186--187
-\TU/LatinModernRoman(0)/m/n/10 trois paires (EUR, GBP,
- []
-
-
-Underfull \hbox (badness 5563) in paragraph at lines 186--187
-\TU/LatinModernRoman(0)/m/n/10 10%. USD-CAD explicite-
- []
-
-
-Underfull \hbox (badness 1629) in paragraph at lines 188--189
-\TU/LatinModernRoman(0)/m/n/10 Sharpe standalone modeste
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 188--189
-\TU/LatinModernRoman(0)/m/n/10 mais diversificateur anti-
- []
-
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 223--224
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
-
- []
-
-File: figures/equity_combined_logscale.png Graphic file (type bmp)
-<figures/equity_combined_logscale.png>
-
-Underfull \hbox (badness 10000) in paragraph at lines 248--249
-
- []
-
-
-Overfull \hbox (13.38089pt too wide) in paragraph at lines 231--256
-[]$[]$ $[]$ 
- []
-
-(./tables/walkforward_yearly.tex) [4]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 265--266
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
-
- []
-
-File: figures/oos_zoom.png Graphic file (type bmp)
-<figures/oos_zoom.png>
-(./tables/bootstrap_percentiles.tex) [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 303--304
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 303--304
-
- []
-
-(./tables/robustness_verdict_summary.tex
-Overfull \hbox (32.61795pt too wide) in paragraph at lines 5--18
- [][] 
- []
-
-)
-File: figures/robustness_metric_ci_forest.png Graphic file (type bmp)
-<figures/robustness_metric_ci_forest.png>
+File: figures/gold_trades_timeline.png Graphic file (type bmp)
+<figures/gold_trades_timeline.png>
+ [4] [5])
+(./sections/gold_trades/02_les_35_trades.tex
+File: figures/gold_trades_gantt.png Graphic file (type bmp)
+<figures/gold_trades_gantt.png>
+File: figures/gold_trades_waterfall.png Graphic file (type bmp)
+<figures/gold_trades_waterfall.png>
  [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 338--339
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 338--339
-
- []
-
-File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
-<figures/robustness_equity_fan_chart.png>
-[7]
-File: figures/robustness_pbo_logits.png Graphic file (type bmp)
-<figures/robustness_pbo_logits.png>
-
-Overfull \hbox (10.95pt too wide) in paragraph at lines 361--362
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 361--362
-
- []
-
-File: figures/robustness_rolling_stability.png Graphic file (type bmp)
-<figures/robustness_rolling_stability.png>
-[8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 405--406
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
-
- []
+File: figures/gold_trades_scatter_duration.png Graphic file (type bmp)
+<figures/gold_trades_scatter_duration.png>
+ [7]
+File: figures/gold_trades_distribution.png Graphic file (type bmp)
+<figures/gold_trades_distribution.png>
+ [8]
+(./tables/gold_trades_yearly.tex)) (./sections/gold_trades/03_anatomie.tex
+File: figures/gold_trades_best4.png Graphic file (type bmp)
+<figures/gold_trades_best4.png>
 
 [9]
+File: figures/gold_trades_worst4.png Graphic file (type bmp)
+<figures/gold_trades_worst4.png>
+ [10]) (./sections/gold_trades/04_sequences_risque.tex [11]
+File: figures/gold_trades_streaks.png Graphic file (type bmp)
+<figures/gold_trades_streaks.png>
+File: figures/gold_trades_equity_dd.png Graphic file (type bmp)
+<figures/gold_trades_equity_dd.png>
+ [12]
+File: figures/gold_trades_yearly.png Graphic file (type bmp)
+<figures/gold_trades_yearly.png>
+ [13])
+(./sections/gold_trades/05_vbt_vs_mt5.tex
+File: figures/gold_trades_alignment.png Graphic file (type bmp)
+<figures/gold_trades_alignment.png>
+ [14]
+File: figures/gold_trades_engine_profiles.png Graphic file (type bmp)
+<figures/gold_trades_engine_profiles.png>
+ [15]
+File: figures/gold_trades_attribution.png Graphic file (type bmp)
+<figures/gold_trades_attribution.png>
+ [16]
+(./tables/gold_trades_attribution.tex)
+File: figures/gold_trades_costs.png Graphic file (type bmp)
+<figures/gold_trades_costs.png>
+ [17])
+(./sections/gold_trades/06_sizing.tex
+File: figures/gold_trades_sizing.png Graphic file (type bmp)
+<figures/gold_trades_sizing.png>
+ [18] [19])
+(./sections/gold_trades/07_limites.tex [20])
+(./sections/gold_trades/annexe_trades.tex [21] (./tables/gold_trades_full.tex)
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 443.
+(Font)              scaled to size 10.95pt on input line 22.
 
-Underfull \hbox (badness 1189) in paragraph at lines 440--444
-\TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
-s, de la matrice de responsabilité
- []
+[22
 
-
-Overfull \hbox (10.95pt too wide) in paragraph at lines 452--453
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 452--453
-
- []
-
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.8952pt on input line 482.
-
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 469--483
-[][][][][][] 
- []
-
-
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 486--501
-[][][][][][] 
- []
-
-[10] [11] (./main_executive.aux)
+]) [23] (./main_gold_trades.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1805,12 +1704,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 41420 strings out of 468173
- 947742 string characters out of 5435520
- 1526349 words of memory out of 5000000
- 69516 multiletter control sequences out of 15000+600000
- 634876 words of font info for 123 fonts, out of 8000000 for 9000
+ 41756 strings out of 468173
+ 957741 string characters out of 5435520
+ 1548763 words of memory out of 5000000
+ 69826 multiletter control sequences out of 15000+600000
+ 636429 words of font info for 130 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11217b,1302s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11219b,1302s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main_executive.pdf (11 pages).
+Output written on main_gold_trades.pdf (23 pages).
