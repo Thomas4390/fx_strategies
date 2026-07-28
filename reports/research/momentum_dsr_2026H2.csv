@@ -1,0 +1,7 @@
+deflated_object,trial_universe,n_trials,sharpe,sharpe_std,expected_max_sharpe,dsr,verdict
+GOLD_JPY_XAG_w0.200,sweep de poids (11 Sharpe portefeuille),11,1.1854,0.0236,0.0665,1.0,PASS
+GOLD_JPY_XAG_w0.200,"registre, configurations distinctes",382,1.1854,0.0236,0.1217,1.0,PASS
+GOLD_JPY_XAG_w0.200,"registre brut, re-runs inclus",544,1.1854,0.0236,0.1261,1.0,PASS
+XAU-USD,classement MT5 des 21 instruments,382,0.7381,0.0239,2.8905,0.0,FAIL
+USD-JPY,classement MT5 des 21 instruments,382,0.5095,0.0221,2.8905,0.0,FAIL
+XAG-USD,classement MT5 des 21 instruments,382,0.2008,0.0126,2.8905,0.0,FAIL

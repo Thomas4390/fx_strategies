@@ -173,6 +173,112 @@ Contrôle : 1,20 / 0,999 = 1,201 = √(365/252).
 
 ## 6. Résultats
 
-_À remplir après exécution. Cette section est vide au moment du commit de la table de
-décision — c'est la garantie que les seuils n'ont pas été choisis en connaissance du
-résultat._
+Exécution du 2026-07-28, `scripts/audit_momentum_promotion.py`. `--selfcheck` OK :
+reconstruction des 11 Sharpe du sweep à **2,2e-16** (epsilon machine).
+
+### 6.1 PBO — le verdict
+
+| matrice | n_configs | fenêtre | PBO (8/10/12/16 bins) | verdict |
+|---|---|---|---|---|
+| `weights_sweep` | 11 | 1822 séances, 2019-01→2025-12 | **0,786 / 0,841 / 0,824 / 0,754** | **OVERFIT** |
+| `instruments_common` | 21 | 608 séances, 2022-11→2025-12 | 0,200 / 0,302 / 0,176 / — | SAIN |
+| `instruments_deep` | 5 | 8298 séances, 1992→2025 | 0,014 / 0,024 / 0,038 / — | SAIN |
+
+**Branche déclenchée : PBO-W ≥ 0,5.** La table §1 commande le retour à **w = 0,15**.
+PBO-I étant sain, la composition trio est **conservée** — XAGUSD n'est pas retiré.
+
+### 6.2 Ce que j'avais prédit et qui était faux
+
+Le §2 annonçait qu'un CSCV sur une grille monotone unidimensionnelle rendrait
+« PBO ≈ 0 quoi qu'il arrive » et que le pass serait vide de sens. **C'est démenti** : le
+test avait du pouvoir discriminant, et il a rejeté.
+
+Le mécanisme est cohérent avec le §3 : la monotonie du Sharpe en w sur la fenêtre
+*complète* n'entraîne pas la monotonie dans *chaque sous-échantillon*. Quand trois
+positions portent 89 % du net, le poids fort domine les splits qui contiennent ces trades
+et se retrouve sous la médiane dans les autres. Le PBO mesure exactement cela : le poids
+fort ne gagne hors échantillon que dans ~20 % des découpes.
+
+### 6.3 Décomposition post-hoc — publiée, non utilisée pour décider
+
+Découpes décidées **après** avoir vu le résultat global, marquées `post_hoc=True` dans
+`momentum_pbo_2026H2.csv`. Elles informent sur l'origine du rejet ; les utiliser pour
+renverser la décision serait exactement le biais que le pré-gel interdit.
+
+| sous-ensemble | PBO (10 bins) | PBO (12 bins) | lecture |
+|---|---|---|---|
+| toutes (11) | 0,841 | 0,824 | la matrice qui décide |
+| sans baseline (10) | 0,849 | 0,843 | la baseline n'explique pas le rejet |
+| **trio seul (5 poids)** | **0,282** | **0,445** | à composition fixée, la grille de poids passe |
+| duo seul (5 poids) | 0,837 | 0,840 | la composition duo ne généralise pas |
+
+Lecture : la matrice complète mélange deux décisions — quelle composition, quel poids. Le
+rejet vient surtout de la **composition**, pas du poids à composition donnée. Le trio
+passe seul, mais son PBO monte avec le nombre de bins (0,25 → 0,44), ce qui n'est pas le
+profil d'un résultat franc.
+
+Cela ne change pas la décision appliquée, et c'est voulu : la table a été écrite sur la
+matrice complète, elle s'applique sur la matrice complète.
+
+### 6.4 DSR — l'assemblage tient, le choix des instruments non
+
+| objet déflaté | univers | N | Sharpe | E[max SR] | DSR |
+|---|---|---|---|---|---|
+| portefeuille w=0,20 | 11 Sharpe du sweep | 11 | 1,185 | 0,067 | 1,00 PASS |
+| portefeuille w=0,20 | registre, distinctes | 382 | 1,185 | 0,122 | 1,00 PASS |
+| portefeuille w=0,20 | registre brut | 544 | 1,185 | 0,126 | 1,00 PASS |
+| XAU-USD | classement MT5, 21 instr. | 382 | 0,738 | 2,891 | 0,00 FAIL |
+| USD-JPY | idem | 382 | 0,510 | 2,891 | 0,00 FAIL |
+| XAG-USD | idem | 382 | 0,201 | 2,891 | 0,00 FAIL |
+
+**Le PASS du portefeuille doit être lu avec sa réserve** : l'écart-type des 11 Sharpe vaut
+0,024, parce que les 11 configurations sont quasi identiques. Déflater avec la dispersion
+d'une grille dégénérée donne un `E[max SR]` de 0,12 — donc un DSR de 1,00 quasi
+automatique. Ce chiffre est moins faux que le `N = 6` du livrable, il n'est pas beaucoup
+plus informatif. **C'est le PBO, pas le DSR, qui a tranché.**
+
+Le FAIL des instruments est, lui, franc : la dispersion des Sharpe MT5 du classement
+(≈ 0,8) porte `E[max SR]` à 2,89, très au-dessus du meilleur survivant.
+
+### 6.5 Attribution — recoupée avec le JSON publié
+
+`momentum_attribution_2026H2.csv` retrouve exactement les parts de `mt5_reference.json` :
+Gold Momentum **91,08 %** du net, XAGUSD 44,73 %, XAUUSD 36,16 %, USDJPY 15,05 %. La
+position dominante XAGUSD #1575 (2025-05-21 → 2026-03-19) fait **51,38 %** du net publié.
+Le dépôt initial (`DEAL_TYPE_BALANCE`) est exclu du dénominateur : l'y laisser aurait
+sous-estimé toutes les parts de 15 %.
+
+### 6.6 Deux découvertes de reproductibilité
+
+**Le sweep de poids publié n'était plus reproductible.** La promotion a changé les deux
+entrées dont il dépend : `PRODUCTION_WEIGHTS` (la baseline « or seul à 0,10 » est devenue
+« trio à 0,20 ») et le contenu du cache `Gold_Momentum`, qui porte désormais le trio et
+remonte à 2000 par la série Yahoo de l'argent. L'intersection des quatre sleeves n'est donc
+plus bornée à gauche par l'or : **la fenêtre passe de 1822 séances (2019-01-02) à 2081
+(2018-01-02)**, et tous les Sharpe bougent de 0,04 à 0,33. `sweep_context()` refait la
+sleeve or seul et reprend les poids d'alors ; le `--selfcheck` prouve que cela redonne le
+CSV publié au bit près.
+
+Corollaire non documenté à ce jour : **la fenêtre du portefeuille de production a glissé de
+2019 à 2018 lors de la promotion** (2146 séances, 2018-01-02 → 2026-04-01). Sur
+2018→2019, la sleeve momentum ne contient ni l'or (export QC à partir de 2019) : elle vaut
+`(usdjpy + xag)/3`, conformément à la règle « absent = 0, pas de redistribution » qui
+mirroir le `sub_equity/n` MQL5. Ce n'est pas un défaut de logique, mais c'est un
+changement d'échantillon qui a accompagné le changement de poids sans être noté.
+
+**Les « deux conventions de Sharpe » n'en sont qu'une.** Le portefeuille de production
+mesure 0,9983 à 252 jours ; 0,9983 × √(365/252) = **1,2018**, soit le « Sharpe vbt 1,20 »
+publié. Ce n'est pas deux mesures divergentes, c'est le même nombre sous deux
+annualisations, publiées côte à côte comme si elles étaient cohérentes. Cause dans
+`src/framework/robustness.py:181-198`.
+
+### 6.7 Conséquence appliquée
+
+Conformément au §1, sans rediscussion :
+
+- **poids de la sleeve momentum : 0,20 → 0,15** (MR Macro 0,62 → 0,67) ;
+- **composition inchangée** : {XAUUSD, USDJPY, XAGUSD}, PBO-I sain ;
+- nouveau run de référence MT5, allocations épinglées, et republication des livrables sur
+  cette configuration ;
+- correction des deux défauts du tableau de robustesse (N = 6 → 382, PBO du bon objet) et
+  de l'annualisation, plus divulgation de la concentration.
