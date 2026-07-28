@@ -108,3 +108,75 @@ python src/mt5/bridge/run_backtest_cli.py --symbol XAUUSD.c \
     --input Inp_AllocTSMomentum=0.0 --input Inp_AllocRSIDaily=0.0 \
     --input Inp_AllocH1Momentum=0.0
 ```
+
+---
+
+## 2026-07-28 — la parité devient mesurable sur les trois jambes
+
+Jusqu'ici la trace n'écrivait que le **premier** instrument configuré, si bien que la
+parité était vérifiée sur l'or et invérifiable sur USD/JPY et l'argent — qui portent
+ensemble 60 % du résultat. `Inp_Gold_TraceSymbol` choisit l'instrument tracé (nom de base,
+suffixe résolu automatiquement ; vide = premier configuré, comportement historique). Le
+format de trace est inchangé : c'est un contrat partagé avec le port QuantConnect.
+
+### Le portage multi-instruments ne touche pas la décision
+
+Test que l'intégration du trio n'avait jamais fait : même fenêtre, USD/JPY tracé en sleeve
+mono puis dans le trio.
+
+| colonne | écart mono ↔ trio, 816 séances |
+|---|---|
+| `close` | **0** |
+| `score` | **0** |
+| `target_weight` | **0** |
+
+Le budget se partage bien par tiers. Rapporté à la sub-equity de chaque run —
+`(units_trio / units_mono) × (equity_mono / equity_trio)`, attendu 1/3 :
+
+| taille de position | n | ratio médian | écart-type |
+|---|---|---|---|
+| 1 à 3 lots | 354 | 0,3483 | 0,029 |
+| 3 à 10 lots | 94 | **0,3334** | 0,036 |
+
+La dérive sur les petites positions est un effet d'**arrondi des lots** (pas de 0,01 lot =
+1 000 unités) : elle disparaît quand la position grandit. Le partage `sub_equity / n` est
+donc conforme.
+
+### Écart vbt ↔ MT5 par instrument, sleeve isolée, 2022-11-04 → 2025-12-31
+
+`RiskScale=1.0`, dépôt 100 k, config de production épinglée, `loader_override="mt5"` des
+deux côtés (sans quoi XAG-USD serait comparé à un continu de futures à rolls).
+
+| instrument | Sharpe MT5 | Sharpe vbt | Δ | trades MT5 / vbt | maxDD MT5 / vbt |
+|---|---|---|---|---|---|
+| XAU-USD (référence historique) | 0,73 | 1,08 | 0,35 | — | — |
+| USD-JPY | −0,18 | +0,02 | **0,20** | 30 / 31 | 56,9 % / 45,8 % |
+| XAG-USD | 0,44 | 1,05 | **0,61** | **18 / 15** | 66,3 % / 52,4 % |
+
+Deux lectures :
+
+1. **USD/JPY est la jambe la mieux réconciliée** — 0,20 d'écart, sous le résidu structurel
+   de 0,35 mesuré sur l'or. Rien à instruire.
+2. **XAG-USD est la moins bien réconciliée du dossier** (0,61), et le signe du compte de
+   trades l'explique : **MT5 en fait 3 de plus que vbt**, alors que l'or et l'USD/JPY en
+   font autant ou moins. Un moteur qui ferme *plus* que la règle de signal ne peut le faire
+   que par un stop — et le moteur vbt n'en a aucun (`sl_stop=None`). C'est la confirmation
+   indépendante de ce que les deals du run de référence montraient déjà : le stop de
+   sécurité `Inp_Gold_SafetySL = 0,04` vaut **2,5 σ quotidiens** sur l'argent et y coupe
+   6 sorties sur 23, contre 0 sur 34 pour l'USD/JPY.
+
+### Reproduire
+
+```bash
+# une trace par instrument, sleeve isolée
+python src/mt5/bridge/run_backtest_cli.py --from 2022.11.04 --to 2025.12.31 --model 1 \
+    --deposit 100000 --report-name mono_usdjpy --ini-name mono_usdjpy.ini \
+    --input Inp_AllocGoldMomentum=1.0 --input Inp_AllocMRMacro=0.0 \
+    --input Inp_AllocTSMomentum=0.0 --input Inp_AllocRSIDaily=0.0 \
+    --input Inp_AllocH1Momentum=0.0 --input Inp_RiskScale=1.0 \
+    --input Inp_Gold_Symbols=USDJPY --input Inp_Gold_Trace=true \
+    --input Inp_Gold_TraceFile=trace_usdjpy_mono.csv --input Inp_Gold_TraceSymbol=USDJPY
+
+python scripts/compare_vbt_vs_mt5_gold.py --run reports/mt5/run_<id>.json \
+    --symbol USD-JPY --loader mt5
+```

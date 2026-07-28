@@ -205,6 +205,21 @@ public:
     }
 
 private:
+    //--- Which instrument the reconciliation trace follows.
+    //--- Matched on the *base* name so the caller need not know the broker
+    //--- suffix: "USDJPY" selects "USDJPY.c". Empty, or a name that matches
+    //--- nothing, falls back to the first configured instrument — a typo
+    //--- degrades to the historical behaviour rather than to a silent
+    //--- no-trace, which would read as "the sleeve never traded".
+    string TracedSymbol()
+    {
+        if(Inp_Gold_TraceSymbol == "") return m_symbols[0];
+        for(int i = 0; i < m_n_symbols; i++)
+            if(StringFind(m_symbols[i], Inp_Gold_TraceSymbol) == 0)
+                return m_symbols[i];
+        return m_symbols[0];
+    }
+
     void ProcessSymbol(string symbol, CRiskManager &risk)
     {
         double score;
@@ -243,11 +258,14 @@ private:
             else if(short_signal) OpenPosition(symbol, ORDER_TYPE_SELL, lev, score, risk);
         }
 
-        // The trace stays wired to the first instrument only. Its file format
-        // is single-series (one row per date, no symbol column) and it is
-        // already known broken against vbt; widening it to the whole universe
-        // would only produce interleaved rows nothing can read.
-        if(Inp_Gold_Trace && symbol == m_symbols[0])
+        // One instrument per run, but a *chosen* one. The file format is
+        // single-series (one row per date, no symbol column) and it is a
+        // contract shared with the QuantConnect port, so widening it to the
+        // whole universe would break three readers at once. Selecting the
+        // traced instrument costs one input and makes parity verifiable on
+        // every leg — run once per symbol. Empty (the default) keeps the
+        // historical behaviour: the first configured instrument.
+        if(Inp_Gold_Trace && symbol == TracedSymbol())
             WriteTraceRow(symbol, score, lev, long_signal, short_signal, risk);
     }
 

@@ -88,13 +88,23 @@ def load_mt5_run(path: Path) -> dict:
     }
 
 
-def run_vbt(window: tuple[pd.Timestamp, pd.Timestamp] | None) -> dict:
-    from strategies.gold_momentum import pipeline
-    from utils import apply_vbt_settings, load_gold_data
+def run_vbt(
+    window: tuple[pd.Timestamp, pd.Timestamp] | None,
+    symbol: str = "XAU-USD",
+    loader: str | None = None,
+) -> dict:
+    """Recompute the sleeve on ``symbol``, over the MT5 run's window.
+
+    ``loader`` matters more than it looks. The registry default for XAG-USD is
+    the long Yahoo series, which is a **rolled futures** history: comparing it
+    to the broker's spot CFD would fail the parity gate for a reason that has
+    nothing to do with the engines. Pass ``mt5`` to compare like for like.
+    """
+    from strategies import tsmom
+    from utils import apply_vbt_settings
 
     apply_vbt_settings()
-    _, data = load_gold_data()
-    pf, _ = pipeline(data)
+    pf, _ = tsmom.pipeline(symbol, loader_override=loader)
 
     rets = pf.returns
     trades = pf.trades.records_readable
@@ -118,6 +128,11 @@ def run_vbt(window: tuple[pd.Timestamp, pd.Timestamp] | None) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", type=Path, help="reports/mt5/run_*.json (default: most recent)")
+    ap.add_argument("--symbol", default="XAU-USD",
+                    help="instrument du registre tsmom (défaut: XAU-USD)")
+    ap.add_argument("--loader", default=None,
+                    help="loader_override — 'mt5' pour comparer au CFD du courtier "
+                         "plutôt qu'à la série longue (obligatoire pour XAG-USD)")
     args = ap.parse_args()
 
     path = args.run
@@ -131,11 +146,13 @@ def main() -> int:
     print(f"[mt5] {path.name}  symbole={mt5['symbol']}  exit={mt5['exit_code']}  init_ok={mt5['init_ok']}")
     if mt5["window"]:
         print(f"[mt5] fenêtre {mt5['window'][0].date()} → {mt5['window'][1].date()}")
-    if mt5["symbol"] and "XAU" not in str(mt5["symbol"]):
-        print(f"[!] symbole {mt5['symbol']} : ce run ne porte pas sur l'or — "
-              "vérifier Inp_AllocGoldMomentum et --symbol.")
+    if args.symbol == "XAG-USD" and args.loader != "mt5":
+        print("[!] XAG-USD sans --loader mt5 : le registre servirait la série Yahoo, "
+              "qui est un continu de futures à rolls. La comparaison échouerait pour "
+              "une raison de source, pas de moteur.")
 
-    vbt = run_vbt(mt5["window"])
+    vbt = run_vbt(mt5["window"], symbol=args.symbol, loader=args.loader)
+    print(f"[vbt] instrument={args.symbol} loader={args.loader or 'défaut registre'}")
     print(f"[vbt] Sharpe={vbt['sharpe']:.2f}  CAGR={vbt['cagr']:.2f}%  "
           f"vol={vbt['vol']:.2f}%  maxDD={vbt['maxdd']:.2f}%  trades={vbt['trades']}")
 

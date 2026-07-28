@@ -156,6 +156,7 @@ input double Inp_Gold_SafetySL      = 0.04;    // gold is ~2x FX volatility
 input int    Inp_Gold_SlippageBps   = 2;       // XAUUSD CFD spread + commission
 input bool   Inp_Gold_Trace         = false;   // daily reconciliation trace — diagnostic only
 input string Inp_Gold_TraceFile     = "gold_trace.csv";  // in Common\Files
+input string Inp_Gold_TraceSymbol   = "";      // base name to trace; "" = first configured
 
 // === Execution costs ===============================================
 // Per-side commission in basis points. Calibrate to the live broker:
