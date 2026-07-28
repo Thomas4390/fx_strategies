@@ -6,7 +6,7 @@
 \begin{thesisbox}
 \textbf{Les tests de robustesse ne sont pas tous franchis, et le rapport le dit.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
 
-La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0{,}754$ pour un seuil de danger de $0{,}5$~: \textbf{ce test échoue.} Il porte sur la grille d'allocations réellement parcourue pour fixer le poids de la sleeve momentum, et sa conséquence a été appliquée --- ce poids est ramené de $20\,\%$ à $15\,\%$ selon une règle de décision écrite avant le calcul. Les avertissements ci-dessous sont les limites qui subsistent après cette correction.
+La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0{,}649$ pour un seuil de danger de $0{,}5$~: \textbf{ce test échoue.} Il porte sur la grille d'allocations réellement parcourue pour fixer le poids de la sleeve momentum, et sa conséquence a été appliquée --- ce poids est ramené de $20\,\%$ à $15\,\%$ selon une règle de décision écrite avant le calcul. Les avertissements ci-dessous sont les limites qui subsistent après cette correction.
 \end{thesisbox}
 
 \subsection{Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}
@@ -30,7 +30,7 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \subsection{Avertissement 2 --- La sélection a consommé du pouvoir statistique}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting}, mesurée sur la grille d'allocations qui a produit la recommandation, vaut $0{,}754$ contre un seuil de danger de $0{,}5$. \textbf{Ce test échoue.} La procédure estime que l'allocation la mieux classée sur une moitié des données se retrouve sous la médiane sur l'autre moitié dans trois découpes sur quatre.
+\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting}, mesurée sur la grille d'allocations qui a produit la recommandation, vaut $0{,}649$ contre un seuil de danger de $0{,}5$. \textbf{Ce test échoue.} La procédure estime que l'allocation la mieux classée sur une moitié des données se retrouve sous la médiane sur l'autre moitié dans près de deux découpes sur trois.
 
 \textbf{Ce chiffre corrige une mesure antérieure.} Les éditions précédentes de ce rapport annonçaient $0{,}335$ et un verdict favorable~: cette valeur portait sur la matrice des quatre \emph{sleeves}, et répondait donc à la question « choisir le meilleur moteur tient-il hors échantillon~», qui n'est pas une décision prise dans ce projet. Le nombre publié ici porte sur la grille réellement parcourue pour fixer le poids de la sleeve momentum. Pour la même raison, le \textit{Deflated Sharpe} est désormais déflaté par les $382$ configurations distinctes du registre d'essais, contre $6$ auparavant --- ce dernier chiffre étant le nombre de sleeves, non le nombre d'essais.
 

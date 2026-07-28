@@ -284,3 +284,57 @@ Conformément au §1, sans rediscussion :
   cette configuration ;
 - correction des deux défauts du tableau de robustesse (N = 6 → 382, PBO du bon objet) et
   de l'annualisation, plus divulgation de la concentration.
+
+---
+
+## 7. Re-mesure après correction du modèle de coût (2026-07-28, phase 3)
+
+Le modèle de coût de la recherche facturait le portage en valeur absolue à tous les
+instruments — `ret - swap × |exposition|` — donc il **prélevait sur USD/JPY un portage que
+le compte encaisse**, alors que la thèse du dossier attribue à ce portage 63 % du résultat
+de cette jambe. Le modèle contredisait ce qu'il servait à établir. Corrigé
+(`strategies.tsmom.carry_sign`, signe issu du catalogue broker archivé).
+
+**Re-mesurer après correction d'un bug est légitime ; choisir entre l'ancienne et la
+nouvelle mesure selon celle qui arrange ne le serait pas.** La table de décision du §1
+s'applique donc telle qu'écrite, aux nouveaux chiffres.
+
+### 7.1 Ce que la correction déplace
+
+| instrument | Sharpe vbt avant | après | Δ |
+|---|---|---|---|
+| USD-JPY | 0,538 | **0,770** | +0,232 |
+| GBP-JPY | 0,079 | **0,314** | +0,235 |
+| XAU-USD, XAG-USD, indices, EUR-USD | inchangés | | 0 |
+
+Le criblage **sous-estimait systématiquement de ~0,23 de Sharpe la classe d'instruments que
+la thèse désigne**. Conséquences sur le classement du pré-filtre : USD-JPY passe 5ᵉ → 3ᵉ
+(0,73, à un cheveu de l'or à 0,74), EUR-JPY 7ᵉ → 4ᵉ (0,71), GBP-JPY 12ᵉ → 9ᵉ, et
+**USD-CAD cesse d'être tué** (−0,24 → 0,00). Les kills passent de 7 à 6.
+
+### 7.2 La décision ne change pas
+
+| matrice | PBO avant | PBO après | verdict |
+|---|---|---|---|
+| `weights_sweep` (11 configs) | 0,754 – 0,841 | **0,649 – 0,732** | **OVERFIT** dans les deux cas |
+| `instruments_common` (21) | 0,176 – 0,302 | 0,242 – 0,393 | SAIN dans les deux cas |
+| `weights_trio_only` (post-hoc) | 0,249 – 0,445 | 0,167 – 0,336 | sain |
+| `weights_duo_only` (post-hoc) | 0,812 – 0,840 | 0,598 – 0,661 | overfit |
+
+Le PBO baisse — la correction améliore le trio — mais **reste largement au-dessus du seuil
+de 0,5**. La branche « PBO-W ≥ 0,5 → w = 0,15 » est déclenchée une seconde fois, sur une
+mesure indépendante du bug. **Le poids de 0,15 est confirmé, pas reconduit par inertie.**
+
+Le sweep corrigé montre par ailleurs un trio nettement meilleur qu'estimé : Sharpe 1,261 à
+w = 0,20 (contre 1,185) et surtout **maxDD −40,4 % contre −58,5 % pour la baseline or seul**,
+là où l'ancien modèle affichait −42,1 %. Le minimum de drawdown reste à w = 0,175
+(−40,2 %), donc l'argument du §1.2 tient aussi.
+
+### 7.3 Un second défaut de reproductibilité, corrigé
+
+La baseline du sweep dérivait de `PRODUCTION_WEIGHTS`. Un sweep dont la référence suit la
+production **se réécrit à chaque changement de production**, donc ne peut plus servir à
+juger ce changement : relancé après la promotion, il comparait le trio à lui-même sur une
+fenêtre de 2081 séances au lieu de 1822. La baseline est désormais figée en clair
+(`BASELINE_WEIGHTS`, or seul à 0,10), et `sweep_context()` de l'audit délègue à cette
+fonction unique plutôt que d'en tenir une copie.

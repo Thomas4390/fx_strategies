@@ -156,7 +156,7 @@ la proportion exacte où il multiplie le rendement.
 ramènerait le résultat à moins d'un dixième de son niveau.
 \item \textbf{Quatre tests de robustesse sur six sont franchis}~; les deux échecs
 portent sur le coût de la sélection, pas sur l'existence de l'\emph{edge}~: le test de
-sur-ajustement échoue (probabilité $0.754$ pour un seuil de $0.5$) et la longueur
+sur-ajustement échoue (probabilité $0.649$ pour un seuil de $0.5$) et la longueur
 minimale de \emph{backtest} requise ($12.25$~ans) dépasse l'historique disponible
 ($8.5$~ans). Le poids de la sleeve momentum a été ramené de $20\,\%$ à $15\,\%$ en
 conséquence~--- voir section~5.
@@ -360,7 +360,7 @@ fenêtre OOS~: le Sharpe observé dépasse la médiane bootstrap.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.754$~: dans trois découpages temporels sur quatre, le vainqueur in-sample retombe sous la médiane. C'est au-dessus du seuil de danger de $0.5$, et le test échoue.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne orange marque le seuil au-dessus duquel le vainqueur in-sample reste au-dessus de la médiane out-of-sample. La probabilité de sur-ajustement vaut $0.649$~: dans près de deux découpages temporels sur trois, le vainqueur in-sample retombe sous la médiane. C'est au-dessus du seuil de danger de $0.5$, et le test échoue.}
 \end{figure}
 
 
@@ -397,7 +397,7 @@ $10\,\%$ avant juillet~2026. À ce poids, elle porte environ la moitié du budge
 risque. Action~: suivi de la contribution par sleeve et par instrument, réexamen du
 poids sur données fraîches.
 \item \textbf{La sélection a consommé du pouvoir statistique} --- le test de
-sur-ajustement échoue ($0.754$ contre un seuil de $0.5$)~: le poids de la sleeve
+sur-ajustement échoue ($0.649$ contre un seuil de $0.5$)~: le poids de la sleeve
 momentum, arrêté à la borne du domaine testé, ne se transporte pas hors échantillon.
 Action~: poids ramené à $15\,\%$, tranche de données gelée, \emph{paper-trade}
 $\geq 3$~mois avant capital réel.

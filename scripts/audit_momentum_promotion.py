@@ -58,7 +58,6 @@ from framework.statistical_testing import (  # noqa: E402
     probability_of_backtest_overfitting,
 )
 from screen_tsmom_universe import build_universe  # noqa: E402
-from strategies.combined_portfolio import get_strategy_daily_returns  # noqa: E402
 from strategies.combined_portfolio_v2 import (  # noqa: E402
     PRODUCTION_MAX_LEVERAGE,
     PRODUCTION_TARGET_VOL,
@@ -189,30 +188,13 @@ def instrument_matrix() -> pd.DataFrame:
 
 
 def sweep_context() -> tuple[dict[str, pd.Series], dict[str, float]]:
-    """Le contexte dans lequel le sweep de poids a tourné — reconstruit, pas lu.
+    """Le contexte dans lequel le sweep de poids tourne — délégué au sweep.
 
-    Le sweep publié n'est **plus** reproductible depuis ``PRODUCTION_WEIGHTS`` et
-    le cache, parce que la promotion a changé les deux : la baseline « or seul à
-    0,10 » est devenue « trio à 0,20 », et ``cached["Gold_Momentum"]`` porte
-    désormais le trio, dont l'historique remonte à 2000 par la série Yahoo de
-    l'argent. L'intersection des quatre sleeves n'est donc plus bornée à gauche
-    par l'or : la fenêtre passe de 1822 séances (2019-01-02) à 2081 (2018-01-02),
-    et tous les Sharpe bougent.
-
-    On refait donc la sleeve or seul et on reprend les poids d'alors. Le
-    ``--selfcheck`` vérifie que cela redonne le CSV publié ; sans quoi le PBO-W
-    porterait sur une grille qui n'est pas celle qui a produit la recommandation.
+    La reconstruction vivait ici en double jusqu'au 2026-07-28. Elle appartient
+    au script qui produit la grille : deux copies de la même référence peuvent
+    diverger, et c'est précisément ce que ce fichier est censé détecter.
     """
-    from strategies.combined_portfolio import backtest_momentum_sleeve
-
-    cached = dict(get_strategy_daily_returns())
-    cached["Gold_Momentum"] = backtest_momentum_sleeve(instruments=(("XAU-USD", None),))
-    baseline_weights = {
-        "MR_Macro": 0.72,
-        **smw.FIXED_WEIGHTS,
-        "Gold_Momentum": 0.10,
-    }
-    return cached, baseline_weights
+    return smw.baseline_context()
 
 
 def weight_matrix(

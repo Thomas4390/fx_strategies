@@ -126,3 +126,42 @@ def test_check_mode_is_green_right_after_generation():
         text=True,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Signe du portage
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def test_carry_sign_follows_the_broker_catalog():
+    """Le portage est crédité à qui l'encaisse, débité à qui le paie.
+
+    Le modèle de coût facturait ``swap * |exposition|`` à tout le monde : il
+    prélevait sur USD/JPY un portage que le compte encaisse, alors que la thèse
+    du dossier lui attribue 63 % du résultat de cette jambe. Corrigé, le Sharpe
+    vbt d'USD/JPY monte de 0,54 à 0,77 — le criblage sous-estimait
+    systématiquement la classe d'instruments qu'il était censé désigner.
+    """
+    from strategies import tsmom
+
+    assert tsmom.carry_sign("USD-JPY") > 0, "USD/JPY encaisse le portage"
+    assert tsmom.carry_sign("GBP-JPY") > 0
+    assert tsmom.carry_sign("XAU-USD") < 0, "l'or paie le portage"
+    assert tsmom.carry_sign("XAG-USD") < 0
+    assert tsmom.carry_sign("EUR-USD") < 0
+
+
+def test_an_uncatalogued_instrument_is_assumed_to_pay():
+    """Le défaut est pessimiste : on ne crédite pas un portage non vérifié."""
+    from strategies import tsmom
+
+    assert tsmom.carry_sign("INSTRUMENT-INEXISTANT") < 0
+
+
+def test_the_broker_catalog_is_archived_and_readable():
+    """Sans catalogue archivé, le signe retomberait silencieusement sur -1."""
+    from framework.costs import load_broker_catalog
+
+    catalog = load_broker_catalog()
+    assert len(catalog) > 200, f"catalogue broker trop court : {len(catalog)} symboles"
+    assert "USDJPY.c" in catalog and "XAUUSD.c" in catalog

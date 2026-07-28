@@ -1,4 +1,4 @@
-\section{Moteur 4 --- Momentum Multi-Actifs (20\,\%)}
+\section{Moteur 4 --- Momentum Multi-Actifs (15\,\%)}
 \label{sec:gold_momentum}
 
 \lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} quatrième moteur est le plus récent et le seul à sortir de l'univers des devises. Il suit la tendance de trois instruments sur données journalières~--- l'or (XAU-USD), le dollar-yen (USD-JPY) et l'argent (XAG-USD)~--- avec le même signal appliqué à chacun. Son entrée en production répond à une contrainte précise~: sans lui, le mandat de rendement était hors d'atteinte.
@@ -13,7 +13,7 @@
 Le trio FX, combiné et non leviérié, rend 2,2\,\% par an pour une volatilité de 5,8\,\%. Le ciblage de volatilité peut amplifier ce résultat, mais pas indéfiniment~: au-delà d'un certain levier, le \emph{drag} de variance détruit plus de rendement composé qu'il n'en crée, et le rendement plafonne autour de 32\,\% avant de retomber. Un mandat à 40\,\% ne pouvait donc pas être servi par un levier plus élevé~--- il exigeait une source de rendement supplémentaire, faiblement corrélée aux trois autres.
 \end{thesisbox}
 
-Le suivi de tendance sur métaux et sur le yen remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À 20\,\% de poids, il porte le Sharpe du portefeuille combiné de 0,66 à environ 1,0 (tableau~\ref{tab:robustness_bootstrap_ci}), ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
+Le suivi de tendance sur métaux et sur le yen remplit cette condition. Sa corrélation avec chacun des trois moteurs FX est proche de zéro~: il ne réagit ni au différentiel de taux qui porte le Momentum Journalier, ni à la micro-structure de session qui porte la Mean Reversion Intraday. À son poids de 15\,\%, il porte le Sharpe du portefeuille combiné de 0,66 à environ 1,0 (tableau~\ref{tab:robustness_bootstrap_ci}), ce qui déplace le plafond de rendement au-dessus de la cible et rend celle-ci atteignable à un niveau de volatilité \emph{inférieur} à celui qu'exigeait le trio seul.
 
 \subsubsection*{Ce que chaque instrument apporte}
 
@@ -24,9 +24,9 @@ Le suivi de tendance sur métaux et sur le yen remplit cette condition. Sa corr�
 \toprule
 \textbf{Instrument} & \textbf{Ce qu'il apporte} & \textbf{Ce qu'il coûte} \\
 \midrule
-\textbf{Or} (XAU-USD) & Le moteur d'origine~: la tendance la plus ample de la fenêtre, et 40\,\% du résultat de la sleeve pour 35~positions. & Un portage \emph{négatif}~--- l'or ne rapporte rien à qui le détient, les frais de nuit s'accumulent sur des positions qui durent des semaines. \\
+\textbf{Or} (XAU-USD) & Le moteur d'origine~: la tendance la plus ample de la fenêtre, et 40\,\% du résultat de la sleeve pour 34~positions. & Un portage \emph{négatif}~--- l'or ne rapporte rien à qui le détient, les frais de nuit s'accumulent sur des positions qui durent des semaines. \\
 \textbf{Dollar-yen} (USD-JPY) & Une tendance longue de nature différente (différentiel de taux), et un portage \textbf{positif}~: ici les frais de nuit sont une recette, pas une charge. & Une corrélation non nulle avec le Momentum Journalier, qui traite aussi cette paire~--- les deux moteurs peuvent se retrouver du même côté. \\
-\textbf{Argent} (XAG-USD) & Le poste qui divise le repli~: médiocre pris isolément, il casse la dépendance du résultat à la seule trajectoire de l'or. Sur cette fenêtre il apporte la plus grosse part du résultat de la sleeve, 49\,\% en 23~positions seulement. & L'historique le plus court des trois sur données de courtier propres, et la volatilité la plus élevée. \\
+\textbf{Argent} (XAG-USD) & Le poste qui divise le repli~: médiocre pris isolément, il casse la dépendance du résultat à la seule trajectoire de l'or. Sur cette fenêtre il apporte la plus grosse part du résultat de la sleeve, 48\,\% en 20~positions seulement. & L'historique le plus court des trois sur données de courtier propres, et la volatilité la plus élevée. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -47,7 +47,7 @@ Le signal est un \emph{time series momentum} au sens de Moskowitz, Ooi et Peders
 
 \item \textbf{La séance est bornée à 17h00, heure de New York}, conformément à la convention du courtier sur les CFD. Ce détail n'en est pas un~: borner la journée à minuit fabrique $392$~fausses séances~--- les dimanches soir, longs de six heures au lieu de treize~--- et gonfle le décompte de séances de $20\,\%$, ce qui raccourcit d'autant tous les horizons exprimés en séances. Cette borne fait l'objet d'un verrou de test dédié.
 
-\item \textbf{Le moteur est lent.} Le vote de chaque instrument ne bascule qu'une dizaine de fois par an. Sur la fenêtre d'exécution de référence, les trois cumulés représentent $93$~positions en cinq ans et quatre mois~--- $10\,\%$ des transactions du portefeuille, contre $4\,\%$ du temps où l'or était seul. Les positions se comptent en semaines, et le coût de rotation reste négligeable~: environ $0{,}2\,\%$ par an.
+\item \textbf{Le moteur est lent.} Le vote de chaque instrument ne bascule qu'une dizaine de fois par an. Sur la fenêtre d'exécution de référence, les trois cumulés représentent $89$~positions en cinq ans et quatre mois~--- $10\,\%$ des transactions du portefeuille, contre $4\,\%$ du temps où l'or était seul. Les positions se comptent en semaines, et le coût de rotation reste négligeable~: environ $0{,}2\,\%$ par an.
 \end{enumerate}
 
 \subsection{Du signal à la taille de position}
@@ -290,7 +290,7 @@ Le dossier de l'anti-martingale était réel et méritait d'être instruit~: c'�
 \begin{warningbox}
 \textbf{2019--2026 a été un marché haussier des métaux d'une ampleur inhabituelle, doublé d'une mégatendance sur le yen.} Le prix de l'or a plus que doublé sur la fenêtre. Un moteur de suivi de tendance y réalise mécaniquement sa meilleure performance possible, et rien dans les données disponibles ne permet de distinguer la part qui revient au signal de celle qui revient au régime. Élargir la sleeve à trois instruments ne corrige pas ce biais~: les trois ont tendu dans le même sens sur la même période.
 
-Trois constats l'illustrent. D'abord, le Sharpe du portefeuille croît de façon monotone avec le poids accordé à cette sleeve sur toute la plage testée~: l'optimum était \emph{à la borne} de la grille (20\,\%), signature d'un biais de période et non d'un optimum démontré. \textbf{Le test de sur-ajustement l'a confirmé} (section~\ref{sec:advanced_robustness})~: le poids le mieux classé sur une moitié des données retombe sous la médiane sur l'autre dans trois découpes sur quatre. Le poids a donc été ramené à \textbf{15\,\%} le 28~juillet~2026. Ensuite, même à ce poids réduit, la sleeve porte une part du budget de risque très supérieure à sa part de capital. Enfin, à l'exécution, ce moteur produit 87,0\,\% du résultat net du portefeuille pour 10\,\% de ses transactions.
+Trois constats l'illustrent. D'abord, le Sharpe du portefeuille croît de façon monotone avec le poids accordé à cette sleeve sur toute la plage testée~: l'optimum était \emph{à la borne} de la grille (20\,\%), signature d'un biais de période et non d'un optimum démontré. \textbf{Le test de sur-ajustement l'a confirmé} (section~\ref{sec:advanced_robustness})~: le poids le mieux classé sur une moitié des données retombe sous la médiane sur l'autre dans près de deux découpes sur trois. Le poids a donc été ramené à \textbf{15\,\%} le 28~juillet~2026. Ensuite, même à ce poids réduit, la sleeve porte une part du budget de risque très supérieure à sa part de capital. Enfin, à l'exécution, ce moteur produit 87,0\,\% du résultat net du portefeuille pour 10\,\% de ses transactions.
 
 Le taux de gain de la sleeve est de 39,8\,\%~: elle perd trois fois sur cinq. C'est une amélioration réelle par rapport aux 31,4\,\% de l'or seul --- trois instruments produisent trois séquences de tendance moins synchrones --- mais sa rentabilité tient toujours à l'amplitude de quelques positions gagnantes, comportement attendu d'un suivi de tendance, et son résultat futur reste dépendant de la persistance des tendances.
 

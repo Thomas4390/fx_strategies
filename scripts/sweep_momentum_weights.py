@@ -16,7 +16,12 @@ Ce qui est balayé — grille fermée, 2 compositions × 5 poids + la baseline :
 - poids momentum w ∈ {0,10 · 0,125 · 0,15 · 0,175 · 0,20}, la réduction se
   faisant sur MR Macro seul (`0,82 − w`, TS et RSI figés à 0,09 chacun, somme
   vérifiée à 1,0) ;
-- baseline : la configuration actuelle, or seul à 10 % (`PRODUCTION_WEIGHTS`).
+- baseline : **or seul à 10 %, poids 0,72/0,09/0,09/0,10** — figés en clair.
+  Cette baseline dérivait de `PRODUCTION_WEIGHTS` jusqu'au 2026-07-28, ce qui
+  rendait le sweep non reproductible : la promotion du trio a changé les poids
+  ET le contenu du cache `Gold_Momentum`, déplaçant la fenêtre de 1822 à 2081
+  séances. Un sweep dont la référence suit la production se réécrit à chaque
+  changement de production, donc ne peut plus servir à juger ce changement.
 
 Conventions, toutes reprises du cycle :
 
@@ -94,6 +99,13 @@ FIXED_WEIGHTS: dict[str, float] = {"TS_Momentum_3p": 0.09, "RSI_Daily_3p": 0.09}
 MOMENTUM_KEY = "Momentum_Multi"
 BASELINE_LABEL = "BASELINE_or_seul"
 
+# Référence figée : la production d'avant le cycle momentum. Ne PAS la relier à
+# PRODUCTION_WEIGHTS — voir le docstring.
+BASELINE_WEIGHTS: dict[str, float] = {
+    "MR_Macro": 0.72, "TS_Momentum_3p": 0.09,
+    "RSI_Daily_3p": 0.09, "Gold_Momentum": 0.10,
+}
+
 SWAP_BPS_PER_NIGHT = 0.00005  # Inp_SwapBpsPerNight de l'EA, charge par séance
 SELECTION_END = pd.Timestamp("2025-12-31")  # = HOLDOUT_START, écrit en clair
 DD_FLAG_PP = 0.03  # au-delà de 3 pp de maxDD sous la baseline : ⚠️
@@ -126,7 +138,7 @@ def instrument_returns(symbol: str, loader: str) -> pd.Series:
     )
     ret = pf.returns
     exposure = (pf.asset_value / pf.value).reindex(ret.index).fillna(0.0)
-    ret_net = ret - SWAP_BPS_PER_NIGHT * exposure.abs()
+    ret_net = ret + SWAP_BPS_PER_NIGHT * exposure.abs() * tsmom.carry_sign(symbol)
     # Les loaders n'ont pas la même convention d'horodatage (dates de session
     # pour l'or, timestamps du broker pour le minute long) : la date calendaire
     # est le seul axe sur lequel les trois séries sont comparables.
@@ -164,6 +176,20 @@ def _insample(series: pd.Series) -> pd.Series:
     return ret[ret.index <= SELECTION_END]
 
 
+def baseline_context() -> tuple[dict[str, pd.Series], dict[str, float]]:
+    """Le cache avec la sleeve **or seul**, et les poids d'avant le cycle.
+
+    ``cached["Gold_Momentum"]`` porte le trio depuis la promotion, et sa série
+    remonte à 2000 par le loader Yahoo de l'argent : l'utiliser comme référence
+    changerait la fenêtre de comparaison en même temps que les poids.
+    """
+    from strategies.combined_portfolio import backtest_momentum_sleeve
+
+    cached = dict(get_strategy_daily_returns())
+    cached["Gold_Momentum"] = backtest_momentum_sleeve(instruments=(("XAU-USD", None),))
+    return cached, dict(BASELINE_WEIGHTS)
+
+
 def selection_window(cached: dict[str, pd.Series]) -> pd.DatetimeIndex:
     """Fenêtre de la production : intersection des quatre sleeves, coupée au holdout.
 
@@ -171,7 +197,7 @@ def selection_window(cached: dict[str, pd.Series]) -> pd.DatetimeIndex:
     momentum remontent plus haut ; les y laisser courir comparerait la baseline
     et les candidats sur deux échantillons différents.
     """
-    frame = pd.DataFrame({k: _insample(cached[k]) for k in PRODUCTION_WEIGHTS})
+    frame = pd.DataFrame({k: _insample(cached[k]) for k in BASELINE_WEIGHTS})
     return frame.dropna().index
 
 
@@ -256,12 +282,13 @@ def main() -> int:
         config_key="integration_weights:11cfg:gold_jpy_xag_grid",
     )
 
-    cached = get_strategy_daily_returns()
+    cached, baseline_weights = baseline_context()
 
     # Contrôle : la production telle qu'elle tourne aujourd'hui, fenêtre pleine,
     # pour situer la baseline (coupée à 2025-12-31) contre le chiffre publié.
+    prod_cache = get_strategy_daily_returns()
     full = build_combined_portfolio_v2(
-        {k: cached[k] for k in PRODUCTION_WEIGHTS},
+        {k: prod_cache[k] for k in PRODUCTION_WEIGHTS},
         allocation="custom",
         custom_weights=PRODUCTION_WEIGHTS,
         target_vol=PRODUCTION_TARGET_VOL,
@@ -274,7 +301,7 @@ def main() -> int:
     window = selection_window(cached)
     rows: list[dict[str, object]] = [
         evaluate(
-            BASELINE_LABEL, "GOLD_ONLY", 1, cached, dict(PRODUCTION_WEIGHTS),
+            BASELINE_LABEL, "GOLD_ONLY", 1, cached, baseline_weights,
             momentum_key="Gold_Momentum", window=window,
         )
     ]

@@ -178,5 +178,116 @@
     "n": 36,
     "note": "stress de stabilit\u00e9 passe 2 \u2014 aucune res\u00e9lection",
     "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr"
+  },
+  {
+    "ts": "2026-07-28T22:10:25.918647+00:00",
+    "family": "tsmom_universe",
+    "n": 21,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or"
+  },
+  {
+    "ts": "2026-07-28T22:11:23.196863+00:00",
+    "family": "integration_weights",
+    "n": 11,
+    "note": "baseline + 2 compositions x 5 poids de sleeve momentum",
+    "config_key": "integration_weights:11cfg:gold_jpy_xag_grid"
+  },
+  {
+    "ts": "2026-07-28T22:12:12.362007+00:00",
+    "family": "integration_weights",
+    "n": 11,
+    "note": "baseline + 2 compositions x 5 poids de sleeve momentum",
+    "config_key": "integration_weights:11cfg:gold_jpy_xag_grid"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.262526+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:23:02.322193+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.262751+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:30:30.799980+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.262861+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:31:44.192479+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.262957+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:24.532151+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263042+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:29.159829+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263122+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:33.726511+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263199+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:53.552316+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263276+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:45:38.684970+00:00",
+    "config_key": "donchian:6cfg:tsmom_pass_universe",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263354+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:45:38.685498+00:00",
+    "config_key": "xs_momentum:6cfg:tsmom_pass_universe",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263432+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:48:01.422617+00:00",
+    "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263510+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:49:18.582061+00:00",
+    "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263587+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T19:53:07.355308+00:00",
+    "config_key": "integration_weights:11cfg:gold_jpy_xag_grid",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:14:04.263666+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-28T22:10:25.918647+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
   }
 ]

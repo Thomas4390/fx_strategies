@@ -95,7 +95,7 @@ Le \textbf{DSR} répond à~: \emph{ce participant est-il significatif sachant qu
 \begin{itemize}
 \item \textbf{Haircut Sharpe~$= 0.947$ (ratio de survie $96.11\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $0.947$. On perd $4\,\%$ du Sharpe à la correction, ce qui est faible.
 \item \textbf{Minimum Backtest Length~$= 12.25$~ans~--- \emph{échec}}~: sous $382$~essais déclarés, il faudrait $12.25$~années d'historique pour qu'un Sharpe de $0.99$ soit distinguable du hasard. On en dispose de $8.5$. L'écart n'est pas rédhibitoire mais il est réel, et il ne se comble que par du temps.
-\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.754$~--- \emph{échec}}~: dans $75.4\,\%$ des découpages temporels, l'allocation la mieux classée sur la moitié in-sample retombe sous la médiane out-of-sample. Le seuil de danger est $0.5$. \textbf{Ce test est mesuré sur la grille d'allocations réellement parcourue}~--- les onze combinaisons de composition et de poids du criblage~--- et non, comme dans les éditions antérieures, sur la matrice des quatre \emph{sleeves}, qui répondait à une question jamais posée dans ce projet.
+\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.649$~--- \emph{échec}}~: dans $64.9\,\%$ des découpages temporels, l'allocation la mieux classée sur la moitié in-sample retombe sous la médiane out-of-sample. Le seuil de danger est $0.5$. \textbf{Ce test est mesuré sur la grille d'allocations réellement parcourue}~--- les onze combinaisons de composition et de poids du criblage~--- et non, comme dans les éditions antérieures, sur la matrice des quatre \emph{sleeves}, qui répondait à une question jamais posée dans ce projet.
 \end{itemize}
 
 \begin{examplebox}
@@ -137,7 +137,7 @@ Partition & In-sample & Out-of-sample & Logit \\
 Pour chaque partition, on identifie le \emph{vainqueur} in-sample~--- la configuration au meilleur Sharpe sur $B_{1},B_{2}$ par exemple~--- puis on regarde son rang out-of-sample sur $B_{3},B_{4}$. Ce rang est converti en \emph{logit}~: positif si le vainqueur reste dans la moitié supérieure, négatif s'il tombe sous la médiane.
 
 \smallskip
-Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaudrait donc $1/6 \approx 0.17$~: sous $0.5$, régime sain. \textbf{Le vrai CSCV est nettement plus sévère que ce jouet.} Sur les 12\,870~partitions réelles, Apogée reporte $\mathrm{PBO} = 0.754$~--- environ 9\,700~partitions sur 12\,870 voient un retournement IS$\to$OOS, soit trois sur quatre. Le seuil critique est franchi et le test échoue.
+Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaudrait donc $1/6 \approx 0.17$~: sous $0.5$, régime sain. \textbf{Le vrai CSCV est nettement plus sévère que ce jouet.} Sur les 12\,870~partitions réelles, Apogée reporte $\mathrm{PBO} = 0.649$~--- environ 8\,350~partitions sur 12\,870 voient un retournement IS$\to$OOS, soit deux sur trois. Le seuil critique est franchi et le test échoue.
 
 \smallskip
 \textbf{D'où vient cet échec.} Il n'a rien de mystérieux~: quand trois positions portent $82\,\%$ du résultat (section~\ref{sec:limitations}), l'allocation qui les surpondère domine mécaniquement toute partition qui les contient, et se classe mal dans celles qui ne les contiennent pas. Le PBO mesure exactement cette instabilité. C'est la raison pour laquelle le poids de la sleeve momentum a été ramené de $20\,\%$ à $15\,\%$.
@@ -146,11 +146,11 @@ Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.754$ signifie que $75.4\,\%$ de la masse de la distribution est à gauche du seuil~--- une majorité, d'où l'échec du test.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.649$ signifie que $64.9\,\%$ de la masse de la distribution est à gauche du seuil~--- une majorité, d'où l'échec du test.}
 \end{figure}
 
 \begin{insightbox}
-\textbf{L'\emph{edge} passe, la sélection échoue --- et les deux verdicts sont compatibles.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui s'obtiendrait par chance pure, et le \emph{Haircut} ne prélève que $4\,\%$ du Sharpe. Mais le PBO échoue à $0.754$, et la longueur minimale de \emph{backtest} requise ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
+\textbf{L'\emph{edge} passe, la sélection échoue --- et les deux verdicts sont compatibles.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui s'obtiendrait par chance pure, et le \emph{Haircut} ne prélève que $4\,\%$ du Sharpe. Mais le PBO échoue à $0.649$, et la longueur minimale de \emph{backtest} requise ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
 
 Les tests répondent à des questions différentes~: le PSR et le DSR demandent «~l'\emph{edge} est-il réel~?~», le PBO demande «~le choix qu'on a fait parmi les candidats se transporte-t-il hors échantillon~?~». \textbf{La réponse est oui à la première et non à la seconde.} Un moteur peut avoir un avantage authentique et avoir été \emph{dosé} sur du bruit~: c'est exactement le diagnostic ici, et il porte sur le poids, pas sur l'existence du signal. La correction appliquée est du même ordre~--- réduire le poids, ne pas retirer le moteur.
 \end{insightbox}
@@ -186,7 +186,7 @@ Une stratégie robuste doit avoir ses métriques de risque ajusté qui restent p
 \input{tables/robustness_verdict_summary.tex}
 
 \begin{thesisbox}
-\textbf{Quatre tests sur six franchissent leur seuil.} Les deux échecs ne portent pas sur l'existence de l'\emph{edge}, mais sur ce que la \emph{sélection} a coûté~: la probabilité de sur-ajustement vaut $0.754$ pour un seuil de $0.5$, et la longueur minimale de \emph{backtest} requise sous $382$~essais ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
+\textbf{Quatre tests sur six franchissent leur seuil.} Les deux échecs ne portent pas sur l'existence de l'\emph{edge}, mais sur ce que la \emph{sélection} a coûté~: la probabilité de sur-ajustement vaut $0.649$ pour un seuil de $0.5$, et la longueur minimale de \emph{backtest} requise sous $382$~essais ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
 
 $382$~configurations distinctes ont été évaluées sur la même fenêtre, chaque phase héritant des meilleurs points de la précédente, et le poids de la sleeve momentum avait été arrêté à la borne du domaine testé (section~\ref{sec:gold_momentum}). \textbf{Ce poids a été ramené de $20\,\%$ à $15\,\%$ à la suite de ce test}, selon une règle de décision écrite et horodatée avant le calcul. C'est aussi la raison pour laquelle une tranche de données a été gelée, et pour laquelle le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation de ce portefeuille qui soit authentiquement pré-engagée.
 \end{thesisbox}

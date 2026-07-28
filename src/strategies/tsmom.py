@@ -26,6 +26,7 @@ from typing import Any
 import pandas as pd
 import vectorbtpro as vbt
 
+from framework import costs
 from framework.pipeline_utils import (
     SHARPE_RATIO,
     compute_metric_nb,
@@ -237,3 +238,19 @@ def create_cv_pipeline(
         return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
 
     return cv_pipeline
+
+
+def carry_sign(symbol: str) -> float:
+    """``+1`` si une position longue sur ``symbol`` encaisse le portage, ``-1`` sinon.
+
+    Le registre est le seul endroit qui connaît la correspondance entre le nom
+    projet (``USD-JPY``) et le nom courtier (``USDJPY``), donc c'est ici que la
+    traduction se fait ; le signe lui-même vient du catalogue broker archivé.
+
+    Un symbole inconnu paie : le défaut pessimiste évite qu'un instrument non
+    catalogué se voie créditer un portage qu'on n'a pas vérifié.
+    """
+    instrument = INSTRUMENTS.get(symbol)
+    if instrument is None:
+        return -1.0
+    return costs.swap_sign(instrument.mt5_symbol)

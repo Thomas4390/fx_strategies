@@ -83,3 +83,64 @@ def cost_for(
             f"{', '.join(sorted(entry))}."
         )
     return float(entry[stat])
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Signe du portage — quel instrument est payé pour attendre
+# ═══════════════════════════════════════════════════════════════════════
+
+BROKER_CATALOG_DIR: Path = PROJECT_ROOT / "data" / "broker"
+
+
+@lru_cache(maxsize=1)
+def load_broker_catalog(path: str | Path | None = None) -> dict[str, float]:
+    """``{symbole broker: swap_long}`` depuis le dernier catalogue archivé.
+
+    Le CSV sort de ``FxListSymbols.mq5`` en page de codes Windows.
+    """
+    import csv
+
+    resolved = Path(path) if path else None
+    if resolved is None:
+        catalogs = sorted(BROKER_CATALOG_DIR.glob("symbols_catalog_*.csv"))
+        if not catalogs:
+            return {}
+        resolved = catalogs[-1]
+    with resolved.open(encoding="cp1252", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    out: dict[str, float] = {}
+    for row in rows:
+        try:
+            out[row["name"]] = float(row["swap_long"])
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
+def swap_sign(mt5_symbol: str, *, default: float = -1.0) -> float:
+    """``+1`` si la position longue **encaisse** le portage, ``-1`` si elle le paie.
+
+    Le modèle de coût de la recherche facturait le portage en valeur absolue à
+    tout le monde — ``ret - swap * |exposition|`` — donc il **facturait à
+    USD/JPY un portage qu'il encaisse**, alors que la thèse du dossier attribue
+    à ce portage 63 % du résultat de cette jambe. Le modèle contredisait
+    frontalement ce qu'il servait à établir.
+
+    Ce qui est corrigé ici est le **signe**, pas l'amplitude. Celle-ci reste le
+    ``Inp_SwapBpsPerNight`` de l'EA : la convertir depuis le catalogue
+    demanderait d'interpréter ``swap_mode`` (points, devise, pourcentage
+    annuel) et donnerait une fausse précision.
+
+    Réserve à publier avec tout chiffre qui en dépend : les swaps du catalogue
+    sont ceux d'**aujourd'hui**, appliqués à tout l'historique simulé. C'est un
+    modèle de vraisemblance, pas une reconstitution — un instrument dont le
+    portage a changé de signe sur la période est mal représenté. ``default``
+    est volontairement pessimiste : un symbole absent du catalogue paie.
+    """
+    catalog = load_broker_catalog()
+    for candidate in (f"{mt5_symbol}.c", mt5_symbol):
+        if candidate in catalog:
+            swap = catalog[candidate]
+            return 1.0 if swap > 0 else -1.0
+    logger.debug("swap_sign: %s absent du catalogue, défaut %s", mt5_symbol, default)
+    return default

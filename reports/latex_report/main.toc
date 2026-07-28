@@ -27,7 +27,7 @@
 \contentsline {subsection}{\numberline {6.3}Le paradoxe du Sharpe standalone}{13}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Performance historique}{14}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Épisodes représentatifs}{14}{subsection.6.5}%
-\contentsline {section}{\numberline {7}Moteur 4 --- Momentum Multi-Actifs (20\,\%)}{15}{section.7}%
+\contentsline {section}{\numberline {7}Moteur 4 --- Momentum Multi-Actifs (15\,\%)}{15}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Pourquoi ce moteur, et pourquoi trois instruments}{16}{subsection.7.1}%
 \contentsline {subsection}{\numberline {7.2}Mécanique du signal}{16}{subsection.7.2}%
 \contentsline {subsection}{\numberline {7.3}Du signal à la taille de position}{17}{subsection.7.3}%

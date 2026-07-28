@@ -146,7 +146,7 @@ def run_instrument(symbol: str, loader: str) -> tuple[pd.Series, pd.Series, pd.D
     )
     ret = pf.returns
     exposure = (pf.asset_value / pf.value).reindex(ret.index).fillna(0.0)
-    ret_net = ret - SWAP_BPS_PER_NIGHT * exposure.abs()
+    ret_net = ret + SWAP_BPS_PER_NIGHT * exposure.abs() * tsmom.carry_sign(symbol)
 
     trades = pf.trades.records_readable
     col = "Exit Index" if "Exit Index" in trades.columns else "Entry Index"
@@ -323,7 +323,9 @@ def main() -> int:
     print(f"{'=' * 92}\n")
 
     trials.log_trials(
-        "tsmom_universe", 21, "passe 1 pré-filtre vbt, config unique défauts or"
+        "tsmom_universe", len(universe),
+        "passe 1 pré-filtre vbt, config unique défauts or",
+        config_key="tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
     )
 
     gold_ret: pd.Series | None = None
