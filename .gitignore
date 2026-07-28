@@ -6,6 +6,12 @@ data/**
 !data/
 !data/MANIFEST.json
 !data/README.md
+# Catalogue broker : de la métadonnée de symboles (~50 Ko), pas des séries de
+# marché. Versionné parce que c'est la seule trace de ce que le courtier cotait
+# à une date donnée — sans elle, chaque cycle redécouvre par backtest ce qu'un
+# champ de symbole dit gratuitement.
+!data/broker/
+!data/broker/*.csv
 *.parquet
 *.ods
 
