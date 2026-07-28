@@ -52,6 +52,15 @@ YAHOO_SOURCES: dict[str, tuple[str, str, str]] = {
     "GER40": ("^GDAXI", "GER40Cash", "indice cash, tz Berlin"),
     "JPN225": ("^N225", "JPN225Cash", "indice cash, tz Tokyo"),
     "UK100": ("^FTSE", "UK100Cash", "indice cash, tz Londres"),
+    # 2026-07-28 — crosses yen à portage long POSITIF, jamais screenés. Ce ne
+    # sont pas des candidats pêchés : le catalogue broker
+    # (data/broker/symbols_catalog_2026-07-28.csv) les désigne avant tout
+    # backtest — AUDJPY +6.03, NZDJPY +3.20, CADJPY +2.91 de swap long, quand
+    # 186 des 207 symboles éligibles ont un portage long négatif. La thèse du
+    # dossier veut qu'un moteur long-only lent préfère être payé pour attendre.
+    "AUD-JPY": ("AUDJPY=X", "AUDJPY", "cross yen, portage long positif"),
+    "NZD-JPY": ("NZDJPY=X", "NZDJPY", "cross yen, portage long positif"),
+    "CAD-JPY": ("CADJPY=X", "CADJPY", "cross yen, portage long positif"),
 }
 
 _UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"

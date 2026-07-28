@@ -3,6 +3,9 @@
 # (colonne `spread` en points des parquets data/<PAIR>_daily_mt5.parquet).
 # `half_spread_frac` est le coût par fill à passer en slippage VBT.
 # Ni swap ni commission ici — modèle de friction de screening uniquement.
+AUD-JPY:
+  half_spread_frac: 8.615004367e-05
+  source: proxy_gbp_jpy
 AUD-USD:
   spread_points_median: 13.0
   spread_frac_median: 0.00018717078
@@ -11,6 +14,9 @@ AUD-USD:
   n_bars: 1697
   from: '2020-11-22'
   to: '2026-05-01'
+CAD-JPY:
+  half_spread_frac: 8.615004367e-05
+  source: proxy_gbp_jpy
 EUR-GBP:
   spread_points_median: 14.0
   spread_frac_median: 0.0001593072411
@@ -67,6 +73,9 @@ JPN225:
   n_bars: 1114
   from: '2022-11-04'
   to: '2026-06-19'
+NZD-JPY:
+  half_spread_frac: 8.615004367e-05
+  source: proxy_gbp_jpy
 NZD-USD:
   spread_points_median: 26.0
   spread_frac_median: 0.0003709410489

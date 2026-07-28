@@ -289,5 +289,12 @@
     "target_ts": "2026-07-28T22:10:25.918647+00:00",
     "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
     "note": "qualification retroactive : meme espace de configurations que les runs posterieurs"
+  },
+  {
+    "ts": "2026-07-28T22:21:23.175160+00:00",
+    "family": "tsmom_universe",
+    "n": 24,
+    "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31"
   }
 ]

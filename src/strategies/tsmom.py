@@ -76,6 +76,9 @@ _SCREENING_NAMES: dict[str, str] = {
     "XNG-USD": "XNGUSD", "US500": "US500Cash", "US100": "US100Cash",
     "US30": "US30Cash", "GER40": "GER40Cash", "JPN225": "JPN225Cash",
     "UK100": "UK100Cash",
+    # 2026-07-28 — crosses yen à portage long positif, désignés par le
+    # catalogue broker avant tout backtest (cf. data/broker/).
+    "AUD-JPY": "AUDJPY", "NZD-JPY": "NZDJPY", "CAD-JPY": "CADJPY",
 }
 
 INSTRUMENTS: dict[str, Instrument] = {

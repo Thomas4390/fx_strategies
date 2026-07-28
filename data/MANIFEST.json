@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T18:39:17.295629+00:00",
+  "generated_at": "2026-07-28T22:20:33.820403+00:00",
   "project_root": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies",
   "files": {
     "AAA10Y_daily.parquet": {
@@ -27,6 +27,21 @@
       ],
       "index_start": "1964-01-01 00:00:00",
       "index_end": "2026-03-01 00:00:00"
+    },
+    "AUD-JPY_daily_yahoo.parquet": {
+      "sha256": "408054cd13abde0e9d639f7c27cb4ef4f654e9394562b991b74d753ac5e5346b",
+      "size_bytes": 200828,
+      "size_mb": 0.192,
+      "row_count": 5898,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2003-12-01 00:00:00+00:00",
+      "index_end": "2026-07-28 22:19:31+00:00"
     },
     "AUD-USD_daily_mt5.parquet": {
       "sha256": "2926519ff67599b2ab92844695d50699f245d477b74af31ef5a251b260aa9fcc",
@@ -128,6 +143,21 @@
       ],
       "index_start": "1987-05-20 00:00:00",
       "index_end": "2026-04-27 00:00:00"
+    },
+    "CAD-JPY_daily_yahoo.parquet": {
+      "sha256": "41cebf161fb1f3fdb9492fd6f0164a1ae2cdfc891bf0ff8837469165311649ed",
+      "size_bytes": 196624,
+      "size_mb": 0.188,
+      "row_count": 5708,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2004-08-19 23:00:00+00:00",
+      "index_end": "2026-07-28 22:19:46+00:00"
     },
     "CIVPART_monthly.parquet": {
       "sha256": "586b691b4428e22102f61bae15b4a885949939d58be9c038a8c808002f9c0059",
@@ -793,6 +823,21 @@
       ],
       "index_start": "1939-01-01 00:00:00",
       "index_end": "2026-03-01 00:00:00"
+    },
+    "NZD-JPY_daily_yahoo.parquet": {
+      "sha256": "bb35b9a61b67aa8c564faa8b2eb30288d6c649620d0fd040b16814362a06d2d0",
+      "size_bytes": 205463,
+      "size_mb": 0.196,
+      "row_count": 5895,
+      "column_count": 4,
+      "columns": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "index_start": "2003-12-01 00:00:00+00:00",
+      "index_end": "2026-07-28 22:19:44+00:00"
     },
     "NZD-USD_daily_mt5.parquet": {
       "sha256": "35f5f7a4673a6adac4055918264f1de70a8e9144bd168e3ab1b5dde0ce7a17d9",
@@ -1535,5 +1580,5 @@
       "index_end": "2026-06-19 16:59:00+00:00"
     }
   },
-  "combined_fingerprint": "8d4a8fdaa9bb146fb2e6b0fa6c59ba19fd037fc94ae3d0d6154bbc140d8b5aae"
+  "combined_fingerprint": "65cb7f52d889a1f1475b6de14afd984d3689cc98c70188490d42dfdf9d115b63"
 }

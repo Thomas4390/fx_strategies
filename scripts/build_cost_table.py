@@ -84,6 +84,19 @@ _SPEC_ENTRIES: dict[str, dict[str, Any]] = {
         "half_spread_frac": 0.0001,
         "source": "spec",
     },
+    # Crosses yen ajoutés au pré-filtre le 2026-07-28. Leur spread empirique
+    # n'est pas dérivable : il vient de la colonne `spread` des parquets
+    # broker, et ces paires n'ont pas encore d'export MT5. On prend donc le
+    # demi-spread de GBP-JPY, le plus LARGE des crosses yen déjà mesurés
+    # (8.6e-05, contre 5.4e-05 pour EUR-JPY et 4.3e-05 pour USD-JPY).
+    #
+    # Le choix est délibérément pessimiste parce que ce pré-filtre sert à
+    # TUER : surestimer le coût ne peut pas faire passer un candidat qui
+    # devrait mourir, alors que le sous-estimer le pourrait. À remplacer par la
+    # mesure réelle si l'un d'eux survit et qu'on télécharge son historique.
+    "AUD-JPY": {"half_spread_frac": 8.615004367e-05, "source": "proxy_gbp_jpy"},
+    "NZD-JPY": {"half_spread_frac": 8.615004367e-05, "source": "proxy_gbp_jpy"},
+    "CAD-JPY": {"half_spread_frac": 8.615004367e-05, "source": "proxy_gbp_jpy"},
 }
 
 # Significant digits kept in the YAML. Rounding on *significant* digits and

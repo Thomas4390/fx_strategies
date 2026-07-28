@@ -72,6 +72,15 @@ _NON_FX: tuple[str, ...] = (
     "US100", "US30", "GER40", "JPN225", "UK100",
 )
 
+# Crosses yen ajoutés le 2026-07-28, lus sur la série longue Yahoo (~22 ans).
+# Pas de verdict de source pour eux : `check_screening_vs_broker` compare une
+# série longue au CFD du courtier, et ces paires n'ont pas encore d'export
+# broker. Ce sont du FX comptant, pas des futures à rolls ni des indices cash,
+# donc la divergence structurelle que ce verdict cherche n'a pas lieu d'être —
+# mais leur spread reste un PROXY (celui de GBP-JPY, le plus large des crosses
+# yen mesurés) tant qu'aucun historique broker ne le mesure.
+_FX_LONG_YAHOO: tuple[str, ...] = ("AUD-JPY", "NZD-JPY", "CAD-JPY")
+
 SOURCE_CHECK_PATH = _ROOT / "reports" / "research" / "screening_source_check.json"
 OUTPUT_PATH = _ROOT / "reports" / "research" / "tsmom_screen_2026H2.csv"
 
@@ -121,13 +130,14 @@ def read_source_verdicts() -> dict[str, str]:
 
 
 def build_universe() -> list[tuple[str, str]]:
-    """``(symbol, loader)`` for the 21 instruments, longest usable history each."""
+    """``(symbol, loader)`` per instrument, longest usable history each."""
     universe = [(GOLD, "qc")]
     universe += [
         (pair, "fx_minute" if pair in _FX_LONG_MINUTE else "mt5") for pair in _FX_PAIRS
     ]
     sources = read_source_verdicts()
     universe += [(name, sources[name]) for name in _NON_FX]
+    universe += [(name, "yahoo") for name in _FX_LONG_YAHOO]
     return universe
 
 
