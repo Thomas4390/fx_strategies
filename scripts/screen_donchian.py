@@ -43,7 +43,7 @@ if str(_SRC) not in sys.path:
 if str(_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(_ROOT / "scripts"))
 
-from framework import holdout  # noqa: E402
+from framework import holdout, trials  # noqa: E402
 from framework.costs import cost_for  # noqa: E402
 from strategies import donchian_breakout, tsmom  # noqa: E402
 from strategies.gold_momentum import (  # noqa: E402
@@ -305,6 +305,12 @@ def main() -> int:
 
     universe = read_universe()
     grid = build_grid()
+
+    trials.log_trials(
+        "donchian", len(grid),
+        "N {55,100,252} x sortie {N/2, N/4}, selection par Sharpe agrege",
+        config_key="donchian:6cfg:tsmom_pass_universe",
+    )
 
     print(f"\n{'=' * 92}")
     print("  Donchian breakout screen — vbt pre-filter, closed grid of 6 configs")

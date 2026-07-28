@@ -1,0 +1,4 @@
+symbol,n_trials_distinct,sharpe,sharpe_std,expected_max_sharpe,dsr,n_trials
+USD-JPY,382,0.771147,0.025268,3.030621,0.0,616.0
+XAG-USD,382,0.309677,0.012608,3.030621,0.0,616.0
+US100,382,1.00451,0.010666,3.030621,0.0,616.0

@@ -46,8 +46,10 @@ _ROOT = Path(__file__).resolve().parent.parent
 _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+if str(_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(_ROOT / "scripts"))
 
-from framework import holdout  # noqa: E402
+from framework import holdout, trials  # noqa: E402
 from framework.costs import cost_for  # noqa: E402
 from strategies import tsmom, xs_momentum  # noqa: E402
 from strategies.gold_momentum import (  # noqa: E402
@@ -56,6 +58,7 @@ from strategies.gold_momentum import (  # noqa: E402
     _daily_open,
     session_dates,
 )
+from update_data_manifest import assert_manifest_fresh  # noqa: E402
 
 TSMOM_SCREEN_PATH = _ROOT / "reports" / "research" / "tsmom_screen_2026H2.csv"
 OUTPUT_PATH = _ROOT / "reports" / "research" / "xs_screen_2026H2.csv"
@@ -304,10 +307,16 @@ def main() -> int:
                     help="check the ranking and the availability gate, then exit")
     args = ap.parse_args()
 
+    assert_manifest_fresh()
     if args.selfcheck:
         return selfcheck()
 
     universe = read_universe()
+    trials.log_trials(
+        "xs_momentum", len(xs_momentum.GRID),
+        "rank 3m/6m/12m skip1m x {long-only, long-short}",
+        config_key="xs_momentum:6cfg:tsmom_pass_universe",
+    )
     print(f"\n{'=' * 92}")
     print("  XS momentum screen — vbt pre-filter, one portfolio per config")
     print(f"  {len(universe)} instruments (TSMOM screen PASS), selection window <= "

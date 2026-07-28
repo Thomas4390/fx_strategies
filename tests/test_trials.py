@@ -124,14 +124,21 @@ def test_annotating_an_unknown_entry_raises(tmp_registry):
 
 
 def test_committed_registry_totals_are_locked():
-    """544 brut / 382 distinct / 92 hors fx_legacy — les trois chiffres publiés.
+    """382 distinct / 92 hors fx_legacy — les chiffres publiés.
 
     Ce test est le garde-fou qui aurait attrapé les 6 re-runs de
     ``tsmom_universe`` comptés comme des tests nouveaux.
+
+    Il verrouille le **distinct**, pas le brut. La première version figeait le
+    total brut à 544 et rougissait au premier re-run légitime d'un sweep — elle
+    aurait poussé à ne plus relancer les scripts, ou à retoucher la constante à
+    chaque fois, c'est-à-dire à faire du garde-fou une formalité. Le brut est
+    une borne conservatrice qui a le droit de croître ; ce qui ne doit pas
+    bouger sans décision, c'est le nombre d'espaces de configurations explorés.
     """
     entries = json.loads(_REAL_REGISTRY.read_text())
     sweeps = [e for e in entries if e.get("kind") != "annotation"]
 
-    assert sum(int(e["n"]) for e in sweeps) == 544
     assert trials.distinct_trials() == 382
     assert trials.distinct_trials() - trials.distinct_trials("fx_legacy") == 92
+    assert sum(int(e["n"]) for e in sweeps) >= trials.distinct_trials()

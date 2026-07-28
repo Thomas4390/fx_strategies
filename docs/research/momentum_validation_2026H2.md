@@ -95,9 +95,11 @@ tandis que le Sharpe **de chaque instrument** reste ≤ 0 (dispersion des Sharpe
 Ce n'est pas une contradiction, c'est le résultat central : **ce qui n'est pas prouvé,
 c'est le choix des instruments, pas l'assemblage.**
 
-Univers de trials publiés ensemble : **382 distincts** (chiffre de tête), 544 bruts
-(borne conservatrice, re-runs inclus), 92 distincts hors `fx_legacy` (budget du seul
-cycle momentum). Voir `framework.trials.distinct_trials`.
+Univers de trials publiés ensemble : **382 distincts** (chiffre de tête), 92 distincts
+hors `fx_legacy` (budget du seul cycle momentum), plus le total brut re-runs inclus —
+544 au moment de cette mesure, et **il croît à chaque relance d'un script** sans qu'aucun
+espace de configurations nouveau soit exploré. C'est précisément pourquoi le chiffre de
+tête est le distinct. Voir `framework.trials.distinct_trials`.
 
 ## 3. Les faits d'attribution (établis, à régénérer par le script)
 
@@ -226,7 +228,7 @@ matrice complète, elle s'applique sur la matrice complète.
 |---|---|---|---|---|---|
 | portefeuille w=0,20 | 11 Sharpe du sweep | 11 | 1,185 | 0,067 | 1,00 PASS |
 | portefeuille w=0,20 | registre, distinctes | 382 | 1,185 | 0,122 | 1,00 PASS |
-| portefeuille w=0,20 | registre brut | 544 | 1,185 | 0,126 | 1,00 PASS |
+| portefeuille w=0,20 | registre brut à la mesure | 544 | 1,185 | 0,126 | 1,00 PASS |
 | XAU-USD | classement MT5, 21 instr. | 382 | 0,738 | 2,891 | 0,00 FAIL |
 | USD-JPY | idem | 382 | 0,510 | 2,891 | 0,00 FAIL |
 | XAG-USD | idem | 382 | 0,201 | 2,891 | 0,00 FAIL |

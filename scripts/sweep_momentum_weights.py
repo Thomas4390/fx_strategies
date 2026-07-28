@@ -61,8 +61,9 @@ import vectorbtpro as vbt
 
 _REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_REPO / "src"))
+sys.path.insert(0, str(_REPO / "scripts"))
 
-from framework import holdout  # noqa: E402
+from framework import holdout, trials  # noqa: E402
 from framework.costs import cost_for  # noqa: E402
 from strategies import tsmom  # noqa: E402
 from strategies.combined_portfolio import get_strategy_daily_returns  # noqa: E402
@@ -72,6 +73,7 @@ from strategies.combined_portfolio_v2 import (  # noqa: E402
     PRODUCTION_WEIGHTS,
     build_combined_portfolio_v2,
 )
+from update_data_manifest import assert_manifest_fresh  # noqa: E402
 from utils import apply_vbt_settings  # noqa: E402
 
 # (symbole, loader) — le loader est celui qui donne l'historique le plus long,
@@ -236,6 +238,7 @@ def format_table(df: pd.DataFrame) -> str:
 
 def main() -> int:
     apply_vbt_settings()
+    assert_manifest_fresh()
     vbt.settings.returns.year_freq = pd.Timedelta(days=252)
 
     print(f"\n{'=' * 92}")
@@ -245,6 +248,13 @@ def main() -> int:
     print(f"  assemblage v2 custom, tv={PRODUCTION_TARGET_VOL}, "
           f"cap={PRODUCTION_MAX_LEVERAGE}, DD-cap OFF — production NON modifiée")
     print(f"{'=' * 92}\n")
+
+    n_configs = 1 + len(COMPOSITIONS) * len(MOMENTUM_WEIGHTS)
+    trials.log_trials(
+        "integration_weights", n_configs,
+        "baseline + 2 compositions x 5 poids de sleeve momentum",
+        config_key="integration_weights:11cfg:gold_jpy_xag_grid",
+    )
 
     cached = get_strategy_daily_returns()
 
