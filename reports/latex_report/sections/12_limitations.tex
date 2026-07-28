@@ -4,43 +4,47 @@
 \lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} audit méthodologique a été conduit avant la présentation de ce rapport. \textbf{Six avertissements} sont identifiés et divulgués ci-dessous. Aucune erreur structurelle n'a été détectée dans la chaîne de calcul~--- pas de biais de \emph{look-ahead}, pas de bug numérique, bootstrap méthodologiquement correct~--- mais deux des avertissements ci-dessous portent sur la nature même de la performance, et non sur sa mesure.
 
 \begin{thesisbox}
-\textbf{Les six tests de robustesse sont franchis.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
+\textbf{Les tests de robustesse ne sont pas tous franchis, et le rapport le dit.} La section~\ref{sec:advanced_robustness} documente le \emph{block bootstrap} stationnaire sur les 14~métriques (intervalle de confiance 95\,\% du Sharpe strictement positif), le \textit{Probabilistic Sharpe Ratio}, le \textit{Deflated Sharpe Ratio}, le \textit{Haircut Sharpe} de Benjamini--Hochberg--Yekutieli, le \textit{Minimum Backtest Length}, ainsi que les tests de supériorité prédictive Hansen~SPA et Romano--Wolf~StepM.
 
-La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0.335$, sous le seuil de danger de $0.5$~: \textbf{ce test, qui échouait à $0.532$ sur l'allocation précédente, passe désormais}. Un verdict unanime ne clôt pas la discussion~--- les avertissements ci-dessous sont les limites résiduelles qui persistent malgré la validation statistique, et la première d'entre elles s'est aggravée.
+La \textit{Probability of Backtest Overfitting} mesurée par validation croisée combinatoire vaut $0{,}754$ pour un seuil de danger de $0{,}5$~: \textbf{ce test échoue.} Il porte sur la grille d'allocations réellement parcourue pour fixer le poids de la sleeve momentum, et sa conséquence a été appliquée --- ce poids est ramené de $20\,\%$ à $15\,\%$ selon une règle de décision écrite avant le calcul. Les avertissements ci-dessous sont les limites qui subsistent après cette correction.
 \end{thesisbox}
 
 \subsection{Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $91\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $20\,\%$ de son allocation. Les trois moteurs FX, qui portent $80\,\%$ de l'allocation, ne contribuent ensemble qu'à $8{,}9\,\%$ du gain.
+\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $86{,}5\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $15\,\%$ de son allocation. Les trois moteurs FX, qui portent $85\,\%$ de l'allocation et $816$ des $909$ transactions, ne contribuent ensemble qu'à $13{,}5\,\%$ du gain.
 
-\textbf{Ce risque s'est aggravé en juillet~2026.} Avant le doublement du poids de la sleeve, la concentration était de $80\,\%$ du résultat pour $10\,\%$ du capital~; elle est maintenant de $91\,\%$ pour $20\,\%$. Élargir la sleeve à trois instruments a diversifié \emph{la sleeve} --- son repli isolé et son taux de gain s'améliorent nettement --- mais pas le portefeuille, dont le résultat dépend plus qu'avant d'une seule famille de signaux. C'est un arbitrage assumé, pas un effet de bord~: il a été retenu pour le profil risque-ajusté, en connaissance de cette contrepartie.
+\textbf{Et à l'intérieur de cette sleeve, le résultat tient à quelques positions.} Une position unique sur l'argent, ouverte le 21~mai~2025 et fermée le 19~mars~2026, apporte $47{,}7\,\%$ du résultat net du portefeuille. Les trois plus grosses positions --- sur $909$ transactions --- en apportent $82\,\%$. Ce n'est pas une propriété du suivi de tendance en général~; c'est la propriété de \emph{cette} fenêtre, où deux mouvements exceptionnels ont été captés par des positions tenues plusieurs mois.
+
+\textbf{Concentration temporelle~:} $64{,}6\,\%$ du résultat net a été acquis dans les quatre mois de janvier à avril~2026, une tranche que la recherche s'était interdite pour toute sélection de modèle. Les cinq années sur lesquelles les paramètres ont été choisis ($2021$--$2025$) apportent le tiers restant. Le rendement affiché décrit donc majoritairement une période qui n'a pas servi à construire la stratégie --- ce qui est méthodologiquement sain, mais rend le chiffre de tête peu représentatif du régime de croisière.
 
 \textbf{Impact potentiel~:} le portefeuille est présenté comme diversifié sur quatre sources d'alpha, mais son \emph{résultat} ne l'est pas. Un régime durablement défavorable au suivi de tendance ne serait pas compensé par les trois autres moteurs à leur niveau de contribution actuel. La diversification a servi à rendre la cible de rendement atteignable, elle n'a pas réparti le risque de résultat.
 
-\textbf{Aggravant~:} 2019--2026 a été un marché haussier des métaux d'ampleur inhabituelle, doublé d'une mégatendance sur le yen, et le Sharpe du portefeuille croît de façon monotone avec le poids accordé à ce moteur sur toute la plage testée --- l'optimum est \emph{à la borne} de la grille, signature d'un biais de période. Le poids retenu, $20\,\%$, est le meilleur point \emph{testé} et non un maximum démontré. À ce poids, la sleeve porte environ la moitié du budget de risque du portefeuille.
+\textbf{Aggravant~:} 2019--2026 a été un marché haussier des métaux d'ampleur inhabituelle, doublé d'une mégatendance sur le yen.
 
-\textbf{Aggravant secondaire~:} l'argent, qui apporte près de la moitié du résultat de la sleeve sur cette fenêtre, est aussi l'instrument dont l'historique de données de courtier propres est le plus court. Sa contribution est mesurée sur moins d'observations que celle de l'or.
+\textbf{Aggravant secondaire~:} l'argent est l'instrument dont l'historique de données de courtier propres est le plus court, et il \emph{perd} $3\,067\,\$$ sur les cinq années de la fenêtre de sélection~: la totalité de son apport provient de la tranche gelée de 2026. Sa contribution est donc mesurée sur beaucoup moins d'observations utiles que celle de l'or.
 
-\textbf{Action corrective~:} suivre la contribution par sleeve et par instrument en production, et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids de la sleeve sur une tranche de données réellement fraîche, postérieure à juillet~2026.
+\textbf{Action corrective~:} le poids de la sleeve a été ramené de $20\,\%$ à $15\,\%$ le 28~juillet~2026 à la suite du test d'\textit{overfitting} décrit à l'avertissement~2. Suivre la contribution par sleeve et par instrument en production, et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids sur une tranche de données réellement fraîche, postérieure à juillet~2026.
 \end{warningbox}
 
 \subsection{Avertissement 2 --- La sélection a consommé du pouvoir statistique}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting} vaut $0.335$ contre un seuil de $0.5$. Le test passe --- il échouait à $0.532$ sur l'allocation précédente --- mais la marge reste modeste~: la procédure estime qu'une configuration sélectionnée sur une moitié des données a encore une chance sur trois de se retrouver sous la médiane sur l'autre moitié.
+\textbf{Nature du risque~:} la \textit{Probability of Backtest Overfitting}, mesurée sur la grille d'allocations qui a produit la recommandation, vaut $0{,}754$ contre un seuil de danger de $0{,}5$. \textbf{Ce test échoue.} La procédure estime que l'allocation la mieux classée sur une moitié des données se retrouve sous la médiane sur l'autre moitié dans trois découpes sur quatre.
 
-\textbf{Origine~:} plus de deux cents configurations ont été évaluées au fil de la recherche sur la même fenêtre historique, chaque phase héritant des meilleurs points de la précédente. Aucune correction formelle pour tests multiples n'était appliquée avant l'introduction des tests de la section~\ref{sec:advanced_robustness}.
+\textbf{Ce chiffre corrige une mesure antérieure.} Les éditions précédentes de ce rapport annonçaient $0{,}335$ et un verdict favorable~: cette valeur portait sur la matrice des quatre \emph{sleeves}, et répondait donc à la question « choisir le meilleur moteur tient-il hors échantillon~», qui n'est pas une décision prise dans ce projet. Le nombre publié ici porte sur la grille réellement parcourue pour fixer le poids de la sleeve momentum. Pour la même raison, le \textit{Deflated Sharpe} est désormais déflaté par les $382$ configurations distinctes du registre d'essais, contre $6$ auparavant --- ce dernier chiffre étant le nombre de sleeves, non le nombre d'essais.
 
-\textbf{Ce que le verdict favorable ne dit pas~:} que la sélection n'a rien coûté. Le poids de la sleeve momentum a été arrêté à la borne du domaine testé, et le classement des allocations voisines tient dans le bruit d'estimation (annexe~\ref{app:weight_sensitivity}). C'est la \emph{sélection} de cette configuration précise qui a consommé une part importante du pouvoir statistique disponible.
+\textbf{Origine~:} $382$ configurations distinctes ont été évaluées au fil de la recherche sur la même fenêtre historique, chaque phase héritant des meilleurs points de la précédente. Le mécanisme précis de l'échec est lisible dans l'avertissement~1~: quand trois positions portent $82\,\%$ du résultat, l'allocation qui les surpondère domine les découpes qui les contiennent et se classe mal dans les autres.
 
-\textbf{Action corrective~:} une tranche de données a été gelée et retirée de la sélection de modèle. Le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation authentiquement pré-engagée dont ce portefeuille dispose.
+\textbf{Ordre de grandeur à retenir~:} la longueur minimale de historique requise pour qu'un Sharpe de $0{,}99$ soit distinguable du hasard sous ce nombre d'essais est de $12{,}25$~années. Le \textit{backtest} en couvre $5{,}3$.
+
+\textbf{Action corrective appliquée~:} le poids de la sleeve momentum a été ramené de $20\,\%$ à $15\,\%$, conformément à une règle de décision écrite et horodatée \emph{avant} le calcul du test. Une tranche de données reste gelée et retirée de la sélection de modèle. Le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation authentiquement pré-engagée dont ce portefeuille dispose.
 \end{warningbox}
 
 \subsection{Avertissement 3 --- Aucun coupe-circuit n'est actif}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint $50{,}9\,\%$~--- contre $44{,}3\,\%$ avant le doublement de la sleeve momentum~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-71\,\%$.
+\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint $47{,}3\,\%$~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-71\,\%$.
 
 \textbf{Impact potentiel~:} il n'existe aucun mécanisme automatique pour interrompre une perte en cours. Le ciblage de volatilité réduit l'exposition \emph{après} que la volatilité réalisée a augmenté, avec le retard que cela implique~; ce n'est pas un dispositif de protection du capital.
 

@@ -73,6 +73,9 @@ DEALS_PATH = _REPO / "reports" / "mt5" / "prod_ref_trio20_deals.csv"
 SWEEP_CSV = _REPO / "reports" / "research" / "momentum_weights_sweep_2026H2.csv"
 MT5_SWEEP_CSV = _REPO / "reports" / "mt5" / "tsmom_universe_sweep.csv"
 OUT_DIR = _REPO / "reports" / "research"
+# Consommée par scripts/build_latex_report_assets.py : le DSR et le PBO du
+# rapport client doivent porter sur cette grille, pas sur les séries de sleeves.
+WEIGHTS_RETURNS_CSV = OUT_DIR / "momentum_weights_returns_2026H2.csv"
 
 # Le CSV de deals sort du tester en UTF-16, séparateur virgule.
 DEALS_ENCODING = "utf-16"
@@ -453,6 +456,9 @@ def main() -> int:
     # ── PBO-W ──────────────────────────────────────────────────────────
     print("\n  [3/4] PBO-W — 11 configurations du sweep de poids", flush=True)
     weights_df, weight_sharpes = weight_matrix(*sweep_context())
+    # Archivée : c'est la grille que le rapport client doit déflater et passer
+    # au CSCV, à la place des 4-6 séries de sleeves qu'il utilisait.
+    weights_df.to_csv(WEIGHTS_RETURNS_CSV)
     rows += pbo_rows(weights_df, "weights_sweep", PBO_BINS)
     for label, columns in weight_subsets(weights_df).items():
         rows += pbo_rows(weights_df[columns], label, PBO_BINS, post_hoc=True)

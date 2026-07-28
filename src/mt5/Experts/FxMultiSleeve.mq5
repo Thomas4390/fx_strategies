@@ -30,11 +30,11 @@
 //============================================================ INPUTS
 
 // === Allocation & Risk =============================================
-input double Inp_AllocMRMacro       = 0.62;     // sum across all sleeves must equal 1.0
+input double Inp_AllocMRMacro       = 0.67;     // sum across all sleeves must equal 1.0
 input double Inp_AllocTSMomentum    = 0.09;
 input double Inp_AllocRSIDaily      = 0.09;
 input double Inp_AllocH1Momentum    = 0.0;      // optional sleeve, off by default
-input double Inp_AllocGoldMomentum  = 0.20;     // Sleeve 5 — multi-instrument trio since 2026-07-27
+input double Inp_AllocGoldMomentum  = 0.15;     // Sleeve 5 — trio; 0.20 rejected by the PBO gate 2026-07-28
 
 // Tail-risk protections.
 //

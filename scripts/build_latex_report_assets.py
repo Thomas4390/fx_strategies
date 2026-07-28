@@ -1395,6 +1395,26 @@ def _build_episode_table(
 # ────────────────────────────────────────────────────────────────────────
 # Advanced robustness — figures + tables via framework.robustness
 # ────────────────────────────────────────────────────────────────────────
+def _load_weight_sweep_grid() -> tuple[pd.DataFrame, np.ndarray]:
+    """La grille de configurations du sweep de poids : rendements et Sharpe.
+
+    Produite par ``scripts/audit_momentum_promotion.py`` — une seule source de
+    vérité, pas un recalcul parallèle qui pourrait diverger de celle qui a servi
+    à trancher le poids.
+    """
+    returns_path = _PROJECT_ROOT / "reports" / "research" / "momentum_weights_returns_2026H2.csv"
+    sharpes_path = _PROJECT_ROOT / "reports" / "research" / "momentum_weights_sweep_2026H2.csv"
+    if not returns_path.exists():
+        raise FileNotFoundError(
+            f"{returns_path.name} absent — lancer d'abord "
+            "`python scripts/audit_momentum_promotion.py`, qui produit la grille "
+            "que le DSR et le PBO du rapport doivent déflater."
+        )
+    grid = pd.read_csv(returns_path, index_col=0, parse_dates=True)
+    sharpes = pd.read_csv(sharpes_path).set_index("config")["sharpe"]
+    return grid, sharpes.reindex(grid.columns).to_numpy(dtype=float)
+
+
 def build_robustness_assets(pf, strat_rets: dict, port_rets: pd.Series) -> None:
     """Produce the advanced-robustness figures and tables for the LaTeX build.
 
@@ -1411,26 +1431,25 @@ def build_robustness_assets(pf, strat_rets: dict, port_rets: pd.Series) -> None:
         SHARPE_RATIO,
     )
 
-    # Build the (T, n_configs) grid of sleeve returns + zero benchmark.
-    port_idx = port_rets.dropna().index
-    grid_mat = pd.concat(
-        {k: v.reindex(port_idx).fillna(0.0) for k, v in strat_rets.items()},
-        axis=1,
-    )
-    sleeve_sharpes = np.array(
-        [
-            float((v.mean() / v.std()) * np.sqrt(252))
-            for v in strat_rets.values()
-            if v.std() > 0
-        ]
-    )
-    benchmark = pd.Series(0.0, index=port_idx)
+    from framework import trials
+
+    # La grille de configurations, PAS la grille de sleeves.
+    #
+    # Jusqu'au 2026-07-28, les deux arguments recevaient les 4-6 séries de
+    # sleeves : le DSR sortait « N = 6 trials » quand le registre en comptait
+    # 382, et le PBO répondait à « choisir la meilleure *sleeve* tient-il hors
+    # échantillon », une décision que le projet n'a jamais prise. Le gate de la
+    # Phase 21 porte sur la grille qui a produit la promotion — le sweep de
+    # poids — et c'est elle qu'il faut passer.
+    grid_mat, grid_sharpes = _load_weight_sweep_grid()
+    benchmark = pd.Series(0.0, index=grid_mat.index)
 
     print("    → running framework.robustness.robustness_report() ...")
     report = robustness_report(
         pf,
-        grid_sharpes=sleeve_sharpes,
+        grid_sharpes=grid_sharpes,
         grid_returns_matrix=grid_mat,
+        n_trials=trials.distinct_trials(),
         benchmark_returns=benchmark,
         n_boot=3000,
         n_mc=1000,
@@ -1997,10 +2016,14 @@ def _build_robustness_tables(report: dict, backtest_years: float) -> None:
         ))
     if minbtl:
         value = minbtl.get("years", float("nan"))
+        # L'opérateur est dérivé du résultat, jamais écrit d'avance : la ligne
+        # affichait « 12.25 ans < 8.5 ans » — une affirmation fausse — quand le
+        # minimum requis dépassait l'historique disponible.
+        operator = r"$<$" if value < backtest_years else r"$>$"
         checks.append((
             r"Longueur backtest $>$ minimum statistique",
             r"$<$ longueur observée",
-            f"{fmt_num(value, 2)}~ans $<$ {backtest_years:.1f}~ans",
+            f"{fmt_num(value, 2)}~ans {operator} {backtest_years:.1f}~ans",
             bool(value < backtest_years),
         ))
     if pbo:

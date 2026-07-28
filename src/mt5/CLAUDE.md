@@ -21,7 +21,7 @@ Si tu reprends une nouvelle session, lis dans cet ordre :
 - [`docs/investigations/rsi_daily_vbt_vs_mt5.md`](../../docs/investigations/rsi_daily_vbt_vs_mt5.md) — écart entre la référence VBT~Pro et le port MQL5 du sleeve RSI Daily, plan complet d'enquête (8 hypothèses).
 
 **Outils CLI clés** (Linux/Wine, mais transposable Windows) :
-- `bridge/run_backtest_cli.py` — backtest 5.4 ans en ~20 s. Référence 2026-07-26 : 851 trades, Sharpe 0.89, CAGR 35.44 %, repli d'équité 44.33 %.
+- `bridge/run_backtest_cli.py` — backtest 5.4 ans en ~20 s. Référence 2026-07-28 : 909 trades, Sharpe 1.00, CAGR 39.11 %, repli d'équité 47.29 %.
   ⚠️ Le run publié utilise `--model 1` ; le défaut du CLI est `--model 4` (ticks réels), qui ne tourne pas sur ce poste faute de ticks téléchargés.
 - `bridge/write_default_preset.py` — régénère `FxMultiSleeve_Default.set` depuis les défauts compilés.
 - `bridge/reset_tester_preset.py` — patch les `.set` cachés MT5 quand on change un défaut compilé.
@@ -93,7 +93,7 @@ Avec les défauts compilés actuels (`Inp_SymbolSuffix=".c"` et `Inp_MacroSource
 |---|---|---|
 | `Common\Files\fred_api_key.txt` | NATIVE / HYBRID / AUTO-live | ✅ déployé — ⚠️ voir le piège de chemin ci-dessous |
 | `Common\Files\macro_cache.csv` | FILE / HYBRID-fallback | non requis (NATIVE par défaut) |
-| `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ 1400 lignes, 2020.09.23 → 2026.04.30 (état 2026-07-26) |
+| `Common\Files\macro_history.csv` | HISTORY / AUTO-tester | ✅ 1400 lignes, 2020.09.23 → 2026.04.30 (état 2026-07-28 — **borne la fenêtre MT5**) |
 | URL whitelist `https://api.stlouisfed.org` | NATIVE / HYBRID / AUTO-live | ✅ activé dans MT5 |
 
 **Pour obtenir une clé FRED (gratuit)** : https://fredaccount.stlouisfed.org/apikeys
@@ -208,11 +208,11 @@ C:\Users\vaude\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF
 - Macro filter via `CMacroFilter` (`FxMacroFilter.mqh`)
 
 **Allocations strictes** (somme = 1.0, validée à 1e-6) :
-- 0.72 → Sleeve 1 MR Macro (M1 intraday, 4 paires, fenêtre 8h-16h UTC)
+- 0.67 → Sleeve 1 MR Macro (M1 intraday, 4 paires, fenêtre 8h-16h UTC)
 - 0.09 → Sleeve 2 TS Momentum (D1, 3 paires)
 - 0.09 → Sleeve 3 RSI Daily (D1, **3** paires — USD/JPY retiré en Phase E.3)
 - 0.00 → Sleeve 4 H1 Momentum (compilée, inactive)
-- 0.10 → Sleeve 5 Gold Momentum (D1, XAU-USD) — **produit 79.8 % du résultat net**
+- 0.15 → Sleeve 5 Gold Momentum (D1, **XAUUSD+USDJPY+XAGUSD**) — **produit 86,5 % du résultat net**
 
 **Includes (16 fichiers `.mqh`)** :
 ```
@@ -245,11 +245,12 @@ Les 2 scripts partagent le même schéma CSV ; la seule différence est le nombr
 
 ```
 // Allocations (somme strict = 1.0)
-Inp_AllocMRMacro      = 0.72
+Inp_AllocMRMacro      = 0.67
 Inp_AllocTSMomentum   = 0.09
 Inp_AllocRSIDaily     = 0.09
 Inp_AllocH1Momentum   = 0.0       // sleeve compilée, non allouée
-Inp_AllocGoldMomentum = 0.10      // en production depuis 2026-07-26
+Inp_AllocGoldMomentum = 0.15      // trio depuis 2026-07-27, poids 0.20→0.15 le 2026-07-28 (gate PBO)
+Inp_Gold_Symbols      = "XAUUSD,USDJPY,XAGUSD"  // CSV, max 8 instruments
 
 // Risk (retuné 2026-07-26 avec l'entrée de l'or)
 Inp_GlobalTargetVol   = 0.37      // (vs 0.75 Phase I)

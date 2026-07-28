@@ -1,18 +1,18 @@
 \begin{table}[H]
 \centering
-\caption{Verdict consolidé sur les tests de robustesse statistique~: 6 test(s) sur 6 franchissent leur seuil. La dernière ligne est reportée sans verdict~: le plafond de drawdown ayant été retiré de la configuration de production, elle ne répond plus à une contrainte.}
+\caption{Verdict consolidé sur les tests de robustesse statistique~: 4 test(s) sur 6 franchissent leur seuil. La dernière ligne est reportée sans verdict~: le plafond de drawdown ayant été retiré de la configuration de production, elle ne répond plus à une contrainte.}
 \label{tab:robustness_verdict_summary}
 \begin{tabular}{llrl}
 \toprule
 Test & Seuil & Résultat & Verdict \\
 \midrule
-Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & $[0.308,\ 1.712]$ & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Intervalle de confiance 95\,\% Sharpe & Borne basse $> 0$ & $[0.311,\ 1.677]$ & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
 Probabilité Sharpe vrai $> 0$ & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
 Sharpe corrigé pour biais de sélection & $> 0.95$ & 1.0000 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Ratio de survie après tests multiples & $> 50\,\%$ & 78.80\,\% & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Longueur backtest $>$ minimum statistique & $<$ longueur observée & 2.48~ans $<$ 8.5~ans & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Probabilité de sur-ajustement & $< 0.5$ & 0.335 & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
-Bootstrap --- pire drawdown à 95\,\% & aucun plafond actif & -76.47\,\% & \emph{mesure} \\
+Ratio de survie après tests multiples & $> 50\,\%$ & 96.11\,\% & \textcolor{rsiGreen}{\textbf{PASSÉ}} \\
+Longueur backtest $>$ minimum statistique & $<$ longueur observée & 12.25~ans $<$ 8.5~ans & \textcolor{tsOrange}{\textbf{ÉCHEC}} \\
+Probabilité de sur-ajustement & $< 0.5$ & 0.754 & \textcolor{tsOrange}{\textbf{ÉCHEC}} \\
+Bootstrap --- pire drawdown à 95\,\% & aucun plafond actif & -75.68\,\% & \emph{mesure} \\
 \bottomrule
 \end{tabular}
 \end{table}

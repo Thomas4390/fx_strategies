@@ -67,13 +67,19 @@ from strategies.combined_portfolio import (
 # near-orthogonal diversifiers whose 2019/2023 alpha plugs the two
 # weak years of the MR Macro standalone.
 PRODUCTION_WEIGHTS: dict[str, float] = {
-    "MR_Macro": 0.62,        # 2026-07-27 : -10 pp, la réduction ne porte que sur MR
+    "MR_Macro": 0.67,        # 2026-07-28 : +5 pp, la réduction ne porte que sur MR
     "TS_Momentum_3p": 0.09,
     "RSI_Daily_3p": 0.09,    # Phase E.3 retire USDJPY (was RSI_Daily_4p)
     # 2026-07-27 : la sleeve momentum passe de l'or seul (0.10) au trio
-    # multi-instruments {XAU-USD, USD-JPY, XAG-USD} équipondéré et son poids
-    # double — cf. docs/research/momentum_integration_2026H2.md.
-    "Gold_Momentum": 0.20,
+    # multi-instruments {XAU-USD, USD-JPY, XAG-USD} équipondéré, poids 0.20.
+    # 2026-07-28 : poids ramené à 0.15. Le gate PBO de la Phase 21, appliqué
+    # rétroactivement au sweep de poids, rejette 0.20 (PBO 0.75-0.84 selon
+    # n_bins) : le poids fort domine in-sample et passe sous la médiane hors
+    # échantillon dans ~80% des découpes, ce qu'explique la concentration du
+    # résultat (3 positions = 89% du net). La composition trio est conservée,
+    # le PBO de la sélection d'instruments étant sain (0.18-0.30).
+    # cf. docs/research/momentum_validation_2026H2.md §6.
+    "Gold_Momentum": 0.15,
 }
 
 # 2026-07-26 — retunés sous mandat de CAGR 40% sur le portefeuille combiné.

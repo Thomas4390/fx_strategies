@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T191123Z",
+  "exit_code": 0,
+  "duration_sec": 12.188049568001588,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/oos_XAGUSD.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/oos_XAGUSD.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2022.11.04 - 2026.04.30)",
+    "initial_deposit": "100 000.00",
+    "total_net_profit": "111 046.96",
+    "profit_factor": "2.23",
+    "recovery_factor": "0.41",
+    "sharpe_ratio": "0.40",
+    "total_trades": "23",
+    "balance_dd_max": "54 566.03 (54.57%)",
+    "equity_dd_max": "271 276.51 (61.06%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "QL\t0\t15:11:20.499\tCore 01\t2026.04.21 21:00:02   [Gold_Momentum][INFO] Entry LONG XAGUSD.c lots=0.77 price=76.76 score=0.50 lev=1.16\nQH\t0\t15:11:20.499\tCore 01\t2026.04.21 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nRS\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1339 sigma63=4.2603 realized=4.2603 -> lev=0.087\nKN\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   market sell 0.77 XAGUSD.c, close #46 (77.676 / 77.751 / 77.676)\nMR\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   deal #47 sell 0.77 XAGUSD.c at 77.676 done (based on order #47)\nDP\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   deal performed [#47 sell 0.77 XAGUSD.c at 77.676]\nPJ\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   order performed sell 0.77 at 77.676 [#47 sell 0.77 XAGUSD.c at 77.676]\nIE\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   CTrade::OrderSend: market sell 0.77 position #46 XAGUSD.c [done at 77.676]\nGK\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   [Gold_Momentum][INFO] Exit LONG XAGUSD.c (score=0.00)\nJI\t0\t15:11:20.499\tCore 01\t2026.04.22 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nFQ\t0\t15:11:20.499\tCore 01\t2026.04.23 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1875 sigma63=4.2610 realized=4.2610 -> lev=0.087\nCO\t0\t15:11:20.499\tCore 01\t2026.04.23 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQL\t0\t15:11:20.499\tCore 01\t2026.04.24 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1875 sigma63=4.2610 realized=4.2610 -> lev=0.087\nPM\t0\t15:11:20.499\tCore 01\t2026.04.24 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLN\t0\t15:11:20.499\tCore 01\t2026.04.25 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1875 sigma63=4.2610 realized=4.2610 -> lev=0.087\nER\t0\t15:11:20.499\tCore 01\t2026.04.25 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nCH\t0\t15:11:20.499\tCore 01\t2026.04.26 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1875 sigma63=4.2610 realized=4.2610 -> lev=0.087\nNP\t0\t15:11:20.499\tCore 01\t2026.04.26 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nRK\t0\t15:11:20.499\tCore 01\t2026.04.27 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1875 sigma63=4.2610 realized=4.2610 -> lev=0.087\nOF\t0\t15:11:20.499\tCore 01\t2026.04.27 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQE\t0\t15:11:20.499\tCore 01\t2026.04.28 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1871 sigma63=4.2610 realized=4.2610 -> lev=0.087\nLK\t0\t15:11:20.499\tCore 01\t2026.04.28 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLG\t0\t15:11:20.499\tCore 01\t2026.04.29 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1871 sigma63=4.2610 realized=4.2610 -> lev=0.087\nII\t0\t15:11:20.499\tCore 01\t2026.04.29 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nQQ\t0\t15:11:20.499\tCore 01\t2026.04.29 23:59:59   [OPTIM] vt=0.3700 maxlev=31.0000 volfloor=0.0200 cagr=0.238999 dd=66.2532 sharpe=0.4025 pf=2.2252 rf=0.4093 trades=23 net=111046.96 years=3.485\nFD\t0\t15:11:20.499\tCore 01\t2026.04.29 23:59:59   [OPTIM] deals exported -> deals_20260429T2359.csv\nGF\t0\t15:11:20.499\tCore 01\tfinal balance 211046.96 USD\nFP\t0\t15:11:20.499\tCore 01\tOnTester result 0.2389993156295334\nNE\t0\t15:11:20.499\tCore 01\t2026.04.29 23:59:59   [DEINIT][INFO] EA stopped reason=1\nJL\t0\t15:11:20.499\tCore 01\tEURUSD.c,M1: 5042242 ticks, 1280852 bars generated. Test passed in 0:00:05.138 (including ticks preprocessing 0:00:00.636).\nQR\t0\t15:11:20.499\tCore 01\t24952110 total ticks for all symbols\nNI\t0\t15:11:20.499\tCore 01\tEURUSD.c: generate 5042242 ticks in 0:00:00.126, passed to tester 5042242 ticks\nDE\t0\t15:11:20.499\tCore 01\tGBPUSD.c: generate 5048312 ticks in 0:00:00.130, passed to tester 5048312 ticks\nHG\t0\t15:11:20.499\tCore 01\tUSDCAD.c: generate 5015904 ticks in 0:00:00.131, passed to tester 5015904 ticks\nNQ\t0\t15:11:20.499\tCore 01\tUSDJPY.c: generate 5067943 ticks in 0:00:00.130, passed to tester 5067943 ticks\nFM\t0\t15:11:20.499\tCore 01\tXAGUSD.c: generate 4777709 ticks in 0:00:00.119, passed to tester 4777709 ticks\nNQ\t0\t15:11:20.499\tCore 01\t1032 Mb memory used including 458 Mb of history data, 512 Mb of tick data\nOK\t0\t15:11:20.499\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260727.log\" written\nFF\t0\t15:11:20.545\tTester\tautomatic testing finished\nDQ\t0\t15:11:20.547\tCore 01\tconnection closed"
+  }
+}

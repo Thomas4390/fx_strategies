@@ -1,6 +1,10 @@
 # Intégration de la sleeve momentum multi-instruments — cycle 2026-H2
 
-> **Date** : 2026-07-27 · **Statut** : recommandation prête, promotion NON actée
+> **Date** : 2026-07-27 · **Statut** : **PROMUE le 2026-07-27** (`fb6e949`, `2e939e4`,
+> `e54c778`) à 0,20, puis **poids ramené à 0,15 le 2026-07-28** après échec du gate PBO —
+> voir `momentum_validation_2026H2.md`. Les réserves du §4 ci-dessous n'avaient pas été
+> levées au moment de la promotion ; la première (optimum au bord de grille) est
+> précisément celle que le PBO a sanctionnée.
 > **Holdout state** : LOCKED (frozen from 2026-01-01 until Phase 25 / 2026-12-31).
 > Toute la sélection de ce document ferme au **2025-12-31**. Aucune lecture
 > FROZEN_OOS supplémentaire consommée (les tranches USDJPY/XAGUSD l'ont été au

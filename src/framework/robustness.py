@@ -169,19 +169,37 @@ def _section_dsr_haircut(
     *,
     haircut_correction: str,
     ann_factor: float,
+    n_trials: int | None = None,
 ) -> tuple[Any, Any, Any]:
     """Return ``(dsr, haircut, min_backtest_length)`` triple.
 
     Each slot is ``None`` on failure ; the three are computed in
     dependency order so a missing DSR still lets Haircut/MinBTL run
     by falling back to a VBT-native Sharpe.
+
+    ``n_trials`` is the size of the search that produced the strategy, and it
+    is **not** the length of ``sharpes_arr`` : a caller can hand over a short
+    vector of rival Sharpes (used to estimate their dispersion) while declaring
+    the true trial count from the registry. Defaulting it to the vector length
+    is what published ``DSR (N = 6)`` off a 6-sleeve array while the registry
+    counted 382 configurations.
+
+    Annualization is pinned to ``ann_factor`` throughout : without it, the
+    deflation ran under the ambient VBT year frequency (365 days) while the
+    bootstrap block of the same report ran at 252, so the two published Sharpes
+    differed by exactly sqrt(365/252) = 1.204.
     """
     dsr = haircut = min_btl = None
+    n = int(n_trials if n_trials is not None else sharpes_arr.size)
+    year_freq = pd.Timedelta(days=ann_factor)
+
     try:
         dsr = deflated_sharpe_ratio(
             returns,
-            n_trials=int(sharpes_arr.size),
+            n_trials=n,
             trial_sharpes=sharpes_arr,
+            freq="1D",
+            year_freq=year_freq,
         )
     except Exception as exc:
         _log_err("DSR", exc)
@@ -189,10 +207,12 @@ def _section_dsr_haircut(
     try:
         sr_obs = float(dsr["sharpe"]) if dsr else float("nan")
         if not np.isfinite(sr_obs):
-            sr_obs = float(returns.vbt.returns().sharpe_ratio())
+            sr_obs = float(
+                returns.vbt.returns(freq="1D", year_freq=year_freq).sharpe_ratio()
+            )
         haircut = haircut_sharpe_ratio(
             sr_obs,
-            n_trials=int(sharpes_arr.size),
+            n_trials=n,
             sample_length=int(returns.size),
             correction=haircut_correction,
             ann_factor=ann_factor,
@@ -204,9 +224,9 @@ def _section_dsr_haircut(
         sr_obs = float(haircut["sharpe_obs"]) if haircut else float("nan")
         if np.isfinite(sr_obs) and sr_obs > 0:
             min_btl = {
-                "years": minimum_backtest_length(sr_obs, int(sharpes_arr.size)),
+                "years": minimum_backtest_length(sr_obs, n),
                 "sharpe_target": sr_obs,
-                "n_trials": int(sharpes_arr.size),
+                "n_trials": n,
             }
     except Exception as exc:
         _log_err("MinBTL", exc)
@@ -296,6 +316,7 @@ def robustness_report(
     *,
     grid_sharpes: pd.Series | np.ndarray | None = None,
     grid_returns_matrix: pd.DataFrame | None = None,
+    n_trials: int | None = None,
     benchmark_returns: pd.Series | None = None,
     n_boot: int = ROBUSTNESS_DEFAULTS["n_boot"],
     n_mc: int = ROBUSTNESS_DEFAULTS["n_mc"],
@@ -320,6 +341,11 @@ def robustness_report(
     grid_returns_matrix
         Optional ``(T, n_configs)`` DataFrame of sweep per-bar returns.
         Unlocks PBO via CSCV and SPA/StepM via ``arch``.
+    n_trials
+        Size of the search that produced the strategy, for the deflation.
+        Defaults to ``len(grid_sharpes)``, which is only right when the vector
+        *is* the search. Pass the trial registry count
+        (``framework.trials.distinct_trials()``) when it is not.
     benchmark_returns
         Optional benchmark return series for SPA/StepM.
     n_boot
@@ -409,6 +435,7 @@ def robustness_report(
             sharpes_arr,
             haircut_correction=haircut_correction,
             ann_factor=ann_factor,
+            n_trials=n_trials,
         )
     else:
         dsr = haircut = minbtl = None

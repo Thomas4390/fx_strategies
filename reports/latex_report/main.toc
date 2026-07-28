@@ -40,7 +40,7 @@
 \contentsline {subsection}{\numberline {8.2}Comment l'échelle a été calibrée}{26}{subsection.8.2}%
 \contentsline {subsection}{\numberline {8.3}Ce qu'il faut en retenir pour lire ce document}{26}{subsection.8.3}%
 \contentsline {section}{\numberline {9}Architecture de pondération et gestion du risque}{27}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Allocation statique 62 / 9 / 9 / 20}{27}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.1}Allocation statique 67 / 9 / 9 / 15}{27}{subsection.9.1}%
 \contentsline {subsection}{\numberline {9.2}Couche de ciblage de volatilité}{27}{subsection.9.2}%
 \contentsline {subsection}{\numberline {9.3}Impact du levier sur les métriques}{28}{subsection.9.3}%
 \contentsline {subsection}{\numberline {9.4}Protection drawdown --- disponible, désactivée, et non remplacée}{30}{subsection.9.4}%
@@ -67,33 +67,33 @@
 \contentsline {paragraph}{Deux zones de vigilance identifiées.}{40}{paragraph*.36}%
 \contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{42}{subsection.13.3}%
 \contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{42}{subsection.13.4}%
-\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{45}{subsection.13.5}%
-\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{46}{subsection.13.6}%
-\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{47}{subsection.13.7}%
+\contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{46}{subsection.13.5}%
+\contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{47}{subsection.13.6}%
+\contentsline {subsection}{\numberline {13.7}Verdict consolidé}{48}{subsection.13.7}%
 \contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{48}{section.14}%
-\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{48}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{49}{subsection.14.1}%
 \contentsline {subsection}{\numberline {14.2}Observations transversales}{49}{subsection.14.2}%
-\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{49}{section.15}%
-\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}{50}{subsection.15.1}%
+\contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{50}{section.15}%
+\contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}{51}{subsection.15.1}%
 \contentsline {subsection}{\numberline {15.2}Avertissement 2 --- La sélection a consommé du pouvoir statistique}{51}{subsection.15.2}%
-\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{51}{subsection.15.3}%
-\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{51}{subsection.15.4}%
-\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{52}{subsection.15.5}%
-\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{52}{subsection.15.6}%
-\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{52}{subsection.15.7}%
-\contentsline {section}{\numberline {16}Conditions de déploiement}{53}{section.16}%
-\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{54}{subsection.16.1}%
-\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{54}{appendix.A}%
-\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{56}{appendix.B}%
-\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{57}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}La question posée}{57}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{58}{subsection.C.2}%
-\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{58}{subsection.C.3}%
-\contentsline {paragraph}{Trois observations saillantes.}{58}{paragraph*.47}%
-\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{59}{subsection.C.4}%
-\contentsline {paragraph}{Lecture du plateau.}{59}{paragraph*.49}%
-\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{60}{subsection.C.5}%
-\contentsline {paragraph}{Distance au maximum.}{60}{paragraph*.52}%
-\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{61}{subsection.C.6}%
-\contentsline {paragraph}{Lecture de la frontière.}{61}{paragraph*.54}%
+\contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{52}{subsection.15.3}%
+\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{52}{subsection.15.4}%
+\contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{53}{subsection.15.5}%
+\contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{53}{subsection.15.6}%
+\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{53}{subsection.15.7}%
+\contentsline {section}{\numberline {16}Conditions de déploiement}{54}{section.16}%
+\contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{55}{subsection.16.1}%
+\contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{55}{appendix.A}%
+\contentsline {section}{\numberline {B}Annexe B --- Anatomie d'un trade}{57}{appendix.B}%
+\contentsline {section}{\numberline {C}Sensibilité à l'allocation du trio FX}{58}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}La question posée}{58}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{59}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{59}{subsection.C.3}%
+\contentsline {paragraph}{Trois observations saillantes.}{59}{paragraph*.47}%
+\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{60}{subsection.C.4}%
+\contentsline {paragraph}{Lecture du plateau.}{60}{paragraph*.49}%
+\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{61}{subsection.C.5}%
+\contentsline {paragraph}{Distance au maximum.}{61}{paragraph*.52}%
+\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{62}{subsection.C.6}%
+\contentsline {paragraph}{Lecture de la frontière.}{62}{paragraph*.54}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

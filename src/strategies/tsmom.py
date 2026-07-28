@@ -180,9 +180,10 @@ def create_cv_pipeline(
 ):
     """Build a ``@vbt.cv_split`` pipeline for walk-forward cross-validation.
 
-    Mirrors ``gold_momentum.create_cv_pipeline`` but carries the **production**
-    sizing: that factory still defaults to target_vol=0.25 / max_leverage=3.0,
-    which is the pre-2026-07-26 tuning and no longer what the sleeve trades.
+    Mirrors ``gold_momentum.create_cv_pipeline``, both carrying the
+    **production** sizing (target_vol=0.55 / max_leverage=6.6). The gold factory
+    was left on the pre-2026-07-26 tuning (0.25 / 3.0) until 2026-07-28 ; it is
+    now aligned, so the two agree.
     """
     splitter_kwargs = pipeline_defaults.pop("splitter_kwargs", {})
 

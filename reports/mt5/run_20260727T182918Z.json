@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T182918Z",
+  "exit_code": 0,
+  "duration_sec": 11.138649192998855,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/tsmom_ger40cash.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/tsmom_ger40cash.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2022.11.04 - 2025.12.31)",
+    "initial_deposit": "0.00",
+    "total_net_profit": "0.00",
+    "profit_factor": "0.00",
+    "recovery_factor": "0.00",
+    "sharpe_ratio": "0.00",
+    "total_trades": "0",
+    "balance_dd_max": "0.00 (0.00%)",
+    "equity_dd_max": "0.00 (0.00%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "init_ok": false,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "OK\t0\t14:29:13.681\tCore 01\tUSDJPY.c: load 31 bytes of history data to synchronize in 0:00:00.000\nJL\t0\t14:29:13.681\tCore 01\tUSDJPY.c: history synchronized from 2020.11.22 to 2026.05.01\nFO\t0\t14:29:13.681\tCore 01\tUSDJPY.c,M1: history cache allocated for 1867363 bars and contains 681420 bars from 2021.01.03 22:06 to 2022.11.03 23:59\nFN\t0\t14:29:13.681\tCore 01\tUSDJPY.c,M1: history begins from 2021.01.03 22:06\nEF\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   CVWAPDaily::Warmup: no bars for USDJPY.c since midnight UTC\nJG\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   [MR_Macro][WARN] VWAP warmup empty for USDJPY.c; rebuilding as bars arrive\nLD\t0\t14:29:13.681\tCore 01\tUSDCAD.c: symbol to be synchronized\nJS\t0\t14:29:13.681\tCore 01\tUSDCAD.c: symbol synchronized, 4120 bytes of symbol info received\nQG\t0\t14:29:13.681\tCore 01\tUSDCAD.c: load 31 bytes of history data to synchronize in 0:00:00.104\nGH\t0\t14:29:13.681\tCore 01\tUSDCAD.c: history synchronized from 2020.11.22 to 2026.05.01\nKS\t0\t14:29:13.681\tCore 01\tUSDCAD.c,M1: history cache allocated for 1865764 bars and contains 679821 bars from 2021.01.03 22:05 to 2022.11.03 23:59\nFR\t0\t14:29:13.681\tCore 01\tUSDCAD.c,M1: history begins from 2021.01.03 22:05\nHR\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   CVWAPDaily::Warmup: no bars for USDCAD.c since midnight UTC\nOK\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   [MR_Macro][WARN] VWAP warmup empty for USDCAD.c; rebuilding as bars arrive\nIJ\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   [MR_Macro][INFO] Init OK 4 pairs (EURUSD,GBPUSD,USDJPY,USDCAD)\nOF\t0\t14:29:13.681\tCore 01\tEURUSD.c,Daily: history cache allocated for 1399 bars and contains 575 bars from 2021.01.03 00:00 to 2022.11.03 00:00\nHI\t0\t14:29:13.681\tCore 01\tEURUSD.c,Daily: history begins from 2021.01.03 00:00\nHD\t0\t14:29:13.681\tCore 01\tGBPUSD.c,Daily: history cache allocated for 1399 bars and contains 575 bars from 2021.01.03 00:00 to 2022.11.03 00:00\nCD\t0\t14:29:13.681\tCore 01\tGBPUSD.c,Daily: history begins from 2021.01.03 00:00\nDQ\t0\t14:29:13.681\tCore 01\tUSDJPY.c,Daily: history cache allocated for 1399 bars and contains 575 bars from 2021.01.03 00:00 to 2022.11.03 00:00\nCQ\t0\t14:29:13.681\tCore 01\tUSDJPY.c,Daily: history begins from 2021.01.03 00:00\nKS\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   [TS_Momentum][INFO] Init OK 3/3 pairs (skipped 0 for missing D1/symbol)\nCJ\t0\t14:29:13.681\tCore 01\tUSDCAD.c,Daily: history cache allocated for 1399 bars and contains 575 bars from 2021.01.03 00:00 to 2022.11.03 00:00\nLN\t0\t14:29:13.681\tCore 01\tUSDCAD.c,Daily: history begins from 2021.01.03 00:00\nGH\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   [RSI_Daily][INFO] Init OK 3 pairs\nRN\t2\t14:29:13.681\tCore 01\tsymbol GER40Cash.c does not exist\nOE\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:00   EnsureSymbolSelected: cannot add GER40Cash.c (err=4305)\nJF\t0\t14:29:13.681\tCore 01\tGER40Cash: symbol to be synchronized\nJR\t0\t14:29:13.681\tCore 01\tGER40Cash: symbol synchronized, 4120 bytes of symbol info received\nEJ\t0\t14:29:13.681\tCore 01\tGER40Cash: load 8.15 Mb of history data to synchronize in 0:00:00.612\nDI\t0\t14:29:13.681\tCore 01\tGER40Cash: history synchronized from 2022.11.06 to 2025.12.30\nCN\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:02   EnsureHistory: GER40Cash PERIOD_D1 only -1/252 bars\nPQ\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:05   EnsureHistory: GER40Cash PERIOD_D1 only -1/1 bars\nJE\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:05   [Gold_Momentum][ERROR] GER40Cash: no D1 history available; sleeve disabled\nIK\t0\t14:29:13.681\tCore 01\t2022.11.04 00:00:05   [DEINIT][INFO] EA stopped reason=8\nIK\t2\t14:29:13.681\tCore 01\ttester stopped because OnInit returns non-zero code 1\nKP\t0\t14:29:13.689\tTester\tautomatic testing finished\nMI\t2\t14:29:13.691\tCore 01\tdisconnected\nPD\t0\t14:29:13.691\tCore 01\tconnection closed\nMN\t0\t14:29:13.696\tTester\tautomatic testing finished"
+  }
+}

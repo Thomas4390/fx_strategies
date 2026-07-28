@@ -44,7 +44,7 @@ Le deuxième bloc $(r_{4},r_{5},r_{6}) = (-2.1,+1.9,-1.7)$ est \textbf{copié in
 \paragraph{Deux zones de vigilance identifiées.}
 \begin{itemize}
 \item L'intervalle de confiance du \textbf{Max Drawdown} s'étend de $-76.47\,\%$ à $-32.25\,\%$, pour une réalisation observée de $-55.00\,\%$. Il n'existe plus de plafond contractuel auquel comparer ces valeurs~: elles décrivent le risque encouru, elles ne signalent pas un dépassement.
-\item L'intervalle de confiance du \textbf{Tail Ratio} est $[0.973,\ 1.452]$ pour une réalisation observée de $1.120$. La borne basse est passée sous~1 avec le doublement de la sleeve momentum~: la domination des gains extrêmes sur les pertes extrêmes reste le cas central, elle n'est plus acquise sur toute la distribution.
+\item L'intervalle de confiance du \textbf{Tail Ratio} est $[0.973,\ 1.452]$ pour une réalisation observée de $1.120$. La borne basse est passée sous~1 avec la montée en poids de la sleeve momentum~: la domination des gains extrêmes sur les pertes extrêmes reste le cas central, elle n'est plus acquise sur toute la distribution.
 \end{itemize}
 
 \subsection{\emph{Equity fan chart} --- trajectoires bootstrap alternatives}
@@ -61,14 +61,20 @@ La bande P5 reste plate voire négative sur les premières années, ce qui repro
 
 \subsection{Tests d'\emph{overfitting}}
 
-Cinq tests complémentaires sont appliqués. Chacun pose une question légèrement différente. \textbf{Les cinq franchissent leur seuil}, y compris la probabilité de sur-ajustement, qui échouait sur la configuration précédente et passe désormais~--- ce point est discuté plus bas et repris dans le verdict consolidé.
+Cinq tests complémentaires sont appliqués. Chacun pose une question légèrement différente. \textbf{Trois franchissent leur seuil, deux échouent}~: la probabilité de sur-ajustement et la longueur minimale de \emph{backtest}. Ces deux échecs sont discutés en détail plus bas et repris dans le verdict consolidé~; le premier a directement conduit à réduire le poids de la sleeve momentum.
 
 \input{tables/robustness_overfitting.tex}
 
 \begin{itemize}
 \item \textbf{Probabilistic Sharpe Ratio (PSR)~$= 1.000$}~: la probabilité que le vrai Sharpe soit supérieur à zéro est de 100\,\%, après correction pour la non-normalité des rendements.
-\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les six composantes candidates testées, le Sharpe observé dépasse de près de sept fois l'espérance du maximum sous hypothèse nulle ($1.20$ contre $0.176$). La stratégie n'est pas le fruit d'un \emph{best of N}.
+\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les $382$~configurations distinctes du registre d'essais, le Sharpe observé dépasse d'un facteur~$8$ l'espérance du maximum sous hypothèse nulle ($0.99$ contre $0.122$). Le portefeuille combiné n'est pas le fruit d'un \emph{best of N}.
 \end{itemize}
+
+\begin{warningbox}
+\textbf{Ce que ce DSR ne couvre pas, et qui est mesuré ailleurs.} Le $N = 382$ est désormais celui du registre d'essais du projet et non, comme dans les éditions antérieures de ce rapport, le nombre de \emph{sleeves} ($N=6$)~--- une déclaration qui répondait à «~ce portefeuille est-il le meilleur de six~?~» plutôt qu'à «~est-il le meilleur de tout ce qui a été essayé~?~».
+
+Mais la déflation ne dit rien du \emph{choix des instruments}. Déflaté par la dispersion des $21$~instruments classés au criblage, le Sharpe de chacun des trois retenus tombe très en-dessous du seuil~: $\mathbb{E}[\max \mathrm{SR}] = 2{,}89$ contre $0{,}74$ pour l'or, $0{,}51$ pour le dollar-yen et $0{,}20$ pour l'argent. \textbf{Ce qui résiste à la correction, c'est l'assemblage~; ce qui n'y résiste pas, c'est la sélection des instruments qui le composent.} Le criblage désigne des candidats, il ne les démontre pas.
+\end{warningbox}
 
 \begin{examplebox}
 \textbf{Pourquoi le DSR est-il plus sévère que le PSR --- l'analogie du concours de pile ou face.} Supposons qu'on organise un concours où $N=1\,000$ participants lancent chacun une pièce équitable 100 fois et reportent leur taux de «~face~». Par chance pure, \emph{au moins un} participant va tomber sur un score spectaculaire~--- disons 65~faces sur 100, soit un $z$-score de $+3$. Cela ne prouve \textbf{rien} sur son habileté~: c'est l'espérance mécanique du maximum sur 1\,000~essais.
@@ -80,27 +86,27 @@ Le \textbf{PSR} répond à~: \emph{ce participant-là est-il statistiquement dif
 Le \textbf{DSR} répond à~: \emph{ce participant est-il significatif sachant qu'il est le vainqueur de 1\,000 essais~?} Il compare son $z=3$ à $\mathbb{E}[\max z] \approx \sqrt{2\ln 1000} \approx 3.72$. Conclusion~: non, son score est en-dessous de ce qu'on attend par chance. Le DSR dira non.
 
 \smallskip
-\textbf{Application Apogée.} Avec $N=6$ composantes candidates testées, $\mathbb{E}[\max \mathrm{SR}\mid N=6] \approx 0.176$. Le Sharpe observé $\widehat{\mathrm{SR}}=1.20$ dépasse ce seuil d'un facteur~$6.8$, d'où DSR~$\approx 1.000$. \textbf{Si on avait testé 10\,000~configurations} au lieu de 6, le seuil monterait à $\sqrt{2\ln 10\,000} \cdot \sqrt{0.089} \approx 1.28$~--- soit pratiquement le Sharpe observé, et le DSR s'effondrerait sous $0.95$. C'est pour ça que le DSR exige d'honnêtement déclarer $N$.
+\textbf{Application Apogée.} Avec $N=382$ configurations distinctes déclarées au registre d'essais, $\mathbb{E}[\max \mathrm{SR}\mid N=382] \approx 0.122$. Le Sharpe observé $\widehat{\mathrm{SR}}=0.99$ dépasse ce seuil d'un facteur~$8$, d'où DSR~$\approx 1.000$. Le seuil croît en $\sqrt{2\ln N}$, donc lentement~: passer de $382$ à $10\,000$~essais ne le porterait qu'à $\approx 0.145$. \textbf{Ce qui fait vraiment bouger la déflation, ce n'est pas $N$, c'est la dispersion des essais rivaux}~--- ici $\widehat{\sigma}(\mathrm{SR}) = 0.024$ entre des allocations quasi identiques, donc un seuil bas.
 
 \smallskip
-\textbf{Et c'est précisément la limite de ce test ici.} Le $N=6$ déclaré compte les six composantes candidates entrées dans la validation croisée. Il ne compte pas les configurations explorées en amont au fil de la recherche. Le DSR répond donc à «~ce portefeuille est-il le meilleur de six~?~» et non à «~est-il le meilleur de tout ce qui a été essayé~?~». Le PBO, lui, ne dépend pas d'un $N$ déclaré~--- c'est une des raisons pour lesquelles son verdict, favorable sur cette configuration, est le plus informatif des cinq.
+\textbf{Et c'est précisément la limite de ce test ici.} Les $382$~essais sont des variantes du \emph{même} portefeuille~; leur faible dispersion rend le seuil facile à franchir, et le verdict favorable est en partie mécanique. Appliquée à une famille réellement hétérogène~--- les $21$~instruments du criblage, dont les Sharpe s'étalent de $-1.05$ à $+0.78$~--- la même formule donne un seuil de $2.89$ que \emph{aucun} candidat ne franchit. Le PBO, lui, ne dépend d'aucun $N$ déclaré~: c'est pourquoi son verdict est le plus informatif des cinq, et c'est lui qui a tranché ici.
 \end{examplebox}
 
 \begin{itemize}
-\item \textbf{Haircut Sharpe~$= 0.947$ (ratio de survie $78.80\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $0.947$. On perd $21\,\%$ du Sharpe à la correction, ce qui reste modéré.
-\item \textbf{Minimum Backtest Length~$= 2.48$~ans}~: la longueur minimale de backtest requise pour valider statistiquement un Sharpe cible de $1.20$ est de 2.48~ans. On dispose de 8.5~ans, soit plus de trois fois le minimum requis.
-\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.335$~--- \emph{passé}}~: dans $66.5\,\%$ des découpages temporels, le vainqueur in-sample reste dans la moitié supérieure out-of-sample. Le seuil de danger est $0.5$~; $0.335$ reste en-deçà. Ce test échouait ($0.532$) sur la configuration précédente~: c'est le seul verdict que la nouvelle allocation renverse, et il va dans le bon sens.
+\item \textbf{Haircut Sharpe~$= 0.947$ (ratio de survie $96.11\,\%$)}~: après correction pour tests multiples, le Sharpe effectif reste à $0.947$. On perd $4\,\%$ du Sharpe à la correction, ce qui est faible.
+\item \textbf{Minimum Backtest Length~$= 12.25$~ans~--- \emph{échec}}~: sous $382$~essais déclarés, il faudrait $12.25$~années d'historique pour qu'un Sharpe de $0.99$ soit distinguable du hasard. On en dispose de $8.5$. L'écart n'est pas rédhibitoire mais il est réel, et il ne se comble que par du temps.
+\item \textbf{Probability of Backtest Overfitting (PBO)~$= 0.754$~--- \emph{échec}}~: dans $75.4\,\%$ des découpages temporels, l'allocation la mieux classée sur la moitié in-sample retombe sous la médiane out-of-sample. Le seuil de danger est $0.5$. \textbf{Ce test est mesuré sur la grille d'allocations réellement parcourue}~--- les onze combinaisons de composition et de poids du criblage~--- et non, comme dans les éditions antérieures, sur la matrice des quatre \emph{sleeves}, qui répondait à une question jamais posée dans ce projet.
 \end{itemize}
 
 \begin{examplebox}
-\textbf{Le Haircut Sharpe étape par étape.} On part du Sharpe observé $\widehat{\mathrm{SR}} = 1.20$ sur $T = 2\,146$~barres journalières, avec $N = 6$~essais.
+\textbf{Le Haircut Sharpe étape par étape.} On part du Sharpe observé $\widehat{\mathrm{SR}} = 0.99$ sur $T = 2\,146$~barres journalières, avec $N = 382$~essais.
 
 \begin{enumerate}
-\item \emph{Aller en t-stat}~: $t_{\text{obs}} = 1.20 \times \sqrt{2145} \approx 55.6$~--- statistiquement énorme sous hypothèse nulle.
-\item \emph{P-value brute} (survie Student-t)~: $p_{\text{raw}} \approx 10^{-6}$.
-\item \emph{Correction BHY} pour $N = 6$~essais~: on multiplie par $N$ puis par le 6\textsuperscript{e}~nombre harmonique $c(6) = 1 + \tfrac{1}{2} + \tfrac{1}{3} + \tfrac{1}{4} + \tfrac{1}{5} + \tfrac{1}{6} \approx 2.45$. Donc $p_{\text{adj}} \approx 10^{-6} \times 6 \times 2.45 \approx 1.47 \times 10^{-5}$.
+\item \emph{Aller en t-stat}~: $t_{\text{obs}} = 0.99 \times \sqrt{2145} \approx 45.6$~--- statistiquement énorme sous hypothèse nulle.
+\item \emph{P-value brute} (survie Student-t)~: $p_{\text{raw}}$ est de l'ordre de $10^{-6}$ ou moins.
+\item \emph{Correction BHY} pour $N = 382$~essais~: on multiplie par $N$ puis par le $382$\textsuperscript{e}~nombre harmonique $c(382) \approx \ln 382 + 0.577 \approx 6.52$. Le facteur de pénalité total est donc $\approx 2\,490$.
 \item \emph{Retour en t-stat}~: $t_{\text{adj}} = \Phi^{-1}_{\text{Student}}(1 - p_{\text{adj}}) \approx 43.9$.
-\item \emph{Retour en Sharpe}~: $\mathrm{SR}_{\text{haircut}} = 43.9 / \sqrt{2145} \approx 0.947$, soit un ratio de survie de $0.947 / 1.20 = 79\,\%$.
+\item \emph{Retour en Sharpe}~: $\mathrm{SR}_{\text{haircut}} = 43.9 / \sqrt{2145} \approx 0.947$, soit un ratio de survie de $0.947 / 0.99 = 96\,\%$.
 \end{enumerate}
 
 \textbf{Intuition.} Le BHY pénalise le Sharpe de façon d'autant plus douce que l'\emph{edge} initial est grand par rapport à sa variance d'estimation. Une stratégie avec $\widehat{\mathrm{SR}} = 0.25$ et les mêmes paramètres verrait son Haircut s'effondrer à quasi-zéro~: la correction «~mord~» d'autant plus fort que le signal est faible.
@@ -131,33 +137,38 @@ Partition & In-sample & Out-of-sample & Logit \\
 Pour chaque partition, on identifie le \emph{vainqueur} in-sample~--- la configuration au meilleur Sharpe sur $B_{1},B_{2}$ par exemple~--- puis on regarde son rang out-of-sample sur $B_{3},B_{4}$. Ce rang est converti en \emph{logit}~: positif si le vainqueur reste dans la moitié supérieure, négatif s'il tombe sous la médiane.
 
 \smallskip
-Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaudrait donc $1/6 \approx 0.17$~: sous $0.5$, régime sain. \textbf{Le vrai CSCV est plus sévère que ce jouet.} Sur les 12\,870~partitions réelles, Apogée reporte $\mathrm{PBO} = 0.335$~--- environ 4\,310~partitions sur 12\,870 voient un retournement IS$\to$OOS, soit une sur trois. Le seuil critique n'est pas franchi, mais on en reste à distance modeste.
+Dans ce jouet à 6~partitions, \textbf{1~sur~6} a un logit négatif (partition~4). Le PBO vaudrait donc $1/6 \approx 0.17$~: sous $0.5$, régime sain. \textbf{Le vrai CSCV est nettement plus sévère que ce jouet.} Sur les 12\,870~partitions réelles, Apogée reporte $\mathrm{PBO} = 0.754$~--- environ 9\,700~partitions sur 12\,870 voient un retournement IS$\to$OOS, soit trois sur quatre. Le seuil critique est franchi et le test échoue.
+
+\smallskip
+\textbf{D'où vient cet échec.} Il n'a rien de mystérieux~: quand trois positions portent $82\,\%$ du résultat (section~\ref{sec:limitations}), l'allocation qui les surpondère domine mécaniquement toute partition qui les contient, et se classe mal dans celles qui ne les contiennent pas. Le PBO mesure exactement cette instabilité. C'est la raison pour laquelle le poids de la sleeve momentum a été ramené de $20\,\%$ à $15\,\%$.
 \end{examplebox}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\linewidth]{robustness_pbo_logits.png}
-\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.335$ signifie que $33.5\,\%$ de la masse de la distribution est à gauche du seuil~--- une minorité, d'où le verdict favorable.}
+\caption{Distribution des logits de validation croisée combinatoire. La ligne verticale orange matérialise le seuil au-dessus duquel le vainqueur in-sample est au-dessus de la médiane out-of-sample (en-dessous~: overfitting manifeste). Le PBO de $0.754$ signifie que $75.4\,\%$ de la masse de la distribution est à gauche du seuil~--- une majorité, d'où l'échec du test.}
 \end{figure}
 
 \begin{insightbox}
-\textbf{Les cinq tests d'\emph{overfitting} sont désormais favorables.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui pourrait être obtenu par chance pure. Le \emph{Haircut} prélève $21\,\%$ du Sharpe, signe d'un \emph{edge} grand relativement à sa variance d'estimation. \textbf{Et le PBO passe à $0.335$}, contre $0.532$ --- un échec --- sur l'allocation précédente~: le classement des composantes est plus stable d'un découpage temporel à l'autre depuis que la sleeve momentum porte trois instruments plutôt qu'un. Les tests répondent à des questions différentes~: le PSR et le DSR demandent «~l'\emph{edge} est-il réel~?~»~; le PBO demande «~le choix qu'on a fait parmi les candidats se transporte-t-il hors échantillon~?~». La réponse est oui aux deux --- avec la réserve que $0.335$ n'est pas $0$, et que la marge au seuil reste modeste.
+\textbf{L'\emph{edge} passe, la sélection échoue --- et les deux verdicts sont compatibles.} PSR et DSR à $1.000$ indiquent que le Sharpe observé est très loin de ce qui s'obtiendrait par chance pure, et le \emph{Haircut} ne prélève que $4\,\%$ du Sharpe. Mais le PBO échoue à $0.754$, et la longueur minimale de \emph{backtest} requise ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
+
+Les tests répondent à des questions différentes~: le PSR et le DSR demandent «~l'\emph{edge} est-il réel~?~», le PBO demande «~le choix qu'on a fait parmi les candidats se transporte-t-il hors échantillon~?~». \textbf{La réponse est oui à la première et non à la seconde.} Un moteur peut avoir un avantage authentique et avoir été \emph{dosé} sur du bruit~: c'est exactement le diagnostic ici, et il porte sur le poids, pas sur l'existence du signal. La correction appliquée est du même ordre~--- réduire le poids, ne pas retirer le moteur.
 \end{insightbox}
 
 \subsection{Tests de supériorité prédictive}
 
-Avec la matrice des rendements des composantes candidates contre un \emph{benchmark} à rendement nul, on teste si \emph{au moins une} stratégie du \emph{sweep} bat statistiquement le \emph{benchmark} après correction de \textit{data snooping}. Deux tests complémentaires sont appliqués~: le test de supériorité prédictive (Hansen SPA) et la procédure stepwise de Romano--Wolf.
+Avec la matrice des rendements des onze allocations candidates du criblage contre un \emph{benchmark} à rendement nul, on teste si \emph{au moins une} d'entre elles bat statistiquement le \emph{benchmark} après correction de \textit{data snooping}. Deux tests complémentaires sont appliqués~: le test de supériorité prédictive (Hansen SPA) et la procédure stepwise de Romano--Wolf.
 
 \input{tables/robustness_arch_tests.tex}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{robustness_spa_pvalues.png}
-\caption{P-values du test de supériorité prédictive sur les six composantes. Les trois bornes correspondent à trois estimateurs différents du re-centering, la borne cohérente étant celle recommandée en pratique. La ligne pointillée orange matérialise le seuil $\alpha = 0.05$.}
+\caption{P-values du test de supériorité prédictive sur les onze allocations candidates. Les trois bornes correspondent à trois estimateurs différents du re-centering, la borne cohérente étant celle recommandée en pratique. La ligne pointillée orange matérialise le seuil $\alpha = 0.05$.}
 \end{figure}
 
 \begin{warningbox}
-\textbf{Les p-values élevées ici ne contredisent pas le DSR à $1.000$.} Les deux tests répondent à des questions différentes~: le DSR teste la \emph{stratégie combinée finale} contre un seuil tenant compte du nombre d'essais, tandis que ces tests évaluent chaque \emph{composante individuelle} contre un \emph{benchmark} nul. Les composantes individuelles ont des Sharpes modestes (voir tableau~\ref{tab:sleeve_standalone}) et le test est conservateur~: il faudrait qu'une composante batte significativement les autres. \textbf{La force du portefeuille combiné vient de la diversification inter-composantes}, pas de la supériorité individuelle. C'est leur \emph{combinaison} (pondération fixe $62/9/9/20$ et ciblage de volatilité global) qui produit le profil mesuré ici.
+\textbf{Les p-values élevées ici ne contredisent pas le DSR à $1.000$.} Les deux tests répondent à des questions différentes~: le DSR teste la \emph{configuration retenue} contre un seuil tenant compte du nombre d'essais, tandis que ces tests demandent si une allocation candidate se détache significativement des dix autres. Elles sont quasi identiques par construction --- même moteur, poids voisins --- donc aucune ne domine, et le StepM ne retient $0$ candidat sur $11$. C'est le résultat attendu, et il rejoint le diagnostic du PBO~: \textbf{le classement des allocations entre elles n'est pas une information solide}. C'est leur \emph{combinaison} (pondération fixe $67/9/9/15$ et ciblage de volatilité global) qui produit le profil mesuré ici, pas la supériorité démontrable d'un point de la grille sur ses voisins.
 \end{warningbox}
 
 \subsection{Stabilité temporelle multi-métrique}
@@ -175,7 +186,7 @@ Une stratégie robuste doit avoir ses métriques de risque ajusté qui restent p
 \input{tables/robustness_verdict_summary.tex}
 
 \begin{thesisbox}
-\textbf{Les six tests franchissent leur seuil.} La probabilité de sur-ajustement mesurée par validation croisée combinatoire vaut $0.335$ pour un seuil de danger fixé à $0.5$~: sur l'allocation précédente, ce test échouait à $0.532$. C'est le seul verdict que le passage de la sleeve momentum à trois instruments renverse, et il faut le lire sans l'exagérer~--- la procédure estime qu'une configuration sélectionnée sur une moitié des données a une chance sur trois de se retrouver sous la médiane sur l'autre moitié. C'est mieux qu'un tirage à pile ou face, ce n'est pas une garantie.
+\textbf{Quatre tests sur six franchissent leur seuil.} Les deux échecs ne portent pas sur l'existence de l'\emph{edge}, mais sur ce que la \emph{sélection} a coûté~: la probabilité de sur-ajustement vaut $0.754$ pour un seuil de $0.5$, et la longueur minimale de \emph{backtest} requise sous $382$~essais ($12.25$~ans) dépasse l'historique disponible ($8.5$~ans).
 
-Un verdict unanime ne dit pas que la \emph{sélection} qui a conduit à cette configuration n'a rien coûté en pouvoir statistique~: plus de deux cents configurations ont été évaluées sur la même fenêtre, et le poids de la sleeve momentum a été arrêté à la borne du domaine testé (section~\ref{sec:gold_momentum}). C'est la raison pour laquelle une tranche de données a été gelée, et pour laquelle le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité.
+$382$~configurations distinctes ont été évaluées sur la même fenêtre, chaque phase héritant des meilleurs points de la précédente, et le poids de la sleeve momentum avait été arrêté à la borne du domaine testé (section~\ref{sec:gold_momentum}). \textbf{Ce poids a été ramené de $20\,\%$ à $15\,\%$ à la suite de ce test}, selon une règle de décision écrite et horodatée avant le calcul. C'est aussi la raison pour laquelle une tranche de données a été gelée, et pour laquelle le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation de ce portefeuille qui soit authentiquement pré-engagée.
 \end{thesisbox}

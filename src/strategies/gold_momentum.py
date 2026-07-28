@@ -572,8 +572,12 @@ def create_cv_pipeline(
     defaults = dict(
         lookbacks=DEFAULT_LOOKBACKS,
         allow_short=False,
-        target_vol=0.25,
-        max_leverage=3.0,
+        # 2026-07-28 : alignés sur les défauts de production (retune du
+        # 2026-07-26). Ils étaient restés à 0.25/3.0 alors que ``pipeline``
+        # était passé à 0.55/6.6, si bien qu'une cross-validation lancée par
+        # cette fabrique n'évaluait pas la sleeve qui tourne.
+        target_vol=0.55,
+        max_leverage=6.6,
         sl_stop=None,
         leverage=None,
         init_cash=None,

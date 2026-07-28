@@ -178,6 +178,17 @@ arbitrate, so reads are recorded here rather than left to memory.
 | `2026-01-01 → 2026-07` | gold lookback retune (CAGR mandate) | **1** | 2026-07-26 | at risk |
 | `2026-01-01 → 2026-04-30` | USDJPY TSMOM sleeve (momentum expansion cycle) | **1** | 2026-07-27 | at risk |
 | `2026-01-01 → 2026-04-30` | XAGUSD TSMOM sleeve (momentum expansion cycle) | **1** | 2026-07-27 | at risk |
+| `2026-01-01 → 2026-04-30` | published MT5 reference run (production backtest) | **0** — descriptive only | 2026-07-28 | intact |
+
+**Published reference run, 2026-07-28 — a description, not a read.** The reference
+backtest spans 2021-01-01 → 2026-04-30 and therefore *reports* over the frozen
+slice, but it selects nothing: the allocation it runs was fixed on data ending
+2025-12-31. `scripts/audit_momentum_promotion.py` splits its P&L at the boundary
+and publishes the result, which is a disclosure obligation rather than a
+selection read — hence 0 reads charged. The numbers matter to anyone reading the
+headline: **64.6 % of the published net was earned in those four months**, and a
+single silver position (2025-05-21 → 2026-03-19) carries 47.7 % of it. See
+`docs/research/momentum_validation_2026H2.md` §3 and §6.5.
 
 **Momentum expansion, USDJPY & XAGUSD, read #1 each** (2026-07-27) —
 `FROZEN_OOS_RESULT`, single inference pass, predictions pre-frozen and committed

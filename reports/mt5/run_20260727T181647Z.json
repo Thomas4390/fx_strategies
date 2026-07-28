@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T181647Z",
+  "exit_code": 0,
+  "duration_sec": 1.0245240660005948,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/tsmom_xauusd.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/tsmom_xauusd.htm",
+    "symbol": null,
+    "period": null,
+    "initial_deposit": null,
+    "total_net_profit": null,
+    "profit_factor": null,
+    "recovery_factor": null,
+    "sharpe_ratio": null,
+    "total_trades": null,
+    "balance_dd_max": null,
+    "equity_dd_max": null,
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": null,
+    "init_ok": false,
+    "init_errors": [],
+    "macro_source_resolved": null,
+    "raw_tail": ""
+  }
+}

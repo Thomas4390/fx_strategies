@@ -10,7 +10,7 @@
 
 \item \textbf{Alerte automatique de drawdown live}~: arrêt automatique du trading si le drawdown depuis le \emph{high water mark} dépasse 15\,\%. Le seuil à 15\,\% est choisi pour déclencher l'alerte \emph{avant} d'atteindre la bande la plus favorable du bootstrap ($-34.93\,\%$ au 95\textsuperscript{e}~percentile du repli), en laissant une marge de décision manuelle.
 
-\item \textbf{Monitoring par moteur, et par instrument sur le Moteur~4}~: calcul du Sharpe glissant sur 63~jours pour chaque moteur individuel, avec alerte si un moteur passe sous 0.5. Le Moteur~4 portant $91\,\%$ du résultat, sa contribution est suivie instrument par instrument (or, dollar-yen, argent). Cela permet de détecter une dégradation structurelle avant que le portefeuille combiné n'en souffre visiblement.
+\item \textbf{Monitoring par moteur, et par instrument sur le Moteur~4}~: calcul du Sharpe glissant sur 63~jours pour chaque moteur individuel, avec alerte si un moteur passe sous 0.5. Le Moteur~4 portant $86{,}5\,\%$ du résultat, sa contribution est suivie instrument par instrument (or, dollar-yen, argent). Cela permet de détecter une dégradation structurelle avant que le portefeuille combiné n'en souffre visiblement.
 
 \item \textbf{Re-run mensuel des tests de stress}~: régénération complète des trajectoires bootstrap et comparaison aux baselines du présent rapport, chaque premier du mois. Alerte si le CAGR bootstrap moyen dérive de plus de 3~points de pourcentage.
 

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 18:22
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  28 JUL 2026 15:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1719,7 +1719,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 312--313
  []
 
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (29.1687pt too wide) in paragraph at lines 5--18
+Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
  []
 
@@ -1754,42 +1754,42 @@ Underfull \hbox (badness 10000) in paragraph at lines 372--373
 File: figures/robustness_rolling_stability.png Graphic file (type bmp)
 <figures/robustness_rolling_stability.png>
 [8] [9]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 420--421
+Overfull \hbox (10.95pt too wide) in paragraph at lines 421--422
 [][][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 420--421
+Underfull \hbox (badness 10000) in paragraph at lines 421--422
 
  []
 
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 458.
+(Font)              scaled to size 10.95pt on input line 459.
 
-Underfull \hbox (badness 1189) in paragraph at lines 455--459
+Underfull \hbox (badness 1189) in paragraph at lines 456--460
 \TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
 s, de la matrice de responsabilité
  []
 
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 467--468
+Overfull \hbox (10.95pt too wide) in paragraph at lines 468--469
 [][][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 467--468
+Underfull \hbox (badness 10000) in paragraph at lines 468--469
 
  []
 
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.8952pt on input line 497.
+(Font)              scaled to size 7.8952pt on input line 498.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 484--498
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 485--499
 [][][][][][] 
  []
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 501--516
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 502--517
 [][][][][][] 
  []
 
@@ -1804,11 +1804,11 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 41424 strings out of 468173
- 947832 string characters out of 5435520
+ 41429 strings out of 468173
+ 948077 string characters out of 5435520
  1528349 words of memory out of 5000000
- 69520 multiletter control sequences out of 15000+600000
- 634876 words of font info for 123 fonts, out of 8000000 for 9000
+ 69523 multiletter control sequences out of 15000+600000
+ 634892 words of font info for 125 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  108i,13n,118p,11217b,1302s stack positions out of 10000i,1000n,20000p,200000b,200000s
 

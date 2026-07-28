@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  27 JUL 2026 18:17
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  28 JUL 2026 15:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1649,9 +1649,9 @@ LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 )
 File: figures/mt5_balance_curve.png Graphic file (type bmp)
 <figures/mt5_balance_curve.png>
- (./tables/mt5_by_sleeve.tex) [1
+ [1
 
-] (./tables/mt5_yearly.tex) [2])
+] (./tables/mt5_by_sleeve.tex) [2] (./tables/mt5_yearly.tex))
 (./sections/01_introduction.tex
 Underfull \hbox (badness 3612) in paragraph at lines 10--10
 []|\TU/LatinModernRoman(0)/b/n/10.95 Univers d’investisse-
@@ -1791,7 +1791,7 @@ File: figures/leverage_timeline.png Graphic file (type bmp)
 <figures/leverage_timeline.png>
 
 (./tables/leverage_impact.tex
-Overfull \hbox (64.0469pt too wide) in paragraph at lines 5--14
+Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
  []
 
@@ -1841,7 +1841,7 @@ File: figures/bootstrap_scatter.png Graphic file (type bmp)
  [37] [38])
 (./sections/10_advanced_robustness.tex [39]
 (./tables/robustness_bootstrap_ci.tex
-Overfull \hbox (32.27357pt too wide) in paragraph at lines 5--24
+Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
  [][] 
  []
 
@@ -1856,62 +1856,63 @@ File: figures/robustness_equity_fan_chart.png Graphic file (type bmp)
  (./tables/robustness_overfitting.tex) [42] [43] [44]
 File: figures/robustness_pbo_logits.png Graphic file (type bmp)
 <figures/robustness_pbo_logits.png>
-
-(./tables/robustness_arch_tests.tex) [45]
+ [45]
+(./tables/robustness_arch_tests.tex)
 File: figures/robustness_spa_pvalues.png Graphic file (type bmp)
 <figures/robustness_spa_pvalues.png>
+ [46]
 File: figures/robustness_rolling_stability.png Graphic file (type bmp)
 <figures/robustness_rolling_stability.png>
-
+ [47]
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (29.1687pt too wide) in paragraph at lines 5--18
+Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
  []
 
-) [46] [47]) (./sections/11_scenarios.tex
+)) (./sections/11_scenarios.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
- (./tables/scenarios.tex) [48])
+ (./tables/scenarios.tex) [48] [49])
 (./sections/12_limitations.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (U);
 (lettrine.sty)             reported on input line 4.
- [49] [50] [51]
-Underfull \hbox (badness 1314) in paragraph at lines 90--91
+ [50] [51] [52]
+Underfull \hbox (badness 1314) in paragraph at lines 94--95
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 92--93
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
 []|\TU/LatinModernRoman(0)/m/n/10 Paramètre unique, abais-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 92--93
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
  []
 
-) (./sections/13_production_checklist.tex [52]
+) (./sections/13_production_checklist.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.80363pt (A);
 (lettrine.sty)             reported on input line 4.
-
+ [53]
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
  []
 
-[53]) (./sections/appendix_a_inventory.tex [54] [55])
+[54]) (./sections/appendix_a_inventory.tex [55] [56])
 (./sections/appendix_b_trade_walkthrough.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (P);
 (lettrine.sty)             reported on input line 4.
- [56]
+ [57]
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
 (Font)              scaled to size 8.64523pt on input line 32.
 )
@@ -1931,10 +1932,10 @@ Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 1/cmr/m/n/10.95 ) :
  []
 
-[57] (./tables/weight_sensitivity_named.tex)
+[58] (./tables/weight_sensitivity_named.tex)
 File: figures/weight_sensitivity_named_bars.png Graphic file (type bmp)
 <figures/weight_sensitivity_named_bars.png>
- [58]
+ [59]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -1973,7 +1974,7 @@ File: figures/weight_sensitivity_1d_mr.png Graphic file (type bmp)
 <figures/weight_sensitivity_1d_mr.png>
 File: figures/weight_sensitivity_simplex_ternary.png Graphic file (type bmp)
 <figures/weight_sensitivity_simplex_ternary.png>
-(./tables/weight_sensitivity_extremes.tex) [59] [60]
+(./tables/weight_sensitivity_extremes.tex) [60] [61]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 65.
@@ -1988,7 +1989,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_pareto_frontier.png Graphic file (type bmp)
 <figures/weight_sensitivity_pareto_frontier.png>
-[61]) [62] (./main.aux)
+[62]) [63] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1999,12 +2000,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 42197 strings out of 468173
- 969705 string characters out of 5435520
- 1541489 words of memory out of 5000000
- 70144 multiletter control sequences out of 15000+600000
+ 42203 strings out of 468173
+ 969809 string characters out of 5435520
+ 1543549 words of memory out of 5000000
+ 70150 multiletter control sequences out of 15000+600000
  638094 words of font info for 151 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,14n,118p,11207b,1411s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,14n,118p,11207b,1407s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (66 pages).
+Output written on main.pdf (67 pages).

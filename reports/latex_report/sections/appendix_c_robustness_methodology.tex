@@ -97,7 +97,9 @@ où $\gamma = 0.5772\ldots$ est la constante d'Euler--Mascheroni et $\Phi^{-1}$ 
 \label{eq:dsr}
 \end{equation}
 
-\paragraph{Exemple numérique Apogee.} $N = 6$~essais (les six composantes candidates entrées en validation croisée), $\mathrm{Var}[\widehat{\mathrm{SR}}] \approx 0.089$, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 6] = 0.273$. Le Sharpe observé $\widehat{\mathrm{SR}} = 1.31$ dépasse ce seuil d'un facteur $4.8$, d'où DSR~$= 1.000$. Ce $N$ ne compte que les candidates de la validation croisée, pas les configurations explorées en amont~: c'est la limite du test.
+\paragraph{Exemple numérique Apogee.} $N = 382$~essais (les configurations distinctes du registre d'essais du projet), $\widehat{\sigma}[\widehat{\mathrm{SR}}] \approx 0.024$ entre les allocations rivales, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 382] = 0.122$. Le Sharpe observé $\widehat{\mathrm{SR}} = 0.99$ dépasse ce seuil d'un facteur $8$, d'où DSR~$= 1.000$.
+
+\paragraph{La limite de ce test, et où elle se voit.} Le seuil dépend beaucoup moins de $N$ (il croît en $\sqrt{2\ln N}$) que de la \emph{dispersion} des essais rivaux. Ici les $382$~essais sont des variantes d'un même portefeuille~: leur dispersion est faible, le seuil est bas, et le verdict favorable est en partie mécanique. Appliquée aux $21$~instruments du criblage, dont les Sharpe s'étalent de $-1.05$ à $+0.78$, la même formule donne $\mathbb{E}[\max \mathrm{SR}] = 2.89$~--- seuil qu'aucun des trois instruments retenus ne franchit. Le DSR valide l'assemblage, pas la sélection des composants.
 
 \subsection{Haircut Sharpe Ratio (\textsc{Harvey--Liu} 2015)}
 \label{app:haircut}
@@ -163,7 +165,7 @@ Le MinBTL répond à la question~: \emph{combien d'années de données sont néc
 
 \paragraph{Utilisation comme \emph{power calculation} a priori.} Avant de lancer un \emph{grid search} massif, le MinBTL répond à~: \emph{mon historique est-il assez long pour que le grid search produise un résultat statistiquement défendable ?}. Si on veut tester 1000~configurations et qu'on a 5~ans de données, le seul Sharpe qu'on peut espérer «~prouver~» est supérieur à $\sqrt{2 \ln 1000 / 5} \approx 1.66$. Tout ce qu'on trouvera en-dessous de ce seuil est susceptible d'être du bruit.
 
-Pour le portefeuille Apogee, le MinBTL affiché est $2.10$~ans pour $\mathrm{SR} = 1.31$ avec $N = 6$~essais. On dispose de 7.5~ans, soit plus de trois fois le minimum statistique requis.
+Pour le portefeuille Apogee, le MinBTL affiché est $12.25$~ans pour $\mathrm{SR} = 0.99$ avec $N = 382$~essais. On dispose de $8.5$~ans~: \textbf{le minimum statistique n'est pas atteint}, et il ne le sera que par accumulation de temps réel, pas par un traitement supplémentaire des mêmes données.
 
 \subsection{Probability of Backtest Overfitting via CSCV (\textsc{Bailey et al.} 2015)}
 \label{app:pbo_cscv}

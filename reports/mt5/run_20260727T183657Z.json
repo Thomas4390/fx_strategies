@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T183657Z",
+  "exit_code": 0,
+  "duration_sec": 11.138727087000007,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/tsmom_ger40cash.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/tsmom_ger40cash.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2022.11.10 - 2025.12.31)",
+    "initial_deposit": "100 000.00",
+    "total_net_profit": "21 875.84",
+    "profit_factor": "1.21",
+    "recovery_factor": "0.16",
+    "sharpe_ratio": "0.17",
+    "total_trades": "22",
+    "balance_dd_max": "55 043.33 (34.52%)",
+    "equity_dd_max": "136 474.96 (58.37%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "IE\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   market buy 35.4 GER40Cash sl: 23366.07 (24356.62 / 24357.42 / 24356.62)\nPG\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   deal #44 buy 35.4 GER40Cash at 24357.42 done (based on order #44)\nLJ\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   deal performed [#44 buy 35.4 GER40Cash at 24357.42]\nPG\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   order performed buy 35.4 at 24357.42 [#44 buy 35.4 GER40Cash at 24357.42]\nDG\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   CTrade::OrderSend: market buy 35.40 GER40Cash sl: 23366.07 [done at 24357.42]\nGH\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   [Gold_Momentum][INFO] Entry LONG GER40Cash lots=35.40 price=24357.42 score=0.50 lev=6.25\nII\t0\t14:36:54.629\tCore 01\t2025.12.23 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nER\t0\t14:36:54.629\tCore 01\t2025.12.24 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.2534 sigma63=0.3783 realized=0.3783 -> lev=0.978\nNN\t0\t14:36:54.629\tCore 01\t2025.12.24 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nDL\t0\t14:36:54.629\tCore 01\t2025.12.25 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.2551 sigma63=0.3786 realized=0.3786 -> lev=0.977\nOL\t0\t14:36:54.629\tCore 01\t2025.12.25 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nFO\t0\t14:36:54.629\tCore 01\t2025.12.26 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.2568 sigma63=0.3789 realized=0.3789 -> lev=0.976\nHR\t0\t14:36:54.629\tCore 01\t2025.12.26 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nCI\t0\t14:36:54.629\tCore 01\t2025.12.27 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1284 sigma63=0.3800 realized=0.3800 -> lev=0.974\nMG\t0\t14:36:54.629\tCore 01\t2025.12.27 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHK\t0\t14:36:54.629\tCore 01\t2025.12.28 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.1284 sigma63=0.3800 realized=0.3800 -> lev=0.974\nRE\t0\t14:36:54.629\tCore 01\t2025.12.28 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nGF\t0\t14:36:54.629\tCore 01\t2025.12.29 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.0913 sigma63=0.3772 realized=0.3772 -> lev=0.981\nKK\t0\t14:36:54.629\tCore 01\t2025.12.29 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nIP\t0\t14:36:54.629\tCore 01\t2025.12.30 21:00:02   [RISK][INFO] Daily recompute: sigma21=0.3411 sigma63=0.4240 realized=0.4240 -> lev=0.873\nMH\t0\t14:36:54.629\tCore 01\t2025.12.30 21:00:02   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLL\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 24598.54 [#44 buy 35.4 GER40Cash 24357.42 sl: 23366.07]\nDS\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   deal #45 sell 35.4 GER40Cash at 24598.54 done (based on order #45)\nEL\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   deal performed [#45 sell 35.4 GER40Cash at 24598.54]\nQN\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   order performed sell 35.4 at 24598.54 [#45 sell 35.4 GER40Cash at 24598.54]\nHN\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   [OPTIM] vt=0.3700 maxlev=31.0000 volfloor=0.0200 cagr=0.065024 dd=58.3732 sharpe=0.1672 pf=1.2070 rf=0.1603 trades=22 net=21875.84 years=3.140\nHE\t0\t14:36:54.629\tCore 01\tfinal balance 121875.84 USD\nRR\t0\t14:36:54.629\tCore 01\tOnTester result 0.06502439801719051\nJE\t0\t14:36:54.629\tCore 01\t2025.12.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nOM\t0\t14:36:54.629\tCore 01\tEURUSD.c,M1: 4540162 ticks, 1154447 bars generated. Test passed in 0:00:04.283 (including ticks preprocessing 0:00:00.528).\nHQ\t0\t14:36:54.629\tCore 01\t21986560 total ticks for all symbols\nOJ\t0\t14:36:54.629\tCore 01\tEURUSD.c: generate 4540162 ticks in 0:00:00.107, passed to tester 4540162 ticks\nND\t0\t14:36:54.629\tCore 01\tGBPUSD.c: generate 4544479 ticks in 0:00:00.110, passed to tester 4544479 ticks\nJE\t0\t14:36:54.629\tCore 01\tGER40Cash: generate 3823410 ticks in 0:00:00.089, passed to tester 3823410 ticks\nNR\t0\t14:36:54.629\tCore 01\tUSDCAD.c: generate 4513874 ticks in 0:00:00.111, passed to tester 4513874 ticks\nCL\t0\t14:36:54.629\tCore 01\tUSDJPY.c: generate 4564635 ticks in 0:00:00.111, passed to tester 4564635 ticks\nOS\t0\t14:36:54.629\tCore 01\t944 Mb memory used including 429 Mb of history data, 448 Mb of tick data\nKK\t0\t14:36:54.629\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260727.log\" written\nMF\t0\t14:36:54.660\tTester\tautomatic testing finished\nIP\t0\t14:36:54.660\tCore 01\tconnection closed"
+  }
+}

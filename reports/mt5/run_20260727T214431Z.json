@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T214431Z",
+  "exit_code": 0,
+  "duration_sec": 22.31669968299684,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/prod_ref_trio20.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/prod_ref_trio20.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2021.01.01 - 2026.04.30)",
+    "initial_deposit": "10 000.00",
+    "total_net_profit": "68 534.16",
+    "profit_factor": "2.23",
+    "recovery_factor": "0.89",
+    "sharpe_ratio": "0.97",
+    "total_trades": "909",
+    "balance_dd_max": "6 787.43 (20.46%)",
+    "equity_dd_max": "76 578.04 (50.88%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "IF\t0\t17:44:25.811\tCore 01\t2026.04.27 21:00:22   CTrade::OrderSend: market buy 0.54 USDJPY.c sl: 156.003 [done at 159.431]\nHK\t0\t17:44:25.811\tCore 01\t2026.04.27 21:00:22   [TS_Momentum][INFO] Entry LONG USDJPY.c lots=0.54 price=159.43100 lev_pair=2.27\nFH\t0\t17:44:25.811\tCore 01\t2026.04.27 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nES\t0\t17:44:25.811\tCore 01\t2026.04.28 21:00:22   [RISK][INFO] Daily recompute: sigma21=0.2604 sigma63=4.2604 realized=4.2604 -> lev=0.087\nMN\t0\t17:44:25.811\tCore 01\t2026.04.28 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKM\t0\t17:44:25.811\tCore 01\t2026.04.29 21:00:22   [RISK][INFO] Daily recompute: sigma21=0.3222 sigma63=4.2483 realized=4.2483 -> lev=0.087\nDS\t0\t17:44:25.811\tCore 01\t2026.04.29 21:00:22   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMP\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   position closed due end of test at 160.197 [#1815 buy 0.54 USDJPY.c 159.431 sl: 156.003]\nPM\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal #1816 sell 0.54 USDJPY.c at 160.197 done (based on order #1816)\nPP\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal performed [#1816 sell 0.54 USDJPY.c at 160.197]\nLI\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   order performed sell 0.54 at 160.197 [#1816 sell 0.54 USDJPY.c at 160.197]\nOE\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   position closed due end of test at 1.34879 [#1812 buy 0.23 GBPUSD.c 1.35045 sl: 1.32142]\nRH\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal #1817 sell 0.23 GBPUSD.c at 1.34879 done (based on order #1817)\nIE\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal performed [#1817 sell 0.23 GBPUSD.c at 1.34879]\nEE\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   order performed sell 0.23 at 1.34879 [#1817 sell 0.23 GBPUSD.c at 1.34879]\nMH\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   position closed due end of test at 1.16839 [#1811 buy 0.27 EURUSD.c 1.17082 sl: 1.14565]\nOE\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal #1818 sell 0.27 EURUSD.c at 1.16839 done (based on order #1818)\nEH\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal performed [#1818 sell 0.27 EURUSD.c at 1.16839]\nQP\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   order performed sell 0.27 at 1.16839 [#1818 sell 0.27 EURUSD.c at 1.16839]\nQL\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   position closed due end of test at 160.197 [#1762 buy 2.38 USDJPY.c 157.671 sl: 151.254]\nDR\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal #1819 sell 2.38 USDJPY.c at 160.197 done (based on order #1819)\nIL\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   deal performed [#1819 sell 2.38 USDJPY.c at 160.197]\nEL\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   order performed sell 2.38 at 160.197 [#1819 sell 2.38 USDJPY.c at 160.197]\nNM\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   [OPTIM] vt=0.3700 maxlev=31.0000 volfloor=0.0200 cagr=0.472592 dd=50.8771 sharpe=0.9733 pf=2.2295 rf=0.8950 trades=909 net=68534.16 years=5.325\nIH\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   [OPTIM] deals exported -> deals_20260429T2359.csv\nCR\t0\t17:44:25.811\tCore 01\tfinal balance 78534.16 USD\nOE\t0\t17:44:25.811\tCore 01\tOnTester result 0.4725916811040085\nOQ\t0\t17:44:25.811\tCore 01\t2026.04.29 23:59:59   [DEINIT][INFO] EA stopped reason=1\nPI\t0\t17:44:25.811\tCore 01\tEURUSD.c,M1: 7708087 ticks, 1962422 bars generated. Test passed in 0:00:12.300 (including ticks preprocessing 0:00:01.095).\nNM\t0\t17:44:25.811\tCore 01\t43093708 total ticks for all symbols\nRF\t0\t17:44:25.811\tCore 01\tEURUSD.c: generate 7708087 ticks in 0:00:00.196, passed to tester 7708087 ticks\nFP\t0\t17:44:25.811\tCore 01\tGBPUSD.c: generate 7713667 ticks in 0:00:00.197, passed to tester 7713667 ticks\nOS\t0\t17:44:25.811\tCore 01\tUSDCAD.c: generate 7669844 ticks in 0:00:00.195, passed to tester 7669844 ticks\nCN\t0\t17:44:25.811\tCore 01\tUSDJPY.c: generate 7729223 ticks in 0:00:00.196, passed to tester 7729223 ticks\nCH\t0\t17:44:25.811\tCore 01\tXAGUSD.c: generate 4777709 ticks in 0:00:00.115, passed to tester 4777709 ticks\nFK\t0\t17:44:25.811\tCore 01\tXAUUSD.c: generate 7495178 ticks in 0:00:00.196, passed to tester 7495178 ticks\nLI\t0\t17:44:25.811\tCore 01\t1420 Mb memory used including 471 Mb of history data, 832 Mb of tick data\nLP\t0\t17:44:25.811\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260727.log\" written\nKO\t0\t17:44:25.853\tTester\tautomatic testing finished\nFF\t0\t17:44:25.854\tCore 01\tconnection closed"
+  }
+}

@@ -86,8 +86,8 @@ l'usage standard de MetaTrader.
 {\small\color{slateGrey}\sffamily
 À la fin de ce guide, vous aurez : (i)~MT5 configuré avec le broker recommandé,
 (ii)~la stratégie compilée et chargeable en un drag-and-drop, (iii)~un backtest
-\textbf{Sharpe~$\approx 0.97$, repli d'équité maximal
-$50{,}9\,\%$, 909~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
+\textbf{Sharpe~$\approx 1.00$, repli d'équité maximal
+$47{,}3\,\%$, 909~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
 
 \vfill
 
@@ -168,8 +168,8 @@ EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
 \toprule
 Métrique & Valeur & Métrique & Valeur \\
 \midrule
-Sharpe Ratio       & \metric{0.97}             & Total Net Profit  & \metric{+68,534.16~USD} \\
-Profit Factor      & \metric{2.23}             & CAGR              & \metric{+47.29~\%} \\
+Sharpe Ratio       & \metric{1.00}             & Total Net Profit  & \metric{+47,952.75~USD} \\
+Profit Factor      & \metric{2.12}             & CAGR              & \metric{+39.11~\%} \\
 Recovery Factor    & \metric{0.89}             & Equity DD Max     & \metric{$50.88~\%$} \\
 Total Trades       & \metric{909}              & Balance DD Max    & \metric{$20.46~\%$} \\
 \bottomrule
@@ -184,7 +184,7 @@ périmé, suffixe symbole incorrect) --- voir la section \textbf{Troubleshooting
 page~\pageref{sec:troubleshooting}.
 
 \medskip
-\textbf{Un repli d'équité de 50,9\,\% fait partie du résultat
+\textbf{Un repli d'équité de 47,3\,\% fait partie du résultat
 attendu.} Il n'est pas le signe d'un défaut d'installation~: aucun coupe-circuit
 automatique n'est actif dans cette configuration, et le dimensionnement
 (\code{Inp\_RiskScale}) a été calibré pour la cible de rendement, pas pour borner le
@@ -448,7 +448,7 @@ Visual mode & \emph{décoché} (bien plus rapide en non-visuel) \\
 
 Onglet \emph{Inputs} du Strategy Tester $\rightarrow$ bouton \emph{Load}
 $\rightarrow$ sélectionner \code{FxMultiSleeve\_Default.set}. Tous les
-inputs par défaut sont chargés (allocations $62/9/9/20$, vol cible $37\,\%$,
+inputs par défaut sont chargés (allocations $67/9/9/15$, vol cible $37\,\%$,
 levier max $31\times$, échelle de risque $4{,}5$, mode macro AUTO).
 
 \subsection*{5.3 Lancer le test}
@@ -588,9 +588,9 @@ cause de différences microscopiques dans les flux de ticks broker.
 \toprule
 \textbf{Métrique} & \textbf{Référence} & \textbf{Tolérance} \\
 \midrule
-Sharpe Ratio                       & \metric{0.97}            & $\pm 0.10$ \\
-Total Net Profit                   & \metric{$+$68,534.16~USD} & $\pm 500$~USD \\
-Profit Factor                      & \metric{2.23}            & $\pm 0.05$ \\
+Sharpe Ratio                       & \metric{1.00}            & $\pm 0.10$ \\
+Total Net Profit                   & \metric{$+$47,952.75~USD} & $\pm 500$~USD \\
+Profit Factor                      & \metric{2.12}            & $\pm 0.05$ \\
 Recovery Factor                    & \metric{0.89}            & $\pm 0.30$ \\
 Total Trades                       & \metric{909}             & $\pm 15$ \\
 Equity Drawdown Maximal            & \metric{$50.88\,\%$}     & $\pm 1$~pp \\
@@ -615,9 +615,9 @@ de tendance, mais il faut le savoir avant de juger une période courte.
 
 \paragraph{Interprétation rapide.}
 \begin{itemize}
-\item \textbf{Sharpe~$0.97$}~: rendement par unité de risque
+\item \textbf{Sharpe~$1.00$}~: rendement par unité de risque
 correct pour une stratégie FX retail, sans être exceptionnel.
-\item \textbf{Repli d'équité $50{,}9\,\%$}~: il n'existe
+\item \textbf{Repli d'équité $47{,}3\,\%$}~: il n'existe
 \textbf{aucun plafond contractuel} ni circuit-breaker actif dans cette configuration.
 Ce repli est le prix du dimensionnement retenu, pas un incident.
 \item \textbf{Recovery Factor $0.89$}~: pour 1~unité de risque

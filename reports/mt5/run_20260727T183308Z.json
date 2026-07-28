@@ -1,0 +1,28 @@
+{
+  "run_id": "20260727T183308Z",
+  "exit_code": 0,
+  "duration_sec": 12.146462070999405,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/tsmom_usdjpy.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/tsmom_usdjpy.htm",
+    "symbol": "EURUSD.c",
+    "period": "M1 (2021.01.01 - 2025.12.31)",
+    "initial_deposit": "100 000.00",
+    "total_net_profit": "215 600.68",
+    "profit_factor": "1.89",
+    "recovery_factor": "1.23",
+    "sharpe_ratio": "0.81",
+    "total_trades": "31",
+    "balance_dd_max": "96 940.43 (33.79%)",
+    "equity_dd_max": "175 047.06 (43.96%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260727.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": "CMacroSourceHistory: loaded 1400 rows from macro_history.csv [2020.09.23 ... 2026.04.30]",
+    "raw_tail": "KR\t0\t14:33:06.315\tCore 01\t2025.12.20 21:00:17   [RISK][INFO] Daily recompute: sigma21=14.4131 sigma63=8.3214 realized=14.4131 -> lev=0.026\nFN\t0\t14:33:06.315\tCore 01\t2025.12.20 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nNL\t0\t14:33:06.315\tCore 01\t2025.12.21 21:00:17   [RISK][INFO] Daily recompute: sigma21=14.4131 sigma63=8.3214 realized=14.4131 -> lev=0.026\nCL\t0\t14:33:06.315\tCore 01\t2025.12.21 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nKN\t0\t14:33:06.315\tCore 01\t2025.12.22 21:00:17   [RISK][INFO] Daily recompute: sigma21=13.1096 sigma63=7.5688 realized=13.1096 -> lev=0.028\nHR\t0\t14:33:06.315\tCore 01\t2025.12.22 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nMH\t0\t14:33:06.315\tCore 01\t2025.12.23 21:00:17   [RISK][INFO] Daily recompute: sigma21=11.9515 sigma63=6.9002 realized=11.9515 -> lev=0.031\nIP\t0\t14:33:06.315\tCore 01\t2025.12.23 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nLK\t0\t14:33:06.315\tCore 01\t2025.12.24 21:00:17   [RISK][INFO] Daily recompute: sigma21=11.3698 sigma63=6.5644 realized=11.3698 -> lev=0.033\nRF\t0\t14:33:06.315\tCore 01\t2025.12.24 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nOE\t0\t14:33:06.315\tCore 01\t2025.12.25 21:00:17   [RISK][INFO] Daily recompute: sigma21=11.3458 sigma63=6.5505 realized=11.3458 -> lev=0.033\nOD\t0\t14:33:06.315\tCore 01\t2025.12.25 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nPG\t0\t14:33:06.315\tCore 01\t2025.12.26 21:00:17   [RISK][INFO] Daily recompute: sigma21=12.3711 sigma63=7.1424 realized=12.3711 -> lev=0.030\nLJ\t0\t14:33:06.315\tCore 01\t2025.12.26 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHQ\t0\t14:33:06.315\tCore 01\t2025.12.27 21:00:17   [RISK][INFO] Daily recompute: sigma21=12.5648 sigma63=7.2543 realized=12.5648 -> lev=0.029\nMH\t0\t14:33:06.315\tCore 01\t2025.12.27 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nGS\t0\t14:33:06.315\tCore 01\t2025.12.28 21:00:17   [RISK][INFO] Daily recompute: sigma21=12.5648 sigma63=7.2543 realized=12.5648 -> lev=0.029\nNM\t0\t14:33:06.315\tCore 01\t2025.12.28 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nDM\t0\t14:33:06.315\tCore 01\t2025.12.29 21:00:17   [RISK][INFO] Daily recompute: sigma21=11.6533 sigma63=6.7280 realized=11.6533 -> lev=0.032\nKS\t0\t14:33:06.315\tCore 01\t2025.12.29 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHO\t0\t14:33:06.315\tCore 01\t2025.12.30 21:00:17   [RISK][INFO] Daily recompute: sigma21=12.3537 sigma63=7.1324 realized=12.3537 -> lev=0.030\nIQ\t0\t14:33:06.315\tCore 01\t2025.12.30 21:00:17   [DAILY][INFO] Daily recompute done at hour=21 UTC\nHE\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   position closed due end of test at 156.395 [#62 buy 18.53 USDJPY.c 150.379 sl: 144.259]\nDH\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   deal #63 sell 18.53 USDJPY.c at 156.395 done (based on order #63)\nGF\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   deal performed [#63 sell 18.53 USDJPY.c at 156.395]\nPG\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   order performed sell 18.53 at 156.395 [#63 sell 18.53 USDJPY.c at 156.395]\nPE\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   [OPTIM] vt=0.3700 maxlev=31.0000 volfloor=0.0200 cagr=0.258624 dd=49.4055 sharpe=0.8137 pf=1.8913 rf=1.2317 trades=31 net=215600.68 years=4.997\nOM\t0\t14:33:06.315\tCore 01\tfinal balance 315600.68 USD\nDI\t0\t14:33:06.315\tCore 01\tOnTester result 0.2586238636107374\nNM\t0\t14:33:06.315\tCore 01\t2025.12.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nFE\t0\t14:33:06.315\tCore 01\tEURUSD.c,M1: 7228529 ticks, 1841683 bars generated. Test passed in 0:00:05.647 (including ticks preprocessing 0:00:00.722).\nNI\t0\t14:33:06.315\tCore 01\t28899171 total ticks for all symbols\nHR\t0\t14:33:06.315\tCore 01\tEURUSD.c: generate 7228529 ticks in 0:00:00.175, passed to tester 7228529 ticks\nGM\t0\t14:33:06.315\tCore 01\tGBPUSD.c: generate 7232254 ticks in 0:00:00.182, passed to tester 7232254 ticks\nPO\t0\t14:33:06.315\tCore 01\tUSDCAD.c: generate 7189994 ticks in 0:00:00.182, passed to tester 7189994 ticks\nRJ\t0\t14:33:06.315\tCore 01\tUSDJPY.c: generate 7248394 ticks in 0:00:00.183, passed to tester 7248394 ticks\nKK\t0\t14:33:06.315\tCore 01\t1082 Mb memory used including 441 Mb of history data, 576 Mb of tick data\nQQ\t0\t14:33:06.315\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260727.log\" written\nNM\t0\t14:33:06.353\tTester\tautomatic testing finished\nIG\t0\t14:33:06.356\tCore 01\tconnection closed"
+  }
+}
