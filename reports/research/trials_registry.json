@@ -94,5 +94,68 @@
     "family": "integration_weights",
     "n": 11,
     "note": "sweep poids sleeve momentum : baseline + 2 compositions x 5 poids (10-20%)"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.378936+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:23:02.322193+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379101+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:30:30.799980+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379189+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:31:44.192479+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379259+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:24.532151+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379323+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:29.159829+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379382+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:33.726511+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379444+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:39:53.552316+00:00",
+    "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379504+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:48:01.422617+00:00",
+    "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T18:32:36.379560+00:00",
+    "kind": "annotation",
+    "target_ts": "2026-07-27T18:49:18.582061+00:00",
+    "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr",
+    "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
   }
 ]

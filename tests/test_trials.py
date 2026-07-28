@@ -76,6 +76,62 @@ def test_total_trials_on_a_missing_registry_is_zero(tmp_registry):
 
 def test_committed_registry_holds_the_fx_legacy_seed():
     entries = json.loads(_REAL_REGISTRY.read_text())
-    legacy = [e for e in entries if e["family"] == "fx_legacy"]
+    legacy = [e for e in entries if e.get("family") == "fx_legacy"]
     assert len(legacy) == 1
     assert legacy[0]["n"] == 290
+
+
+def test_a_shared_config_key_counts_once(tmp_registry):
+    """Re-running the same sweep tests nothing new — distinct must not move."""
+    trials.seed_registry()
+    for _ in range(3):
+        trials.log_trials("screen", 21, config_key="screen:21instr:v1")
+
+    assert trials.total_trials("screen") == 63
+    assert trials.distinct_trials("screen") == 21
+
+
+def test_entries_without_a_key_each_count_on_their_own(tmp_registry):
+    """Absence of a key means unqualified, never "same as some other sweep"."""
+    trials.seed_registry()
+    trials.log_trials("adhoc", 4)
+    trials.log_trials("adhoc", 4)
+
+    assert trials.total_trials("adhoc") == 8
+    assert trials.distinct_trials("adhoc") == 8
+
+
+def test_annotation_folds_a_legacy_entry_without_rewriting_it(tmp_registry):
+    trials.seed_registry()
+    trials.log_trials("screen", 21)
+    trials.log_trials("screen", 21)
+    before = json.loads(tmp_registry.read_text())
+    assert trials.distinct_trials("screen") == 42
+
+    for entry in [e for e in before if e["family"] == "screen"]:
+        trials.annotate_config_key(entry["ts"], "screen:21instr:v1")
+
+    after = json.loads(tmp_registry.read_text())
+    assert after[: len(before)] == before, "les entrées existantes sont intouchées"
+    assert trials.distinct_trials("screen") == 21
+    assert trials.total_trials("screen") == 42, "le total brut ne bouge pas"
+
+
+def test_annotating_an_unknown_entry_raises(tmp_registry):
+    trials.seed_registry()
+    with pytest.raises(ValueError, match="no logged sweep"):
+        trials.annotate_config_key("2020-01-01T00:00:00+00:00", "whatever")
+
+
+def test_committed_registry_totals_are_locked():
+    """544 brut / 382 distinct / 92 hors fx_legacy — les trois chiffres publiés.
+
+    Ce test est le garde-fou qui aurait attrapé les 6 re-runs de
+    ``tsmom_universe`` comptés comme des tests nouveaux.
+    """
+    entries = json.loads(_REAL_REGISTRY.read_text())
+    sweeps = [e for e in entries if e.get("kind") != "annotation"]
+
+    assert sum(int(e["n"]) for e in sweeps) == 544
+    assert trials.distinct_trials() == 382
+    assert trials.distinct_trials() - trials.distinct_trials("fx_legacy") == 92
