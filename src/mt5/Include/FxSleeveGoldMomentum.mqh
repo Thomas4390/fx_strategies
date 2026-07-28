@@ -65,6 +65,12 @@
 #define FX_GOLD_HISTORY_CAP  (FX_GOLD_MAX_LOOKBACK + 2)
 #define FX_GOLD_MAX_SYMBOLS  8
 
+//--- Safety-stop floor, in daily sigmas. Derived, not tuned: it is the
+//--- quotient of two constants already published in the dossier — the 4%
+//--- Inp_Gold_SafetySL and gold's 0.16 long-run sigma used by ComputeSigma21 —
+//--- since 0.04 / (0.16/sqrt(252)) = 3.969. No grid was searched for it.
+#define FX_GOLD_SL_SIGMAS    4.0
+
 class CSleeveGoldMomentum : public CSleeveBase
 {
 private:
@@ -180,6 +186,18 @@ public:
         for(int i = 0; i < m_n_symbols; i++)
             sym_desc += StringFormat("%s%s", (i > 0 ? "/" : ""), m_symbols[i]);
 
+        // The 0.05 volatility floor in ProcessSymbol is inert at the shipped
+        // settings: it can only bite if TargetVol/0.05 < MaxLeverage, and
+        // 0.55/0.05 = 11 > 6.6, so the cap dominates in every branch. That is
+        // fine — but a future retune could wake the constant up silently and
+        // clamp the leverage on the quietest sessions. Say so once at Init
+        // rather than let it change behaviour unannounced.
+        if(Inp_Gold_TargetVol / 0.05 < Inp_Gold_MaxLeverage)
+            g_logger.Warn(m_name, StringFormat(
+                "volatility floor 0.05 is now ACTIVE: TargetVol/0.05 = %.2f < "
+                "MaxLeverage %.2f, so leverage is clamped on low-vol sessions",
+                Inp_Gold_TargetVol / 0.05, Inp_Gold_MaxLeverage));
+
         m_trade.SetExpertMagicNumber(m_magic);
         m_trade.SetDeviationInPoints(FX_DEFAULT_DEVIATION);
         g_logger.Info(m_name, StringFormat(
@@ -254,8 +272,8 @@ private:
 
         if(existing == 0)
         {
-            if(long_signal)       OpenPosition(symbol, ORDER_TYPE_BUY,  lev, score, risk);
-            else if(short_signal) OpenPosition(symbol, ORDER_TYPE_SELL, lev, score, risk);
+            if(long_signal)       OpenPosition(symbol, ORDER_TYPE_BUY,  lev, sigma21, score, risk);
+            else if(short_signal) OpenPosition(symbol, ORDER_TYPE_SELL, lev, sigma21, score, risk);
         }
 
         // One instrument per run, but a *chosen* one. The file format is
@@ -389,7 +407,7 @@ private:
     //--- empirical swap drag are pre-paid via SizingDrag() so signal-flip
     //--- exits do not undercount costs.
     void OpenPosition(string symbol, ENUM_ORDER_TYPE type, double lev,
-                      double score, CRiskManager &risk)
+                      double sigma21, double score, CRiskManager &risk)
     {
         double price = (type == ORDER_TYPE_BUY)
                        ? SymbolInfoDouble(symbol, SYMBOL_ASK)
@@ -399,11 +417,23 @@ private:
         double slip_pct = SlippageFraction(Inp_Gold_SlippageBps,
                                            Inp_CommissionBpsPerSide);
 
-        // Wide safety stop. The sleeve normally exits on a signal flip, so
-        // this guards an overnight gap rather than acting as a regular stop.
-        // Gold is roughly twice as volatile as a major FX pair, hence the
-        // wider distance than the 2% used by the FX sleeves.
-        double sl_dist = price * (Inp_Gold_SafetySL + slip_pct);
+        // Two distances, deliberately: the stop that protects, and the divisor
+        // that sizes. They were the same value until 2026-07-28, so widening
+        // the stop would have shrunk the notional by the same factor and mixed
+        // two effects in one number.
+        //
+        // SIZING keeps Inp_Gold_SafetySL as its risk-per-trade denominator, so
+        // notionals are untouched by this change.
+        double sl_dist_sizing = price * (Inp_Gold_SafetySL + slip_pct);
+
+        // PROTECTION scales with the instrument. A flat 4% is 8.4 daily sigmas
+        // on USD/JPY but 2.5 on silver, where it stops being a gap guard and
+        // becomes an ordinary stop that cut 6 of 23 exits. The floor is
+        // one-sided: the stop can only widen, never tighten, so this cannot
+        // create a stop-out where there was none.
+        double sl_frac = MathMax(Inp_Gold_SafetySL,
+                                 FX_GOLD_SL_SIGMAS * sigma21 / MathSqrt(252.0));
+        double sl_dist = price * (sl_frac + slip_pct);
         double sl = (type == ORDER_TYPE_BUY) ? price - sl_dist
                                              : price + sl_dist;
         sl = EnforceStopLevel(symbol, price, sl, type, true);
@@ -417,12 +447,12 @@ private:
                                       FX_GOLD_AVG_NIGHTS_HELD);
         double risk_money = sub_eq * FX_RISK_PCT_GOLD_MOMENTUM
                             * lev * slip_drag * Inp_RiskScale;
-        double lots = LotsForRisk(symbol, risk_money, sl_dist);
+        double lots = LotsForRisk(symbol, risk_money, sl_dist_sizing);
         if(lots <= 0.0)
         {
             g_logger.Warn(m_name, StringFormat(
-                "%s: computed lots=0 (risk_money=%.2f sl_dist=%.2f); "
-                "check SYMBOL_VOLUME_MIN", symbol, risk_money, sl_dist));
+                "%s: computed lots=0 (risk_money=%.2f sl_dist_sizing=%.2f); "
+                "check SYMBOL_VOLUME_MIN", symbol, risk_money, sl_dist_sizing));
             return;
         }
 

@@ -35,52 +35,52 @@
 \contentsline {subsection}{\numberline {7.5}Performance historique}{24}{subsection.7.5}%
 \contentsline {subsection}{\numberline {7.6}Épisodes représentatifs}{24}{subsection.7.6}%
 \contentsline {subsection}{\numberline {7.7}Ce que ce moteur doit à sa période}{25}{subsection.7.7}%
-\contentsline {section}{\numberline {8}Recherche et exécution~: deux mesures, un seul compte}{25}{section.8}%
+\contentsline {section}{\numberline {8}Recherche et exécution~: deux mesures, un seul compte}{26}{section.8}%
 \contentsline {subsection}{\numberline {8.1}Le mot « levier » ne désigne pas la même quantité}{26}{subsection.8.1}%
 \contentsline {subsection}{\numberline {8.2}Comment l'échelle a été calibrée}{26}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}Ce qu'il faut en retenir pour lire ce document}{26}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.3}Ce qu'il faut en retenir pour lire ce document}{27}{subsection.8.3}%
 \contentsline {section}{\numberline {9}Architecture de pondération et gestion du risque}{27}{section.9}%
 \contentsline {subsection}{\numberline {9.1}Allocation statique 67 / 9 / 9 / 15}{27}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}Couche de ciblage de volatilité}{27}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Impact du levier sur les métriques}{28}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.2}Couche de ciblage de volatilité}{28}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Impact du levier sur les métriques}{29}{subsection.9.3}%
 \contentsline {subsection}{\numberline {9.4}Protection drawdown --- disponible, désactivée, et non remplacée}{30}{subsection.9.4}%
-\contentsline {section}{\numberline {10}Performance de recherche in-sample}{30}{section.10}%
+\contentsline {section}{\numberline {10}Performance de recherche in-sample}{31}{section.10}%
 \contentsline {subsection}{\numberline {10.1}Métriques agrégées}{31}{subsection.10.1}%
 \contentsline {subsection}{\numberline {10.2}Validation par fenêtres annuelles (walk-forward)}{32}{subsection.10.2}%
 \contentsline {subsection}{\numberline {10.3}Heatmap des rendements mensuels}{33}{subsection.10.3}%
 \contentsline {subsection}{\numberline {10.4}Courbe \emph {underwater} du drawdown}{33}{subsection.10.4}%
-\contentsline {subsection}{\numberline {10.5}Sharpe glissant sur 63 jours}{34}{subsection.10.5}%
-\contentsline {subsection}{\numberline {10.6}Corrélations glissantes entre moteurs}{34}{subsection.10.6}%
-\contentsline {subsection}{\numberline {10.7}Contribution mensuelle par moteur}{34}{subsection.10.7}%
-\contentsline {section}{\numberline {11}Validation hors échantillon}{34}{section.11}%
+\contentsline {subsection}{\numberline {10.5}Sharpe glissant sur 63 jours}{33}{subsection.10.5}%
+\contentsline {subsection}{\numberline {10.6}Corrélations glissantes entre moteurs}{33}{subsection.10.6}%
+\contentsline {subsection}{\numberline {10.7}Contribution mensuelle par moteur}{33}{subsection.10.7}%
+\contentsline {section}{\numberline {11}Validation hors échantillon}{33}{section.11}%
 \contentsline {subsection}{\numberline {11.1}Comparaison directe}{34}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{36}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{37}{subsection.11.3}%
-\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{37}{section.12}%
-\contentsline {subsection}{\numberline {12.1}Méthodologie}{37}{subsection.12.1}%
-\contentsline {subsection}{\numberline {12.2}Résultats}{37}{subsection.12.2}%
+\contentsline {subsection}{\numberline {11.2}Zoom sur la fenêtre de validation}{35}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Caveat méthodologique sur le caractère OOS}{35}{subsection.11.3}%
+\contentsline {section}{\numberline {12}Tests de résistance --- bootstrap historique}{38}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Méthodologie}{38}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Résultats}{38}{subsection.12.2}%
 \contentsline {subsection}{\numberline {12.3}Interprétations critiques}{38}{subsection.12.3}%
 \contentsline {subsection}{\numberline {12.4}Stabilité face aux hyperparamètres de ciblage de volatilité}{38}{subsection.12.4}%
 \contentsline {section}{\numberline {13}Robustesse statistique avancée}{39}{section.13}%
 \contentsline {subsection}{\numberline {13.1}Pourquoi un Sharpe ponctuel ne suffit pas}{39}{subsection.13.1}%
-\contentsline {subsection}{\numberline {13.2}Intervalles de confiance bootstrap sur les métriques}{39}{subsection.13.2}%
-\contentsline {paragraph}{Deux zones de vigilance identifiées.}{40}{paragraph*.36}%
+\contentsline {subsection}{\numberline {13.2}Intervalles de confiance bootstrap sur les métriques}{40}{subsection.13.2}%
+\contentsline {paragraph}{Deux zones de vigilance identifiées.}{42}{paragraph*.36}%
 \contentsline {subsection}{\numberline {13.3}\emph {Equity fan chart} --- trajectoires bootstrap alternatives}{42}{subsection.13.3}%
 \contentsline {subsection}{\numberline {13.4}Tests d'\emph {overfitting}}{42}{subsection.13.4}%
 \contentsline {subsection}{\numberline {13.5}Tests de supériorité prédictive}{46}{subsection.13.5}%
 \contentsline {subsection}{\numberline {13.6}Stabilité temporelle multi-métrique}{47}{subsection.13.6}%
 \contentsline {subsection}{\numberline {13.7}Verdict consolidé}{48}{subsection.13.7}%
-\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{48}{section.14}%
+\contentsline {section}{\numberline {14}Rejeu de scénarios historiques}{49}{section.14}%
 \contentsline {subsection}{\numberline {14.1}Lecture détaillée des six scénarios}{49}{subsection.14.1}%
-\contentsline {subsection}{\numberline {14.2}Observations transversales}{49}{subsection.14.2}%
+\contentsline {subsection}{\numberline {14.2}Observations transversales}{50}{subsection.14.2}%
 \contentsline {section}{\numberline {15}Analyse des risques et limites méthodologiques}{50}{section.15}%
 \contentsline {subsection}{\numberline {15.1}Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}{51}{subsection.15.1}%
-\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- La sélection a consommé du pouvoir statistique}{51}{subsection.15.2}%
+\contentsline {subsection}{\numberline {15.2}Avertissement 2 --- La sélection a consommé du pouvoir statistique}{52}{subsection.15.2}%
 \contentsline {subsection}{\numberline {15.3}Avertissement 3 --- Aucun coupe-circuit n'est actif}{52}{subsection.15.3}%
-\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{52}{subsection.15.4}%
+\contentsline {subsection}{\numberline {15.4}Avertissement 4 --- Le dimensionnement multiplie le risque autant que le rendement}{53}{subsection.15.4}%
 \contentsline {subsection}{\numberline {15.5}Avertissement 5 --- Coûts de transaction au niveau portefeuille}{53}{subsection.15.5}%
 \contentsline {subsection}{\numberline {15.6}Avertissement 6 --- Hyperparamètres des sub-stratégies}{53}{subsection.15.6}%
-\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{53}{subsection.15.7}%
+\contentsline {subsection}{\numberline {15.7}Tableau récapitulatif des risques}{54}{subsection.15.7}%
 \contentsline {section}{\numberline {16}Conditions de déploiement}{54}{section.16}%
 \contentsline {subsection}{\numberline {16.1}Décisionnaires et responsabilités}{55}{subsection.16.1}%
 \contentsline {section}{\numberline {A}Annexe A --- Glossaire des termes techniques}{55}{appendix.A}%

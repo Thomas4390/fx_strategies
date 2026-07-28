@@ -12,17 +12,17 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \subsection{Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $86{,}5\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $15\,\%$ de son allocation. Les trois moteurs FX, qui portent $85\,\%$ de l'allocation et $816$ des $909$ transactions, ne contribuent ensemble qu'à $13{,}5\,\%$ du gain.
+\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $87{,}0\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $15\,\%$ de son allocation. Les trois moteurs FX, qui portent $85\,\%$ de l'allocation et $816$ des $909$ transactions, ne contribuent ensemble qu'à $13{,}5\,\%$ du gain.
 
 \textbf{Et à l'intérieur de cette sleeve, le résultat tient à quelques positions.} Une position unique sur l'argent, ouverte le 21~mai~2025 et fermée le 19~mars~2026, apporte $47{,}7\,\%$ du résultat net du portefeuille. Les trois plus grosses positions --- sur $909$ transactions --- en apportent $82\,\%$. Ce n'est pas une propriété du suivi de tendance en général~; c'est la propriété de \emph{cette} fenêtre, où deux mouvements exceptionnels ont été captés par des positions tenues plusieurs mois.
 
-\textbf{Concentration temporelle~:} $64{,}6\,\%$ du résultat net a été acquis dans les quatre mois de janvier à avril~2026, une tranche que la recherche s'était interdite pour toute sélection de modèle. Les cinq années sur lesquelles les paramètres ont été choisis ($2021$--$2025$) apportent le tiers restant. Le rendement affiché décrit donc majoritairement une période qui n'a pas servi à construire la stratégie --- ce qui est méthodologiquement sain, mais rend le chiffre de tête peu représentatif du régime de croisière.
+\textbf{Concentration temporelle~:} $64{,}3\,\%$ du résultat net a été acquis dans les quatre mois de janvier à avril~2026, une tranche que la recherche s'était interdite pour toute sélection de modèle. Les cinq années sur lesquelles les paramètres ont été choisis ($2021$--$2025$) apportent le tiers restant. Le rendement affiché décrit donc majoritairement une période qui n'a pas servi à construire la stratégie --- ce qui est méthodologiquement sain, mais rend le chiffre de tête peu représentatif du régime de croisière.
 
 \textbf{Impact potentiel~:} le portefeuille est présenté comme diversifié sur quatre sources d'alpha, mais son \emph{résultat} ne l'est pas. Un régime durablement défavorable au suivi de tendance ne serait pas compensé par les trois autres moteurs à leur niveau de contribution actuel. La diversification a servi à rendre la cible de rendement atteignable, elle n'a pas réparti le risque de résultat.
 
 \textbf{Aggravant~:} 2019--2026 a été un marché haussier des métaux d'ampleur inhabituelle, doublé d'une mégatendance sur le yen.
 
-\textbf{Aggravant secondaire~:} l'argent est l'instrument dont l'historique de données de courtier propres est le plus court, et il \emph{perd} $3\,067\,\$$ sur les cinq années de la fenêtre de sélection~: la totalité de son apport provient de la tranche gelée de 2026. Sa contribution est donc mesurée sur beaucoup moins d'observations utiles que celle de l'or.
+\textbf{Aggravant secondaire~:} l'argent est l'instrument dont l'historique de données de courtier propres est le plus court, et il \emph{perd} $2\,440\,\$$ sur les cinq années de la fenêtre de sélection~: la totalité de son apport provient de la tranche gelée de 2026. Sa contribution est donc mesurée sur beaucoup moins d'observations utiles que celle de l'or.
 
 \textbf{Action corrective~:} le poids de la sleeve a été ramené de $20\,\%$ à $15\,\%$ le 28~juillet~2026 à la suite du test d'\textit{overfitting} décrit à l'avertissement~2. Suivre la contribution par sleeve et par instrument en production, et alerter si la concentration se maintient au-delà de deux trimestres. Réexaminer le poids sur une tranche de données réellement fraîche, postérieure à juillet~2026.
 \end{warningbox}
@@ -44,7 +44,7 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \subsection{Avertissement 3 --- Aucun coupe-circuit n'est actif}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint $47{,}3\,\%$~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-71\,\%$.
+\textbf{Nature du risque~:} le mécanisme de plafonnement du drawdown existe dans le moteur mais il est désactivé, et le mandat ne fixe plus de limite de repli. Le repli d'équité mesuré à l'exécution atteint $47{,}0\,\%$~; le bootstrap situe le 5\textsuperscript{e} percentile du repli à environ $-71\,\%$.
 
 \textbf{Impact potentiel~:} il n'existe aucun mécanisme automatique pour interrompre une perte en cours. Le ciblage de volatilité réduit l'exposition \emph{après} que la volatilité réalisée a augmenté, avec le retard que cela implique~; ce n'est pas un dispositif de protection du capital.
 

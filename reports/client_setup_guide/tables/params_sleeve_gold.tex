@@ -11,10 +11,11 @@
 \code{Inp\_Gold\_AllowShort} & \metric{false} & Positions courtes désactivées~: l'or présente une dérive haussière structurelle. \\
 \code{Inp\_Gold\_TargetVol} & \metric{0.55} & Volatilité cible propre à la sleeve, appliquée avant la couche globale. \\
 \code{Inp\_Gold\_MaxLeverage} & \metric{6.6} & Plafond de levier interne à la sleeve. \\
-\code{Inp\_Gold\_SafetySL} & \metric{0.04} & Stop de sécurité~; l'or est environ deux fois plus volatil que les paires FX. \\
+\code{Inp\_Gold\_SafetySL} & \metric{0.04} & Stop de sécurité, en plancher~: la distance retenue est ce seuil ou quatre écarts-types quotidiens de l'instrument, selon le plus large. \\
 \code{Inp\_Gold\_SlippageBps} & \metric{2} & Spread CFD XAU-USD et commission, en points de base. \\
 \code{Inp\_Gold\_Trace} & \metric{false} & Trace journalière de réconciliation (diagnostic uniquement). \\
 \code{Inp\_Gold\_TraceFile} & \metric{gold\_trace.csv} & Fichier de la trace ci-dessus. \\
+\code{Inp\_Gold\_TraceSymbol} & \metric{} & Instrument suivi par la trace~; vide = le premier configuré. \\
 \bottomrule
 \end{tabular}
 \end{center}

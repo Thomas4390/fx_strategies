@@ -18,7 +18,7 @@ Deux moteurs mesurent ce portefeuille et ils ne mesurent pas la même chose. Le 
 \end{figure}
 
 \begin{insightbox}
-\textbf{Le résultat est concentré, et c'est le fait le plus important du document.} La sleeve momentum --- or, dollar-yen et argent, équipondérés --- représente 15\,\% de l'allocation et 86,5\,\% du résultat net, pour 93~transactions sur 909. À l'intérieur de cette sleeve, \textbf{une position unique sur l'argent apporte 47,7\,\% du résultat net du portefeuille}, et les trois plus grosses en apportent 82\,\%. La performance annoncée dépend donc d'un très petit nombre de mouvements, sur une période exceptionnellement favorable aux tendances des métaux et du yen. Aucune moyenne, aucun ratio de Sharpe ne rend visible cette dépendance --- la section~\ref{sec:limitations} en tire les conséquences.
+\textbf{Le résultat est concentré, et c'est le fait le plus important du document.} La sleeve momentum --- or, dollar-yen et argent, équipondérés --- représente 15\,\% de l'allocation et 87,0\,\% du résultat net, pour 89~transactions sur 905. À l'intérieur de cette sleeve, \textbf{une position unique sur l'argent apporte 46,6\,\% du résultat net du portefeuille}, et les trois plus grosses en apportent 80\,\%. La performance annoncée dépend donc d'un très petit nombre de mouvements, sur une période exceptionnellement favorable aux tendances des métaux et du yen. Aucune moyenne, aucun ratio de Sharpe ne rend visible cette dépendance --- la section~\ref{sec:limitations} en tire les conséquences.
 
 \textbf{Le poids de cette sleeve a été réduit le 28~juillet~2026}, de 20\,\% à 15\,\%~: le test de sur-ajustement appliqué à la grille d'allocations échoue (section~\ref{sec:advanced_robustness}), ce qui indique que le poids le mieux classé sur une moitié des données ne se transporte pas sur l'autre. La conséquence était écrite avant le calcul.
 \end{insightbox}
@@ -28,8 +28,8 @@ Deux moteurs mesurent ce portefeuille et ils ne mesurent pas la même chose. Le 
 \subsection*{Quatre conclusions pour la décision}
 
 \begin{enumerate}
-\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~: 39,1\,\% de croissance annualisée, pour un profit net de 47\,953~USD sur un dépôt de 10\,000~USD.
-\item \textbf{Le repli maximal d'équité atteint 47,3\,\%.} C'est le prix direct du niveau de risque choisi~: le dimensionnement des positions a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
+\item \textbf{Le mandat de rendement est tenu} sur la période mesurée~: 39,7\,\% de croissance annualisée, pour un profit net de 47\,953~USD sur un dépôt de 10\,000~USD.
+\item \textbf{Le repli maximal d'équité atteint 47,0\,\%.} C'est le prix direct du niveau de risque choisi~: le dimensionnement des positions a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
 \item \textbf{La performance repose sur une sleeve.} Retirer la sleeve momentum ramènerait le résultat à moins d'un dixième de son niveau. La diversification annoncée par l'architecture à quatre moteurs ne s'est pas traduite par une diversification du résultat.
 \item \textbf{Une année sur six est négative} (2023, $-13{,}1$\,\%), et le repli d'équité dépasse celui du solde sur toute la période --- signe que des positions restent longtemps ouvertes en territoire défavorable.
 \end{enumerate}

@@ -115,6 +115,9 @@ PRESET_LINES: list[str] = [
     f"Inp_Gold_SlippageBps={_ext(2, 1, 20)}",
     f"Inp_Gold_Trace={_ext(False, 0, 0, is_bool=True)}",
     "Inp_Gold_TraceFile=gold_trace.csv",
+    # Vide = premier instrument configuré (comportement historique). Renseigner
+    # un nom de base — "USDJPY" — pour vérifier la parité sur une autre jambe.
+    "Inp_Gold_TraceSymbol=",
     "; --- Operational ---",
     "Inp_SymbolSuffix=.c",
     f"Inp_MagicMR={_ext(831, 1, 8310)}",

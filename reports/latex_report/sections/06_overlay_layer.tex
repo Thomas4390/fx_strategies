@@ -95,7 +95,7 @@ Le drawdown est calculé sur l'équité pré-cap et lagué d'un bar pour éviter
 \begin{warningbox}
 \textbf{Pourquoi ce dispositif est-il désactivé dans la configuration retenue~?} Deux raisons se sont succédé. La première est empirique~: les tests ont mesuré que le \emph{drawdown cap} dégradait le Sharpe au lieu de le protéger, parce qu'il déleverage pendant la phase de rebond et prive le portefeuille du retour à la moyenne qui aurait restauré l'équité. La seconde tient au mandat actuel~: le plafond de repli qu'il servait à défendre a été retiré, si bien que le dispositif n'a plus de seuil à faire respecter.
 
-\textbf{Il n'existe donc aujourd'hui aucun coupe-circuit automatique sur ce portefeuille.} Le repli d'équité mesuré à l'exécution atteint 47,3\,\%~; rien dans la configuration ne l'aurait interrompu s'il était allé plus loin. C'est un choix assumé, pas un oubli, mais il doit être connu de quiconque déploie la stratégie.
+\textbf{Il n'existe donc aujourd'hui aucun coupe-circuit automatique sur ce portefeuille.} Le repli d'équité mesuré à l'exécution atteint 47,0\,\%~; rien dans la configuration ne l'aurait interrompu s'il était allé plus loin. C'est un choix assumé, pas un oubli, mais il doit être connu de quiconque déploie la stratégie.
 \end{warningbox}
 
 Le dispositif reste disponible dans le moteur et peut être réactivé sans modification de code, avec le seuil de repli que le mandant jugerait acceptable.

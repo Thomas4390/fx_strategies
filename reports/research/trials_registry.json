@@ -157,5 +157,12 @@
     "target_ts": "2026-07-27T18:49:18.582061+00:00",
     "config_key": "tsmom_stability:3lookback_grids_x_3tv_x_4instr",
     "note": "qualification retroactive : meme espace de configurations, re-run sans nouveau test"
+  },
+  {
+    "ts": "2026-07-28T20:08:13.377165+00:00",
+    "family": "gold_stop_spec",
+    "n": 0,
+    "note": "correction de specification derivee (SL plancher a 4 sigma) \u2014 0 configuration evaluee, k=4 quotient de deux constantes publiees",
+    "config_key": "gold_stop_spec:derived:no_search"
   }
 ]

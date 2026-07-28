@@ -87,3 +87,102 @@ quatre prédictions ci-dessus**, pas le signe du P&L.
   qu'après un `ComputeScore` qui exige 252 barres, et qui a 252 barres en a 22. Un test
   verrouillant l'ordre des deux appels suffit.
 - **`FX_GOLD_AVG_NIGHTS_HELD`** : ±0,2 % sur le dimensionnement, sous le bruit d'arrondi.
+
+---
+
+## Résultats — confrontation aux prédictions
+
+Run de vérification `prod_ref_slfix`, fenêtre 2021-01-01 → 2026-04-30, configuration de
+production intégralement épinglée. Portefeuille : **905 trades** (contre 909), net
+**+49 143 $** (contre +47 953), Sharpe **1,01** (contre 1,00), repli d'équité **47,04 %**
+(contre 47,29 %).
+
+### Sorties intraday (stop touché) contre sorties sur retournement à 21:00
+
+| instrument | avant | après |
+|---|---|---|
+| USD-JPY | 34 flips, **0 stop** | 34 flips, **0 stop** |
+| XAU-USD | 34 flips, **1 stop** | 34 flips, **0 stop** |
+| XAG-USD | 17 flips, **6 stops** | 19 flips, **1 stop** |
+
+### Prédiction par prédiction
+
+**1. « USD-JPY identique au bit » — CONTREDITE sur la forme, confirmée sur le fond.**
+Les 69 deals ont des **horodatages, sens et prix strictement identiques**. Seuls les
+**volumes** diffèrent, de 0,01 lot au maximum, sur 21 deals — et le premier écart
+(2024-12-05) survient *après* le premier stop-out d'argent supprimé (2023-12-11).
+
+La prédiction était trop forte parce qu'elle raisonnait comme si les trois jambes étaient
+indépendantes. Elles ne le sont pas : elles partagent `SubEquity(GOLD) / n`. Supprimer une
+perte sur l'argent en 2023 relève l'équité du compte, donc le budget de chaque jambe, donc
+les lots — d'un cran d'arrondi. La formulation correcte aurait été « mêmes dates, sens et
+prix ; volumes à ±1 cran d'arrondi par cascade de budget commun ». **La décision USD/JPY,
+elle, est strictement inchangée** — ce que la prédiction visait réellement.
+
+**2. « XAU-USD : au plus 1 trade change » — CONFIRMÉE exactement.** L'unique sortie
+intraday disparaît, 35 → 34 sorties. Rien d'autre ne bouge.
+
+**3. « XAG-USD : les 6 stop-outs candidats à disparaître » — CONFIRMÉE.** Cinq disparaissent.
+Le sixième (2025-04-04) subsiste mais **décalé de 9 minutes et 0,14 point plus bas**
+(14:06:40 à 30,274 → 14:15:40 à 30,130) : c'est le stop élargi touché plus tard, exactement
+le comportement attendu. Sorties 23 → 20, compte de trades en baisse comme prédit.
+
+**4. « Notionnel inchangé » — CONTREDITE sur la forme, même cause.** Les volumes d'entrée
+bougent de 0,01 lot au maximum, par la même cascade de sub-equity. `sl_dist_sizing` n'a bien
+pas été touché : c'est l'équité qui a changé, pas la formule.
+
+### Attribution de l'écart — critère de résidu
+
+| poste | delta |
+|---|---|
+| sleeve momentum | **+1 252,87** |
+| dont XAG-USD | +676,84 |
+| dont XAU-USD | +586,54 |
+| dont USD-JPY | −10,51 |
+| sleeves FX (cascade d'équité sur le vol-targeting global) | −62,31 |
+| **total portefeuille** | **+1 190,56** |
+
+Résidu hors sleeve momentum : **5,2 %** de l'écart total, sous le seuil de 20 % fixé au
+§9 du spec. Critère rempli.
+
+### Le chiffre qui empêche de sur-vendre la correction
+
+Les six stop-outs d'argent coûtaient **−3 873 $** ; il en reste un à **−1 262 $**, soit
+**2 611 $ de pertes évitées**. Or le gain net de la jambe argent n'est que de **+677 $**.
+
+L'écart n'est pas une erreur : les positions qu'on cesse de couper **continuent de perdre**
+avant leur retournement de signal. Le stop, en coupant tôt, en sauvait une partie. Le bilan
+reste positif, mais il vaut le quart de ce que la simple somme des pertes évitées laisserait
+croire — et il aurait pu être négatif. C'est la raison pour laquelle le critère de succès
+était la conformité aux prédictions, jamais le signe du P&L.
+
+### Le critère de parité XAG : moitié tenu, moitié contredit
+
+La prédiction 3 posait deux conditions : le compte de trades devait baisser, et l'écart de
+parité vbt↔MT5 devait se réduire depuis 0,61. Re-mesuré en sleeve isolée sur
+2022-11-04 → 2025-12-31 :
+
+| | avant | après | prédit |
+|---|---|---|---|
+| trades MT5 / vbt | 18 / 15 (−16,7 %) | **16 / 15 (−6,3 %)** | baisse — **tenu**, et désormais dans la tolérance ±10 % |
+| Δ Sharpe | 0,61 | **0,66** | réduction — **contredit**, il s'aggrave de 0,05 |
+| Sharpe MT5 isolé | 0,44 | 0,39 | — |
+
+**Le second critère est contredit et je ne le réécris pas après coup.** Sur cette fenêtre de
+trois ans, retirer les stops dégrade le Sharpe isolé de l'argent : les positions qu'on cesse
+de couper continuent de perdre plus souvent qu'elles ne se redressent. C'est le même
+mécanisme que le §précédent, vu à l'échelle d'un ratio plutôt que d'un cumul de P&L — et
+c'est le rappel que le stop, en coupant tôt, faisait parfois du bon travail.
+
+**La correction est conservée quand même**, pour une raison qui ne dépend pas de cette
+métrique : le moteur de recherche n'a **aucun stop** (`sl_stop=None`), et le moteur
+d'exécution en avait un qui déclenchait sur **26 %** des trades d'argent. Après correction
+il déclenche sur **5 %**. Ce qui est corrigé, c'est un écart de spécification entre les deux
+moteurs — un backtest de recherche qui ne modélise pas ce que l'exécution fait réellement.
+Ce motif tient indépendamment du signe de 0,05 de Sharpe sur une fenêtre de trois ans.
+
+Reste ouvert, et honnêtement non résolu : **l'argent demeure la jambe la moins bien
+réconciliée du dossier** (0,66 contre 0,35 pour l'or et 0,20 pour l'USD/JPY). Le compte de
+trades est désormais aligné, donc le résidu ne vient plus des sorties : il vient du
+dimensionnement en lots et du levier non décalé, comme sur l'or, mais amplifié par une
+volatilité deux fois supérieure. À instruire si l'argent devait peser davantage.

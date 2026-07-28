@@ -144,10 +144,11 @@ ROLES: dict[str, str] = {
     "Inp_Gold_AllowShort": "Positions courtes désactivées~: l'or présente une dérive haussière structurelle.",
     "Inp_Gold_TargetVol": "Volatilité cible propre à la sleeve, appliquée avant la couche globale.",
     "Inp_Gold_MaxLeverage": "Plafond de levier interne à la sleeve.",
-    "Inp_Gold_SafetySL": "Stop de sécurité~; l'or est environ deux fois plus volatil que les paires FX.",
+    "Inp_Gold_SafetySL": "Stop de sécurité, en plancher~: la distance retenue est ce seuil ou quatre écarts-types quotidiens de l'instrument, selon le plus large.",
     "Inp_Gold_SlippageBps": "Spread CFD XAU-USD et commission, en points de base.",
     "Inp_Gold_Trace": "Trace journalière de réconciliation (diagnostic uniquement).",
     "Inp_Gold_TraceFile": "Fichier de la trace ci-dessus.",
+    "Inp_Gold_TraceSymbol": "Instrument suivi par la trace~; vide = le premier configuré.",
     # --- 6.7 Opérationnel & source macro ---
     "Inp_SymbolSuffix": "Suffixe broker (\\textbf{critique}, voir~3.4).",
     "Inp_MagicMR": "Identifiant des transactions du Sleeve~1 (audit).",
@@ -231,6 +232,7 @@ TABLES: list[tuple[str, str, list[str], set[str]]] = [
         "Inp_Gold_Symbols", "Inp_Gold_LookbackA", "Inp_Gold_AllowShort",
         "Inp_Gold_TargetVol", "Inp_Gold_MaxLeverage", "Inp_Gold_SafetySL",
         "Inp_Gold_SlippageBps", "Inp_Gold_Trace", "Inp_Gold_TraceFile",
+        "Inp_Gold_TraceSymbol",
     ], set()),
     ("params_ops", r"p{4.6cm}>{\footnotesize\ttfamily}p{3.4cm}p{6.9cm}", [
         "Inp_SymbolSuffix", "Inp_MagicMR", "Inp_MagicTS", "Inp_MagicRSI",

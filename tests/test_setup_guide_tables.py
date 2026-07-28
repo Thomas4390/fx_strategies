@@ -64,6 +64,23 @@ def test_no_description_targets_a_vanished_input(gen):
     assert not orphans, f"décrits mais absents du preset : {orphans}"
 
 
+def test_every_described_input_actually_lands_in_a_table(gen):
+    """Décrire un input ne suffit pas : il doit figurer dans une table publiée.
+
+    Angle mort du test précédent, constaté sur ``Inp_Gold_TraceSymbol`` : décrit
+    dans ROLES, absent de TABLES, donc jamais imprimé dans le guide client — et
+    le contrôle de couverture le voyait « décrit », donc conforme.
+    """
+    published = {name for _, _, names, _ in gen.TABLES for name in names}
+    described = set(gen.ROLES) - set(gen.EXCLUDED)
+    unpublished = sorted(described - published)
+    assert not unpublished, (
+        f"{len(unpublished)} input(s) décrits mais absents de toute table : "
+        f"{unpublished}. Les ajouter à la table adéquate de TABLES, ou les "
+        f"déplacer dans EXCLUDED avec la raison."
+    )
+
+
 def test_published_tables_are_in_sync_with_the_preset(gen):
     """Les .tex sur disque doivent être ceux que le générateur produit aujourd'hui.
 

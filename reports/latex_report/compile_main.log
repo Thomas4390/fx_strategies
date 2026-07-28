@@ -391,41 +391,41 @@ Package lettrine Warning: *** ATTENTION REQUIRED ***
 Overfull \hbox (1.85715pt too wide) in paragraph at lines 23--32
  [] 
 [16] [17] [18] [19] [20]
-Overfull \hbox (3.60478pt too wide) in paragraph at lines 158--170
+Overfull \hbox (3.60478pt too wide) in paragraph at lines 160--172
  [] 
 
-Overfull \hbox (1.55493pt too wide) in paragraph at lines 179--191
+Overfull \hbox (1.55493pt too wide) in paragraph at lines 181--193
  [] 
-[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24])
-(./sections/06b_research_vs_execution.tex [25]
+[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24] [25])
+(./sections/06b_research_vs_execution.tex
 Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
 []\TU/LatinModernRoman(0)/m/sc/10.95 Plutôt que de réconcilier deux définitions
  incompatibles, un facteur d’échelle unique (\TU/LatinModernMono(0)/m/n/10.95 I
 np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
-[26]) (./sections/06_overlay_layer.tex [27] (./tables/sensitivity.tex)
+[26]) (./sections/06_overlay_layer.tex [27] (./tables/sensitivity.tex) [28]
 (./tables/leverage_impact.tex
 Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
-) [28] [29]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+) [29] [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
 
 Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
-) [30] (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
-[32] [33]) (./sections/08_out_of_sample.tex
+) (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
+[32]) (./sections/08_out_of_sample.tex [33]
 Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
-[34] [35] [36]) (./sections/09_stress_test.tex
-(./tables/bootstrap_percentiles.tex) [37] [38])
+[34] [35]) (./sections/09_stress_test.tex [36] [37]
+(./tables/bootstrap_percentiles.tex) [38])
 (./sections/10_advanced_robustness.tex [39]
 (./tables/robustness_bootstrap_ci.tex
 Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
  [][] 
 ) [40] [41] (./tables/robustness_overfitting.tex) [42] [43] [44] [45]
-(./tables/robustness_arch_tests.tex) [46] [47]
+(./tables/robustness_arch_tests.tex) [46]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
-)) (./sections/11_scenarios.tex (./tables/scenarios.tex) [48] [49])
+) [47] [48]) (./sections/11_scenarios.tex (./tables/scenarios.tex) [49])
 (./sections/12_limitations.tex [50] [51] [52]
 Underfull \hbox (badness 1314) in paragraph at lines 94--95
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
@@ -435,7 +435,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 96--97
 
 Underfull \hbox (badness 10000) in paragraph at lines 96--97
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
-) (./sections/13_production_checklist.tex [53]
+[53]) (./sections/13_production_checklist.tex
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
@@ -446,14 +446,14 @@ Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
 risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
 10.95 37$\TU/LatinModernRoman(0)/m/sc/10.95 , $[] \OT1/cmr/m/n/10.95 =
-
+[58]
 Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 []\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
 (0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
 95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
  $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
 1/cmr/m/n/10.95 ) :
-[58] (./tables/weight_sensitivity_named.tex) [59]
+(./tables/weight_sensitivity_named.tex) [59]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
@@ -504,9 +504,6 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 [62]) [63] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)
@@ -905,41 +902,41 @@ Package lettrine Warning: *** ATTENTION REQUIRED ***
 Overfull \hbox (1.85715pt too wide) in paragraph at lines 23--32
  [] 
 [16] [17] [18] [19] [20]
-Overfull \hbox (3.60478pt too wide) in paragraph at lines 158--170
+Overfull \hbox (3.60478pt too wide) in paragraph at lines 160--172
  [] 
 
-Overfull \hbox (1.55493pt too wide) in paragraph at lines 179--191
+Overfull \hbox (1.55493pt too wide) in paragraph at lines 181--193
  [] 
-[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24])
-(./sections/06b_research_vs_execution.tex [25]
+[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24] [25])
+(./sections/06b_research_vs_execution.tex
 Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
 []\TU/LatinModernRoman(0)/m/sc/10.95 Plutôt que de réconcilier deux définitions
  incompatibles, un facteur d’échelle unique (\TU/LatinModernMono(0)/m/n/10.95 I
 np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
-[26]) (./sections/06_overlay_layer.tex [27] (./tables/sensitivity.tex)
+[26]) (./sections/06_overlay_layer.tex [27] (./tables/sensitivity.tex) [28]
 (./tables/leverage_impact.tex
 Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
-) [28] [29]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+) [29] [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
 
 Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
  [][] 
-) [30] (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
-[32] [33]) (./sections/08_out_of_sample.tex
+) (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
+[32]) (./sections/08_out_of_sample.tex [33]
 Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
-[34] [35] [36]) (./sections/09_stress_test.tex
-(./tables/bootstrap_percentiles.tex) [37] [38])
+[34] [35]) (./sections/09_stress_test.tex [36] [37]
+(./tables/bootstrap_percentiles.tex) [38])
 (./sections/10_advanced_robustness.tex [39]
 (./tables/robustness_bootstrap_ci.tex
 Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
  [][] 
 ) [40] [41] (./tables/robustness_overfitting.tex) [42] [43] [44] [45]
-(./tables/robustness_arch_tests.tex) [46] [47]
+(./tables/robustness_arch_tests.tex) [46]
 (./tables/robustness_verdict_summary.tex
 Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
-)) (./sections/11_scenarios.tex (./tables/scenarios.tex) [48] [49])
+) [47] [48]) (./sections/11_scenarios.tex (./tables/scenarios.tex) [49])
 (./sections/12_limitations.tex [50] [51] [52]
 Underfull \hbox (badness 1314) in paragraph at lines 94--95
 []|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
@@ -949,7 +946,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 96--97
 
 Underfull \hbox (badness 10000) in paragraph at lines 96--97
 \TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
-) (./sections/13_production_checklist.tex [53]
+[53]) (./sections/13_production_checklist.tex
 Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
 []\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
 dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
@@ -960,14 +957,14 @@ Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
 risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
 10.95 37$\TU/LatinModernRoman(0)/m/sc/10.95 , $[] \OT1/cmr/m/n/10.95 =
-
+[58]
 Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
 []\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
 (0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
 95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
  $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
 1/cmr/m/n/10.95 ) :
-[58] (./tables/weight_sensitivity_named.tex) [59]
+(./tables/weight_sensitivity_named.tex) [59]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 43.
