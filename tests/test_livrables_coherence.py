@@ -248,6 +248,45 @@ def test_no_document_claims_more_passing_tests_than_the_verdict_table(tex: Path)
         )
 
 
+# Le nombre qui suit le libellé, pas n'importe quel montant de la ligne : la
+# même phrase cite le dépôt initial de 10 000 USD.
+_NET_PROFIT_RE = re.compile(r"profit net de\s+(\d{2})[\\,\s]{1,3}(\d{3})\s*~?USD")
+_YEAR_RETURN_RE = re.compile(r"\(2023, \$-(\d{1,2})\{,\}(\d)\$")
+
+
+@pytest.mark.parametrize("tex", _DELIVERED, ids=lambda p: p.name)
+def test_the_net_profit_in_prose_matches_the_reference(tex: Path):
+    """Le profit net cité en toutes lettres doit être celui du run publié.
+
+    L'exécutif a annoncé 47 953 USD — le net du run d'avant la correction du
+    stop — pendant que sa propre table de référence donnait 49 143.
+    """
+    expected = _headline()["total_net_profit"]
+    body = _uncommented(tex.read_text(encoding="utf-8"))
+    for line_no, line in enumerate(body.splitlines(), start=1):
+        for whole, thousands in _NET_PROFIT_RE.findall(line):
+            got = float(f"{whole}{thousands}")
+            assert abs(got - expected) < 1.0, (
+                f"{tex.relative_to(_ROOT)}:{line_no} — profit net {got:,.0f} USD "
+                f"alors que le run publié en donne {expected:,.2f}."
+            )
+
+
+@pytest.mark.parametrize("tex", _DELIVERED, ids=lambda p: p.name)
+def test_the_negative_year_matches_the_reference(tex: Path):
+    """2023 est la seule année négative : son chiffre doit être le bon."""
+    yearly = json.loads(_MT5_REFERENCE.read_text(encoding="utf-8"))["yearly"]
+    expected = -next(y["return_pct"] for y in yearly if y["year"] == 2023) * 100
+    body = _uncommented(tex.read_text(encoding="utf-8"))
+    for line_no, line in enumerate(body.splitlines(), start=1):
+        for whole, frac in _YEAR_RETURN_RE.findall(line):
+            got = float(f"{whole}.{frac}")
+            assert abs(got - expected) < 0.1, (
+                f"{tex.relative_to(_ROOT)}:{line_no} — 2023 y perd {got} % "
+                f"alors que le run publié donne {expected:.1f} %."
+            )
+
+
 def test_the_superseded_list_stays_anchored_to_the_reference():
     """Si la production change, la liste des valeurs retirées doit suivre.
 
