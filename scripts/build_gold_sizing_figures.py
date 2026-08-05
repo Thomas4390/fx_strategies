@@ -52,7 +52,7 @@ from framework.sizing_nb import (  # noqa: E402
 from strategies.gold_momentum import pipeline, session_dates  # noqa: E402
 from utils import load_gold_data  # noqa: E402
 
-FIG_DIR = _PROJECT_ROOT / "reports" / "latex_report" / "figures"
+FIG_DIR = _PROJECT_ROOT / "reports" / "client" / "rapport_technique" / "figures"
 
 HOLDOUT_START = pd.Timestamp("2025-07-01")
 INIT_CASH = 100_000.0

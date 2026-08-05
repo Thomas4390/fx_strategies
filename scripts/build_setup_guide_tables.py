@@ -31,7 +31,7 @@ if str(_SRC) not in sys.path:
 
 from mt5.bridge.write_default_preset import PRESET_LINES  # noqa: E402
 
-TBL_DIR = _PROJECT_ROOT / "reports" / "client_setup_guide" / "tables"
+TBL_DIR = _PROJECT_ROOT / "reports" / "client" / "guide_installation" / "tables"
 
 
 # ═══════════════════════════════════════════════════════════════════════

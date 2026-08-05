@@ -4,8 +4,8 @@ Run:
     python scripts/build_latex_report_assets.py
 
 Outputs:
-    reports/latex_report/figures/*.png   (300 DPI matplotlib figures)
-    reports/latex_report/tables/*.tex    (booktabs snippets for \\input{})
+    reports/client/rapport_technique/figures/*.png   (300 DPI matplotlib figures)
+    reports/client/rapport_technique/tables/*.tex    (booktabs snippets for \\input{})
 
 The script is read-only on the rest of the codebase — it calls
 ``build_production_portfolio`` once, then the three underlying backtests
@@ -34,7 +34,7 @@ _SRC = _PROJECT_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-OUTPUT_ROOT = _PROJECT_ROOT / "reports" / "latex_report"
+OUTPUT_ROOT = _PROJECT_ROOT / "reports" / "client" / "rapport_technique"
 FIG_DIR = OUTPUT_ROOT / "figures"
 TBL_DIR = OUTPUT_ROOT / "tables"
 FIG_DIR.mkdir(parents=True, exist_ok=True)

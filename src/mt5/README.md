@@ -1,7 +1,7 @@
 # FxMultiSleeve — Portage MQL5 de la stratégie FX Tri-Signaux
 
 Implémentation MetaTrader 5 (MQL5) de la stratégie documentée dans
-`reports/latex_report/main.tex` et codée en Python/vectorbtpro dans
+`reports/client/rapport_technique/main.tex` et codée en Python/vectorbtpro dans
 `src/strategies/`.
 
 ## Vue d'ensemble

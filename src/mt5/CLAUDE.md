@@ -21,15 +21,26 @@ Si tu reprends une nouvelle session, lis dans cet ordre :
 - [`docs/investigations/rsi_daily_vbt_vs_mt5.md`](../../docs/investigations/rsi_daily_vbt_vs_mt5.md) — écart entre la référence VBT~Pro et le port MQL5 du sleeve RSI Daily, plan complet d'enquête (8 hypothèses).
 
 **Outils CLI clés** (Linux/Wine, mais transposable Windows) :
-- `bridge/run_backtest_cli.py` — backtest 5.4 ans en ~20 s. Référence 2026-07-28 : 909 trades, Sharpe 1.00, CAGR 39.11 %, repli d'équité 47.29 %.
+- `bridge/run_backtest_cli.py` — backtest 5.4 ans en ~20 s. Référence publiée (run `prod_ref_slfix`, 2021-01-01 → 2026-04-30) : **905 trades, Sharpe 1.01, CAGR 39.65 %, repli d'équité 47.04 %, net +49 143,31 $**. Source unique : `results/production_report/mt5_reference.json` — ne jamais recopier ces chiffres sans les y relire.
   ⚠️ Le run publié utilise `--model 1` ; le défaut du CLI est `--model 4` (ticks réels), qui ne tourne pas sur ce poste faute de ticks téléchargés.
 - `bridge/write_default_preset.py` — régénère `FxMultiSleeve_Default.set` depuis les défauts compilés.
 - `bridge/reset_tester_preset.py` — patch les `.set` cachés MT5 quand on change un défaut compilé.
 - `bridge/fx_macro_history.py` — régénère `macro_history.csv` (FRED API, à faire mensuellement).
 
 **Livrables client** :
-- [`reports/client_setup_guide/main.pdf`](../../reports/client_setup_guide/main.pdf) — guide d'installation client, 17 pages. Sa table de paramètres est **générée** par `scripts/build_setup_guide_tables.py` depuis `bridge/write_default_preset.PRESET_LINES` — ne jamais l'éditer à la main.
-- [`reports/latex_report/main_executive.pdf`](../../reports/latex_report/main_executive.pdf) — synthèse exécutive, 15 pages (rapport investissement).
+Les six documents livrés au client vivent tous sous **`reports/client/`** (déplacés le
+2026-08-05 ; `latex_report/`, `client_setup_guide/` et `client_pedagogical_guide/`
+n'existent plus à la racine de `reports/`) :
+
+- [`reports/client/guide_installation/main.pdf`](../../reports/client/guide_installation/main.pdf) — guide d'installation client, 16 pages. Sa table de paramètres est **générée** par `scripts/build_setup_guide_tables.py` depuis `bridge/write_default_preset.PRESET_LINES` — ne jamais l'éditer à la main.
+- [`reports/client/rapport_technique/main_executive.pdf`](../../reports/client/rapport_technique/main_executive.pdf) — synthèse exécutive, 11 pages (rapport investissement).
+- [`reports/client/rapport_technique/main.pdf`](../../reports/client/rapport_technique/main.pdf) — rapport technique complet, 73 pages, plus les deux analyses trade par trade (`main_gold_trades.pdf`, `main_usdjpy_trades.pdf`).
+- [`reports/client/guide_pedagogique/main.pdf`](../../reports/client/guide_pedagogique/main.pdf) — guide pédagogique, 34 pages.
+
+Tout chiffre publié dans ces six documents est contrôlé par
+`tests/test_livrables_coherence.py`, qui le confronte à `PRESET_LINES` et à
+`results/production_report/mt5_reference.json`. Recompiler avec
+`scripts/compile_latex_report.sh all`.
 
 ---
 
@@ -212,7 +223,7 @@ C:\Users\vaude\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF
 - 0.09 → Sleeve 2 TS Momentum (D1, 3 paires)
 - 0.09 → Sleeve 3 RSI Daily (D1, **3** paires — USD/JPY retiré en Phase E.3)
 - 0.00 → Sleeve 4 H1 Momentum (compilée, inactive)
-- 0.15 → Sleeve 5 Gold Momentum (D1, **XAUUSD+USDJPY+XAGUSD**) — **produit 86,5 % du résultat net**
+- 0.15 → Sleeve 5 Gold Momentum (D1, **XAUUSD+USDJPY+XAGUSD**) — **produit 87,0 % du résultat net** pour 89 des 905 transactions
 
 **Includes (16 fichiers `.mqh`)** :
 ```

@@ -3,8 +3,8 @@
 
 Consomme ``reports/mt5/usdjpy_trades_research.csv`` (figé par
 ``scripts/extract_usdjpy_trades.py``). Sortie :
-``reports/latex_report/figures/usdjpy_trades_*.png`` et
-``reports/latex_report/tables/usdjpy_trades_*.tex``.
+``reports/client/rapport_technique/figures/usdjpy_trades_*.png`` et
+``reports/client/rapport_technique/tables/usdjpy_trades_*.tex``.
 
 Le document décrit un **run de recherche**, pas un backtest de production : la
 sleeve TSMOM (moteur or, ``Inp_Gold_Symbol=USDJPY``) y est jouée seule, à

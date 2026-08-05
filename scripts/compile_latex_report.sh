@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Compile un des documents LaTeX livrés au client (xelatex, deux passes).
 #
-# Ce script était codé en dur sur reports/latex_report/main.tex. Les trois
+# Ce script était codé en dur sur reports/client/rapport_technique/main.tex. Les trois
 # autres livrables — la synthèse exécutive et les deux guides client — n'avaient
 # aucun script de compilation et ont été produits à la main, ce qui explique
 # qu'ils aient dérivé chacun de leur côté.
@@ -47,19 +47,19 @@ compile_one() {
 
 target="${1:-report}"
 case "$target" in
-    report)      compile_one "reports/latex_report" "main" ;;
-    executive)   compile_one "reports/latex_report" "main_executive" ;;
-    pedagogical) compile_one "reports/client_pedagogical_guide" "main" ;;
-    setup)       compile_one "reports/client_setup_guide" "main" ;;
-    goldtrades)  compile_one "reports/latex_report" "main_gold_trades" ;;
-    usdjpytrades) compile_one "reports/latex_report" "main_usdjpy_trades" ;;
+    report)      compile_one "reports/client/rapport_technique" "main" ;;
+    executive)   compile_one "reports/client/rapport_technique" "main_executive" ;;
+    pedagogical) compile_one "reports/client/guide_pedagogique" "main" ;;
+    setup)       compile_one "reports/client/guide_installation" "main" ;;
+    goldtrades)  compile_one "reports/client/rapport_technique" "main_gold_trades" ;;
+    usdjpytrades) compile_one "reports/client/rapport_technique" "main_usdjpy_trades" ;;
     all)
-        compile_one "reports/latex_report" "main"
-        compile_one "reports/latex_report" "main_executive"
-        compile_one "reports/client_pedagogical_guide" "main"
-        compile_one "reports/client_setup_guide" "main"
-        compile_one "reports/latex_report" "main_gold_trades"
-        compile_one "reports/latex_report" "main_usdjpy_trades"
+        compile_one "reports/client/rapport_technique" "main"
+        compile_one "reports/client/rapport_technique" "main_executive"
+        compile_one "reports/client/guide_pedagogique" "main"
+        compile_one "reports/client/guide_installation" "main"
+        compile_one "reports/client/rapport_technique" "main_gold_trades"
+        compile_one "reports/client/rapport_technique" "main_usdjpy_trades"
         ;;
     *)
         echo "Cible inconnue : $target" >&2

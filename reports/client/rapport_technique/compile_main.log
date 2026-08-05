@@ -311,13 +311,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 110--112
 
 Package polyglossia Warning: Failed to patch part for French
 
-[1] [2]) [3] (./sections/00_executive_summary.tex
+[1] [2]
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 4.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 10
+4.
 
-
-(./tables/mt5_reference.tex
+) [3] (./sections/00_executive_summary.tex (./tables/mt5_reference.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 3.
@@ -421,12 +421,8 @@ Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
  [] 
 [34] [35]) (./sections/09_stress_test.tex [36] [37]
 (./tables/bootstrap_percentiles.tex) [38])
-(./sections/10_advanced_robustness.tex
-
-LaTeX Warning: Reference `app:robustness_methodology' on page 39 undefined on i
-nput line 6.
-
-[39] (./tables/robustness_bootstrap_ci.tex
+(./sections/10_advanced_robustness.tex [39]
+(./tables/robustness_bootstrap_ci.tex
 Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
  [][] 
 ) [40] [41] (./tables/robustness_overfitting.tex) [42] [43] [44] [45]
@@ -535,12 +531,6 @@ tinModernMono(0)/m/n/10.95 framework.statistical_testing.reality_check_via_arch
 ) [68] [69] (./main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  )
 (see the transcript file for additional information)

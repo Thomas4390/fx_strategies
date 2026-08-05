@@ -17,12 +17,12 @@ figée à target_vol=0.28 / max_leverage=12, elle a fait publier une annexe
 entière — légendes comprises — sous un régime de risque qui n'existait plus.
 
 Outputs:
-  reports/latex_report/figures/weight_sensitivity_named_bars.png
-  reports/latex_report/figures/weight_sensitivity_1d_mr.png
-  reports/latex_report/figures/weight_sensitivity_simplex_ternary.png
-  reports/latex_report/figures/weight_sensitivity_pareto_frontier.png
-  reports/latex_report/tables/weight_sensitivity_named.tex
-  reports/latex_report/tables/weight_sensitivity_extremes.tex
+  reports/client/rapport_technique/figures/weight_sensitivity_named_bars.png
+  reports/client/rapport_technique/figures/weight_sensitivity_1d_mr.png
+  reports/client/rapport_technique/figures/weight_sensitivity_simplex_ternary.png
+  reports/client/rapport_technique/figures/weight_sensitivity_pareto_frontier.png
+  reports/client/rapport_technique/tables/weight_sensitivity_named.tex
+  reports/client/rapport_technique/tables/weight_sensitivity_extremes.tex
 
 Usage:
     python scripts/generate_weight_sensitivity_figures.py             # full
@@ -51,8 +51,8 @@ _SRC = _PROJECT_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-FIG_DIR = _PROJECT_ROOT / "reports" / "latex_report" / "figures"
-TBL_DIR = _PROJECT_ROOT / "reports" / "latex_report" / "tables"
+FIG_DIR = _PROJECT_ROOT / "reports" / "client" / "rapport_technique" / "figures"
+TBL_DIR = _PROJECT_ROOT / "reports" / "client" / "rapport_technique" / "tables"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 TBL_DIR.mkdir(parents=True, exist_ok=True)
 

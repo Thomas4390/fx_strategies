@@ -6,9 +6,9 @@ Run:
     python scripts/build_sleeve_signals_figures.py
 
 Outputs:
-    reports/latex_report/figures/sleeve_mr_macro_signals.png
-    reports/latex_report/figures/sleeve_ts_momentum_3p_signals.png
-    reports/latex_report/figures/sleeve_rsi_daily_3p_signals.png
+    reports/client/rapport_technique/figures/sleeve_mr_macro_signals.png
+    reports/client/rapport_technique/figures/sleeve_ts_momentum_3p_signals.png
+    reports/client/rapport_technique/figures/sleeve_rsi_daily_3p_signals.png
 
 Multi-pair sleeves (TS Momentum 3p, RSI Daily 4p) are represented by
 their anchor pair — GBP-USD and EUR-USD respectively — since
@@ -33,7 +33,7 @@ _SRC = _PROJECT_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-FIG_DIR = _PROJECT_ROOT / "reports" / "latex_report" / "figures"
+FIG_DIR = _PROJECT_ROOT / "reports" / "client" / "rapport_technique" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 PNG_WIDTH = 1600

@@ -3,8 +3,8 @@
 
 Consomme ``reports/mt5/gold_trades_production.csv`` (figé par
 ``scripts/extract_gold_trades.py``). Sortie :
-``reports/latex_report/figures/gold_trades_*.png`` et
-``reports/latex_report/tables/gold_trades_*.tex``.
+``reports/client/rapport_technique/figures/gold_trades_*.png`` et
+``reports/client/rapport_technique/tables/gold_trades_*.tex``.
 
 Le document est **entièrement adossé au moteur d'exécution**. La comparaison
 avec le backtest de recherche a été retirée du livrable client : elle

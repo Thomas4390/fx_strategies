@@ -40,14 +40,16 @@ if str(_SRC) not in sys.path:
 
 from mt5.bridge.write_default_preset import PRESET_LINES  # noqa: E402
 
-# Les six documents livrés au client. Tout le reste est du matériau de travail.
+# Les six documents livrés au client, tous sous reports/client/. Tout le reste
+# de reports/ est du matériau de travail.
+_CLIENT_ROOT = "reports/client"
 MAIN_DOCUMENTS: tuple[str, ...] = (
-    "reports/latex_report/main.tex",
-    "reports/latex_report/main_executive.tex",
-    "reports/latex_report/main_gold_trades.tex",
-    "reports/latex_report/main_usdjpy_trades.tex",
-    "reports/client_setup_guide/main.tex",
-    "reports/client_pedagogical_guide/main.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/main.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/main_executive.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/main_gold_trades.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/main_usdjpy_trades.tex",
+    f"{_CLIENT_ROOT}/guide_installation/main.tex",
+    f"{_CLIENT_ROOT}/guide_pedagogique/main.tex",
 )
 
 _MT5_REFERENCE = _ROOT / "results" / "production_report" / "mt5_reference.json"
@@ -108,7 +110,7 @@ def test_every_section_tex_is_reachable_from_a_delivered_document():
     """Un .tex de section qu'aucun document n'inclut n'est pas livré."""
     on_disk = {
         p.resolve()
-        for p in (_ROOT / "reports" / "latex_report" / "sections").rglob("*.tex")
+        for p in (_ROOT / _CLIENT_ROOT / "rapport_technique" / "sections").rglob("*.tex")
     }
     orphans = sorted(p.relative_to(_ROOT).as_posix() for p in on_disk - set(_DELIVERED))
     assert not orphans, (
@@ -218,7 +220,7 @@ def test_no_superseded_figure_survives(tex: Path):
 
 
 _VERDICT_TABLE = (
-    _ROOT / "reports" / "latex_report" / "tables" / "robustness_verdict_summary.tex"
+    _ROOT / _CLIENT_ROOT / "rapport_technique" / "tables" / "robustness_verdict_summary.tex"
 )
 _VERDICT_COUNT_RE = re.compile(r"(\d+) test\(s\) sur (\d+) franchissent")
 # Formulations qui affirment que *tous* les tests passent. La prose de la

@@ -10,7 +10,7 @@
 > (tous deux supprimés), et le répertoire `results/phase18/` (renommé
 > `results/production_report/`).
 >
-> **Pour les chiffres qui font foi**, voir `reports/latex_report/main.pdf` (rapport
+> **Pour les chiffres qui font foi**, voir `reports/client/rapport_technique/main.pdf` (rapport
 > technique client) et `results/production_report/mt5_reference.json`. Ce document est
 > conservé pour la trace du raisonnement de Phase 18, pas comme référence chiffrée.
 

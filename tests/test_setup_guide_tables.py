@@ -21,7 +21,7 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _ROOT / "scripts" / "build_setup_guide_tables.py"
-_GUIDE = _ROOT / "reports" / "client_setup_guide" / "main.tex"
+_GUIDE = _ROOT / "reports" / "client" / "guide_installation" / "main.tex"
 
 
 def _load_generator():
