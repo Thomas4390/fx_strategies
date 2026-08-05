@@ -37,46 +37,46 @@
 \contentsline {subsection}{\numberline {6.3}Paramètres expliqués}{17}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Performance historique}{18}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Pourquoi ce moteur n'utilise ni martingale ni grille}{19}{subsection.6.5}%
-\contentsline {section}{\numberline {7}Gestion du risque}{23}{section.7}%
+\contentsline {section}{\numberline {7}Gestion du risque}{24}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Ciblage de volatilité global}{24}{subsection.7.1}%
 \contentsline {subsection}{\numberline {7.2}Disjoncteur de drawdown (DD-cap)}{24}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Plafond d'utilisation de la marge}{24}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.3}Plafond d'utilisation de la marge}{25}{subsection.7.3}%
 \contentsline {subsection}{\numberline {7.4}Filtre des fenêtres de news}{25}{subsection.7.4}%
 \contentsline {subsection}{\numberline {7.5}Hiérarchie des protections}{25}{subsection.7.5}%
 \contentsline {section}{\numberline {8}Coûts d'exécution réalistes}{25}{section.8}%
 \contentsline {subsection}{\numberline {8.1}Slippage}{25}{subsection.8.1}%
-\contentsline {paragraph}{Application technique.}{25}{paragraph*.14}%
+\contentsline {paragraph}{Application technique.}{26}{paragraph*.14}%
 \contentsline {subsection}{\numberline {8.2}Commission}{26}{subsection.8.2}%
 \contentsline {subsection}{\numberline {8.3}Swap rollover}{26}{subsection.8.3}%
-\contentsline {subsection}{\numberline {8.4}Spread spike news}{26}{subsection.8.4}%
-\contentsline {subsection}{\numberline {8.5}Contribution totale des frais}{26}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.4}Spread spike news}{27}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Contribution totale des frais}{27}{subsection.8.5}%
 \contentsline {section}{\numberline {9}Paramètres : référence complète}{27}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Allocation et risque}{27}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.1}Allocation et risque}{28}{subsection.9.1}%
 \contentsline {subsection}{\numberline {9.2}Vol-targeting global}{28}{subsection.9.2}%
 \contentsline {subsection}{\numberline {9.3}Coûts d'exécution}{28}{subsection.9.3}%
-\contentsline {subsection}{\numberline {9.4}Source des données macro}{28}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.4}Source des données macro}{29}{subsection.9.4}%
 \contentsline {subsection}{\numberline {9.5}Opérationnel}{29}{subsection.9.5}%
 \contentsline {section}{\numberline {10}Lecture des résultats backtest}{29}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Métriques de premier ordre}{29}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Décomposition par sleeve}{29}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.1}Métriques de premier ordre}{30}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Décomposition par sleeve}{30}{subsection.10.2}%
 \contentsline {subsection}{\numberline {10.3}Year-by-year}{30}{subsection.10.3}%
-\contentsline {section}{\numberline {11}Quand intervenir manuellement}{30}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Scénario 1 --- Disjoncteur de drawdown déclenché}{30}{subsection.11.1}%
+\contentsline {section}{\numberline {11}Quand intervenir manuellement}{31}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Scénario 1 --- Disjoncteur de drawdown déclenché}{31}{subsection.11.1}%
 \contentsline {subsection}{\numberline {11.2}Scénario 2 --- Donnée macro stale ou indisponible}{31}{subsection.11.2}%
 \contentsline {subsection}{\numberline {11.3}Scénario 3 --- Changement de régime macro structurel}{31}{subsection.11.3}%
-\contentsline {subsection}{\numberline {11.4}Checklist d'intervention décisionnelle}{31}{subsection.11.4}%
+\contentsline {subsection}{\numberline {11.4}Checklist d'intervention décisionnelle}{32}{subsection.11.4}%
 \contentsline {section}{\numberline {12}Annexes}{32}{section.12}%
 \contentsline {subsection}{Annexe A --- Glossaire}{32}{section.12}%
 \contentsline {paragraph}{Termes financiers.}{32}{paragraph*.15}%
-\contentsline {paragraph}{Termes MetaTrader 5.}{32}{paragraph*.16}%
+\contentsline {paragraph}{Termes MetaTrader 5.}{33}{paragraph*.16}%
 \contentsline {subsection}{Annexe B --- FAQ client}{33}{paragraph*.16}%
 \contentsline {paragraph}{Q : Combien de temps faut-il pour comprendre la stratégie ?}{33}{paragraph*.17}%
 \contentsline {paragraph}{Q : La stratégie peut-elle perdre de l'argent ?}{33}{paragraph*.18}%
-\contentsline {paragraph}{Q : Pourquoi 62\,\% sur le Moteur~1 et si peu sur les autres ?}{33}{paragraph*.19}%
-\contentsline {paragraph}{Q : Que se passe-t-il si je change de broker ?}{33}{paragraph*.20}%
-\contentsline {paragraph}{Q : Puis-je désactiver un moteur ?}{33}{paragraph*.21}%
-\contentsline {paragraph}{Q : La stratégie est-elle adaptée à un compte EU retail $30\times $ ?}{33}{paragraph*.22}%
-\contentsline {paragraph}{Q : À quelle fréquence dois-je auditer les performances ?}{33}{paragraph*.23}%
-\contentsline {paragraph}{Q : Que faire si la stratégie n'a pas tradé pendant un mois ?}{33}{paragraph*.24}%
-\contentsline {subsection}{Annexe C --- Pour aller plus loin}{33}{paragraph*.24}%
+\contentsline {paragraph}{Q : Pourquoi 67\,\% sur le Moteur~1 et si peu sur les autres ?}{33}{paragraph*.19}%
+\contentsline {paragraph}{Q : Que se passe-t-il si je change de broker ?}{34}{paragraph*.20}%
+\contentsline {paragraph}{Q : Puis-je désactiver un moteur ?}{34}{paragraph*.21}%
+\contentsline {paragraph}{Q : La stratégie est-elle adaptée à un compte EU retail $30\times $ ?}{34}{paragraph*.22}%
+\contentsline {paragraph}{Q : À quelle fréquence dois-je auditer les performances ?}{34}{paragraph*.23}%
+\contentsline {paragraph}{Q : Que faire si la stratégie n'a pas tradé pendant un mois ?}{34}{paragraph*.24}%
+\contentsline {subsection}{Annexe C --- Pour aller plus loin}{34}{paragraph*.24}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

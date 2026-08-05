@@ -11,15 +11,22 @@ L'allocation du portefeuille est \textbf{statique et non discrétionnaire}~:
 \toprule
 \textbf{Moteur} & \textbf{Poids cible} \\
 \midrule
-Moteur 1 --- Mean Reversion Intraday Filtré & 62\,\% \\
+Moteur 1 --- Mean Reversion Intraday Filtré & 67\,\% \\
 Moteur 2 --- Momentum Journalier Multi-Paires & 9\,\% \\
 Moteur 3 --- Mean Reversion Journalière par RSI & 9\,\% \\
-Moteur 4 --- Momentum Multi-Actifs (or, dollar-yen, argent) & 20\,\% \\
+Moteur 4 --- Momentum Multi-Actifs (or, dollar-yen, argent) & 15\,\% \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Cette grille a été révisée en juillet~2026~: la sleeve momentum est passée de 10 à 20\,\%, puis a été ramenée à 15\,\% le 28~juillet après échec du test de sur-ajustement sur la grille d'allocations (section~\ref{sec:advanced_robustness}). Les cinq points nets sont pris sur la seule Mean Reversion Intraday~; les poids du Momentum Journalier et du RSI Journalier sont inchangés depuis l'origine. L'annexe~\ref{app:weight_sensitivity} mesure ce que d'autres répartitions auraient donné.
+
+\begin{insightbox}
+\textbf{Un cinquième moteur est présent dans le programme, à poids nul.} Le fichier livré compile une sleeve \emph{H1~Momentum}~--- un suivi de tendance sur données horaires~--- dont l'allocation \texttt{Inp\_AllocH1Momentum} vaut $0$. Ce n'est ni un oubli ni une réserve~: le moteur a été construit, intégré et mesuré en isolation dans le simulateur d'exécution, où il rend un Sharpe de $-3{,}98$. Le critère d'abandon~--- «~Sharpe autonome inférieur à $0{,}5$~$\rightarrow$ on n'intègre pas~»~--- avait été écrit \emph{avant} de lancer la mesure~; il a été appliqué tel quel.
+
+\smallskip
+Le code est conservé compilé plutôt que supprimé, pour qu'une refonte ultérieure reparte d'une base déjà branchée sur la couche de risque. \textbf{Laisser ce paramètre à zéro}~: le porter au-dessus activerait un moteur dont la seule mesure disponible est franchement négative.
+\end{insightbox}
 
 \textbf{Pas d'adaptation de régime, pas de risk-parity dynamique.} Ce choix, contre-intuitif à première vue, est le résultat de plusieurs tests comparatifs conduits pendant la recherche~:
 

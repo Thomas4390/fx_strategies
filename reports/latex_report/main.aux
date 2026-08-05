@@ -27,15 +27,15 @@
 \@writefile{toc}{\contentsline {section}{\numberline {3}Cadre méthodologique}{6}{section.3}\protected@file@percent }
 \newlabel{sec:methodology}{{3}{6}{Cadre méthodologique}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Moteur de backtest}{6}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Sources de données}{6}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Sources de données}{7}{subsection.3.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{7}{subsection.3.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{7}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (62\,\%)}{7}{section.4}\protected@file@percent }
-\newlabel{sec:mr_macro}{{4}{7}{Moteur 1 --- Mean Reversion Intraday Filtré (62\,\%)}{section.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (67\,\%)}{8}{section.4}\protected@file@percent }
+\newlabel{sec:mr_macro}{{4}{8}{Moteur 1 --- Mean Reversion Intraday Filtré (67\,\%)}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Intuition économique}{8}{subsection.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Mécanique du signal}{8}{subsection.4.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}}{9}{figure.caption.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Performance historique}{9}{subsection.4.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Équité et drawdown du Moteur~1 pris isolément sur la période 2019--2026 (non pondéré, non leveragé). La ligne verticale pointillée marque le début de la fenêtre hors échantillon.}}{9}{figure.caption.6}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \xpg@aux {}{french}\ignorespaces Performance annuelle du Moteur~1 pris isolément. L'année 2021 ne produit aucun trade parce que le spread 10Y--2Y est resté supérieur à 0.5 toute l'année post-Covid, déclenchant le filtre macro.}}{9}{table.caption.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Exemples de trades réels}{10}{subsection.4.4}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces \xpg@aux {}{french}\ignorespaces Exemples de trades MR Macro sur EUR-USD — deux meilleurs, un médian, deux pires. La colonne Durée illustre le design intraday~: la position est dénouée dans la séance.}}{10}{table.caption.8}\protected@file@percent }
@@ -185,22 +185,75 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.1}La question posée}{58}{subsection.C.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Méthodologie succincte}{59}{subsection.C.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Comparaison d'allocations nommées}{59}{subsection.C.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces \xpg@aux {}{french}\ignorespaces Comparaison de 8 répartitions nommées du trio FX sous le régime de risque production ($\mathrm  {tv}=0.37$, $\mathrm  {ml}=31$, DD-cap désactivé), la sleeve or restant à 20\,\%. Sharpe WF = moyenne sur les fenêtres annuelles glissantes.}}{59}{table.caption.45}\protected@file@percent }
-\newlabel{tbl:weight_sensitivity_named}{{20}{59}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Comparaison de 8 répartitions nommées du trio FX sous le régime de risque production ($\mathrm {tv}=0.37$, $\mathrm {ml}=31$, DD-cap désactivé), la sleeve or restant à 20\,\%. Sharpe WF = moyenne sur les fenêtres annuelles glissantes}{table.caption.45}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces \xpg@aux {}{french}\ignorespaces Comparaison de 8 répartitions nommées du trio FX sous le régime de risque production ($\mathrm  {tv}=0.37$, $\mathrm  {ml}=31$, DD-cap désactivé), la sleeve or restant à 15\,\%. Sharpe WF = moyenne sur les fenêtres annuelles glissantes.}}{59}{table.caption.45}\protected@file@percent }
+\newlabel{tbl:weight_sensitivity_named}{{20}{59}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Comparaison de 8 répartitions nommées du trio FX sous le régime de risque production ($\mathrm {tv}=0.37$, $\mathrm {ml}=31$, DD-cap désactivé), la sleeve or restant à 15\,\%. Sharpe WF = moyenne sur les fenêtres annuelles glissantes}{table.caption.45}{}}
 \@writefile{toc}{\contentsline {paragraph}{Trois observations saillantes.}{59}{paragraph*.47}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {25}{\ignorespaces \xpg@aux {}{french}\ignorespaces Comparaison directe de huit répartitions nommées du trio FX, la sleeve momentum restant à $20\,\%$. La répartition de production est mise en évidence en orange.}}{60}{figure.caption.46}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {25}{\ignorespaces \xpg@aux {}{french}\ignorespaces Comparaison directe de huit répartitions nommées du trio FX, la sleeve momentum restant à $15\,\%$. La répartition de production est mise en évidence en orange.}}{60}{figure.caption.46}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.4}Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}{60}{subsection.C.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Lecture du plateau.}{60}{paragraph*.49}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {26}{\ignorespaces \xpg@aux {}{french}\ignorespaces Quatre métriques tracées contre la part MR, avec $w_{\text  {TS}} = w_{\text  {RSI}} = (1-w_{\text  {MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text  {MR}} \approx 0.45$ et $w_{\text  {MR}} \approx 0.80$ (de $1.21$ à $1.25$), avec un maximum à $0.65$. Le Max Drawdown, lui, est le moins profond autour de $w_{\text  {MR}} = 0.45$ ($-50.9\,\%$) et se creuse vers les deux extrémités. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text  {MR}} = 0.45$--$0.50$.}}{61}{figure.caption.48}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {26}{\ignorespaces \xpg@aux {}{french}\ignorespaces Quatre métriques tracées contre la part MR, avec $w_{\text  {TS}} = w_{\text  {RSI}} = (1-w_{\text  {MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text  {MR}} \approx 0.50$ et $w_{\text  {MR}} \approx 0.80$ (de $1.18$ à $1.22$), avec un maximum à $0.60$. Le Max Drawdown, lui, est le moins profond autour de $w_{\text  {MR}} = 0.70$ ($-50.0\,\%$) et se creuse vers la seule extrémité sans~MR. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text  {MR}} = 0.65$.}}{61}{figure.caption.48}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Carte ternaire du simplex complet}{61}{subsection.C.5}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {21}{\ignorespaces \xpg@aux {}{french}\ignorespaces Top-3 et bottom-3 des 231 répartitions du simplex FX (pas de 0.05), classées par Sharpe WF, la sleeve or restant à 20\,\%. La part moyenne de MR y passe de 40\,\% en tête à 2\,\% en queue de classement.}}{61}{table.caption.51}\protected@file@percent }
-\newlabel{tbl:weight_sensitivity_extremes}{{21}{61}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Top-3 et bottom-3 des 231 répartitions du simplex FX (pas de 0.05), classées par Sharpe WF, la sleeve or restant à 20\,\%. La part moyenne de MR y passe de 40\,\% en tête à 2\,\% en queue de classement}{table.caption.51}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {21}{\ignorespaces \xpg@aux {}{french}\ignorespaces Top-3 et bottom-3 des 231 répartitions du simplex FX (pas de 0.05), classées par Sharpe WF, la sleeve or restant à 15\,\%. La part moyenne de MR y passe de 35\,\% en tête à 2\,\% en queue de classement.}}{61}{table.caption.51}\protected@file@percent }
+\newlabel{tbl:weight_sensitivity_extremes}{{21}{61}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Top-3 et bottom-3 des 231 répartitions du simplex FX (pas de 0.05), classées par Sharpe WF, la sleeve or restant à 15\,\%. La part moyenne de MR y passe de 35\,\% en tête à 2\,\% en queue de classement}{table.caption.51}{}}
 \@writefile{toc}{\contentsline {paragraph}{Distance au maximum.}{61}{paragraph*.52}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {27}{\ignorespaces \xpg@aux {}{french}\ignorespaces Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux répartitions pures du trio FX~: $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI, la sleeve momentum restant fixée à $20\,\%$ du portefeuille en chacun des points. La zone la plus défavorable est le coin $100\,\%$~RSI~; le plateau haut forme une bande large, ce qui est le résultat recherché.}}{62}{figure.caption.50}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {27}{\ignorespaces \xpg@aux {}{french}\ignorespaces Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux répartitions pures du trio FX~: $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI, la sleeve momentum restant fixée à $15\,\%$ du portefeuille en chacun des points. La zone la plus défavorable est le coin $100\,\%$~RSI~; le plateau haut forme une bande large, ce qui est le résultat recherché.}}{62}{figure.caption.50}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{62}{subsection.C.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Lecture de la frontière.}{62}{paragraph*.54}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {28}{\ignorespaces \xpg@aux {}{french}\ignorespaces Scatter de toutes les allocations du simplex dans le plan (Volatilité annualisée, CAGR), coloré par Sharpe WF. La ligne pointillée bourgogne trace la frontière efficiente empirique~--- l'enveloppe supérieure des points, c'est-à-dire le meilleur CAGR atteignable pour chaque niveau de volatilité. La répartition de production est marquée d'une étoile orange.}}{63}{figure.caption.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Principes méthodologiques du \textit  {robustness report}}{63}{appendix.D}\protected@file@percent }
+\newlabel{app:robustness_methodology}{{D}{63}{Principes méthodologiques du \textit {robustness report}}{appendix.D}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{64}{subsection.D.1}\protected@file@percent }
+\newlabel{app:robustness_problem}{{D.1}{64}{Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{subsection.D.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Biais d'échantillon (\textsc  {Lo} 2002).}{64}{paragraph*.55}\protected@file@percent }
+\newlabel{eq:lo_sharpe_std}{{1}{64}{Biais d'échantillon (\textsc {Lo} 2002)}{equation.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Biais de sélection (\textsc  {Bailey--L\'opez~de~Prado} 2014).}{64}{paragraph*.56}\protected@file@percent }
+\newlabel{eq:extreme_value_max_sharpe}{{2}{64}{Biais de sélection (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dépendance temporelle.}{64}{paragraph*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Block bootstrap stationnaire (\textsc  {Politis--Romano} 1994)}{64}{subsection.D.2}\protected@file@percent }
+\newlabel{app:politis_romano}{{D.2}{64}{Block bootstrap stationnaire (\textsc {Politis--Romano} 1994)}{subsection.D.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Principe.}{64}{paragraph*.58}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi une longueur géométrique?}{64}{paragraph*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Algorithme.}{64}{paragraph*.60}\protected@file@percent }
+\newlabel{eq:stationary_bootstrap_recurrence}{{3}{64}{Algorithme}{equation.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Choix de $L$.}{65}{paragraph*.61}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Probabilistic Sharpe Ratio (\textsc  {Bailey--L\'opez~de~Prado} 2012)}{65}{subsection.D.3}\protected@file@percent }
+\newlabel{app:psr}{{D.3}{65}{Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{subsection.D.3}{}}
+\newlabel{eq:psr}{{4}{65}{Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{equation.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.4}Deflated Sharpe Ratio (\textsc  {Bailey--L\'opez~de~Prado} 2014)}{65}{subsection.D.4}\protected@file@percent }
+\newlabel{app:dsr}{{D.4}{65}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{subsection.D.4}{}}
+\newlabel{eq:expected_max_sharpe}{{5}{65}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.5}{}}
+\newlabel{eq:dsr}{{6}{65}{Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{equation.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exemple numérique Apogee.}{65}{paragraph*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La limite de ce test, et où elle se voit.}{65}{paragraph*.63}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.5}Haircut Sharpe Ratio (\textsc  {Harvey--Liu} 2015)}{66}{subsection.D.5}\protected@file@percent }
+\newlabel{app:haircut}{{D.5}{66}{Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{subsection.D.5}{}}
+\newlabel{eq:bhy_correction}{{7}{66}{Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{equation.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Ratio de survie.}{66}{paragraph*.64}\protected@file@percent }
+\newlabel{eq:haircut_ratio}{{8}{66}{Ratio de survie}{equation.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.6}Minimum Backtest Length (\textsc  {Bailey et al.} 2014)}{66}{subsection.D.6}\protected@file@percent }
+\newlabel{app:minbtl}{{D.6}{66}{Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{subsection.D.6}{}}
+\newlabel{eq:minbtl}{{9}{66}{Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{equation.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exemples numériques.}{66}{paragraph*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Utilisation comme \emph  {power calculation} a priori.}{67}{paragraph*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.7}Probability of Backtest Overfitting via CSCV (\textsc  {Bailey et al.} 2015)}{67}{subsection.D.7}\protected@file@percent }
+\newlabel{app:pbo_cscv}{{D.7}{67}{Probability of Backtest Overfitting via CSCV (\textsc {Bailey et al.} 2015)}{subsection.D.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Algorithme CSCV (Combinatorially Symmetric Cross-Validation).}{67}{paragraph*.67}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi «~symétrique~»?}{67}{paragraph*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Interprétation du logit.}{67}{paragraph*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limite.}{67}{paragraph*.70}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.8}Hansen SPA (2005) et Romano--Wolf StepM (2005)}{68}{subsection.D.8}\protected@file@percent }
+\newlabel{app:spa_stepm}{{D.8}{68}{Hansen SPA (2005) et Romano--Wolf StepM (2005)}{subsection.D.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Hansen SPA (Superior Predictive Ability).}{68}{paragraph*.71}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Romano--Wolf StepM.}{68}{paragraph*.72}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Implémentation.}{68}{paragraph*.73}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.9}Stratégie de combinaison --- quelle hiérarchie de tests ?}{68}{subsection.D.9}\protected@file@percent }
+\newlabel{app:hierarchy}{{D.9}{68}{Stratégie de combinaison --- quelle hiérarchie de tests ?}{subsection.D.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Stade~1 --- Backtest unique, zéro \emph  {data snooping}.}{68}{paragraph*.74}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~2 --- Après \emph  {grid search} / optimisation de paramètres.}{68}{paragraph*.75}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~3 --- Sélection finale parmi $N$~candidats.}{68}{paragraph*.76}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stade~4 --- Validation opérationnelle.}{68}{paragraph*.77}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Application au portefeuille Apogee.}{68}{paragraph*.78}\protected@file@percent }
 \global\@namedef{scr@dte@section@lastmaxnumwidth}{13.03195pt}
 \global\@namedef{scr@dte@subsection@lastmaxnumwidth}{24.25418pt}
 \@writefile{toc}{\providecommand\tocbasic@end@toc@file{}\tocbasic@end@toc@file}
-\gdef \@abspage@last{67}
+\gdef \@abspage@last{73}

@@ -20,7 +20,7 @@ Un rapport de \emph{backtest} standard reporte typiquement trois statistiques po
 \sigma(\widehat{\mathrm{SR}}) \approx \sqrt{\frac{1 + 0.5\,\widehat{\mathrm{SR}}^{2}}{T}}
 \label{eq:lo_sharpe_std}
 \end{equation}
-Sur 7.5~ans de données journalières ($T = 1\,887$), un Sharpe réel nul peut produire un Sharpe observé de $\pm 0.25$ par pure chance. Le bruit d'estimation est loin d'être négligeable.
+Sur les 8.5~ans de données journalières de ce portefeuille ($T = 2\,146$), cette formule donne un écart-type annualisé de $0.34$ sur l'estimateur~: un Sharpe vrai nul peut produire un Sharpe observé de cet ordre par pure chance. Le bruit d'estimation est loin d'être négligeable, et c'est ce qui explique la largeur de l'intervalle de confiance publié pour le Sharpe (tableau~\ref{tab:robustness_verdict_summary}).
 
 \paragraph{Biais de sélection (\textsc{Bailey--L\'opez~de~Prado} 2014).} Lorsqu'on teste $N$~configurations et qu'on rapporte le meilleur résultat, l'espérance du maximum sous hypothèse nulle est approximativement~:
 \begin{equation}
@@ -52,7 +52,7 @@ i_{k+1} = \begin{cases}
 \end{equation}
 avec $i_{1}$ tiré uniformément. Les indices $\{i_{1}, \ldots, i_{T}\}$ permettent de construire le ré-échantillon $\{r_{i_{1}}, \ldots, r_{i_{T}}\}$ sur lequel on calcule la statistique d'intérêt. Le processus est répété $n_{\text{boot}}$~fois (3000 dans notre cas) et les quantiles empiriques de la distribution donnent les intervalles de confiance.
 
-\paragraph{Choix de $L$.} \textsc{Hall}, \textsc{Horowitz} et \textsc{Jing} (1995) recommandent $L \propto T^{1/3}$. Pour $T = 1764$~barres journalières, cette règle donne $L \approx 12$. Notre choix de $L = 20$ est légèrement conservateur, ce qui donne des intervalles de confiance légèrement plus larges et donc plus prudents.
+\paragraph{Choix de $L$.} \textsc{Hall}, \textsc{Horowitz} et \textsc{Jing} (1995) recommandent $L \propto T^{1/3}$. Pour $T = 2\,146$~barres journalières, cette règle donne $L \approx 13$. Notre choix de $L = 20$ est légèrement conservateur, ce qui donne des intervalles de confiance légèrement plus larges et donc plus prudents.
 
 \subsection{Probabilistic Sharpe Ratio (\textsc{Bailey--L\'opez~de~Prado} 2012)}
 \label{app:psr}
@@ -97,7 +97,7 @@ où $\gamma = 0.5772\ldots$ est la constante d'Euler--Mascheroni et $\Phi^{-1}$ 
 \label{eq:dsr}
 \end{equation}
 
-\paragraph{Exemple numérique Apogee.} $N = 382$~essais (les configurations distinctes du registre d'essais du projet), $\widehat{\sigma}[\widehat{\mathrm{SR}}] \approx 0.024$ entre les allocations rivales, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 382] = 0.122$. Le Sharpe observé $\widehat{\mathrm{SR}} = 0.99$ dépasse ce seuil d'un facteur $8$, d'où DSR~$= 1.000$.
+\paragraph{Exemple numérique Apogee.} $N = 382$~essais (les configurations distinctes du registre d'essais du projet), $\widehat{\sigma}[\widehat{\mathrm{SR}}] = 0.062$ entre les allocations rivales, ce qui donne $\mathbb{E}[\max \mathrm{SR}\mid N = 382] = 0.185$. Le Sharpe observé $\widehat{\mathrm{SR}} = 0.99$ dépasse ce seuil d'un facteur $5$, d'où DSR~$= 1.000$.
 
 \paragraph{La limite de ce test, et où elle se voit.} Le seuil dépend beaucoup moins de $N$ (il croît en $\sqrt{2\ln N}$) que de la \emph{dispersion} des essais rivaux. Ici les $382$~essais sont des variantes d'un même portefeuille~: leur dispersion est faible, le seuil est bas, et le verdict favorable est en partie mécanique. Appliquée aux $21$~instruments du criblage, dont les Sharpe s'étalent de $-1.05$ à $+0.78$, la même formule donne $\mathbb{E}[\max \mathrm{SR}] = 2.89$~--- seuil qu'aucun des trois instruments retenus ne franchit. Le DSR valide l'assemblage, pas la sélection des composants.
 
@@ -139,7 +139,7 @@ où $c(N)$ est le $N$-ème nombre harmonique.
 \mathrm{Haircut\ Ratio} = \frac{\mathrm{SR}_{\text{haircut}}}{\widehat{\mathrm{SR}}}
 \label{eq:haircut_ratio}
 \end{equation}
-qui représente la fraction de l'\emph{edge} qui survit à la correction. Un ratio supérieur à $80\,\%$ est un bon signe~--- l'\emph{edge} est grand relativement à la variance d'estimation et les corrections multi-test ont peu d'emprise. Pour le portefeuille Apogee, le ratio BHY est $79.29\,\%$.
+qui représente la fraction de l'\emph{edge} qui survit à la correction. Un ratio supérieur à $80\,\%$ est un bon signe~--- l'\emph{edge} est grand relativement à la variance d'estimation et les corrections multi-test ont peu d'emprise. Pour le portefeuille Apogee, le ratio BHY est $96.11\,\%$ (tableau~\ref{tab:robustness_overfitting}).
 
 \subsection{Minimum Backtest Length (\textsc{Bailey et al.} 2014)}
 \label{app:minbtl}
@@ -200,7 +200,7 @@ En entrée~: une matrice $M \in \mathbb{R}^{T \times n_{\text{configs}}}$ des re
 \item $\text{logit} < 0$ : le vainqueur IS tombe sous la médiane OOS (\emph{overfitting} manifeste).
 \end{itemize}
 
-Pour Apogee, PBO~$= 0.305$. Sur les 12\,870~partitions, 30.5\,\% voient le vainqueur IS tomber sous la médiane OOS. C'est sous le seuil critique de $0.5$, signalant un régime sain.
+Pour Apogee, PBO~$= 0.649$~: dans $64{,}9\,\%$ des partitions, l'allocation la mieux classée in-sample retombe sous la médiane hors échantillon. C'est \emph{au-dessus} du seuil critique de $0.5$~--- ce test échoue, et c'est lui qui a fait ramener le poids de la sleeve momentum de $20\,\%$ à $15\,\%$ (section~\ref{sec:advanced_robustness}). Le PBO est mesuré sur la grille d'allocations réellement parcourue~; les éditions antérieures de ce rapport le calculaient sur la matrice des quatre \emph{sleeves} et annonçaient $0.305$, une valeur qui répondait à une question jamais posée dans ce projet.
 
 \paragraph{Limite.} Le CSCV suppose que les configurations sont échantillonnées du même «~univers~». Si on a $N = 2$~configurations très différentes, le PBO est peu informatif. Il devient significatif à partir de $N \geq 10$.
 
@@ -234,4 +234,4 @@ Les tests implémentés dans \texttt{framework.robustness} ne sont pas tous appl
 
 \paragraph{Stade~4 --- Validation opérationnelle.} Monte Carlo sur les \emph{trades} (\emph{sequence risk}), walk-forward multi-horizon, \emph{paper trading} $\geq 3$~mois, \emph{stress test} scénarios (2008 GFC, 2020 Covid, 2022 UK gilts, \ldots). \textit{Verdict~: la stratégie tient-elle en conditions réelles~?}
 
-\paragraph{Application au portefeuille Apogee.} Les stades~1, 2 et 3 sont documentés dans la section~\ref{sec:advanced_robustness} avec un \emph{caveat} sur l'interprétation SPA vs DSR. Le stade~4 est couvert par la section~\ref{sec:stress_test} (bootstrap historique), la section~\ref{sec:scenarios} (rejeu de scénarios historiques) et la section~\ref{sec:production} (checklist \emph{paper-trade} et déploiement). Une stratégie qui franchit les quatre stades avant capital réel est statistiquement défendable~--- le portefeuille Apogee en fait partie.
+\paragraph{Application au portefeuille Apogee.} Les stades~1, 2 et 3 sont documentés dans la section~\ref{sec:advanced_robustness} avec un \emph{caveat} sur l'interprétation SPA vs DSR. Le stade~4 est couvert par la section~\ref{sec:stress_test} (bootstrap historique), la section~\ref{sec:scenarios} (rejeu de scénarios historiques) et la section~\ref{sec:production} (checklist \emph{paper-trade} et déploiement). Une stratégie qui franchit les quatre stades avant capital réel est statistiquement défendable. \textbf{Ce portefeuille n'en fait pas partie~:} au stade~2, deux tests sur six échouent~--- la probabilité de sur-ajustement et la longueur minimale de \emph{backtest} (section~\ref{sec:limitations}). Le stade~4 n'est pas encore consommé~: le \emph{paper-trade} reste à faire, et c'est la seule validation de ce portefeuille qui soit authentiquement pré-engagée.

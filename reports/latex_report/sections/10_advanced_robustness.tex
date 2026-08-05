@@ -3,7 +3,7 @@
 
 \subsection{Pourquoi un Sharpe ponctuel ne suffit pas}
 
-Un Sharpe rapporté seul est une \emph{statistique ponctuelle} dont la fiabilité dépend de trois biais bien documentés en recherche quantitative~: le bruit d'estimation sur échantillon fini, le biais de sélection lorsqu'on rapporte la meilleure configuration parmi plusieurs testées, et la dépendance temporelle des rendements qui viole l'hypothèse d'indépendance sous-jacente aux tests classiques. Cette section applique une batterie de tests statistiques qui répondent à chacun de ces biais et produisent des intervalles de confiance, des corrections pour tests multiples et des mesures de sur-ajustement. Le verdict consolidé est donné en fin de section~: \textbf{les six tests franchissent leur seuil.}
+Un Sharpe rapporté seul est une \emph{statistique ponctuelle} dont la fiabilité dépend de trois biais bien documentés en recherche quantitative~: le bruit d'estimation sur échantillon fini, le biais de sélection lorsqu'on rapporte la meilleure configuration parmi plusieurs testées, et la dépendance temporelle des rendements qui viole l'hypothèse d'indépendance sous-jacente aux tests classiques. Cette section applique une batterie de tests statistiques qui répondent à chacun de ces biais et produisent des intervalles de confiance, des corrections pour tests multiples et des mesures de sur-ajustement. Le verdict consolidé est donné en fin de section~: \textbf{quatre des six tests franchissent leur seuil~; les deux qui échouent portent sur ce que la sélection a coûté, pas sur l'existence de l'\emph{edge}.} Les formules et la procédure de chaque test sont détaillées en annexe~\ref{app:robustness_methodology}.
 
 \subsection{Intervalles de confiance bootstrap sur les métriques}
 
@@ -67,7 +67,7 @@ Cinq tests complémentaires sont appliqués. Chacun pose une question légèreme
 
 \begin{itemize}
 \item \textbf{Probabilistic Sharpe Ratio (PSR)~$= 1.000$}~: la probabilité que le vrai Sharpe soit supérieur à zéro est de 100\,\%, après correction pour la non-normalité des rendements.
-\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les $382$~configurations distinctes du registre d'essais, le Sharpe observé dépasse d'un facteur~$8$ l'espérance du maximum sous hypothèse nulle ($0.99$ contre $0.122$). Le portefeuille combiné n'est pas le fruit d'un \emph{best of N}.
+\item \textbf{Deflated Sharpe Ratio (DSR)~$= 1.000$}~: après correction pour le biais de sélection sur les $382$~configurations distinctes du registre d'essais, le Sharpe observé dépasse d'un facteur~$5$ l'espérance du maximum sous hypothèse nulle ($0.99$ contre $0.185$). Le portefeuille combiné n'est pas le fruit d'un \emph{best of N}.
 \end{itemize}
 
 \begin{warningbox}
@@ -86,7 +86,7 @@ Le \textbf{PSR} répond à~: \emph{ce participant-là est-il statistiquement dif
 Le \textbf{DSR} répond à~: \emph{ce participant est-il significatif sachant qu'il est le vainqueur de 1\,000 essais~?} Il compare son $z=3$ à $\mathbb{E}[\max z] \approx \sqrt{2\ln 1000} \approx 3.72$. Conclusion~: non, son score est en-dessous de ce qu'on attend par chance. Le DSR dira non.
 
 \smallskip
-\textbf{Application Apogée.} Avec $N=382$ configurations distinctes déclarées au registre d'essais, $\mathbb{E}[\max \mathrm{SR}\mid N=382] \approx 0.122$. Le Sharpe observé $\widehat{\mathrm{SR}}=0.99$ dépasse ce seuil d'un facteur~$8$, d'où DSR~$\approx 1.000$. Le seuil croît en $\sqrt{2\ln N}$, donc lentement~: passer de $382$ à $10\,000$~essais ne le porterait qu'à $\approx 0.145$. \textbf{Ce qui fait vraiment bouger la déflation, ce n'est pas $N$, c'est la dispersion des essais rivaux}~--- ici $\widehat{\sigma}(\mathrm{SR}) = 0.024$ entre des allocations quasi identiques, donc un seuil bas.
+\textbf{Application Apogée.} Avec $N=382$ configurations distinctes déclarées au registre d'essais, $\mathbb{E}[\max \mathrm{SR}\mid N=382] = 0.185$. Le Sharpe observé $\widehat{\mathrm{SR}}=0.99$ dépasse ce seuil d'un facteur~$5$, d'où DSR~$\approx 1.000$. Le seuil croît en $\sqrt{2\ln N}$, donc lentement~: passer de $382$ à $10\,000$~essais ne le porterait qu'à $0.240$. \textbf{Ce qui fait vraiment bouger la déflation, ce n'est pas $N$, c'est la dispersion des essais rivaux}~--- ici $\widehat{\sigma}(\mathrm{SR}) = 0.062$ entre des allocations quasi identiques, donc un seuil bas.
 
 \smallskip
 \textbf{Et c'est précisément la limite de ce test ici.} Les $382$~essais sont des variantes du \emph{même} portefeuille~; leur faible dispersion rend le seuil facile à franchir, et le verdict favorable est en partie mécanique. Appliquée à une famille réellement hétérogène~--- les $21$~instruments du criblage, dont les Sharpe s'étalent de $-1.05$ à $+0.78$~--- la même formule donne un seuil de $2.89$ que \emph{aucun} candidat ne franchit. Le PBO, lui, ne dépend d'aucun $N$ déclaré~: c'est pourquoi son verdict est le plus informatif des cinq, et c'est lui qui a tranché ici.

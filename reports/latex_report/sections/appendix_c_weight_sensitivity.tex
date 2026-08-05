@@ -3,7 +3,7 @@
 
 \subsection{La question posée}
 
-Le portefeuille final alloue $62\,\%$ à MR~Macro, $9\,\%$ à TS~Momentum~3p, $9\,\%$ à RSI~Daily~3p et $20\,\%$ à la sleeve momentum. Cette annexe balaie la répartition \emph{interne au trio FX} --- soit, une fois la sleeve momentum servie, les $77/11/11$ que forment les poids absolus du trio sur les $80\,\%$ restants. Le poids de la sleeve momentum n'est pas balayé ici~: il a été tranché séparément, et la section~\ref{sec:gold_momentum} explique pourquoi il a été borné plutôt qu'optimisé. Une question reste ouverte pour un allocateur critique~:
+Le portefeuille final alloue $67\,\%$ à MR~Macro, $9\,\%$ à TS~Momentum~3p, $9\,\%$ à RSI~Daily~3p et $15\,\%$ à la sleeve momentum. Cette annexe balaie la répartition \emph{interne au trio FX} --- soit, une fois la sleeve momentum servie, les $79/11/11$ que forment les poids absolus du trio sur les $85\,\%$ restants. Le poids de la sleeve momentum n'est pas balayé ici~: il a été tranché séparément, et la section~\ref{sec:gold_momentum} explique pourquoi il a été borné plutôt qu'optimisé. Une question reste ouverte pour un allocateur critique~:
 
 \begin{quote}
 \emph{La répartition retenue est-elle une pointe isolée sensible au moindre changement de pondération, ou un plateau stable à l'intérieur duquel toute perturbation raisonnable préserve la performance ?}
@@ -16,7 +16,7 @@ Le balayage est conduit sous la couche de risque production ($\mathrm{target\_vo
 Trois grilles de poids sont testées~:
 
 \begin{itemize}
-\item \textbf{Huit répartitions nommées} du trio FX --- production $77/11/11$, pur~MR $100/0/0$, sans~MR $0/50/50$, $70/15/15$, $60/20/20$, $50/25/25$, équipondéré $33/33/33$, et risk-parity inverse-vol (allocation dynamique des composantes par l'inverse de leur volatilité expansive).
+\item \textbf{Huit répartitions nommées} du trio FX --- production $79/11/11$, pur~MR $100/0/0$, sans~MR $0/50/50$, $70/15/15$, $60/20/20$, $50/25/25$, équipondéré $33/33/33$, et risk-parity inverse-vol (allocation dynamique des composantes par l'inverse de leur volatilité expansive).
 \item \textbf{Balayage 1D} --- $w_{\text{MR}}$ varie de $0\,\%$ à $100\,\%$ par pas de $5\,\%$, avec $w_{\text{TS}} = w_{\text{RSI}} = (1-w_{\text{MR}})/2$ ($21$~points).
 \item \textbf{Maillage 2D du simplex} --- grille régulière de pas $0.05$ sur le 2-simplexe $\{(w_{\text{MR}}, w_{\text{TS}}, w_{\text{RSI}}) : w_i \ge 0,\ \sum_i w_i = 1\}$, soit $231$~points valides.
 \end{itemize}
@@ -30,14 +30,14 @@ Cinq métriques sont calculées par répartition~: Sharpe walk-forward (moyenne 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.98\linewidth]{weight_sensitivity_named_bars.png}
-\caption{Comparaison directe de huit répartitions nommées du trio FX, la sleeve momentum restant à $20\,\%$. La répartition de production est mise en évidence en orange.}
+\caption{Comparaison directe de huit répartitions nommées du trio FX, la sleeve momentum restant à $15\,\%$. La répartition de production est mise en évidence en orange.}
 \end{figure}
 
 \paragraph{Trois observations saillantes.}
 \begin{itemize}
-\item \textbf{Le pur MR reste la plus mauvaise des répartitions équilibrées.} Le $100/0/0$ donne un Sharpe walk-forward de $1.061$ contre $1.225$ pour la production, pour un repli équivalent ($-54.70\,\%$ contre $-55.00\,\%$). Le gain des diversifiants se lit donc désormais sur le rendement --- $27.53\,\%$ de CAGR contre $35.08\,\%$ --- plutôt que sur le repli, exactement comme la conception le prévoyait.
-\item \textbf{La répartition de production n'est pas l'optimum du balayage.} Plusieurs points voisins font mieux --- $70/15/15$ atteint $1.247$, $60/20/20$ $1.245$, et le meilleur point du simplexe $1.340$. L'écart reste de l'ordre du bruit d'estimation, mais il faut le dire~: la production occupe un plateau, pas un sommet.
-\item \textbf{Le risk-parity inverse-vol fait aussi bien, avec un repli nettement moindre.} Son Sharpe walk-forward de $1.210$ est comparable, pour un Max~Drawdown de $-41.42\,\%$ contre $-55.00\,\%$, soit le meilleur Calmar de la table ($0.98$ contre $0.64$). C'est une piste d'amélioration identifiée, non retenue à ce stade pour ne pas introduire une allocation dynamique dans une configuration déjà en cours de validation.
+\item \textbf{Le pur MR reste la plus mauvaise des répartitions équilibrées.} Le $100/0/0$ donne un Sharpe walk-forward de $1.016$ contre $1.185$ pour la production, pour un repli équivalent ($-50.56\,\%$ contre $-50.37\,\%$). Le gain des diversifiants se lit donc désormais sur le rendement --- $26.88\,\%$ de CAGR contre $34.62\,\%$ --- plutôt que sur le repli, exactement comme la conception le prévoyait.
+\item \textbf{La répartition de production n'est pas l'optimum du balayage.} Plusieurs points voisins font mieux --- $70/15/15$ atteint $1.216$, $60/20/20$ $1.218$, et le meilleur point du simplexe $1.333$. L'écart reste de l'ordre du bruit d'estimation, mais il faut le dire~: la production occupe un plateau, pas un sommet.
+\item \textbf{Le risk-parity inverse-vol fait aussi bien, avec un repli nettement moindre.} Son Sharpe walk-forward de $1.210$ est comparable, pour un Max~Drawdown de $-41.42\,\%$ contre $-50.37\,\%$, soit le meilleur Calmar de la table ($0.98$ contre $0.69$). C'est une piste d'amélioration identifiée, non retenue à ce stade pour ne pas introduire une allocation dynamique dans une configuration déjà en cours de validation.
 \end{itemize}
 
 \subsection{Balayage 1D --- part MR de $0\,\%$ à $100\,\%$}
@@ -45,22 +45,22 @@ Cinq métriques sont calculées par répartition~: Sharpe walk-forward (moyenne 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.98\linewidth]{weight_sensitivity_1d_mr.png}
-\caption{Quatre métriques tracées contre la part MR, avec $w_{\text{TS}} = w_{\text{RSI}} = (1-w_{\text{MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text{MR}} \approx 0.45$ et $w_{\text{MR}} \approx 0.80$ (de $1.21$ à $1.25$), avec un maximum à $0.65$. Le Max Drawdown, lui, est le moins profond autour de $w_{\text{MR}} = 0.45$ ($-50.9\,\%$) et se creuse vers les deux extrémités. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text{MR}} = 0.45$--$0.50$.}
+\caption{Quatre métriques tracées contre la part MR, avec $w_{\text{TS}} = w_{\text{RSI}} = (1-w_{\text{MR}})/2$. L'étoile orange matérialise le point production. Le Sharpe WF forme un plateau large entre $w_{\text{MR}} \approx 0.50$ et $w_{\text{MR}} \approx 0.80$ (de $1.18$ à $1.22$), avec un maximum à $0.60$. Le Max Drawdown, lui, est le moins profond autour de $w_{\text{MR}} = 0.70$ ($-50.0\,\%$) et se creuse vers la seule extrémité sans~MR. Le Calmar, qui combine les deux, atteint son maximum autour de $w_{\text{MR}} = 0.65$.}
 \end{figure}
 
-\paragraph{Lecture du plateau.} Sur le Sharpe walk-forward, la courbe présente un plateau plat sur une large plage de $w_{\text{MR}}$. Déplacer la production de dix points dans un sens ou dans l'autre ne modifie le Sharpe que de quelques centièmes ($1.234$ à $w_{\text{MR}} = 0.75$, $1.214$ à $0.80$). C'est la définition opérationnelle d'un plateau robuste.
+\paragraph{Lecture du plateau.} Sur le Sharpe walk-forward, la courbe présente un plateau plat sur une large plage de $w_{\text{MR}}$. Déplacer la production de dix points dans un sens ou dans l'autre ne modifie le Sharpe que de quelques centièmes ($1.200$ à $w_{\text{MR}} = 0.75$, $1.181$ à $0.80$). C'est la définition opérationnelle d'un plateau robuste.
 
 \subsection{Carte ternaire du simplex complet}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.93\linewidth]{weight_sensitivity_simplex_ternary.png}
-\caption{Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux répartitions pures du trio FX~: $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI, la sleeve momentum restant fixée à $20\,\%$ du portefeuille en chacun des points. La zone la plus défavorable est le coin $100\,\%$~RSI~; le plateau haut forme une bande large, ce qui est le résultat recherché.}
+\caption{Carte de chaleur ternaire du Sharpe WF sur le 2-simplexe complet ($231$~points). Les sommets correspondent aux répartitions pures du trio FX~: $100\,\%$~MR, $100\,\%$~TS et $100\,\%$~RSI, la sleeve momentum restant fixée à $15\,\%$ du portefeuille en chacun des points. La zone la plus défavorable est le coin $100\,\%$~RSI~; le plateau haut forme une bande large, ce qui est le résultat recherché.}
 \end{figure}
 
 \input{tables/weight_sensitivity_extremes.tex}
 
-\paragraph{Distance au maximum.} Le meilleur point du simplexe atteint un Sharpe walk-forward de $1.340$ contre $1.225$ pour la répartition de production, soit un écart de $0.115$. Cet écart reste très inférieur à la demi-largeur de l'intervalle de confiance bootstrap du Sharpe (section~\ref{sec:advanced_robustness}), qui est de l'ordre de $0.7$. \textbf{Déplacer la production vers ce point n'est donc pas statistiquement défendable}~: la différence est invisible dans le bruit, et l'y déplacer reviendrait à optimiser sur l'échantillon --- exactement ce que le test de sur-ajustement de la section~\ref{sec:limitations} signale déjà.
+\paragraph{Distance au maximum.} Le meilleur point du simplexe atteint un Sharpe walk-forward de $1.333$ contre $1.185$ pour la répartition de production, soit un écart de $0.148$. Cet écart reste très inférieur à la demi-largeur de l'intervalle de confiance bootstrap du Sharpe (section~\ref{sec:advanced_robustness}), qui est de l'ordre de $0.7$. \textbf{Déplacer la production vers ce point n'est donc pas statistiquement défendable}~: la différence est invisible dans le bruit, et l'y déplacer reviendrait à optimiser sur l'échantillon --- exactement ce que le test de sur-ajustement de la section~\ref{sec:limitations} signale déjà.
 
 \subsection{Frontière efficiente empirique Vol $\times$ CAGR}
 
@@ -75,5 +75,5 @@ Cinq métriques sont calculées par répartition~: Sharpe walk-forward (moyenne 
 \begin{insightbox}
 \textbf{La répartition retenue est un point de plateau, pas une pointe.} Le balayage exhaustif du simplexe confirme que~: (i) le Sharpe reste élevé sur une large bande autour de la production, (ii) l'écart au meilleur point du balayage est très inférieur à l'intervalle de confiance bootstrap, et (iii) le risk-parity dynamique inverse-vol atteint un Sharpe comparable pour un repli sensiblement plus faible. La sensibilité à la répartition FX est donc faible.
 
-\textbf{Une réserve importante, et elle s'est alourdie~:} cette annexe ne balaie que la répartition \emph{interne} au trio FX. Or à l'exécution, ces trois moteurs ne produisent ensemble que $13{,}5\,\%$ du résultat --- un septième. La question d'allocation qui pèse réellement sur la performance --- le poids de cette sleeve --- n'est pas traitée ici. Elle l'a été autrement~: son optimum apparent se trouvait à la borne du domaine testé, et le test de sur-ajustement appliqué à cette grille échoue (section~\ref{sec:advanced_robustness}), ce qui a conduit à ramener le poids de 20\,\% à 15\,\%.
+\textbf{Une réserve importante, et elle s'est alourdie~:} cette annexe ne balaie que la répartition \emph{interne} au trio FX. Or à l'exécution, ces trois moteurs ne produisent ensemble que $13{,}0\,\%$ du résultat --- un huitième. La question d'allocation qui pèse réellement sur la performance --- le poids de cette sleeve --- n'est pas traitée ici. Elle l'a été autrement~: son optimum apparent se trouvait à la borne du domaine testé, et le test de sur-ajustement appliqué à cette grille échoue (section~\ref{sec:advanced_robustness}), ce qui a conduit à ramener le poids de 20\,\% à 15\,\%.
 \end{insightbox}

@@ -12,9 +12,9 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 \subsection{Avertissement 1 --- Le résultat repose sur un seul moteur, et davantage qu'avant}
 
 \begin{warningbox}
-\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $87{,}0\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $15\,\%$ de son allocation. Les trois moteurs FX, qui portent $85\,\%$ de l'allocation et $816$ des $909$ transactions, ne contribuent ensemble qu'à $13{,}5\,\%$ du gain.
+\textbf{Nature du risque~:} à l'exécution, la sleeve momentum produit $87{,}0\,\%$ du résultat net du portefeuille pour $10\,\%$ de ses transactions et $15\,\%$ de son allocation. Les trois moteurs FX, qui portent $85\,\%$ de l'allocation et $816$ des $905$ transactions, ne contribuent ensemble qu'à $13{,}0\,\%$ du gain.
 
-\textbf{Et à l'intérieur de cette sleeve, le résultat tient à quelques positions.} Une position unique sur l'argent, ouverte le 21~mai~2025 et fermée le 19~mars~2026, apporte $47{,}7\,\%$ du résultat net du portefeuille. Les trois plus grosses positions --- sur $909$ transactions --- en apportent $82\,\%$. Ce n'est pas une propriété du suivi de tendance en général~; c'est la propriété de \emph{cette} fenêtre, où deux mouvements exceptionnels ont été captés par des positions tenues plusieurs mois.
+\textbf{Et à l'intérieur de cette sleeve, le résultat tient à quelques positions.} Une position unique sur l'argent, ouverte le 21~mai~2025 et fermée le 19~mars~2026, apporte $46{,}6\,\%$ du résultat net du portefeuille. Les trois plus grosses positions --- sur $905$ transactions --- en apportent $80\,\%$. Ce n'est pas une propriété du suivi de tendance en général~; c'est la propriété de \emph{cette} fenêtre, où deux mouvements exceptionnels ont été captés par des positions tenues plusieurs mois.
 
 \textbf{Concentration temporelle~:} $64{,}3\,\%$ du résultat net a été acquis dans les quatre mois de janvier à avril~2026, une tranche que la recherche s'était interdite pour toute sélection de modèle. Les cinq années sur lesquelles les paramètres ont été choisis ($2021$--$2025$) apportent le tiers restant. Le rendement affiché décrit donc majoritairement une période qui n'a pas servi à construire la stratégie --- ce qui est méthodologiquement sain, mais rend le chiffre de tête peu représentatif du régime de croisière.
 
@@ -36,7 +36,7 @@ La \textit{Probability of Backtest Overfitting} mesurée par validation croisée
 
 \textbf{Origine~:} $382$ configurations distinctes ont été évaluées au fil de la recherche sur la même fenêtre historique, chaque phase héritant des meilleurs points de la précédente. Le mécanisme précis de l'échec est lisible dans l'avertissement~1~: quand trois positions portent $82\,\%$ du résultat, l'allocation qui les surpondère domine les découpes qui les contiennent et se classe mal dans les autres.
 
-\textbf{Ordre de grandeur à retenir~:} la longueur minimale de historique requise pour qu'un Sharpe de $0{,}99$ soit distinguable du hasard sous ce nombre d'essais est de $12{,}25$~années. Le \textit{backtest} en couvre $5{,}3$.
+\textbf{Ordre de grandeur à retenir~:} la longueur minimale de historique requise pour qu'un Sharpe de $0{,}99$ soit distinguable du hasard sous ce nombre d'essais est de $12{,}25$~années. La fenêtre de recherche sur laquelle ce Sharpe est mesuré en couvre $8{,}5$ --- et le \textit{backtest} d'exécution MetaTrader~5, plus courte, $5{,}3$.
 
 \textbf{Action corrective appliquée~:} le poids de la sleeve momentum a été ramené de $20\,\%$ à $15\,\%$, conformément à une règle de décision écrite et horodatée \emph{avant} le calcul du test. Une tranche de données reste gelée et retirée de la sélection de modèle. Le \emph{paper-trade} préalable de la section~\ref{sec:production} n'est pas une formalité~: c'est la seule validation authentiquement pré-engagée dont ce portefeuille dispose.
 \end{warningbox}

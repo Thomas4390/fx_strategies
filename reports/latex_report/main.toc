@@ -7,10 +7,10 @@
 \contentsline {subsection}{\numberline {2.4}Pourquoi quatre moteurs}{5}{subsection.2.4}%
 \contentsline {section}{\numberline {3}Cadre méthodologique}{6}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Moteur de backtest}{6}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Sources de données}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.2}Sources de données}{7}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}Découpage in-sample et hors échantillon}{7}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}Contrôle anti look-ahead}{7}{subsection.3.4}%
-\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (62\,\%)}{7}{section.4}%
+\contentsline {section}{\numberline {4}Moteur 1 --- Mean Reversion Intraday Filtré (67\,\%)}{8}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Intuition économique}{8}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Mécanique du signal}{8}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Performance historique}{9}{subsection.4.3}%
@@ -96,4 +96,38 @@
 \contentsline {paragraph}{Distance au maximum.}{61}{paragraph*.52}%
 \contentsline {subsection}{\numberline {C.6}Frontière efficiente empirique Vol $\times $ CAGR}{62}{subsection.C.6}%
 \contentsline {paragraph}{Lecture de la frontière.}{62}{paragraph*.54}%
+\contentsline {section}{\numberline {D}Principes méthodologiques du \textit {robustness report}}{63}{appendix.D}%
+\contentsline {subsection}{\numberline {D.1}Le problème général --- pourquoi un Sharpe ponctuel est insuffisant}{64}{subsection.D.1}%
+\contentsline {paragraph}{Biais d'échantillon (\textsc {Lo} 2002).}{64}{paragraph*.55}%
+\contentsline {paragraph}{Biais de sélection (\textsc {Bailey--L\'opez~de~Prado} 2014).}{64}{paragraph*.56}%
+\contentsline {paragraph}{Dépendance temporelle.}{64}{paragraph*.57}%
+\contentsline {subsection}{\numberline {D.2}Block bootstrap stationnaire (\textsc {Politis--Romano} 1994)}{64}{subsection.D.2}%
+\contentsline {paragraph}{Principe.}{64}{paragraph*.58}%
+\contentsline {paragraph}{Pourquoi une longueur géométrique?}{64}{paragraph*.59}%
+\contentsline {paragraph}{Algorithme.}{64}{paragraph*.60}%
+\contentsline {paragraph}{Choix de $L$.}{65}{paragraph*.61}%
+\contentsline {subsection}{\numberline {D.3}Probabilistic Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2012)}{65}{subsection.D.3}%
+\contentsline {subsection}{\numberline {D.4}Deflated Sharpe Ratio (\textsc {Bailey--L\'opez~de~Prado} 2014)}{65}{subsection.D.4}%
+\contentsline {paragraph}{Exemple numérique Apogee.}{65}{paragraph*.62}%
+\contentsline {paragraph}{La limite de ce test, et où elle se voit.}{65}{paragraph*.63}%
+\contentsline {subsection}{\numberline {D.5}Haircut Sharpe Ratio (\textsc {Harvey--Liu} 2015)}{66}{subsection.D.5}%
+\contentsline {paragraph}{Ratio de survie.}{66}{paragraph*.64}%
+\contentsline {subsection}{\numberline {D.6}Minimum Backtest Length (\textsc {Bailey et al.} 2014)}{66}{subsection.D.6}%
+\contentsline {paragraph}{Exemples numériques.}{66}{paragraph*.65}%
+\contentsline {paragraph}{Utilisation comme \emph {power calculation} a priori.}{67}{paragraph*.66}%
+\contentsline {subsection}{\numberline {D.7}Probability of Backtest Overfitting via CSCV (\textsc {Bailey et al.} 2015)}{67}{subsection.D.7}%
+\contentsline {paragraph}{Algorithme CSCV (Combinatorially Symmetric Cross-Validation).}{67}{paragraph*.67}%
+\contentsline {paragraph}{Pourquoi «~symétrique~»?}{67}{paragraph*.68}%
+\contentsline {paragraph}{Interprétation du logit.}{67}{paragraph*.69}%
+\contentsline {paragraph}{Limite.}{67}{paragraph*.70}%
+\contentsline {subsection}{\numberline {D.8}Hansen SPA (2005) et Romano--Wolf StepM (2005)}{68}{subsection.D.8}%
+\contentsline {paragraph}{Hansen SPA (Superior Predictive Ability).}{68}{paragraph*.71}%
+\contentsline {paragraph}{Romano--Wolf StepM.}{68}{paragraph*.72}%
+\contentsline {paragraph}{Implémentation.}{68}{paragraph*.73}%
+\contentsline {subsection}{\numberline {D.9}Stratégie de combinaison --- quelle hiérarchie de tests ?}{68}{subsection.D.9}%
+\contentsline {paragraph}{Stade~1 --- Backtest unique, zéro \emph {data snooping}.}{68}{paragraph*.74}%
+\contentsline {paragraph}{Stade~2 --- Après \emph {grid search} / optimisation de paramètres.}{68}{paragraph*.75}%
+\contentsline {paragraph}{Stade~3 --- Sélection finale parmi $N$~candidats.}{68}{paragraph*.76}%
+\contentsline {paragraph}{Stade~4 --- Validation opérationnelle.}{68}{paragraph*.77}%
+\contentsline {paragraph}{Application au portefeuille Apogee.}{68}{paragraph*.78}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

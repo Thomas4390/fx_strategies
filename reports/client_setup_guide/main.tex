@@ -87,7 +87,7 @@ l'usage standard de MetaTrader.
 À la fin de ce guide, vous aurez : (i)~MT5 configuré avec le broker recommandé,
 (ii)~la stratégie compilée et chargeable en un drag-and-drop, (iii)~un backtest
 \textbf{Sharpe~$\approx 1.01$, repli d'équité maximal
-$47{,}0\,\%$, 909~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
+$47{,}0\,\%$, 905~trades} reproductible localement, et (iv)~la procédure pour basculer en trading démo réel.}
 
 \vfill
 
@@ -169,9 +169,9 @@ EUR/USD.c~M1, modèle 1-minute~OHLC, dépôt initial 10\,000~USD, levier 1:100.
 Métrique & Valeur & Métrique & Valeur \\
 \midrule
 Sharpe Ratio       & \metric{1.01}             & Total Net Profit  & \metric{+49,143.31~USD} \\
-Profit Factor      & \metric{2.12}             & CAGR              & \metric{+39.65~\%} \\
-Recovery Factor    & \metric{0.89}             & Equity DD Max     & \metric{$50.88~\%$} \\
-Total Trades       & \metric{909}              & Balance DD Max    & \metric{$20.46~\%$} \\
+Profit Factor      & \metric{2.18}             & CAGR              & \metric{+39.65~\%} \\
+Recovery Factor    & \metric{1.00}             & Equity DD Max     & \metric{$47.04~\%$} \\
+Total Trades       & \metric{905}              & Balance DD Max    & \metric{$14.27~\%$} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -590,11 +590,11 @@ cause de différences microscopiques dans les flux de ticks broker.
 \midrule
 Sharpe Ratio                       & \metric{1.01}            & $\pm 0.10$ \\
 Total Net Profit                   & \metric{$+$49,143.31~USD} & $\pm 500$~USD \\
-Profit Factor                      & \metric{2.12}            & $\pm 0.05$ \\
-Recovery Factor                    & \metric{0.89}            & $\pm 0.30$ \\
-Total Trades                       & \metric{909}             & $\pm 15$ \\
-Equity Drawdown Maximal            & \metric{$50.88\,\%$}     & $\pm 1$~pp \\
-Balance Drawdown Maximal           & \metric{$20.46\,\%$}     & $\pm 1$~pp \\
+Profit Factor                      & \metric{2.18}            & $\pm 0.05$ \\
+Recovery Factor                    & \metric{1.00}            & $\pm 0.30$ \\
+Total Trades                       & \metric{905}             & $\pm 15$ \\
+Equity Drawdown Maximal            & \metric{$47.04\,\%$}     & $\pm 1$~pp \\
+Balance Drawdown Maximal           & \metric{$14.27\,\%$}     & $\pm 1$~pp \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -606,11 +606,11 @@ en produit la ventilation. Sur le backtest de référence~:
 304~transactions MR~Macro,
 479~TS~Momentum,
 33~RSI~Daily et
-93~Gold~Momentum (or, dollar-yen et argent confondus).
+89~Gold~Momentum (or, dollar-yen et argent confondus).
 
 \textbf{Le résultat est très concentré}~: la sleeve momentum produit
-91\,\% du profit net pour
-93~transactions, soit $10\,\%$ du total. C'est un comportement attendu d'un suivi
+87\,\% du profit net pour
+89~transactions, soit $10\,\%$ du total. C'est un comportement attendu d'un suivi
 de tendance, mais il faut le savoir avant de juger une période courte.
 
 \paragraph{Interprétation rapide.}
@@ -620,11 +620,11 @@ correct pour une stratégie FX retail, sans être exceptionnel.
 \item \textbf{Repli d'équité $47{,}0\,\%$}~: il n'existe
 \textbf{aucun plafond contractuel} ni circuit-breaker actif dans cette configuration.
 Ce repli est le prix du dimensionnement retenu, pas un incident.
-\item \textbf{Recovery Factor $0.89$}~: pour 1~unité de risque
-(repli maximal de balance), la stratégie a généré $0{,}9$~unité de gain net. Indice
+\item \textbf{Recovery Factor $1.00$}~: pour 1~unité de risque
+(repli maximal de balance), la stratégie a généré $1$~unité de gain net. Indice
 synthétique de qualité de la trajectoire~--- et rappel que le repli est du même ordre
 que le gain.
-\item \textbf{909 trades sur 5.3~ans}~: $\sim 170$~trades/an, soit
+\item \textbf{905 trades sur 5.3~ans}~: $\sim 170$~trades/an, soit
 $\sim 3$/semaine. Volume modéré, trade frequency raisonnable pour les
 coûts de transaction.
 \end{itemize}

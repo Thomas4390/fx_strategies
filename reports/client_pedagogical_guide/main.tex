@@ -159,7 +159,7 @@ Les trois moteurs FX partagent une racine commune : ils exploitent tous des \emp
 \item Le \sleeve{Moteur~1 (MR Macro)} capture la \emph{mean reversion} intraday autour du VWAP en horaires de forte liquidité, filtré par un régime macroéconomique sain.
 \item Le \sleeve{Moteur~2 (TS Momentum)} capture les tendances FX lentes induites par les divergences de politique monétaire entre banques centrales, sur un horizon journalier.
 \item Le \sleeve{Moteur~3 (RSI Daily)} capture les \emph{overshoot} statistiques de court terme via le RSI, en s'activant exactement quand les deux autres moteurs sont en creux.
-\item Le \sleeve{Moteur~4 (Gold Momentum)} capture le \emph{time series momentum} de l'or, du dollar-yen et de l'argent sur des horizons de plusieurs semaines. C'est le seul moteur à sortir des devises, et la source de rendement dominante du portefeuille~--- $91\,\%$ du résultat mesuré (cf.~\ref{sec:gold}).
+\item Le \sleeve{Moteur~4 (Gold Momentum)} capture le \emph{time series momentum} de l'or, du dollar-yen et de l'argent sur des horizons de plusieurs semaines. C'est le seul moteur à sortir des devises, et la source de rendement dominante du portefeuille~--- $87\,\%$ du résultat mesuré (cf.~\ref{sec:gold}).
 \end{itemize}
 
 \subsection{Allocation et levier}
@@ -172,10 +172,10 @@ Le portefeuille combine les quatre moteurs avec une allocation statique et une c
 \toprule
 \textbf{Moteur} & \textbf{Allocation} & \textbf{Timeframe} & \textbf{Style} & \textbf{Univers} \\
 \midrule
-\rowcolor{softBlue} Moteur 1 --- MR Macro & $62\,\%$ & M1 intraday & Mean reversion & 4 majors \\
+\rowcolor{softBlue} Moteur 1 --- MR Macro & $67\,\%$ & M1 intraday & Mean reversion & 4 majors \\
 \rowcolor{softYellow} Moteur 2 --- TS Momentum & $9\,\%$ & D1 swing & Trend following & 3 majors \\
 \rowcolor{softGreen} Moteur 3 --- RSI Daily & $9\,\%$ & D1 swing & Mean reversion & 3 majors \\
-\rowcolor{lightGrey} Moteur 4 --- Gold Momentum & $20\,\%$ & D1 swing & Trend following & 3 actifs \\
+\rowcolor{lightGrey} Moteur 4 --- Gold Momentum & $15\,\%$ & D1 swing & Trend following & 3 actifs \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -218,7 +218,7 @@ Chaque moteur est une stratégie autonome avec son propre univers de paires, ses
  & \cellcolor{softBlue}\textbf{Moteur 1} & \cellcolor{softYellow}\textbf{Moteur 2} & \cellcolor{softGreen}\textbf{Moteur 3} & \cellcolor{lightGrey}\textbf{Moteur 4} \\
  & \cellcolor{softBlue}MR Macro & \cellcolor{softYellow}TS Momentum & \cellcolor{softGreen}RSI Daily & \cellcolor{lightGrey}Gold Momentum \\
 \midrule
-Allocation & 62\,\% & 9\,\% & 9\,\% & 20\,\% \\
+Allocation & 67\,\% & 9\,\% & 9\,\% & 15\,\% \\
 Timeframe & M1 (1 minute) & D1 (1 jour) & D1 (1 jour) & D1 (1 jour) \\
 Type & Mean reversion intraday & Suivi de tendance & Mean reversion swing & Suivi de tendance \\
 Indicateurs & VWAP + Bollinger 5\,$\sigma$ & EMA 20/50 + RSI(7) & RSI(14) & Ensemble de signes 40/60/120/250 \\
@@ -226,14 +226,14 @@ Univers & EUR/USD, GBP/USD, USD/JPY, USD/CAD & EUR/USD, GBP/USD, USD/JPY & EUR/U
 Filtres & Session 8-16 UTC, macro, news USD & --- & --- & Long-only, séance bornée à 17h~NY \\
 Sortie & Stop, take-profit, time-stop 6h, EOD 21h & Inversion du signal & Retour RSI vers 50, time-stop 21j & Ensemble redevenu négatif~; stop de sécurité 4\,\% \\
 Trades / an & $\sim 57$ & $\sim 90$ & $\sim 6$ & $\sim 17$ \\
-Win rate & $58\,\%$ & $63\,\%$ & $67\,\%$ & $40\,\%$ \\
-Part du P\&L mesuré & $1{,}7\,\%$ & $5{,}4\,\%$ & $1{,}8\,\%$ & $\mathbf{91{,}1\,\%}$ \\
+Win rate & $58\,\%$ & $63\,\%$ & $67\,\%$ & $42\,\%$ \\
+Part du P\&L mesuré & $3{,}1\,\%$ & $7{,}3\,\%$ & $2{,}6\,\%$ & $\mathbf{87{,}0\,\%}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent\footnotesize Chiffres mesurés sur le backtest d'exécution MetaTrader~5 de
-référence (2021-01-01 $\rightarrow$ 2026-04-30, $909$~transactions). La dernière ligne est
+référence (2021-01-01 $\rightarrow$ 2026-04-30, $905$~transactions). La dernière ligne est
 la part du profit net réalisée par chaque moteur~--- à ne pas confondre avec l'allocation,
 qui dimensionne une exposition et ne prédit pas un résultat.\normalsize
 
@@ -241,19 +241,19 @@ qui dimensionne une exposition et ne prédit pas un résultat.\normalsize
 
 \begin{thesisbox}
 \textbf{Le poids reflète le rapport rendement/volatilité, pas la part du P\&L.}
-Le Moteur~1 reçoit 62\,\% parce qu'il a la volatilité intrinsèque la plus basse
+Le Moteur~1 reçoit 67\,\% parce qu'il a la volatilité intrinsèque la plus basse
 (environ $1.3\,\%$ annualisé) couplée au Sharpe le plus élevé. Lui allouer une
 fraction importante du capital ne le rend pas plus risqué que les autres
 moteurs~--- au contraire, en termes de \emph{contribution au risque}, les trois
 moteurs FX sont approximativement équipondérés.
 
 \smallskip
-Le Moteur~4 échappe à cette logique~: ses $20\,\%$ ne sont pas un poids
+Le Moteur~4 échappe à cette logique~: ses $15\,\%$ ne sont pas un poids
 vol-équipondéré mais un plafond d'exposition délibéré. Sa volatilité propre
 ($17{,}8\,\%$ annualisée en mesure standalone) est plusieurs fois celle des moteurs
-FX, si bien qu'à $20\,\%$ du capital il porte environ la moitié du budget de risque
+FX, si bien qu'à $15\,\%$ du capital il porte déjà une part majeure du budget de risque
 \emph{et} l'essentiel du rendement du portefeuille. Il n'en pesait que $10\,\%$ avant
-juillet~2026~: le doublement est un choix assumé, discuté en~\ref{sec:gold}.
+juillet~2026~: la hausse est un choix assumé, discuté en~\ref{sec:gold}.
 \end{thesisbox}
 
 Cette logique \emph{vol-équipondérée}, classique en construction de portefeuille institutionnel, s'oppose à une équipondération naïve $33/33/33$ qui aurait sur-pondéré les moteurs daily volatils au détriment du moteur intraday régulier.
@@ -672,7 +672,7 @@ cohérent avec un signal d'horizon long.
 \code{Inp\_Gold\_Symbols} & \texttt{XAUUSD,\allowbreak USDJPY,\allowbreak XAGUSD} & Les symboles suivis par le moteur, séparés par des virgules. Le budget est réparti à parts égales entre eux. Le suffixe de compte (\code{.c}) est ajouté automatiquement. \\
 \code{Inp\_Gold\_LookbackA..D} & $40/60/120/250$ & Les quatre horizons de l'ensemble, en séances. Fixés a priori depuis la littérature TSMOM, jamais optimisés. \\
 \code{Inp\_Gold\_AllowShort} & \texttt{false} & Long-only. Voir l'encadré ci-dessus. \\
-\code{Inp\_Gold\_TargetVol} & $0{,}55$ & Volatilité annualisée visée pour ce moteur pris isolément. Élevée par construction~: c'est un moteur de rendement, borné en aval par son allocation de $20\,\%$, elle-même divisée en trois budgets égaux. \\
+\code{Inp\_Gold\_TargetVol} & $0{,}55$ & Volatilité annualisée visée pour ce moteur pris isolément. Élevée par construction~: c'est un moteur de rendement, borné en aval par son allocation de $15\,\%$, elle-même divisée en trois budgets égaux. \\
 \code{Inp\_Gold\_MaxLeverage} & $6{,}6$ & Plafond de levier propre au moteur, qui borne l'exposition quand la volatilité réalisée d'un instrument s'effondre. \\
 \code{Inp\_Gold\_SafetySL} & $0{,}04$ & Stop de sécurité à $4\,\%$ du prix d'entrée. Ce n'est pas un stop de stratégie~--- le signal sort de lui-même~--- mais un garde-fou contre un décrochage brutal. \\
 \code{Inp\_Gold\_SlippageBps} & $2$ & Slippage modélisé, en points de base par côté. Plus bas que sur les paires FX~: les marchés traités ici sont profonds aux volumes en jeu. \\
@@ -685,7 +685,7 @@ cohérent avec un signal d'horizon long.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{sleeve_gold_momentum_equity.png}
-\caption{Équité du Moteur~4 pris isolément, à son dimensionnement propre et \emph{avant} l'allocation de $20\,\%$. La progression est très irrégulière~: de longues périodes hors marché ou sans progrès, ponctuées de quelques mouvements de grande amplitude qui font l'essentiel du résultat.}
+\caption{Équité du Moteur~4 pris isolément, à son dimensionnement propre et \emph{avant} l'allocation de $15\,\%$. La progression est très irrégulière~: de longues périodes hors marché ou sans progrès, ponctuées de quelques mouvements de grande amplitude qui font l'essentiel du résultat.}
 \end{figure}
 
 Pris isolément, non pondéré et non leviérié, le moteur rend $727{,}5\,\%$ sur la
@@ -695,9 +695,9 @@ isolé atteint $-40{,}47\,\%$~--- l'or seul y montait à près du double.
 
 \begin{warningbox}
 \textbf{Ce moteur porte le résultat, et il porte le risque.} Sur le backtest
-d'exécution MetaTrader~5 de référence, il produit $91{,}1\,\%$ du profit net du
-portefeuille avec $20\,\%$ de l'allocation et $10\,\%$ des transactions. Son taux
-de réussite est de $39{,}8\,\%$~: trois positions sur cinq perdent de l'argent, et
+d'exécution MetaTrader~5 de référence, il produit $87{,}0\,\%$ du profit net du
+portefeuille avec $15\,\%$ de l'allocation et $10\,\%$ des transactions. Son taux
+de réussite est de $41{,}6\,\%$~: trois positions sur cinq perdent de l'argent, et
 l'ensemble du résultat vient d'une minorité de mouvements longs. C'est mieux que
 les $31{,}4\,\%$ de l'or seul~--- trois instruments produisent des séquences de
 tendance moins synchrones~--- mais la nature du moteur est inchangée.
@@ -709,8 +709,8 @@ Quatre conséquences pratiques qu'il faut avoir en tête avant de déployer~:
       dysfonctionnement. Un moteur de suivi de tendance à $40\,\%$ de réussite
       passe l'essentiel de son temps à perdre de petites sommes.
 \item \textbf{La performance du portefeuille est concentrée, et elle l'est plus
-      qu'avant.} Le doublement du poids a fait passer la part de ce moteur dans le
-      résultat de $80\,\%$ à $91\,\%$. Si les trois instruments entrent ensemble
+      qu'avant.} La hausse du poids a fait passer la part de ce moteur dans le
+      résultat de $80\,\%$ à $87\,\%$. Si les trois instruments entrent ensemble
       dans un régime sans tendance durable, le portefeuille perd sa principale
       source de rendement et retombe sur les trois moteurs FX, dont les CAGR isolés
       s'échelonnent entre $0{,}5\,\%$ et $1{,}7\,\%$ en mesure standalone~--- un tout
@@ -719,26 +719,32 @@ Quatre conséquences pratiques qu'il faut avoir en tête avant de déployer~:
       sleeve. Les trois instruments ont tendu dans le même sens sur toute la
       fenêtre mesurée~; rien ne garantit qu'ils divergeront quand il le faudrait.
 \item \textbf{Le repli isolé de $-40{,}47\,\%$ est réel}, même s'il est ramené à
-      l'échelle du portefeuille par l'allocation de $20\,\%$ et par la couche de
+      l'échelle du portefeuille par l'allocation de $15\,\%$ et par la couche de
       ciblage de volatilité globale.
 \end{itemize}
 \end{warningbox}
 
 \begin{insightbox}
-\textbf{Pourquoi $20\,\%$~?} Le poids de ce moteur a été porté de $10$ à $20\,\%$
-en juillet~2026, après l'élargissement de la sleeve à trois instruments. La mesure
-donne un profil risque-ajusté meilleur (Sharpe d'exécution $0{,}97$ contre $0{,}89$,
-et le test de sur-ajustement du portefeuille passe alors qu'il échouait), au prix
-d'un repli plus profond ($50{,}9\,\%$ contre $44{,}3\,\%$) et d'une concentration
-accrue.
+\textbf{Pourquoi $15\,\%$~?} Le poids de ce moteur a été porté de $10$ à $20\,\%$
+en juillet~2026, après l'élargissement de la sleeve à trois instruments~: la mesure
+donnait un profil risque-ajusté meilleur, au prix d'un repli plus profond et d'une
+concentration accrue. \textbf{Le 28~juillet, il a été ramené à $15\,\%$}~--- non
+parce que la mesure s'était dégradée, mais parce qu'un test de sur-ajustement, qui
+n'avait jamais été appliqué à cette grille d'allocations, a été passé et qu'il
+\emph{échoue} à ce poids. Sa lecture~: dans près de deux découpes temporelles sur
+trois, l'allocation la mieux classée sur une moitié des données retombe sous la
+médiane sur l'autre. La règle de décision, écrite et horodatée avant le calcul,
+imposait alors de reculer d'un cran dans la grille.
 
 \smallskip
-Il faut savoir lire ce chiffre pour ce qu'il est~: $20\,\%$ est le \textbf{meilleur
-point testé}, pas un optimum démontré. Le Sharpe continue de monter jusqu'au bord
-de la grille, ce qui est la signature d'une période favorable à ce moteur plutôt
-que d'un maximum. À ce poids, la sleeve porte environ la moitié du budget de risque
-du portefeuille pour un cinquième de son capital. Aller au-delà serait une décision
-à prendre sur des données futures, pas sur celles qui ont servi à la calibrer.
+À $15\,\%$, le backtest d'exécution donne un Sharpe de $1{,}01$ et un repli
+d'équité de $47{,}0\,\%$, contre $0{,}89$ et $44{,}3\,\%$ pour la configuration
+précédente à $10\,\%$ sur l'or seul. Il faut lire ces chiffres pour ce qu'ils
+sont~: le Sharpe continuait de monter jusqu'au bord de la grille testée, ce qui est
+la signature d'une période favorable à ce moteur plutôt que d'un maximum. C'est
+précisément pourquoi le poids retenu n'est pas celui que la mesure désignait.
+Aller au-delà serait une décision à prendre sur des données futures, pas sur celles
+qui ont servi à la calibrer.
 \end{insightbox}
 
 \subsection{Pourquoi ce moteur n'utilise ni martingale ni grille}
@@ -996,7 +1002,7 @@ la stratégie.
 
 \textbf{Ce disjoncteur est désactivé dans la configuration livrée} (\code{Inp\_EnableDDCap = false}). Le mandat ne fixant plus de plafond de repli, il n'a aucun seuil à faire respecter~; les tests avaient par ailleurs montré qu'il dégradait la performance en réduisant l'exposition pendant les phases de rebond.
 
-\textbf{Il n'existe donc aucun coupe-circuit automatique.} Le repli d'équité constaté sur le backtest de référence atteint $50{,}9\,\%$, et rien ne l'aurait interrompu s'il était allé plus loin. C'est un choix assumé du mandant, pas un oubli.
+\textbf{Il n'existe donc aucun coupe-circuit automatique.} Le repli d'équité constaté sur le backtest de référence atteint $47{,}0\,\%$, et rien ne l'aurait interrompu s'il était allé plus loin. C'est un choix assumé du mandant, pas un oubli.
 
 Le mécanisme reste disponible et peut être réactivé à tout moment~: en le passant à \code{true}, la couche de risque compare chaque seconde l'\emph{equity} courante au plus haut historique et ferme toutes les positions si le repli dépasse le seuil \code{Inp\_DDCap} ($20\,\%$ par défaut), en armant un verrou que seul un \emph{reset} manuel lève.
 
@@ -1157,10 +1163,11 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \toprule
 \textbf{Paramètre} & \textbf{Défaut} & \textbf{Quand le toucher ?} \\
 \midrule
-\code{Inp\_AllocMRMacro}      & $0{,}72$  & Jamais (sauf rééquilibrage stratégique majeur). \\
+\code{Inp\_AllocMRMacro}      & $0{,}67$  & Jamais (sauf rééquilibrage stratégique majeur). \\
 \code{Inp\_AllocTSMomentum}   & $0{,}09$  & Jamais. \\
 \code{Inp\_AllocRSIDaily}     & $0{,}09$  & Jamais. \\
-\code{Inp\_AllocGoldMomentum} & $0{,}10$  & Jamais. La somme des quatre allocations doit valoir exactement $1{,}0$. \\
+\code{Inp\_AllocGoldMomentum} & $0{,}15$  & Jamais. La somme des cinq allocations doit valoir exactement $1{,}0$. \\
+\code{Inp\_AllocH1Momentum}   & $0{,}0$   & Jamais. Ce cinquième moteur est compilé dans le programme mais non alloué~: il a été testé et écarté (cf.~\ref{sec:params}). Le laisser à zéro. \\
 \code{Inp\_RiskScale}         & $4{,}5$   & \textbf{Le réglage du risque}. Rendement et repli y répondent proportionnellement~: l'abaisser réduit les deux, sans changer les signaux ni le nombre de trades. \\
 \code{Inp\_EnableDDCap}       & \texttt{false} & Désactivé dans la configuration livrée. À passer à \texttt{true} pour réactiver le coupe-circuit de repli. \\
 \code{Inp\_DDCap}             & $0{,}20$  & Seuil du coupe-circuit, utilisé uniquement si \code{Inp\_EnableDDCap} vaut \texttt{true}. \\
@@ -1262,9 +1269,9 @@ Cette section consolide l'ensemble des paramètres modifiables, organisés par g
 \toprule
 \textbf{Métrique} & \textbf{Cible} & \textbf{Lecture} \\
 \midrule
-Sharpe ratio (rf=0) & $> 1{,}0$ acceptable, $> 1{,}5$ excellent & Rendement annualisé divisé par volatilité annualisée. Mesure l'efficacité d'utilisation du risque. Notre baseline backtest~: $0.97$. \\
-CAGR & $\approx 40\,\%$ visé & Mandat client. Baseline backtest~: $47.0\,\%$. \\
-MaxDD equity & \emph{mesuré} & Aucun plafond contractuel. Repli constaté au backtest~: $50{,}9\,\%$. \\
+Sharpe ratio (rf=0) & $> 1{,}0$ acceptable, $> 1{,}5$ excellent & Rendement annualisé divisé par volatilité annualisée. Mesure l'efficacité d'utilisation du risque. Notre baseline backtest~: $1{,}01$. \\
+CAGR & $\approx 40\,\%$ visé & Mandat client. Baseline backtest~: $39{,}65\,\%$. \\
+MaxDD equity & \emph{mesuré} & Aucun plafond contractuel. Repli constaté au backtest~: $47{,}0\,\%$. \\
 Profit factor & $> 1{,}5$ & Total des gains divisé par total des pertes. Au-dessus de $1{,}5$, le système est solidement profitable. \\
 Recovery factor & $> 3{,}0$ & Gain net divisé par drawdown maximal. Mesure la capacité à se relever d'un creux. \\
 Total trades & $\sim 900$ sur 5{,}3~ans & Ordre de grandeur attendu, en fonction de la fréquence des moteurs. \\
@@ -1282,22 +1289,22 @@ L'export par deal (option \code{Inp\_ExportDeals=true}) permet une analyse fine.
 \toprule
 \textbf{Moteur} & \textbf{Round-trips} & \textbf{Win \%} & \textbf{Avg Win} & \textbf{Avg Loss} \\
 \midrule
-MR Macro       & $304$ & $57{,}9\,\%$ & $\$38{,}89$   & $-\$44{,}22$ \\
-TS Momentum    & $479$ & $62{,}8\,\%$ & $\$78{,}59$   & $-\$112{,}13$ \\
-RSI Daily      & $33$  & $66{,}7\,\%$ & $\$79{,}13$   & $-\$45{,}98$ \\
-Gold Momentum  & $93$  & $39{,}8\,\%$ & $\$2\,487{,}40$ & $-\$528{,}81$ \\
+MR Macro       & $304$ & $57{,}9\,\%$ & $\$47{,}93$   & $-\$54{,}07$ \\
+TS Momentum    & $479$ & $62{,}8\,\%$ & $\$67{,}91$   & $-\$94{,}53$ \\
+RSI Daily      & $33$  & $66{,}7\,\%$ & $\$82{,}62$   & $-\$50{,}58$ \\
+Gold Momentum  & $89$  & $41{,}6\,\%$ & $\$1\,626{,}94$ & $-\$335{,}42$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \begin{insightbox}
 \textbf{Lecture de la décomposition~:} le Moteur~1 fait le gros du volume (304
-trades) pour $1{,}7\,\%$ du P\&L seulement, le Moteur~3 a peu de trades mais un win
+trades) pour $3{,}1\,\%$ du P\&L seulement, le Moteur~3 a peu de trades mais un win
 rate élevé ($67\,\%$), le Moteur~2 a beaucoup de trades pour un edge marginal mais
 joue son rôle de diversification. \textbf{Le Moteur~4 est l'inverse de tous les
-autres}~: il perd trois fois sur cinq, mais son gain moyen est trente fois celui
+autres}~: il perd trois fois sur cinq, mais son gain moyen est vingt-quatre fois celui
 du Moteur~2 --- c'est la signature d'un suivi de tendance, et c'est ce qui explique
-qu'il porte $91\,\%$ du résultat en $10\,\%$ des transactions. Une dégradation du
+qu'il porte $87\,\%$ du résultat en $10\,\%$ des transactions. Une dégradation du
 win rate du Moteur~3 sous $60\,\%$ serait un signal d'alerte~; sur le Moteur~4,
 c'est l'absence de \emph{gros} gagnant sur plusieurs trimestres qui alerterait, pas
 le win rate.
@@ -1435,12 +1442,12 @@ Trade individuel \enquote{bizarre} ?                    & Continuer & Continuer 
 R : La lecture de ce guide prend $30$--$45$~minutes. Une compréhension opérationnelle complète (savoir lire un journal, juger une intervention) demande quelques semaines de paper trade en parallèle.
 
 \paragraph{Q : La stratégie peut-elle perdre de l'argent ?}
-R : Oui, et il faut s'attendre à des creux importants. Le \emph{drawdown} d'équité maximal observé sur le backtest de référence est de $50{,}9\,\%$~--- il était de $44{,}3\,\%$ avant que la sleeve momentum ne passe à $20\,\%$ du capital~--- et les simulations de résistance placent une trajectoire sur vingt au-delà de $70\,\%$. Le mandat ne fixe \textbf{aucun plafond}~: le dimensionnement a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
+R : Oui, et il faut s'attendre à des creux importants. Le \emph{drawdown} d'équité maximal observé sur le backtest de référence est de $47{,}0\,\%$~--- il était de $44{,}3\,\%$ avant que la sleeve momentum ne passe de $10$ à $15\,\%$ du capital~--- et les simulations de résistance placent une trajectoire sur vingt au-delà de $70\,\%$. Le mandat ne fixe \textbf{aucun plafond}~: le dimensionnement a été calibré pour atteindre la cible de rendement, et il multiplie le risque dans la même proportion.
 
-\paragraph{Q : Pourquoi 62\,\% sur le Moteur~1 et si peu sur les autres ?}
+\paragraph{Q : Pourquoi 67\,\% sur le Moteur~1 et si peu sur les autres ?}
 R : Cette répartition ne reflète pas la part du P\&L mais la \emph{contribution au risque}. Le Moteur~1 a la volatilité la plus basse, donc il peut porter une allocation nominale plus grande sans dominer le risque global.
 
-Il faut d'ailleurs bien distinguer les deux~: sur le backtest de référence, le Moteur~4 ne pèse que $20\,\%$ de l'allocation mais produit $91\,\%$ du résultat, tandis que le Moteur~1 en produit $1{,}7\,\%$. Un poids d'allocation dimensionne une exposition, il ne prédit pas un profit.
+Il faut d'ailleurs bien distinguer les deux~: sur le backtest de référence, le Moteur~4 ne pèse que $15\,\%$ de l'allocation mais produit $87\,\%$ du résultat, tandis que le Moteur~1 en produit $3{,}1\,\%$. Un poids d'allocation dimensionne une exposition, il ne prédit pas un profit.
 
 \paragraph{Q : Que se passe-t-il si je change de broker ?}
 R : Adapter \code{Inp\_SymbolSuffix} au nouveau broker, vérifier les structures de \emph{spread} et de commission, ajuster \code{Inp\_CommissionBpsPerSide} et éventuellement \code{Inp\_GlobalMaxLeverage} si le levier offert change. Voir \emph{Guide d'installation}.

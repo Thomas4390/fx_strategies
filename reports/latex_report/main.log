@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  28 JUL 2026 18:17
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  5 AUG 2026 12:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1620,16 +1620,20 @@ Package polyglossia Warning: Failed to patch part for French
 
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 (Font)              scaled to size 8.64523pt on input line 2.
-[1] [2])
+[1] [2]
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/it' will be
+(Font)              scaled to size 8.64523pt on input line 99.
+
+
+LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 10
+4.
+
+)
 \tf@toc=\write4
 \openout4 = `main.toc'.
 
  [3] (./sections/00_executive_summary.tex
-
-LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 4.
-
-
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
@@ -1640,7 +1644,7 @@ LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 (Font)              scaled to size 9.47424pt on input line 8.
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
 (Font)              scaled to size 10.95pt on input line 10.
-(./tables/mt5_reference.tex
+ (./tables/mt5_reference.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 3.
@@ -1686,6 +1690,12 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 4.
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap L doesn't fit on page 7.
+(lettrine)                Missing vertical space: 31.65785pt. 
+(lettrine)                Reported on input line 4.
+
 [7]
 Overfull \hbox (0.13771pt too wide) in paragraph at lines 28--29
 []\TU/LatinModernRoman(0)/b/n/10.95 Filtre session \TU/LatinModernRoman(0)/m/sc
@@ -1693,9 +1703,10 @@ Overfull \hbox (0.13771pt too wide) in paragraph at lines 28--29
 
  []
 
+[8]
 File: figures/sleeve_mr_macro_equity.png Graphic file (type bmp)
 <figures/sleeve_mr_macro_equity.png>
-[8] (./tables/trade_examples_mr_macro.tex) [9])
+ [9] (./tables/trade_examples_mr_macro.tex))
 (./sections/04_sleeve_ts_momentum.tex
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
@@ -1783,10 +1794,10 @@ Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
 np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
  []
 
-[26]) (./sections/06_overlay_layer.tex [27] (./tables/sensitivity.tex
+[26]) (./sections/06_overlay_layer.tex [27] [28] (./tables/sensitivity.tex
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/it' will be
 (Font)              scaled to size 10.0pt on input line 3.
-) [28]
+)
 File: figures/leverage_timeline.png Graphic file (type bmp)
 <figures/leverage_timeline.png>
 
@@ -1795,7 +1806,7 @@ Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
  []
 
-) [29] [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+[29]) [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/it' will be
 (Font)              scaled to size 10.0pt on input line 3.
 
@@ -1987,7 +1998,41 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 File: figures/weight_sensitivity_pareto_frontier.png Graphic file (type bmp)
 <figures/weight_sensitivity_pareto_frontier.png>
-[62]) [63] (./main.aux)
+[62]) (./sections/appendix_d_robustness_methodology.tex
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/it' will be
+(Font)              scaled to size 11.36908pt on input line 8.
+ [63]
+
+LaTeX Font Warning: Font shape `TU/Inter(0)/b/sc' undefined
+(Font)              using `TU/Inter(0)/b/n' instead on input line 34.
+
+
+Overfull \hbox (39.55191pt too wide) in paragraph at lines 41--42
+[] []\TU/LatinModernRoman(0)/b/sc/10.95 Principe.[] \TU/LatinModernRoman(0)/m/s
+c/10.95 Pour estimer la distribution d’échantillonnage d’une statistique sur un
+e série $\OMS/cmsy/m/n/10.95 f\OML/cmm/m/it/10.95 r[]; r[]; [] ; r[]\OMS/cmsy/m
+/n/10.95 g$\TU/LatinModernRoman(0)/m/sc/10.95 ,
+ []
+
+
+Overfull \hbox (13.167pt too wide) in paragraph at lines 41--42
+\TU/LatinModernRoman(0)/m/sc/10.95 de chaque bloc est tirée selon une loi géomé
+trique de moyenne $\OML/cmm/m/it/10.95 L$ \TU/LatinModernRoman(0)/m/sc/10.95 (p
+aramètre \TU/LatinModernMono(0)/m/n/10.95 block_len_mean = 20
+ []
+
+[64]
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/sc' will be
+(Font)              scaled to size 9.47424pt on input line 57.
+ [65] [66] [67]
+Overfull \hbox (89.63689pt too wide) in paragraph at lines 222--223
+\TU/LatinModernRoman(0)/m/sc/10.95 quet \TU/LatinModernMono(0)/m/n/10.95 arch \
+TU/LatinModernRoman(0)/m/sc/10.95 de Kevin Sheppard, licence NCSA). Voir \TU/La
+tinModernMono(0)/m/n/10.95 framework.statistical_testing.reality_check_via_arch
+
+ []
+
+) [68] [69] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1998,12 +2043,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 42206 strings out of 468173
- 969860 string characters out of 5435520
- 1542549 words of memory out of 5000000
- 70153 multiletter control sequences out of 15000+600000
- 638094 words of font info for 151 fonts, out of 8000000 for 9000
+ 42257 strings out of 468173
+ 971065 string characters out of 5435520
+ 1543991 words of memory out of 5000000
+ 70199 multiletter control sequences out of 15000+600000
+ 638110 words of font info for 153 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  108i,14n,118p,11207b,1417s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (67 pages).
+Output written on main.pdf (73 pages).

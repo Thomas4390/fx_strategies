@@ -1,10 +1,10 @@
-\section{Moteur 1 --- Mean Reversion Intraday Filtré (62\,\%)}
+\section{Moteur 1 --- Mean Reversion Intraday Filtré (67\,\%)}
 \label{sec:mr_macro}
 
-\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} premier moteur reçoit la part prépondérante de l'allocation statique~: 62\,\%. Ce poids est justifié par le fait qu'il possède simultanément le Sharpe le plus élevé parmi les moteurs FX et la volatilité intrinsèque la plus basse. Les deux autres composantes FX jouent un rôle de diversificateurs à 9\,\% chacune, et leur valeur apparaît surtout dans les années où ce premier moteur est dormant~; la sleeve momentum complète l'ensemble à 20\,\%, dix points lui ayant été transférés depuis ce moteur en juillet~2026.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{e} premier moteur reçoit la part prépondérante de l'allocation statique~: 67\,\%. Ce poids est justifié par le fait qu'il possède simultanément le Sharpe le plus élevé parmi les moteurs FX et la volatilité intrinsèque la plus basse. Les deux autres composantes FX jouent un rôle de diversificateurs à 9\,\% chacune, et leur valeur apparaît surtout dans les années où ce premier moteur est dormant~; la sleeve momentum complète l'ensemble à 15\,\%, cinq points nets lui ayant été transférés depuis ce moteur en juillet~2026 --- dix d'abord, dont cinq ont été rendus après l'échec du test de sur-ajustement (section~\ref{sec:advanced_robustness}).
 
 \begin{insightbox}
-\textbf{Le poids ne dit rien du résultat.} Ce moteur porte 62\,\% de l'allocation et 1,7\,\% du résultat mesuré à l'exécution. Un poids d'allocation dimensionne une exposition~; il ne prédit pas la contribution au profit, qui dépend de ce que le marché a offert à chaque signal sur la période.
+\textbf{Le poids ne dit rien du résultat.} Ce moteur porte 67\,\% de l'allocation et 3,1\,\% du résultat mesuré à l'exécution. Un poids d'allocation dimensionne une exposition~; il ne prédit pas la contribution au profit, qui dépend de ce que le marché a offert à chaque signal sur la période.
 \end{insightbox}
 
 \subsection{Intuition économique}
