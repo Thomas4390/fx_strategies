@@ -165,6 +165,25 @@ donner au client, pas une gêne à masquer.
 - ligne ajoutée au journal de `docs/research/HOLDOUT_POLICY.md` **au moment de la lecture**
 - aucune re-sélection, aucune nouvelle configuration, aucun nouvel essai après lecture
 
+### 4.1 Décision du 2026-09-21 : la lecture OOS n'est pas effectuée
+
+La campagne in-sample (`docs/research/xau_x10_is_results.md`, commit `74cfaeb`) rend un seul
+critère sur neuf. **Aucune configuration ne passe le plateau : il n'y a rien à geler ci-dessus.**
+La section 4 reste donc vide, et le holdout ≥ 2026-01-01 **n'est pas lu** pour cette stratégie.
+
+- Le verdict est acquis in-sample : six critères mesurés échouent franchement. Un critère non
+  mesuré vaut échec (§1) ; une lecture OOS ne peut donc rien sauver.
+- Le holdout est un budget (`HOLDOUT_POLICY.md`). Le dépenser sur une stratégie déjà rejetée
+  n'apprend rien et entame la tranche 2026 de l'or pour tout travail futur.
+- Le régime 2026 (1,8 ATR M5 par niveau) est hors de la distribution in-sample. Un chiffre
+  positif y serait un argument trompeur face à sept années négatives ; un chiffre négatif
+  n'ajouterait rien.
+
+Le critère « OOS 2026 » reste `non mesuré`, donc en échec, et le verdict est **NE PAS DÉPLOYER**.
+Aucune ligne n'est ajoutée au journal de consommation du holdout : il n'y a pas eu de lecture.
+Les mesures descriptives du 2026-09-21 (ATR, fréquence de croisement) restent les seules à
+avoir touché des barres de 2026.
+
 ## 5. Ce que cette table interdit explicitement
 
 1. Ajouter un axe à la grille après avoir vu les 27 résultats.
