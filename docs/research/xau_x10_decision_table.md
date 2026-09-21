@@ -154,7 +154,7 @@ donner au client, pas une gêne à masquer.
 4. Lire l'OOS deux fois, sous quelque prétexte que ce soit, y compris « correction d'un bug ».
    Un bug découvert après lecture rend le résultat NON CONCLUANT ; il ne rend pas la lecture
    rejouable.
-5. Présenter `R ≥ 1` comme un filtre actif : la note de faisabilité §2 montre qu'il ne mord
-   quasiment jamais sur l'historique (minimum de R disponible sur 2019-2026 : **1,17**). Le
-   taux de rejet par la règle R, par année, doit accompagner toute mention de ce garde-fou
+5. Mentionner `R ≥ 1` **sans** publier son taux de rejet annuel. Le comptage du 2026-09-21
+   (faisabilité §2.1) montre que ce filtre rejette de 6,5 % (2019) à 55,5 % (2025) des
+   candidats : il est actif, et le chiffre doit accompagner toute mention du garde-fou
    (spec §8).

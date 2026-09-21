@@ -5,6 +5,8 @@
 > **Holdout touched by this phase** : descriptif uniquement (ATR M5, fréquence de croisement
 > des x10) ; **0 lecture de performance**.
 > **Essais consommés** : 0 — aucun signal, aucun P&L, aucun backtest n'est calculé ici.
+> Un run de calage au centre de la grille a été exécuté le 2026-09-21 pour **compter des
+> événements** (§2) ; aucune performance lue, aucun essai logué.
 
 ## 0. Pourquoi cette note existe avant le code
 
@@ -85,16 +87,43 @@ Trois conséquences opérationnelles :
 1. **En 2019, chaque aller-retour part avec un demi-R de retard** (0,501 R à `k_s = 1`, deux
    tiers de R à `k_s = 0,75`). Pour une stratégie à 1:1 nominal, c'est un handicap que peu de
    taux de réussite compensent.
-2. **Le garde-fou `R ≥ 1` ne mord presque jamais.** Le R disponible ne descend sous 2 qu'en
-   2026, et ne passe sous 1 dans **aucune** année, même au stop le plus large (`k_s = 1,5`,
-   2026 : **1,17**, la valeur minimale de tout l'échantillon). Le filtre du mandat est donc
-   **quasi inopérant sur l'historique** : il n'élimine pas de trades, il rassure. La spec §8
-   impose pour cette raison de publier le **taux de rejet par la règle R, par année** ; sans ce
-   chiffre, le rapport ne doit pas présenter `R ≥ 1` comme un filtre actif.
+2. ~~**Le garde-fou `R ≥ 1` ne mord presque jamais.**~~ — **hypothèse d'entrée au niveau,
+   RÉFUTÉE par le comptage du 2026-09-21** (voir juste après). Raisonnement conservé pour
+   mémoire : le R disponible ne descend sous 2 qu'en 2026 et ne passe sous 1 dans aucune année,
+   même au stop le plus large (`k_s = 1,5`, 2026 : **1,17**, minimum de l'échantillon) ; on en
+   concluait que le filtre du mandat était inopérant. **Cette conclusion est fausse.**
 3. **Le régime favorable aux coûts est précisément le régime où la cible est du bruit.** 2026
    offre le coût relatif le plus faible (0,053 R) et la cible la plus dérisoire (1,8 ATR). Les
    deux effets tirent en sens contraire et ne se compensent pas *a priori* : c'est exactement
    ce que la campagne in-sample doit décomposer (terciles de `10 $/ATR`, spec §13 barreau 3).
+
+### 2.1 Correction du 2026-09-21 — la règle R mord, et de plus en plus
+
+Le moteur Python étant écrit, la question se compte au lieu de se raisonner. Comptage
+**non financier** (nombre d'événements, aucune performance lue) d'un run de calage au **centre
+de la grille**, candidats rejetés par la règle R sur candidats ayant atteint le test R :
+
+| année | rejetés / candidats | taux de rejet |
+|---|---|---|
+| 2019 | 11 / 168 | 6,5 % |
+| 2020 | 90 / 340 | 26,5 % |
+| 2021 | 39 / 276 | 14,1 % |
+| 2022 | 49 / 299 | 16,4 % |
+| 2023 | 55 / 276 | 19,9 % |
+| 2024 | 104 / 417 | 24,9 % |
+| 2025 | **413 / 744** | **55,5 %** |
+
+**Pourquoi le calcul du §2 se trompait** : il supposait une entrée **au niveau**. L'entrée
+réelle n'a jamais lieu au niveau. Pour un breakout, elle suit le maintien — le prix a déjà
+parcouru une part de la cible, qui se raccourcit d'autant. Pour un reversal, elle suit une
+excursion, dont la profondeur éloigne le stop. Dans les deux cas le `R` effectif est
+structurellement **inférieur** au `R disponible` tabulé plus haut, et l'écart grandit avec
+l'ATR — d'où le décrochage de 2025.
+
+Conséquence pour le rapport client : `R ≥ 1` **est** un filtre actif, il rejette plus d'un
+candidat sur deux dans le régime récent, et le taux de rejet annuel doit être publié (spec §8).
+L'ancien raisonnement reste ci-dessus, marqué réfuté, parce qu'il documente une erreur de
+méthode utile : raisonner sur une entrée idéalisée avant d'avoir un moteur.
 
 Nombre d'opportunités brutes : de 7 croisements par jour (2019) à 74 (2026), soit de l'ordre
 de 1 800 à 19 000 franchissements par an. Même un taux de conversion de 2 % place la stratégie

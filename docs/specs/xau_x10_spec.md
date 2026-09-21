@@ -37,6 +37,10 @@ Mandat, tel que formulé par Apogée Invest et repris sans reformulation :
 > Reversal Long. Chaîne de décision : x10 → contexte → vitesse → accélération → breakout ou
 > sweep → confirmation/retest → R ≥ 1 → entrée.
 
+La chaîne du mandat se traduit par un **ordre d'évaluation des filtres d'entrée, normatif** :
+contexte (§6.4) → règle R (§8) → fenêtre horaire (§10) → taille (§11). Cet ordre décide qui
+compte dans quelle statistique ; il est détaillé au §8.
+
 Périmètre de ce document : définitions, horloge, indicateurs, machine à états, exécution,
 dimensionnement, coûts, contrat de trace, environnement. **Hors périmètre** : tout chiffre de
 performance, tout choix de configuration, toute conclusion. Ils appartiennent à
@@ -156,6 +160,12 @@ n'est donc défini que **trois barres après** `v`. Tout NaN se propage : **aucu
 possible sur une barre où `v`, `m` ou `a` est NaN** (§7.1), sans exception ni substitution
 par 0.
 
+**Barre indéfinie = barre gelée.** Une barre où `A`, `v`, `m` ou `a` vaut NaN **gèle toutes
+les transitions** de l'automate : ni armement, ni cassure, ni sweep, ni annulation. En
+revanche `N_arm`, `N_hold` et `N_sweep` sont des **différences d'indices de barres**, pas des
+compteurs d'événements : ils **continuent de courir** pendant le gel. Une séquence trop
+entrecoupée expire donc, au lieu de survivre indéfiniment.
+
 > **Unités — à ne pas confondre.** `v` et `m` sont sans dimension une fois divisés par `A`,
 > mais pas homogènes entre eux (`v` est une pente par barre, `m` un déplacement normalisé en
 > racine du temps), et `a` est une différence de `v` sur trois barres, donc une troisième
@@ -188,6 +198,13 @@ une version fautive.
 **EMA50 H1** : moyenne exponentielle à 50 périodes (`alpha = 2/51`) des clôtures H1 de l'or,
 puis décalage et reindex ci-dessus. **ATR_H1** : ATR de Wilder 14 sur barres H1, même
 traitement ; il ne sert qu'à la mesure d'extension VWAP (§7.3).
+
+**Warmup.** L'EMA50 H1 exige 50 barres H1 closes : elle est **indéfinie sur les ~2 premiers
+jours** de l'échantillon (données à partir du 2019-01-01). `ctx_ema = 0` sur cette amorce, donc
+**aucun breakout n'y est possible** (§6.4, usage 1) — les reversals, eux, ne sont pas empêchés.
+MT5 et QuantConnect doivent **précharger au moins 51 barres H1** avant la première barre M5
+évaluée, sans quoi leur amorce différera de celle du moteur Python et le barreau 2 de la
+réconciliation cassera d'entrée.
 
 ### 6.2 Contexte de séance (M5) — VWAP
 
@@ -268,6 +285,15 @@ Usages, et eux seuls :
 
 Invariant : **un seul niveau armé à la fois**, et **une seule position à la fois**.
 
+Deux règles de cadence, normatives :
+
+- **L'automate ne tourne que plat.** Tant qu'une position est ouverte, l'automate est à
+  l'arrêt : un signal par ailleurs valide est **ignoré**, jamais mis en file ni rejoué après
+  la sortie.
+- **Au plus un passage d'automate par barre M5.** Une barre qui annule un niveau ne peut
+  **pas** en armer un autre ; l'armement suivant est examiné à la barre d'après. Cette règle
+  rend la trace déterministe et comparable entre moteurs.
+
 ### 7.1 ARMED
 
 ```
@@ -316,9 +342,14 @@ STOP     := L - d * k_s * A
 - **clôture réelle** : la condition `C` dans la moitié directionnelle de la barre. Elle écarte
   les barres qui dépassent le niveau en mèche et referment contre.
 - **maintien** : `N_hold = 3` barres sans clôture repassée, gelé.
+- **`A` du stop** : celui de la **barre de décision** — la fin du maintien — et **non** celui
+  de la barre de cassure. Les deux diffèrent de trois barres d'ATR, donc le stop aussi.
 - **retest** : retour de la mèche sur le niveau pendant le maintien. Il est **mesuré et
   tracé**, il ne conditionne pas l'entrée. Le mandat cite « confirmation/retest » ; la
-  confirmation est le maintien, le retest est descriptif.
+  confirmation est le maintien, le retest est descriptif. C'est un **attribut du trade, pas un
+  événement** : il ne produit aucune ligne de trace propre, il voyage dans le registre des
+  trades. Un reversal né d'un breakout raté **hérite** de l'attribut `retest` du breakout
+  avorté.
 - **Breakout raté → candidat sweep**, règle normative. Soit `b` la barre du `BREAK`. Si une
   clôture vérifie `d·(C − L) < 0` pendant la fenêtre de maintien :
   1. le breakout est annulé (`CANCEL`) ;
@@ -351,6 +382,11 @@ STOP           := E + 0,5 * A * d        # l'extreme de l'excursion, augmente de
   **`N_sweep` ne s'applique qu'au sweep direct** — mèche ou clôture au-delà de `L` **sans**
   `BREAK` validé — et se compte depuis la **première barre dont l'extrême dépasse `L`**. Le
   chemin « breakout raté » du §7.2 a son propre décompte, celui de `N_hold`.
+- **`N_sweep` est inclusif.** La première barre dont l'extrême dépasse `L` — notée `i_exc` —
+  est la **barre 1** de la fenêtre. La réintégration est acceptée sur `i_exc`, `i_exc+1` et
+  `i_exc+2` ; à `i_exc+3` l'automate émet `CANCEL` de raison `nsweep`. Conséquence assumée :
+  un **sweep en une seule barre M5** — mèche au-delà du niveau et clôture déjà revenue — est
+  **tradable**.
 - **réintégration** : la première clôture M5 revenue du côté d'origine du niveau.
 - **décélération** : `d·v[t] < d·v[t−1]`, comparaison à la barre précédente, sans seuil.
 - **flip** : le changement de signe de l'accélération, `d·a ≤ −a_min`. Le même `a_min` sert à
@@ -382,10 +418,24 @@ comme le faisait la formule initiale du plan, comptait donc le spread deux fois.
 `R` est calculé **à la décision**, à partir de `e_mid` ; il est tracé sous `r_est`. Le `R`
 réalisé peut différer (gap, §9) — cela ne rouvre pas la décision.
 
+**Ordre d'évaluation des filtres d'entrée — normatif.**
+
+```
+1. contexte  (§6.4)   -> CANCEL raison ctx
+2. regle R   (§8)     -> CANCEL raison r
+3. fenetre horaire (§10, evaluee sur la barre de FILL) -> CANCEL raison window
+4. taille    (§11, au prix de fill reel)               -> CANCEL raison size
+```
+
+Cet ordre n'est pas cosmétique : il définit les dénominateurs. Un candidat refusé au
+**contexte** n'atteint jamais le test R ; il **n'a pas de `r_est`** (NaN) et **n'entre pas dans
+le dénominateur du taux de rejet R**.
+
 **Obligation de publication.** La campagne in-sample doit publier le **taux de rejet par la
-règle R, par année** : nombre de candidats à `R < 1` sur nombre de candidats. La note de
-faisabilité (§2) montre que ce filtre ne mord quasiment jamais sur l'historique ; le rapport
-client ne doit donc pas le présenter comme un filtre actif sans ce chiffre à l'appui.
+règle R, par année** : candidats à `R < 1` sur candidats **ayant atteint le test R**. Le
+comptage du 2026-09-21 (note de faisabilité §2) montre que ce filtre **mord réellement**, de
+7 % des candidats en 2019 à 56 % en 2025 : il doit être présenté au client comme un filtre
+actif, chiffres à l'appui.
 
 ## 9. Exécution
 
@@ -396,24 +446,52 @@ client ne doit donc pas le présenter comme un filtre actif sans ce chiffre à l
 | résolution stop/cible | sur les barres **M1** à l'intérieur de la barre M5 |
 | double contact dans une même M1 | **le stop l'emporte** (règle pessimiste, sans exception) |
 | gap | si l'open dépasse déjà le stop ou la cible, fill à l'**open**, pas au niveau théorique |
-| cooldown | **6 barres M5** par niveau après un `EXIT` ou un `CANCEL` sur ce niveau |
+| cooldown | **par niveau**, 6 barres M5 (voir ci-dessous) |
 | position | **une seule à la fois**, tous scénarios confondus |
+| stop dans la minute du fill | **autorisé** (voir ci-dessous) |
+
+**Cooldown — règle exacte.** Après un `EXIT` **ou n'importe quel `CANCEL`** survenu à la barre
+`i` sur un niveau donné, **ce niveau seul** est bloqué pendant les **6 barres M5 suivantes** ;
+il redevient armable à la **7ᵉ** (`i + 7`). Les autres niveaux ne sont pas affectés : le
+cooldown est **par niveau, jamais global**.
+
+**Stop immédiat dans la minute du fill.** Si, à l'open de la première barre M1 suivant le fill,
+le côté déclencheur est **déjà au-delà du stop**, la sortie a lieu **à cet open**. Aucune
+minute de grâce n'est accordée : c'est la même règle pessimiste que le double contact.
 
 La règle pessimiste du double contact est la raison pour laquelle l'architecture Python passe
 par un registre d'ordres et `Portfolio.from_orders` sur l'index M1 : `from_signals` ne la
 garantit pas. QC la gère à la main dans `on_data`.
+
+**Prix des sorties temporelles.** Une sortie `TIME` ou `SESSION` se fait à la **clôture de la
+dernière barre M1** de la barre M5 concernée, **côté déclencheur** : `− s/2` pour une position
+longue, `+ s/2` pour une position courte.
 
 ## 10. Sorties temporelles
 
 ```
 DUREE_MAX     := 48 barres M5 (4 heures)      # gele
 CLOTURE_JOUR  := 16:55 New York, inconditionnelle
-FENETRE_INTERDITE := aucune entree entre 16:30 et 18:15 New York
+FENETRE_INTERDITE := [ 16:30 , 18:15 [  New York, bornes incluse / exclue
 ```
 
 Les **sorties** possibles, et leur `exit_reason` dans la trace : `STOP`, `TARGET`, `TIME`
 (48 barres), `SESSION` (16:55), et rien d'autre. Aucune position n'est tenue pendant la coupure
 quotidienne.
+
+**Fenêtre interdite — règle exacte.** Elle s'évalue sur la **barre de fill**, pas sur la barre
+de décision. Bornes : `[16:30, 18:15[` New York — 16:30 est **interdite**, **18:15 est
+autorisée**. Un refus émet `CANCEL` de raison `window`.
+
+**Priorité des sorties.** Si la clôture de séance (16:55) et la 48ᵉ barre tombent sur la même
+barre, la raison retenue est **`SESSION`** : `SESSION > TIME`.
+
+**Deux cas de bord, normatifs.**
+
+- **Fin de fichier** : si la dernière barre M5 des données est atteinte avec une position
+  ouverte, la position est **fermée d'office au dernier M1 disponible**, raison `SESSION`.
+- **Changement de séance** : si le `session_id` change alors qu'une position est ouverte, la
+  sortie a lieu à l'**open du premier M1 de la nouvelle séance**, raison `SESSION`.
 
 ⚠️ **À divulguer dans le rapport client.** La fenêtre interdite mord des deux côtés de la
 coupure : la dernière entrée d'une séance a lieu avant 16:30 et la première de la suivante à
@@ -424,16 +502,25 @@ et des croisements x10 tombant dans la fenêtre interdite, à publier).
 ## 11. Dimensionnement
 
 ```
-f      := 0,005                      # 0,5 % de l'equite, gele
-f      := 0,0025  si ctx_dxy < 0     # DXY adverse : risque * 0,5 (§6)
-lots   := arrondi_inferieur_0,01( f * equite / ( |e - stop| * 100 ) )
+f       := 0,005                      # 0,5 % de l'equite, gele
+f       := 0,0025  si ctx_dxy < 0     # DXY adverse : risque * 0,5 (§6)
+e_fill  := open M5 suivant  +/- s/2   # prix de fill REEL, cote du §9
+lots    := arrondi_inferieur_0,01( f * equite / ( |e_fill - stop| * 100 ) )
 ```
+
+**Le dimensionnement se calcule au fill, avec `e_fill`, jamais avec `e_mid`.** `e_mid` sert au
+test `R` (§8) et à rien d'autre ; utiliser `e_mid` ici décalerait les lots de la moitié d'une
+fourchette, donc le PnL de tous les trades.
 
 `100` est la taille de contrat XAUUSD (`contract_size = 100`,
 `data/broker/symbols_catalog_2026-07-28.csv`). L'arrondi au pas de 0,01 lot est **inférieur**,
 jamais au plus proche : la logique est celle de `LotsForRisk`
 (`src/mt5/Include/FxRiskManager.mqh:122-128`), que les trois moteurs doivent reproduire y
-compris dans son arrondi. Un lot calculé sous `volume_min = 0,01` annule le trade.
+compris dans son arrondi.
+
+**Refus de taille.** Un résultat sous `volume_min = 0,01` annule le trade : l'automate émet un
+`CANCEL` de raison `size`. Ce refus est **décidé au fill** mais **estampillé de la barre de
+décision** (§13), comme l'`ENTRY` qu'il remplace.
 
 ## 12. Modèle de coûts
 
@@ -454,7 +541,7 @@ pas un détail d'implémentation, c'est le premier terme de l'équation.
 
 ## 13. Contrat de trace événementiel et tolérances
 
-Chaque moteur émet un CSV, **une ligne par événement**, colonnes dans cet ordre exact :
+Chaque moteur émet un CSV, **une ligne par événement**, **21 colonnes** dans cet ordre exact :
 
 ```
 ts_decision,event,scenario,level,d,atr,v,m,a,ctx_ema,ctx_vwap,ctx_dxy,vwap,ema50_h1,dxy,
@@ -478,6 +565,27 @@ stop,target,r_est,fill_px,exit_px,exit_reason
 Séparateur `,`, point décimal, en-tête obligatoire, une ligne par événement même sans entrée.
 Émission : vbt `emit_event_trace`, QC ObjectStore **et** log préfixé `TRACE,` (l'ObjectStore
 n'est pas exportable par API sur ce compte), MT5 `Common\Files\x10_trace.csv`.
+
+**Listes fermées.** `event` ∈ {`ARM`, `BREAK`, `SWEEP`, `ENTRY`, `EXIT`, `CANCEL`} ;
+`scenario` ∈ {`BREAK_LONG`, `BREAK_SHORT`, `REV_LONG`, `REV_SHORT`} ou vide ;
+`exit_reason` ∈ {`STOP`, `TARGET`, `TIME`, `SESSION`} ou vide. Aucune autre valeur n'est
+recevable, dans aucun moteur.
+
+**Estampillage temporel — trois règles.**
+
+1. `ts_decision` d'un `EXIT` est la **barre M5 où la sortie est résolue** ; la minute exacte
+   n'est pas dans la trace, elle vit dans le registre des trades.
+2. `ENTRY` est **émis au fill** mais **estampillé de la barre de décision**, comme le `CANCEL`
+   de raison `size` ou `window` qui peut le remplacer (§10, §11).
+3. Conséquence opposable : **`ts_decision` est non décroissant** sur toute la trace. Un moteur
+   qui produit une trace non triée ne respecte pas ce contrat.
+
+**Colonne 22 optionnelle : `cancel_reason`.** Les raisons d'annulation — `zone`, `narm`,
+`hold`, `nsweep`, `sweep`, `ctx`, `r`, `window`, `size` — sont émises dans une **22ᵉ colonne
+facultative**, **hors** du contrat à 21 colonnes : le fichier de réconciliation officiel en
+reste à 21. Elle transforme « l'EA a armé et le Python non » en désaccord nommé, et c'est son
+seul usage. **`exit_reason` reste strictement réservé** aux quatre sorties de position : une
+annulation n'est pas une sortie.
 
 **Échelle de lecture** — on descend jusqu'au premier barreau qui casse ; un écart au barreau
 *N* rend les barreaux au-delà ininterprétables.
@@ -513,6 +621,13 @@ qu'on a réconcilié quoi que ce soit ; un écart n'est un échec que s'il reste
 | MT5 | terminal broker, `XAUUSD.c`, période M5, `--model 1` (OHLC M1), fenêtre 2022-11-04 → 2025-12-31 | `--model 1` interpole les fills : les chiffres sont un **majorant** ; vérifier dès le premier run que le spread du tester n'est pas nul ; export de barres plafonné à ~100 000 lignes |
 
 Toute mesure publiée indique la version du moteur qui l'a produite.
+
+**Référence d'implémentation.** Le moteur Python fait foi en cas de doute sur une formulation
+de cette spec : `src/framework/x10_engine.py::x10_engine_nb` pour l'automate et l'exécution,
+`src/framework/x10_kernels.py::atr_wilder_nb` pour l'ATR (§4). Le **format de trace** de
+référence est produit par `src/strategies/xau_x10.py::emit_event_trace` : horodatage **UTC**,
+arrondis **`level` à 3 décimales, indicateurs à 6, prix à 3**. MT5 et QuantConnect s'alignent
+sur ce fichier, pas sur leur propre convention d'arrondi.
 
 ---
 
