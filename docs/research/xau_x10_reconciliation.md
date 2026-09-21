@@ -817,6 +817,125 @@ avant que le marché ne s'en éloigne — là où le v1 le franchissait de loin.
 
 ---
 
+## 12. Période complète 2019-2025
+
+Backtest `1982926f999d70fced811f64ac0297b7` (« x10_reference_2019_2025_centre »), centre de
+grille, capital 10 000, 2019-01-01 → 2025-12-31, **3 297 ordres**. Référence : la campagne
+in-sample officielle au même centre et au spread gelé de 0,29 $ (**1 723 trades**, équité finale
+**3 741,86 $**, dernière barre M1 lue `2025-12-31 16:58`, aucune donnée ≥ 2026). JSON :
+`results/xau_x10/reconciliation_qc_full.json`.
+
+### 12.1 Santé — **NON SAIN**, et c'est un défaut que j'ai introduit
+
+| critère | mesure | verdict |
+|---|---|---|
+| ordres ≈ 2 × 1 723 | **3 297** (1 642 entrées + 1 655 sorties) | OK |
+| aucun ordre rejeté non retenté | **0 rejet**, mais **13 sorties orphelines** | **NON** |
+| position nulle en fin de run | **0 oz**, `Holdings $0.00` | OK |
+| compte à plat entre deux trades | **1 643 / 3 297** au lieu de 1 648 | **NON** |
+
+Bouclage comptable **exact à 0,00 USD** (−7 782,90 reconstruit = −7 782,90 publié).
+
+**La cause est le garde-fou `INFLIGHT_TIMEOUT` que j'ai ajouté au §11.3.** Les ordres 428 à 441
+sont **le même ordre de sortie réémis toutes les cinq minutes** — exactement la valeur du délai —
+portant tous le tag identique `REV_SHORT|1630.000|2020-03-27 20:55:00|…|xr=SESSION`, et **tous
+remplis**, pour +3 oz chacun. Le garde-fou ne sait pas distinguer « l'ordre n'a jamais existé »
+de « l'ordre est rempli mais son événement ne m'est pas parvenu », et dans le second cas il
+duplique la transaction.
+
+Portée réelle, mesurée sur les trois backtests disponibles :
+
+| run | entrées | sorties | ordres en double |
+|---|---|---|---|
+| 2024 v4 | 316 | 316 | **0** |
+| 2024 v4, spread 0,29 | 317 | 317 | **0** |
+| **2019-2025** | 1 642 | 1 655 | **13, tous le 2020-03-29** |
+
+Treize ordres sur 3 297 (**0,4 %**), tous concentrés sur **une seule séance de reprise
+dominicale** en sept ans, pour **−193,10 USD** — soit **2,5 %** de la perte. Le reste du journal
+est sain. Ce n'est donc pas un défaut qui invalide la lecture, mais c'est un défaut, il est de
+moi, et il est signalé plutôt que lissé.
+
+**Correctif proposé** (non appliqué, aucun backtest disponible pour le valider) : ne jamais
+réémettre à l'aveugle. Conserver le ticket rendu par `market_order`, et n'abandonner un ordre que
+si `ticket.status` le dit mort ; à défaut, n'autoriser la réémission que si la position détenue
+**n'a pas bougé** depuis l'envoi — ce qui suffit ici, puisque les treize doublons suivent chacun
+un remplissage qui avait déjà changé la position.
+
+> **Conséquence sur l'outil.** `reconstruct_qc_trades` appariait les ordres par simple
+> alternance ; un seul ordre de trop décalait tout le reste du journal, et la première lecture de
+> ce backtest annonçait un « inventaire résiduel » de 52,9 % qui n'existait pas. La
+> reconstruction s'appuie désormais sur le tag lui-même (`bm=` = entrée, `xr=` = sortie) et met
+> les sorties orphelines de côté au lieu de les apparier de force ; l'alternance reste le
+> repli pour les tags v1. C'est la deuxième fois qu'un contrôle d'intégrité de cet outil rattrape
+> un décalage d'un ordre — la première était l'entrée refusée du §4.2.
+
+### 12.2 Année par année, en R
+
+Le R est obligatoire ici : l'équité QC se compose de 10 000 à 2 217 sur sept ans, donc les lots
+fondent et un PnL en dollars mélangerait le signal et la taille. Les espérances portent sur
+**tous** les trades de l'année, pas seulement les appariés.
+
+| année | trades Py | trades QC | **E[R] Python** | **E[R] QC** | appariement | entrées QC au plancher 0,01 lot |
+|---|---|---|---|---|---|---|
+| 2019 | 149 | 155 | **−0,0444** | **−0,1001** | 34,9 % | 0 |
+| 2020 | 246 | 239 | **−0,2740** | **−0,3003** | 35,4 % | 0 |
+| 2021 | 234 | 254 | **−0,2196** | **−0,3842** | 37,6 % | 1 |
+| 2022 | 247 | 244 | **−0,2235** | **−0,2883** | 32,0 % | 9 |
+| 2023 | 216 | 206 | **−0,1479** | **−0,1984** | 31,0 % | 13 |
+| 2024 | 307 | 315 | **−0,1096** | **−0,2080** | 33,2 % | 63 |
+| 2025 | 324 | 229 | **−0,0920** | **−0,3484** | 24,7 % | 111 |
+
+**Les refus de taille de §11 ne sont pas observables** : le tag ne voyage que sur les entrées
+**retenues**, jamais sur un `CANCEL` de raison `size`. La colonne publiée est donc le seul proxy
+honnête — le nombre d'entrées déjà collées au plancher de 0,01 lot. Il passe de **0 en 2019-2020
+à 111 en 2025**, soit près de la moitié des entrées de l'année : c'est la trace directe de
+l'équité qui fond, et c'est aussi pourquoi 2025 ne compte que 229 trades QC contre 324 côté
+Python, et pourquoi son appariement (24,7 %) décroche du plateau des autres années.
+
+### 12.3 Attribution sur les 555 trades appariés
+
+| poste | moyenne (R/trade) |
+|---|---|
+| R Python / R QC / **écart** | −0,1374 / −0,1709 / **+0,0335** |
+| (iv) taille | −0,0160 |
+| (i) glissement d'entrée | +0,0162 |
+| (v) gap de sortie Python | −0,0014 |
+| (iii) raison de sortie | +0,0252 |
+| (ii) glissement de sortie | +0,0094 |
+
+Part non attribuée **+3,55 × 10⁻¹⁵ R**. Sur sept ans, le glissement de sortie n'est plus le poste
+dominant et change même de signe : le portage réparé sort en moyenne **au-dessus** du niveau
+théorique. Les raisons de sortie sont toutes **lues** (`xr=`) — plus aucune inférence
+`TIME_OR_SESSION` : STOP 1 076, TIME 268, TARGET 212, SESSION 86.
+
+Le barreau 2 reste cassé dans les mêmes proportions qu'en 2024 : ATR implicite QC/Python de
+médiane **0,9998** sur 249 breakouts, demi-spread QC **×1,56**, `stop` hors tolérance sur
+536/555. L'appariement de **32,2 %** sur sept ans confirme que le 33 % de 2024 n'était pas un
+accident d'échantillon.
+
+### 12.4 Conclusion pour le rapport client
+
+> **Les deux moteurs concordent sur le verdict, et ils y concordent les sept années.**
+> L'espérance par trade est **négative en 2019, 2020, 2021, 2022, 2023, 2024 et 2025**, sur la
+> référence Python **comme** sur QuantConnect, sans une seule exception. Elle vaut **−0,04 à
+> −0,27 R** côté Python et **−0,10 à −0,38 R** côté QC : QuantConnect est **systématiquement
+> plus sévère**, jamais plus favorable. Aucune année, aucun moteur ne produit une espérance
+> positive.
+>
+> Cette concordance de signe est solide **bien que** les deux moteurs ne prennent que 32 % des
+> mêmes trades : ils divergent sur *quels* trades prendre — un écart de données minute encore
+> ouvert, §11.6 — mais pas sur ce que la stratégie rapporte. Deux tirages largement différents
+> du même univers de décisions donnent le même signe sept fois sur sept, ce qui rend le verdict
+> **plus** robuste qu'un accord obtenu sur des trades identiques.
+>
+> Les chiffres de **niveau** restent, eux, inexploitables : le −77,8 % du backtest QC compose une
+> espérance négative avec un plancher de lot qui mord de plus en plus (111 entrées sur 229 en
+> 2025), et ne mesure pas la stratégie. Le verdict publiable est celui de l'espérance en R, pas
+> celui de la courbe d'équité.
+
+---
+
 ## 9. MT5 : en attente
 
 *Rien à publier. L'EA `src/mt5/Experts/XauX10.mq5` n'a pas encore tourné dans le tester.*

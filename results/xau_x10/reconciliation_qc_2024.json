@@ -14,6 +14,18 @@
     "qc_net_return_pct": -21.713799999999683,
     "healthy": true
   },
+  "by_year": [
+    {
+      "year": 2024,
+      "py_trades": 305,
+      "qc_trades": 316,
+      "py_expectancy_r": -0.11957748999205955,
+      "qc_expectancy_r": -0.20482968207010085,
+      "match_rate_py_to_qc": 0.33114754098360655,
+      "n_matched": 101,
+      "qc_entries_at_lot_floor": 0
+    }
+  ],
   "health": {
     "criteria": {
       "orders_in_range": true,
@@ -90,6 +102,8 @@
       "margin_calls": [],
       "tag_key_mismatches": [],
       "unparsed_tags": [],
+      "orphan_exits": [],
+      "n_orphan_exits": 0,
       "inferred_exit_reason_mix": {
         "STOP": 212,
         "TARGET": 57,
@@ -7169,6 +7183,18 @@
           }
         ]
       },
+      "by_year": [
+        {
+          "year": 2024,
+          "py_trades": 305,
+          "qc_trades": 316,
+          "py_expectancy_r": -0.11957748999205955,
+          "qc_expectancy_r": -0.20482968207010085,
+          "match_rate_py_to_qc": 0.33114754098360655,
+          "n_matched": 101,
+          "qc_entries_at_lot_floor": 0
+        }
+      ],
       "rung2_bars": {
         "n": 101,
         "observable": true,
@@ -15923,6 +15949,18 @@
           }
         ]
       },
+      "by_year": [
+        {
+          "year": 2024,
+          "py_trades": 307,
+          "qc_trades": 316,
+          "py_expectancy_r": -0.10960853094859722,
+          "qc_expectancy_r": -0.20482968207010085,
+          "match_rate_py_to_qc": 0.3322475570032573,
+          "n_matched": 102,
+          "qc_entries_at_lot_floor": 0
+        }
+      ],
       "rung2_bars": {
         "n": 102,
         "observable": true,

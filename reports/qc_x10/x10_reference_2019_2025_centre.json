@@ -1,0 +1,49 @@
+{
+  "name": "x10_reference_2019_2025_centre",
+  "backtestId": "1982926f999d70fced811f64ac0297b7",
+  "parameterSet": {
+    "start": "2019-01-01",
+    "end": "2025-12-31",
+    "z": 1,
+    "a_min": 0.2,
+    "k_s": 1
+  },
+  "statistics": {
+    "Total Orders": "3297",
+    "Average Win": "0.54%",
+    "Average Loss": "-0.34%",
+    "Compounding Annual Return": "-19.349%",
+    "Drawdown": "78.400%",
+    "Expectancy": "-0.270",
+    "Start Equity": "10000.00",
+    "End Equity": "2217.10",
+    "Net Profit": "-77.829%",
+    "Sharpe Ratio": "-2.541",
+    "Sortino Ratio": "-3.39",
+    "Probabilistic Sharpe Ratio": "0.000%",
+    "Loss Rate": "72%",
+    "Win Rate": "28%",
+    "Profit-Loss Ratio": "1.60",
+    "Alpha": "-0.167",
+    "Beta": "0.005",
+    "Annual Standard Deviation": "0.066",
+    "Annual Variance": "0.004",
+    "Information Ratio": "-1.573",
+    "Tracking Error": "0.089",
+    "Treynor Ratio": "-31.664",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$320000.00",
+    "Lowest Capacity Asset": "XAUUSD 8I",
+    "Portfolio Turnover": "327.82%"
+  },
+  "runtimeStatistics": {
+    "Equity": "$2,217.11",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$-7,782.90",
+    "Probabilistic Sharpe Ratio": "0.000%",
+    "Return": "-77.83 %",
+    "Unrealized": "$0.00",
+    "Volume": "$43,732,980.58"
+  }
+}

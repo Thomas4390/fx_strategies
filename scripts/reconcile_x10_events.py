@@ -254,6 +254,11 @@ class QcLedger:
     rejected_exits: list[dict[str, Any]] = field(default_factory=list)
     tag_key_mismatches: list[dict[str, Any]] = field(default_factory=list)
     unparsed_tags: list[dict[str, Any]] = field(default_factory=list)
+    #: Ordres de SORTIE arrivés alors qu'aucune position n'était ouverte. Le
+    #: portage ne devrait jamais en produire : c'est la signature d'un ordre
+    #: réémis après coup. On les met de côté au lieu de les apparier de force,
+    #: sans quoi un seul d'entre eux décale tout le reste du journal.
+    orphan_exits: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _order_reject_reason(order: dict[str, Any]) -> str:
@@ -297,6 +302,22 @@ def reconstruct_qc_trades(orders: list[dict[str, Any]]) -> QcLedger:
             else:
                 ledger.unparsed_tags.append(record)
             continue
+
+        # Depuis v4 le tag dit lui-même ce qu'il est : `bm=` sur une entrée,
+        # `xr=` sur une sortie. On s'en sert plutôt que de l'alternance, qui
+        # n'est vraie que tant que le portage n'émet jamais un ordre de trop.
+        # Un tag v1 n'a ni l'un ni l'autre : on retombe alors sur l'alternance.
+        is_entry = "bm" in tag.extra
+        is_exit = "xr" in tag.extra
+        if is_exit and open_trade is None:
+            ledger.orphan_exits.append(
+                {**record, "note": "sortie sans position ouverte"}
+            )
+            continue
+        if is_entry and open_trade is not None:
+            # Une entrée alors qu'une position est ouverte : §9 l'interdit. On
+            # ferme la précédente sans sortie plutôt que de les confondre.
+            open_trade = None
 
         if open_trade is None:
             trade = QcTrade(
@@ -1184,6 +1205,8 @@ def qc_only_sections(qc: QcContext, matched_pnl: float) -> dict[str, Any]:
             "margin_calls": ledger.margin_calls,
             "tag_key_mismatches": ledger.tag_key_mismatches,
             "unparsed_tags": ledger.unparsed_tags,
+            "orphan_exits": ledger.orphan_exits,
+            "n_orphan_exits": len(ledger.orphan_exits),
             "inferred_exit_reason_mix": reasons.value_counts().to_dict(),
         },
         "phantom_inventory": phantom_inventory(qc.orders, ledger),
@@ -1215,6 +1238,70 @@ def qc_only_sections(qc: QcContext, matched_pnl: float) -> dict[str, Any]:
             ],
         },
     }
+
+
+def by_year(
+    py: pd.DataFrame, qc_trades: list[QcTrade], pairs: list[tuple[int, int]]
+) -> list[dict[str, Any]]:
+    """Année par année, en **R** — la seule unité qui survive à la composition.
+
+    L'équité QC se compose sur sept ans (10 000 → 2 217), donc les lots fondent
+    et un PnL en dollars mélange le signal et la taille. Le R rapporte chaque
+    trade au risque qu'il engageait vraiment, ce qui rend 2019 et 2025
+    comparables. Les espérances portent sur **tous** les trades de l'année, pas
+    seulement les appariés : c'est ce que chaque moteur aurait rapporté.
+    """
+    side = py["scenario_name"].map(SCENARIO_SIDE).to_numpy(dtype=float)
+    pnl_py = side * py["lots"].to_numpy(float) * CONTRACT_SIZE * (
+        py["exit_px"].to_numpy(float) - py["fill_px"].to_numpy(float)
+    )
+    risk_py = py["risk_amount"].to_numpy(dtype=float)
+    frame_py = pd.DataFrame(
+        {
+            "year": pd.DatetimeIndex(py["ts_decision_utc"]).year,
+            "r": np.where(risk_py > 0, pnl_py / np.where(risk_py <= 0, np.nan, risk_py), np.nan),
+        }
+    )
+
+    rows_qc = []
+    for trade in qc_trades:
+        risk = trade.risk_engaged
+        rows_qc.append(
+            {
+                "year": trade.tag.ts_decision.year,
+                "r": trade.pnl / risk if trade.closed and risk and risk > 0 else np.nan,
+                "at_lot_floor": abs(trade.entry_qty) <= CONTRACT_SIZE * VOLUME_MIN + 1e-9,
+            }
+        )
+    frame_qc = pd.DataFrame(rows_qc)
+
+    matched_years = pd.Series(
+        [pd.Timestamp(py.loc[i, "ts_decision_utc"]).year for i, _ in pairs], dtype="int64"
+    )
+
+    years = sorted(set(frame_py["year"]) | set(frame_qc["year"]))
+    out = []
+    for year in years:
+        sub_py = frame_py[frame_py["year"] == year]
+        sub_qc = frame_qc[frame_qc["year"] == year]
+        n_matched = int((matched_years == year).sum())
+        out.append(
+            {
+                "year": int(year),
+                "py_trades": int(len(sub_py)),
+                "qc_trades": int(len(sub_qc)),
+                "py_expectancy_r": float(sub_py["r"].mean()) if len(sub_py) else None,
+                "qc_expectancy_r": float(sub_qc["r"].mean()) if len(sub_qc) else None,
+                "match_rate_py_to_qc": n_matched / len(sub_py) if len(sub_py) else None,
+                "n_matched": n_matched,
+                # Les refus de taille (§11, `CANCEL` raison `size`) ne voyagent
+                # sur aucun ordre : seuls les trades RETENUS sont tagués. On
+                # publie donc le proxy observable — la part des entrées déjà
+                # collées au plancher de 0,01 lot — et pas un refus inventé.
+                "qc_entries_at_lot_floor": int(sub_qc["at_lot_floor"].sum()) if len(sub_qc) else 0,
+            }
+        )
+    return out
 
 
 def build_variant(py_path: Path, qc: QcContext, tol_bars: int) -> dict[str, Any]:
@@ -1343,6 +1430,7 @@ def build_variant(py_path: Path, qc: QcContext, tol_bars: int) -> dict[str, Any]
             "py_orphans": py_orphan_rows,
             "qc_orphans": qc_orphan_rows,
         },
+        "by_year": by_year(py, trades, pairs),
         "rung2_bars": rung2_bars(py, trades, pairs),
         "rung4_theoretical": rung4_theoretical(py, trades, pairs, TOL_SAME_DATA),
         "rung5_attribution": aggregate(rows),
@@ -1400,7 +1488,7 @@ def health_check(qc: QcContext) -> dict[str, Any]:
         for o in qc.orders
         if int(o.get("status", -1)) != LEAN_STATUS_FILLED
     ]
-    unretried = len(unfilled)
+    unretried = len(unfilled) + len(ledger.orphan_exits)
     flat_between = phantom["n_fills_leaving_account_flat"]
     expected_flat = phantom["n_fills"] // 2
     criteria = {
@@ -1461,6 +1549,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     matched_pnl = sum(t.pnl for t in qc.ledger.trades if t.closed)
     return {
         "summary": build_summary(qc, primary, health["healthy"]),
+        "by_year": primary["by_year"],
         "health": health,
         "meta": {
             "qc_orders": str(args.qc_orders),
