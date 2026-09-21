@@ -175,7 +175,11 @@ export échoue, la spec §12 impose le spread constant de 0,29 $ marqué
 Le holdout commence au **2026-01-01** (`docs/research/HOLDOUT_POLICY.md`). Mais le contexte
 DXY dépend de quatre parquets FX locaux dont l'index s'arrête tous les quatre au
 **2026-04-01 00:00** (vérifié le 2026-09-21 sur `data/{EUR-USD,USD-JPY,GBP-USD,USD-CAD}_minute.parquet`),
-alors que l'or local va jusqu'au 2026-07-24.
+alors que l'or local va jusqu'au 2026-07-24. Le panier DXY4 construit sur ces jambes corrèle
+**0,87** en rendements journaliers à `DTWEXBGS` au fixing de midi New York (0,67 en fin de jour
+calendaire, écart purement horloger, 2 047 jours 2018-2026) : `DTWEXBGS` étant un indice large
+à 26 devises, la cible de 0,98 du plan était mal calibrée et est abandonnée — rien n'a été
+ajusté pour la remonter (spec §6.3).
 
 Conséquence : la fenêtre OOS **commune aux trois moteurs** est **2026-01-01 → 2026-03-31**,
 soit un trimestre. Une extension jusqu'au 2026-07-24 n'est possible que sous la règle

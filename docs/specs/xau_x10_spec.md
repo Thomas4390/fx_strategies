@@ -106,12 +106,24 @@ fréquence est mesurée dans `docs/research/xau_x10_feasibility_2026H2.md` §1.
 ```
 ATR_PERIOD := 14                               # gele
 TR[t]      := max( H[t]-L[t], |H[t]-C[t-1]|, |L[t]-C[t-1]| )
-A[t]       := moyenne de Wilder de TR sur 14 barres M5
+A[t]       := A[t-1] + ( TR[t] - A[t-1] ) / 14        # recursion de Wilder
+A[1]       := TR[1]                                   # amorcage sur le premier TR disponible
 ```
 
+**Amorçage — normatif.** La récursion démarre sur le **premier TR disponible** (`TR[1]`, la
+deuxième barre M5, la première n'ayant pas de `C[t−1]`), et la valeur n'est **publiée qu'à
+partir de 14 TR** accumulés : `A[t]` est **indéfini** avant, et les barres antérieures sont
+exclues, elles ne valent pas 0. Équivalent pandas exact :
+`tr.ewm(alpha=1/14, adjust=False, min_periods=14).mean()`. Référence d'implémentation :
+`src/framework/x10_kernels.py::atr_wilder_nb`.
+
 Lissage de Wilder (`alpha = 1/14`, récursif), **pas** de moyenne simple ni d'EMA à `2/(n+1)`.
-`A[t]` est **indéfini** tant que `t < 14` : les barres antérieures sont exclues, elles ne
-valent pas 0.
+
+⚠️ **L'`iATR` natif de MT5 n'amorce pas ainsi** : il part de la moyenne simple des 14 premiers
+TR, ce qui décale durablement la série. **L'EA DOIT recalculer l'ATR à la main** avec la
+récursion ci-dessus. Même consigne côté QuantConnect : aucun indicateur ATR natif ne doit être
+utilisé sans avoir vérifié son amorçage. Un écart d'amorçage se propage à *toutes* les
+distances de la spec, donc à tous les seuils.
 
 **Toute distance de cette spec s'exprime en multiples de `A[t]`**, `A` étant celui de la barre
 de décision, jamais recalculé en cours de trade. La normalisation ATR est l'exigence explicite
@@ -138,7 +150,11 @@ a[t] := v[t] - v[t-3]                              # acceleration
   fenêtre de trois barres. `d·a > 0` = le prix accélère vers le niveau ; `d·a < 0` = il
   décélère.
 
-`v`, `m`, `a` sont indéfinis tant que `A[t]` l'est ou que l'historique manque (`t < 15`).
+**Domaine de définition — règle exacte.** `v[t]` et `m[t]` sont définis dès que `A[t]` l'est
+**et** que le close retardé existe (`C[t−3]`, respectivement `C[t−12]`). `a[t] = v[t] − v[t−3]`
+n'est donc défini que **trois barres après** `v`. Tout NaN se propage : **aucun armement n'est
+possible sur une barre où `v`, `m` ou `a` est NaN** (§7.1), sans exception ni substitution
+par 0.
 
 > **Unités — à ne pas confondre.** `v` et `m` sont sans dimension une fois divisés par `A`,
 > mais pas homogènes entre eux (`v` est une pente par barre, `m` un déplacement normalisé en
@@ -206,6 +222,17 @@ DXY4 := 50,14348112 * EURUSD^(-w_e) * USDJPY^(w_j) * GBPUSD^(-w_g) * USDCAD^(w_c
 Jambe absente depuis plus de **5 barres** → **DXY indéfini = neutre** (`ctx_dxy = 0`), et
 l'occurrence est comptée. Ce cas est la règle normale dans le tester MT5, où `CopyRates`
 multi-symboles n'est pas garanti.
+
+**Contrôle de vraisemblance.** Corrélation des rendements journaliers DXY4 / FRED
+`DTWEXBGS` : **0,87** au fixing de midi New York, **0,67** en fin de jour calendaire — l'écart
+est purement horloger, pas un défaut de construction. Mesure sur **2 047 jours**,
+2018 → 2026. `DTWEXBGS` est un **indice large à 26 devises**, pas le DXY ICE : la cible de 0,98
+inscrite au plan de phase était mal calibrée et est **abandonnée**. Rien n'a été ajusté pour la
+remonter. Niveau médian du panier : **94,35** (effet de la renormalisation après retrait du CHF
+et de la SEK) ; sans conséquence, puisque **seul le signe de `DXY − EMA50_H1(DXY)` est
+consommé** (§6.4). Couverture des quatre jambes : **2018-01-01 → 2026-04-01** ; au-delà,
+`ctx_dxy = 0` par la règle ci-dessus. Vérification :
+`uv run python scripts/build_dxy_synthetic.py --check`.
 
 ### 6.4 Scores de contexte — toujours dans le sens du trade
 
