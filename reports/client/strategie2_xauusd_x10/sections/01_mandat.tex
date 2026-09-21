@@ -1,0 +1,59 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
+%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
+%  tables/x10_headline.tex.
+% ═══════════════════════════════════════════════════════════════════════
+\section{Mandat et périmètre}
+\label{sec:x10_mandat}
+
+% TODO L2 : compléter par ce que le mandat interdit une fois le gel posé
+% (aucune re-sélection après lecture du holdout) et par la date de gel.
+
+\subsection{La demande du client}
+
+Apogée Invest demande une deuxième stratégie, indépendante de la première par
+son instrument comme par son horizon~: l'or au comptant, \code{XAUUSD}, traité
+en séance sur des barres de cinq minutes. Le mandat en fixe le principe
+directeur sans ambiguïté~: la stratégie ne s'appuie que sur les \sleeve{niveaux
+psychologiques de 10~\$} --- les prix ronds de la grille décimale --- et sur la
+manière dont le marché les aborde.
+
+Le cadre demandé tient en quatre exigences.
+
+\begin{description}
+  \item[Un seul objet d'étude.] Les niveaux x10 et rien d'autre. Aucun signal
+  n'est construit sur un motif graphique, un indicateur de retournement ou un
+  calendrier d'annonces.
+  \item[Une séance entière.] Le graphique de travail est le M5, sur toute la
+  journée de cotation, sans fenêtre horaire privilégiée a~priori.
+  \item[Un contexte supérieur.] L'unité H1 fournit trois lectures~:
+  l'\code{EMA50}, le \code{VWAP} de séance et le \code{DXY}. Les deux premières
+  orientent, la troisième \emph{filtre sans bloquer}~: un dollar contraire ne
+  supprime pas le trade, il en réduit la taille.
+  \item[Une mesure d'approche.] Le c\oe{}ur de la décision est la façon dont le
+  prix arrive sur le niveau~: sa \sleeve{vitesse}, son \sleeve{momentum} et son
+  \sleeve{accélération}, tous normalisés par l'\code{ATR} pour rester
+  comparables d'un régime de volatilité à l'autre.
+\end{description}
+
+\subsection{Cible, risque et scénarios}
+
+La cible d'un trade est le \sleeve{prochain niveau x10} dans le sens de la
+position. Le stop est placé de sorte que le rapport gain espéré sur perte
+acceptée reste au moins égal à~$1$~: aucun trade dont la géométrie ne le permet
+pas n'est pris.
+
+Quatre scénarios, et quatre seulement, sont admis~: \sleeve{Breakout Long} et
+\sleeve{Breakout Short} lorsque le niveau cède dans le sens de l'approche,
+\sleeve{Reversal Short} et \sleeve{Reversal Long} lorsqu'il tient et renvoie le
+prix. La section~\ref{sec:x10_scenarios} les décrit un à un, et
+l'annexe~\ref{app:x10_anatomie} en déroule un exemple chacun.
+
+\subsection{Ce que ce rapport livre}
+
+Ce document rend compte de la chaîne complète~: recherche vectorielle, portage
+sur QuantConnect, portage sur MetaTrader~5, réconciliation des trois moteurs,
+batterie de robustesse, puis verdict. Le verdict peut être négatif~; il est
+alors publié tel quel, au même titre qu'un verdict favorable.
+
+\subsection{Ce qui reste hors périmètre}

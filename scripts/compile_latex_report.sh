@@ -13,7 +13,8 @@
 #   scripts/compile_latex_report.sh setup        # guide d'installation
 #   scripts/compile_latex_report.sh goldtrades   # analyse des trades du moteur or
 #   scripts/compile_latex_report.sh usdjpytrades # analyse des trades du candidat USD/JPY
-#   scripts/compile_latex_report.sh all          # les six
+#   scripts/compile_latex_report.sh x10          # rapport technique stratégie 2 (XAUUSD x10)
+#   scripts/compile_latex_report.sh all          # les sept
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,6 +54,7 @@ case "$target" in
     setup)       compile_one "reports/client/guide_installation" "ApogeeInvest_Strategie1_GuideInstallation" ;;
     goldtrades)  compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_Or" ;;
     usdjpytrades) compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_USDJPY" ;;
+    x10)         compile_one "reports/client/strategie2_xauusd_x10" "ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique" ;;
     all)
         compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique"
         compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive"
@@ -60,10 +62,11 @@ case "$target" in
         compile_one "reports/client/guide_installation" "ApogeeInvest_Strategie1_GuideInstallation"
         compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_Or"
         compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_USDJPY"
+        compile_one "reports/client/strategie2_xauusd_x10" "ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique"
         ;;
     *)
         echo "Cible inconnue : $target" >&2
-        echo "Attendu : report | executive | pedagogical | setup | goldtrades | usdjpytrades | all" >&2
+        echo "Attendu : report | executive | pedagogical | setup | goldtrades | usdjpytrades | x10 | all" >&2
         exit 2
         ;;
 esac

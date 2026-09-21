@@ -1,0 +1,184 @@
+\documentclass[11pt, a4paper]{scrartcl}
+
+% ═══════════════════════════════════════════════════════════════════
+%  Identité du document — lue par le préambule partagé, donc définie
+%  AVANT son inclusion.
+% ═══════════════════════════════════════════════════════════════════
+\newcommand{\ReportRunningTitle}{Stratégie XAUUSD --- Niveaux x10}
+\newcommand{\ReportFooterLabel}{Rapport technique --- document provisoire}
+\newcommand{\ReportPdfTitle}{Stratégie XAUUSD --- Niveaux x10 --- Rapport technique}
+\newcommand{\ReportPdfSubject}{Stratégie intraday XAUUSD sur les niveaux psychologiques de dix dollars}
+\newcommand{\ReportPdfKeywords}{XAUUSD, or, niveaux psychologiques, breakout, reversal, MetaTrader 5, QuantConnect}
+
+\input{../rapport_technique/preamble.tex}
+
+% Le préambule partagé pointe sur son propre dossier de figures : on le
+% réécrit pour celui de la stratégie 2, le logo client restant commun.
+\graphicspath{{figures/}{../../../docs/logo/}}
+
+% tcolorbox charge déjà etoolbox, mais le verdict conditionnel en dépend
+% directement : on l'exige explicitement plutôt que par ricochet.
+\usepackage{etoolbox}
+
+% ── Couleurs locales — les deux familles de scénarios ─────────────
+\definecolor{breakoutBlue}{HTML}{1F5582}
+\definecolor{reversalOrange}{HTML}{CC6B2F}
+
+% ═══════════════════════════════════════════════════════════════════
+%  Résultats — macros générées, jamais de chiffre dans la prose.
+% ═══════════════════════════════════════════════════════════════════
+\input{tables/x10_verdict.tex}
+\input{tables/x10_headline.tex}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE — Apogée Invest
+% ═══════════════════════════════════════════════════════════════════
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+
+% Top gold accent band — brand signature
+\vspace*{-1.8cm}
+\noindent{\color{apogeeGold}\rule{\textwidth}{2.5pt}}
+
+\vspace{1.0cm}
+
+% Logo Apogée Invest
+\includegraphics[width=4.2cm]{apogee_invest_logo}
+
+\vspace{0.25cm}
+
+% Client wordmark — letter-spaced small caps
+{\interspaced\color{apogeeGold}\large\bfseries APOGÉE INVEST\par}
+
+\vspace{0.3cm}
+
+% Thin gold rule
+{\color{apogeeGold}\rule{0.32\textwidth}{0.6pt}}
+
+\vspace{1.5cm}
+
+% Category label
+{\interspaced\color{slateGrey}\small RAPPORT TECHNIQUE\par}
+
+\vspace{0.7cm}
+
+% Main title
+{\sffamily\color{primary}\Huge\bfseries
+Stratégie XAUUSD\\[0.15cm]
+Niveaux x10
+\par}
+
+\vspace{0.6cm}
+
+% Subtitle
+{\sffamily\color{accent}\LARGE\itshape
+Vitesse et accélération aux niveaux psychologiques
+\par}
+
+\vspace{0.8cm}
+
+\begin{minipage}{0.85\textwidth}
+\centering
+\color{slateGrey}\sffamily\footnotesize
+Recherche vectorielle, portage QuantConnect et MetaTrader~5,\\
+réconciliation des trois moteurs et batterie de robustesse
+\end{minipage}
+
+\vfill
+
+% Metadata block
+{\color{apogeeGold}\rule{0.45\textwidth}{0.5pt}}\\[0.5cm]
+
+\begin{tabular}{rl}
+  \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.2em]
+  \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.2em]
+  \color{slateGrey}\sffamily Statut & \textbf{BROUILLON --- aucune mesure publiée} \\[0.2em]
+  \color{slateGrey}\sffamily Version & \textbf{0.1} \\
+\end{tabular}
+
+\vspace{0.5cm}
+
+{\color{apogeeGold}\rule{0.45\textwidth}{0.5pt}}
+
+\vfill
+
+% Confidentiality block
+\noindent\colorbox{lightGrey}{%
+  \makebox[\textwidth][l]{%
+    \parbox{0.95\textwidth}{%
+      \vspace{0.3cm}
+      \footnotesize\color{slateGrey}\sffamily
+      \textbf{Confidentiel.} Ce document présente une stratégie quantitative
+      sur le marché des changes à l'intention exclusive d'Apogée Invest. Les
+      performances indiquées sont issues de \emph{backtests} sur données
+      historiques et de simulations de résistance. Les performances passées
+      ne préjugent pas des performances futures.
+      \vspace{0.3cm}
+    }
+  }
+}
+
+\vspace{0.3cm}
+
+% Bottom gold accent band — symmetric to top
+\noindent{\color{apogeeGold}\rule{\textwidth}{2.5pt}}
+
+\end{titlepage}
+
+% ═══════════════════════════════════════════════════════════════════
+%  TABLE DES MATIÈRES
+% ═══════════════════════════════════════════════════════════════════
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+{\color{primary}\sffamily\Large\bfseries Table des matières}\\[0.3em]
+{\color{accent}\rule{\linewidth}{1.0pt}}\\[0.5em]
+
+\renewcommand{\contentsname}{}
+\makeatletter
+\renewcommand{\@dotsep}{4.5}
+\makeatother
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ═══════════════════════════════════════════════════════════════════
+%  SECTIONS
+% ═══════════════════════════════════════════════════════════════════
+
+\input{sections/00_resume_verdict.tex}
+\input{sections/01_mandat.tex}
+\input{sections/02_methodologie.tex}
+\input{sections/03_grille_x10.tex}
+\input{sections/04_mecanique.tex}
+\input{sections/05_scenarios.tex}
+\input{sections/06_recherche_vs_execution.tex}
+\input{sections/07_risque.tex}
+\input{sections/08_in_sample.tex}
+\input{sections/09_hors_echantillon.tex}
+\input{sections/10_bootstrap_mc_ruine.tex}
+\input{sections/11_robustesse_avancee.tex}
+\input{sections/12_sensibilite_couts.tex}
+\input{sections/13_limites.tex}
+
+% Une seule des deux sections 14 est livrée : le verdict décide laquelle.
+% Les deux branches restent écrites, donc lues par le test d'orphelins.
+\ifdefstring{\XTenVerdict}{GO}{%
+  \input{sections/14a_deploiement.tex}%
+}{%
+  \input{sections/14b_non_deploiement.tex}%
+}
+
+\appendix
+\input{sections/annexe_a_glossaire.tex}
+\input{sections/annexe_b_anatomie_trades.tex}
+\input{sections/annexe_c_plateau.tex}
+\input{sections/annexe_d_methodologie_robustesse.tex}
+\input{sections/annexe_e_table_decision.tex}
+
+\end{document}

@@ -22,6 +22,11 @@ mesures, dans l'ordre où elles auraient attrapé le défaut :
 - **les métriques de tête** doivent être celles de ``mt5_reference.json``, la
   sortie du moteur qui exécute. Les valeurs des configurations antérieures sont
   listées explicitement : elles ne doivent plus apparaître nulle part.
+
+Le périmètre livré et le test d'orphelins valent pour toute stratégie du
+dossier client : ils sont paramétrés par ``DELIVERABLES``. Les trois mesures
+chiffrées ci-dessus restent propres à ``strategie1``, faute de preset et de run
+MT5 publié pour les autres.
 """
 
 from __future__ import annotations
@@ -29,6 +34,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -40,19 +46,56 @@ if str(_SRC) not in sys.path:
 
 from mt5.bridge.write_default_preset import PRESET_LINES  # noqa: E402
 
-# Les six documents livrés au client, tous sous reports/client/. Tout le reste
-# de reports/ est du matériau de travail.
+# Tout ce qui est livré au client vit sous reports/client/. Le reste de
+# reports/ est du matériau de travail.
 _CLIENT_ROOT = "reports/client"
-MAIN_DOCUMENTS: tuple[str, ...] = (
-    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_Or.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex",
-    f"{_CLIENT_ROOT}/guide_installation/ApogeeInvest_Strategie1_GuideInstallation.tex",
-    f"{_CLIENT_ROOT}/guide_pedagogique/ApogeeInvest_Strategie1_GuidePedagogique.tex",
-)
 
-_MT5_REFERENCE = _ROOT / "results" / "production_report" / "mt5_reference.json"
+
+@dataclass(frozen=True)
+class StrategyDeliverables:
+    """Le périmètre livré d'une stratégie.
+
+    ``root`` est le dossier qui porte le ``sections/`` de la stratégie — c'est
+    lui que le test d'orphelins balaie. ``documents`` liste les racines de
+    compilation, qui peuvent vivre ailleurs (les deux guides de la stratégie 1
+    ont leur propre dossier). ``mt5_reference`` n'existe que pour une stratégie
+    dont un moteur MT5 a déjà produit un run publié.
+    """
+
+    root: str
+    documents: tuple[str, ...]
+    mt5_reference: Path | None = None
+
+
+DELIVERABLES: dict[str, StrategyDeliverables] = {
+    "strategie1": StrategyDeliverables(
+        root=f"{_CLIENT_ROOT}/rapport_technique",
+        documents=(
+            f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.tex",
+            f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.tex",
+            f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_Or.tex",
+            f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex",
+            f"{_CLIENT_ROOT}/guide_installation/ApogeeInvest_Strategie1_GuideInstallation.tex",
+            f"{_CLIENT_ROOT}/guide_pedagogique/ApogeeInvest_Strategie1_GuidePedagogique.tex",
+        ),
+        mt5_reference=_ROOT / "results" / "production_report" / "mt5_reference.json",
+    ),
+    "strategie2": StrategyDeliverables(
+        root=f"{_CLIENT_ROOT}/strategie2_xauusd_x10",
+        documents=(
+            f"{_CLIENT_ROOT}/strategie2_xauusd_x10"
+            f"/ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.tex",
+        ),
+    ),
+}
+
+# Les six documents de la stratégie 1. Les contrôles de chiffres qui suivent
+# (allocations, valeurs périmées, profit net, ancres) lui sont propres : ils
+# confrontent la prose à un preset et à un run MT5 qui n'existent que pour
+# elle.
+MAIN_DOCUMENTS: tuple[str, ...] = DELIVERABLES["strategie1"].documents
+
+_MT5_REFERENCE = DELIVERABLES["strategie1"].mt5_reference
 
 _INPUT_RE = re.compile(r"\\input\{([^}]+)\}")
 _COMMENT_RE = re.compile(r"(?<!\\)%.*$")
@@ -64,7 +107,13 @@ def _uncommented(text: str) -> str:
 
 
 def _resolve_inputs(entry: Path, seen: set[Path]) -> None:
-    """Ajoute ``entry`` et, récursivement, tout ce qu'il ``\\input``."""
+    """Ajoute ``entry`` et, récursivement, tout ce qu'il ``\\input``.
+
+    La recherche est textuelle, donc elle suit les deux branches d'un
+    ``\\ifdefstring`` : sous le verdict conditionnel de la stratégie 2, une
+    seule des deux sections 14 est compilée, mais les deux sont écrites et
+    doivent être relues comme livrables potentiels.
+    """
     entry = entry.resolve()
     if entry in seen or not entry.is_file():
         return
@@ -77,10 +126,10 @@ def _resolve_inputs(entry: Path, seen: set[Path]) -> None:
         _resolve_inputs(child, seen)
 
 
-def delivered_tex_files() -> set[Path]:
+def delivered_tex_files(documents: tuple[str, ...] = MAIN_DOCUMENTS) -> set[Path]:
     """L'ensemble des ``.tex`` réellement compilés dans un livrable client."""
     seen: set[Path] = set()
-    for main in MAIN_DOCUMENTS:
+    for main in documents:
         _resolve_inputs(_ROOT / main, seen)
     return seen
 
@@ -106,22 +155,25 @@ def _headline() -> dict[str, float]:
 # ── Périmètre livré ───────────────────────────────────────────────────────────
 
 
-def test_every_section_tex_is_reachable_from_a_delivered_document():
+@pytest.mark.parametrize("strategy", sorted(DELIVERABLES))
+def test_every_section_tex_is_reachable_from_a_delivered_document(strategy: str):
     """Un .tex de section qu'aucun document n'inclut n'est pas livré."""
-    on_disk = {
-        p.resolve()
-        for p in (_ROOT / _CLIENT_ROOT / "rapport_technique" / "sections").rglob("*.tex")
-    }
-    orphans = sorted(p.relative_to(_ROOT).as_posix() for p in on_disk - set(_DELIVERED))
+    spec = DELIVERABLES[strategy]
+    delivered = delivered_tex_files(spec.documents)
+    on_disk = {p.resolve() for p in (_ROOT / spec.root / "sections").rglob("*.tex")}
+    orphans = sorted(p.relative_to(_ROOT).as_posix() for p in on_disk - delivered)
     assert not orphans, (
         f"sections écrites mais jamais compilées : {orphans}. Soit les inclure "
-        f"dans un des six documents, soit les sortir de sections/ — les laisser "
-        f"là entretient un contenu que personne ne lit et qui diverge en silence."
+        f"dans un des documents de {strategy}, soit les sortir de sections/ — "
+        f"les laisser là entretient un contenu que personne ne lit et qui "
+        f"diverge en silence."
     )
 
 
-def test_the_six_documents_exist():
-    missing = [m for m in MAIN_DOCUMENTS if not (_ROOT / m).is_file()]
+@pytest.mark.parametrize("strategy", sorted(DELIVERABLES))
+def test_the_delivered_documents_exist(strategy: str):
+    spec = DELIVERABLES[strategy]
+    missing = [m for m in spec.documents if not (_ROOT / m).is_file()]
     assert not missing, f"documents livrables introuvables : {missing}"
 
 

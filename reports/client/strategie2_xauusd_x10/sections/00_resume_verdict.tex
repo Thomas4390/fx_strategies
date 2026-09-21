@@ -1,0 +1,50 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
+%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
+%  tables/x10_headline.tex.
+% ═══════════════════════════════════════════════════════════════════════
+\section{Résumé et verdict}
+\label{sec:x10_resume_verdict}
+
+% TODO L2 : écrire le résumé en une page, chaque chiffre pris dans une macro
+% générée, et faire dire au verdict exactement ce que la table de la
+% section~11 établit --- ni plus, ni moins.
+
+\ifdefstring{\XTenVerdictProvisoire}{1}{%
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Document provisoire}}]
+Aucune mesure n'est publiée à ce stade. Le présent document fixe la structure
+du rapport et la place de chaque résultat~; les campagnes in-sample, hors
+échantillon et de réconciliation n'ont pas encore été lues. Toute valeur
+affichée comme \code{\XTenSharpeIS} le reste tant que les fichiers de
+résultats ne sont pas produits.
+\end{warningbox}
+}{}
+
+\ifdefstring{\XTenVerdict}{GO}{%
+\begin{thesisbox}[title=\textbf{\color{white}\textsf{Verdict --- déploiement conditionnel}}]
+Les tests de robustesse franchissent leurs seuils et le hors échantillon
+confirme l'in-sample. Les conditions de déploiement sont données en
+section~\ref{sec:x10_deploiement}.
+\end{thesisbox}
+}{%
+\ifdefstring{\XTenVerdict}{NOGO}{%
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Verdict --- non déploiement}}]
+Les mesures ne soutiennent pas la mise en production. Les motifs sont détaillés
+en section~\ref{sec:x10_non_deploiement}.
+\end{warningbox}
+}{%
+\begin{insightbox}[title=\textbf{\color{white}\textsf{Verdict --- inconclusif}}]
+Les mesures ne permettent de conclure ni dans un sens ni dans l'autre. Ce que
+l'on sait, ce qui manque et la condition de réouverture du dossier sont donnés
+en section~\ref{sec:x10_non_deploiement}.
+\end{insightbox}
+}%
+}
+
+\subsection{Ce que la stratégie fait}
+
+\subsection{Ce que les mesures établissent}
+
+\subsection{Ce qu'elles n'établissent pas}
+
+\subsection{Verdict et suite}

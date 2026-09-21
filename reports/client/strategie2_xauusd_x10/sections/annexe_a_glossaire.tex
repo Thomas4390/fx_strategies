@@ -1,0 +1,86 @@
+% ═══════════════════════════════════════════════════════════════════════
+%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
+%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
+%  tables/x10_headline.tex.
+% ═══════════════════════════════════════════════════════════════════════
+\section{Glossaire}
+\label{app:x10_glossaire}
+
+% TODO L2 : compléter par les termes que la prose finale introduira
+% (plateau, essai, gel), en gardant une définition par terme, sans chiffre.
+
+Les définitions ci-dessous sont celles retenues \emph{dans ce document}. Deux
+d'entre elles --- le \code{VWAP} et le \code{DXY} --- s'écartent de l'usage le
+plus répandu~; l'écart est signalé et motivé.
+
+\subsection{Instrument et unités de temps}
+
+\begin{description}
+  \item[Niveau x10] Prix multiple de dix dollars sur \code{XAUUSD}. Ces
+  niveaux forment une grille régulière, fixée une fois pour toutes et
+  indépendante du marché~: c'est le seul repère sur lequel la stratégie
+  travaille.
+  \item[M5] Barre de cinq minutes. C'est l'unité de décision~: signaux,
+  entrées et sorties y sont évalués.
+  \item[H1] Barre d'une heure. C'est l'unité de contexte~: elle oriente, elle
+  ne déclenche pas. Toute série H1 est décalée d'une barre avant d'être lue en
+  M5, pour qu'aucune information ne soit utilisée avant d'exister.
+\end{description}
+
+\subsection{Contexte}
+
+\begin{description}
+  \item[EMA50] Moyenne mobile exponentielle sur cinquante barres H1. Donne la
+  direction dominante du contexte.
+  \item[VWAP] \emph{Ici}~: moyenne cumulée de séance du prix typique
+  $(H+L+C)/3$, \emph{non pondérée par les volumes}. L'usage courant pondère par
+  le volume échangé~; l'or au comptant n'en publie pas, et les volumes
+  rapportés par les courtiers sont des décomptes de ticks propres à chacun.
+  Une moyenne non pondérée est identique sur les trois moteurs, ce qu'une
+  moyenne pondérée ne serait pas.
+  \item[DXY] \emph{Ici}~: panier synthétique à quatre jambes ---
+  \code{EURUSD}, \code{USDJPY}, \code{GBPUSD}, \code{USDCAD} --- aux poids ICE
+  renormalisés. L'indice officiel en compte six~; les deux jambes écartées sont
+  indisponibles ou illiquides sur les trois plateformes. Le panier mesure la
+  force du dollar, qui est ce dont la stratégie a besoin.
+  \item[ATR] \emph{Average True Range}~: amplitude moyenne des barres récentes.
+  Sert d'unité de mesure locale~: toute distance ou vitesse est divisée par
+  l'ATR pour rester comparable d'une année à l'autre.
+\end{description}
+
+\subsection{Approche du niveau}
+
+\begin{description}
+  \item[Vitesse] Distance parcourue par le prix par unité de temps à
+  l'approche du niveau, exprimée en ATR.
+  \item[Accélération] Variation de cette vitesse. Une approche qui accélère et
+  une approche qui s'essouffle ne présagent pas du même dénouement.
+  \item[Breakout] Franchissement du niveau dans le sens de l'approche, suivi
+  d'une poursuite du mouvement.
+  \item[Sweep] Franchissement bref, qui va chercher les ordres placés
+  au-delà du niveau puis revient. Distinguer un sweep d'un breakout est le
+  problème central de la stratégie.
+  \item[Réintégration] Retour du prix du côté d'où il venait après un
+  franchissement. C'est la confirmation d'un sweep et la condition d'entrée des
+  scénarios de retournement.
+\end{description}
+
+\subsection{Mesure et validation}
+
+\begin{description}
+  \item[R] Unité de risque~: la perte qu'un trade subit si son stop est
+  touché. Un gain de deux~R vaut deux fois le risque engagé. Le mandat exige
+  une géométrie d'au moins $R \geq 1$.
+  \item[In-sample] Période sur laquelle la stratégie a été conçue et ses
+  paramètres choisis. Les résultats y sont, par construction, optimistes.
+  \item[Hors échantillon] Période tenue à l'écart de toute décision de
+  conception, lue une seule fois, après gel. C'est la seule mesure qui ait
+  valeur de test.
+  \item[DSR] \emph{Deflated Sharpe Ratio}~: Sharpe corrigé du nombre d'essais
+  menés pour l'obtenir. Chercher longtemps produit mécaniquement de beaux
+  Sharpes~; le DSR retire cette part de chance.
+  \item[PBO] \emph{Probability of Backtest Overfitting}~: probabilité que la
+  configuration retenue en période d'apprentissage se classe dans la moitié
+  basse en période de contrôle. Une valeur élevée signale une sélection qui ne
+  survit pas au changement d'échantillon.
+\end{description}
