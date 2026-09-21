@@ -309,3 +309,29 @@ Quand quelque chose ne marche pas en drag-and-drop :
 - **Aucun indicateur custom** déployé (tout est embarqué dans les .mqh)
 - **Pas de redistribution FRED** : la clé est personnelle, fichier local uniquement (jamais committer `fred_api_key.txt` dans git)
 - **Encodage source** : les `.mq5`/`.mqh` sont en UTF-8 BOM (standard MetaEditor) — ne pas resauvegarder en autre encoding
+
+## XauX10 — stratégie 2 (XAUUSD niveaux x10)
+
+EA indépendant de FxMultiSleeve : `Experts/XauX10.mq5` + `Include/X10{Clock,Levels,Kinematics,Context,StateMachine,Trace}.mqh`.
+Source de vérité : `docs/specs/xau_x10_spec.md` ; référence à imiter : `src/framework/x10_engine.py`.
+
+- **Décision** : une par NOUVELLE barre M5 du symbole du chart, sur la barre close (indice 1) ; rien sur tick.
+- **Gelé en `#define`** (annexe A.1) : ATR 14 Wilder, EMA50 H1, horizons 3/12, `v_min` 0,2, `k_b` 0,25, `N_arm` 12, `N_hold`/`N_sweep` 3, `s_min` 0,3, 48 barres, cooldown 6, `R_min` 1. **Inputs** : `Inp_Z` / `Inp_AMin` / `Inp_KS` (grille A.2), `Inp_RiskFrac`, `Inp_SlippageUSD`, les switches opérationnels et l'horloge.
+- **ATR recalculé à la main** (`X10WilderATR`, amorçage sur le premier TR) : `iATR` est INTERDIT, il amorce sur la moyenne simple et décale toute la série. Idem EMA50 H1 (`X10EmaSpan`) : `iMA` n'est pas utilisé.
+- **VWAP** : `CSessionMeanTypical` (moyenne cumulée NON pondérée de (H+L+C)/3 depuis 18:00 NY, valide après 12 barres). Ne PAS réutiliser `CVWAPDaily`, qui est pondérée et ancrée 00:00 UTC.
+- **Horloge** : toute la logique est en heure de New York. `X10Clock.mqh::ServerToNY()` est la seule conversion ; défaut `X10_SERVER_UTC` — **mesuré** sur `data/XAG-USD_minute_mt5.parquet` (clôture métaux à 16:58 NY de part et d'autre du DST US, insensible au DST européen), pas documenté ailleurs dans le dépôt. Override sans recompiler : `Inp_ServerToNYMode` + `Inp_ServerToNYOffsetMin`.
+- **Test d'horloge** : `Scripts/X10ClockTest.mq5`, 29 cas (4 bascules DST US, 2 européennes, bornes de séance et de blackout). Lancement headless via `[StartUp] Script=fx_strategies\X10ClockTest` (cf. doc 14) ; verdict en dernière ligne du log `MQL5/logs/`.
+
+```bash
+# Compiler (0 erreur, 0 warning attendus)
+WINEPREFIX=/home/thomas/.mt5 wine "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/MetaEditor64.exe" \
+  /compile:"Z:\home\thomas\Documents_Thomas\11_CodingProjects\fx_strategies\fx_strategies\src\mt5\Experts\XauX10.mq5" /log
+# Backtest CLI (profil XauX10 : XAUUSD.c / M5 / reports/mt5_x10)
+uv run python src/mt5/bridge/run_backtest_cli.py --expert XauX10 --model 1 \
+  --from 2024.01.01 --to 2024.01.31 --ini-name x10_smoke.ini --runtime-ini x10smoke.ini \
+  --report-name x10_smoke_report
+```
+
+**Sorties** (toutes dans le Common Roaming, pas la racine portable — cf. piège `FILE_COMMON` plus haut) :
+`x10_trace_<ts>.csv` (contrat §13, 21 colonnes + `cancel_reason`, stamps UTC), `deals_x10_<ts>.csv` (schéma FxMultiSleeve, colonne `sleeve` = scénario, un magic par scénario 841-844), `x10_m1_<symbole>.csv` si `Inp_DumpBars=true`.
+**Contrat de log** (le parseur du CLI en dépend) : `[INIT][INFO] XauX10 start build <n>` en première ligne, `[INIT][INFO] EA ready` en fin d'init, `[INIT][ERROR] <cause>` sur échec, `[DEINIT][INFO] EA stopped reason=<n>`. Les deux lignes `[SUMMARY]` / `[OPTIM]` donnent les comptages par événement, les barres à DXY indéfini et la médiane de spread en points.
