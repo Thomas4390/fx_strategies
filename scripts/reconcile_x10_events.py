@@ -115,7 +115,18 @@ EXIT_REASONS: tuple[str, ...] = ("STOP", "TARGET", "TIME", "SESSION")
 
 @dataclass(frozen=True)
 class QcTag:
-    """`scenario|level|ts_decision|stop|target|r_est`, tel que `_tag` l'écrit."""
+    """`scenario|level|ts_decision|stop|target|r_est`, puis des champs `k=v`.
+
+    Les **six premiers champs sont positionnels et gelés** ; tout ce que le
+    portage a ajouté depuis (v4) vit derrière, en `k=v`, et est optionnel. Un
+    journal d'ordres v1 se lit donc avec exactement le même code, `extra` vide.
+
+    Les clés connues, côté entrée : `bm` (début de barre de décision, minutes
+    epoch), `c` (close mid de cette barre), `atr`, `sp` (spread plein utilisé
+    dans la règle R), `v`, `a`, `vw`, `ema`. Côté sortie : `xr` (raison) et `xp`
+    (prix théorique). Elles portent le barreau 2 de §13, que rien d'autre ne
+    rendait observable depuis l'API.
+    """
 
     scenario: str
     level: float
@@ -123,6 +134,25 @@ class QcTag:
     stop: float
     target: float
     r_est: float
+    extra: dict[str, str] = field(default_factory=dict)
+
+    def number(self, key: str) -> float:
+        """Champ `k=v` numérique, ou NaN s'il est absent ou vide (tag v1)."""
+        raw = self.extra.get(key, "")
+        try:
+            return float(raw)
+        except ValueError:
+            return float("nan")
+
+    @property
+    def exit_reason(self) -> str | None:
+        """La raison de sortie **lue**, quand le portage la publie (`xr=`)."""
+        return self.extra.get("xr") or None
+
+    @property
+    def exit_px(self) -> float:
+        """Le prix théorique de sortie **lu** (`xp=`), sans inférence."""
+        return self.number("xp")
 
     @property
     def key(self) -> tuple[str, float, float, float, float]:
@@ -145,8 +175,13 @@ def parse_tag(tag: str) -> QcTag | None:
     échouer au parsing.
     """
     parts = tag.split("|")
-    if len(parts) != 6 or parts[0] not in SCENARIOS:
+    if len(parts) < 6 or parts[0] not in SCENARIOS:
         return None
+    extra: dict[str, str] = {}
+    for field_text in parts[6:]:
+        key, sep, value = field_text.partition("=")
+        if sep:
+            extra[key] = value
     try:
         return QcTag(
             scenario=parts[0],
@@ -155,6 +190,7 @@ def parse_tag(tag: str) -> QcTag | None:
             stop=float(parts[3]),
             target=float(parts[4]),
             r_est=float(parts[5]),
+            extra=extra,
         )
     except ValueError:
         return None
@@ -536,6 +572,10 @@ def infer_qc_exit_reason(trade: QcTrade, tol: float = 0.35) -> str:
     """
     if not trade.closed:
         return "NOT_CLOSED"
+    # v4 et au-delà : le portage publie la raison, il n'y a plus rien à deviner.
+    read = trade.exit_tag.exit_reason if trade.exit_tag is not None else None
+    if read in EXIT_REASONS:
+        return read
     stop, target = trade.tag.stop, trade.tag.target
     span = abs(target - stop)
     if span <= 0.0:
@@ -589,8 +629,14 @@ def decompose(py_row: pd.Series, trade: QcTrade) -> dict[str, Any]:
 
     reason_py = str(py_row["exit_reason_name"])
     reason_qc = infer_qc_exit_reason(trade)
+    reason_qc_is_read = bool(trade.exit_tag is not None and trade.exit_tag.exit_reason)
     theo_py = theoretical_exit(reason_py, trade.tag, exit_py)
-    theo_qc = theoretical_exit(reason_qc, trade.tag, exit_qc)
+    # `xp=` donne le prix théorique de sortie du portage, y compris pour TIME et
+    # SESSION, que le tag v1 ne permettait pas de chiffrer : le poste de
+    # glissement de sortie cesse d'être un minorant (§8.3 de la note v1).
+    theo_qc = trade.exit_tag.exit_px if reason_qc_is_read else float("nan")
+    if theo_qc != theo_qc:
+        theo_qc = theoretical_exit(reason_qc, trade.tag, exit_qc)
 
     pnl_py = units_py * (exit_py - entry_py)
     pnl_qc = units_qc * (exit_qc - entry_qc)
@@ -617,6 +663,7 @@ def decompose(py_row: pd.Series, trade: QcTrade) -> dict[str, Any]:
         "exit_order_id": trade.exit_id,
         "exit_reason_py": reason_py,
         "exit_reason_qc": reason_qc,
+        "exit_reason_qc_is_read": reason_qc_is_read,
         "reason_agrees": reason_py == reason_qc,
         "units_py": units_py,
         "units_qc": units_qc,
@@ -740,6 +787,106 @@ def implied_half_spread(py_row: pd.Series, tag: QcTag) -> float:
     k_py = (target + r_py * stop_py) / (r_py + 1.0)
     k_qc = (target + r_qc * stop_qc) / (r_qc + 1.0)
     return side * (k_qc - k_py) + REFERENCE_HALF_SPREAD
+
+
+def rung2_bars(
+    py: pd.DataFrame,
+    qc_trades: list[QcTrade],
+    pairs: list[tuple[int, int]],
+) -> dict[str, Any]:
+    """Barreau 2 — la barre de décision elle-même : close, ATR, spread.
+
+    Jusqu'à v4 ce barreau n'était pas observable : le tag ne portait que des
+    quantités dérivées (stop, cible, R) et il fallait remonter à l'ATR par
+    l'inverse du stop d'un breakout, ce qui ne marchait que sur 36 trades. Le
+    portage publie maintenant `c=`, `atr=` et `sp=` sur chaque entrée, à `bm=`
+    identique : on compare enfin les deux moteurs sur la **même barre**, et un
+    écart tombe sur une quantité nommée au lieu d'un soupçon.
+
+    `bm` est vérifié avant tout le reste : si les deux moteurs ne parlent pas de
+    la même barre, comparer leurs ATR n'a aucun sens.
+    """
+    rows = []
+    for i, j in pairs:
+        tag = qc_trades[j].tag
+        if not tag.extra:
+            continue
+        stamp = py.loc[i, "ts_decision_utc"]
+        bm_py = (stamp - pd.Timestamp("1970-01-01")) // pd.Timedelta(minutes=1)
+        rows.append(
+            {
+                "ts_decision_utc": str(stamp),
+                "bm_py": int(bm_py),
+                "bm_qc": int(tag.number("bm")) if tag.extra.get("bm") else -1,
+                "close_py": float(py.loc[i, "m5_close"])
+                if "m5_close" in py.columns
+                else float("nan"),
+                "close_qc": tag.number("c"),
+                "atr_py": float(py.loc[i, "atr"]),
+                "atr_qc": tag.number("atr"),
+                "spread_py": float(py.loc[i, "spread"]),
+                "spread_qc": tag.number("sp"),
+            }
+        )
+    if not rows:
+        return {"n": 0, "observable": False, "note": "tags v1 : aucun champ k=v"}
+
+    frame = pd.DataFrame(rows)
+    out: dict[str, Any] = {
+        "n": int(len(frame)),
+        "observable": True,
+        "bm_identical": int((frame["bm_py"] == frame["bm_qc"]).sum()),
+        "bm_offset_minutes": _stats((frame["bm_qc"] - frame["bm_py"]).to_numpy(dtype=float)),
+    }
+    for name in ("close", "atr", "spread"):
+        a = frame[f"{name}_py"].to_numpy(dtype=float)
+        b = frame[f"{name}_qc"].to_numpy(dtype=float)
+        delta = np.abs(a - b)
+        out[name] = {
+            "abs": _stats(delta),
+            "ratio_qc_over_py": _stats(np.where(a != 0.0, b / np.where(a == 0.0, np.nan, a), np.nan)),
+            "n_identical_1e6": int(np.nansum(delta <= 1e-6)),
+        }
+    # Le parquet de référence est-il du mid, ou du bid/ask ?
+    #
+    # L'écart médian de close M5 est du même ordre que le demi-spread, ce qui
+    # ferait un joli coupable : un parquet en bid vaudrait `close_qc - close_py
+    # = +sp/2` partout, un parquet en ask `-sp/2`. Le test est le **signe** et
+    # la **régression**, pas l'ordre de grandeur — deux quantités peuvent valoir
+    # un quart de dollar sans avoir le moindre rapport.
+    delta = (frame["close_qc"] - frame["close_py"]).to_numpy(dtype=float)
+    half = (frame["spread_qc"] / 2.0).to_numpy(dtype=float)
+    ok = np.isfinite(delta) & np.isfinite(half) & (half > 0)
+    basis: dict[str, Any] = {"n": int(ok.sum())}
+    if ok.sum() >= 3:
+        d, h = delta[ok], half[ok]
+        slope, intercept = np.polyfit(h, d, 1)
+        pred = slope * h + intercept
+        ss_tot = float(((d - d.mean()) ** 2).sum())
+        basis.update(
+            {
+                "delta_close_qc_minus_py": _stats(d),
+                "share_positive": float((d > 0).mean()),
+                "share_negative": float((d < 0).mean()),
+                "median_delta_over_half_spread": float(np.median(d / h)),
+                "slope_vs_half_spread": float(slope),
+                "intercept": float(intercept),
+                "r2": float(1.0 - ((d - pred) ** 2).sum() / ss_tot) if ss_tot else float("nan"),
+                "slope_through_origin": float((h * d).sum() / (h * h).sum()),
+            }
+        )
+        # Un parquet en bid/ask donnerait une pente proche de ±1 ET un R² élevé
+        # ET un signe quasi constant. Les trois doivent tomber ensemble.
+        basis["verdict"] = (
+            "bid_or_ask"
+            if abs(abs(basis["slope_vs_half_spread"]) - 1.0) < 0.3
+            and basis["r2"] > 0.5
+            and max(basis["share_positive"], basis["share_negative"]) > 0.9
+            else "mid_des_deux_cotes_donnees_differentes"
+        )
+    out["price_basis"] = basis
+    out["rows"] = rows
+    return out
 
 
 def rung4_theoretical(
@@ -974,9 +1121,14 @@ def load_qc(qc_orders: Path, qc_stats: Path | None) -> QcContext:
     if qc_stats and qc_stats.exists():
         stats = json.loads(qc_stats.read_text())
     statistics = stats.get("statistics", {})
+    runtime = stats.get("runtimeStatistics", {})
     start_equity = _float_stat(statistics, "Start Equity") or 10_000.0
+    # L'API rend parfois `statistics` entièrement à null ; `runtimeStatistics`
+    # porte alors les mêmes grandeurs, et c'est le même backtest qui parle.
     end_equity = _float_stat(statistics, "End Equity")
-    holdings = _float_stat(stats.get("runtimeStatistics", {}), "Holdings")
+    if end_equity is None:
+        end_equity = _float_stat(runtime, "Equity")
+    holdings = _float_stat(runtime, "Holdings")
 
     raw = account_pnl(orders)
     # §11 dimensionne sur l'équité **avant** l'ordre courant : c'est celle que le
@@ -1191,6 +1343,7 @@ def build_variant(py_path: Path, qc: QcContext, tol_bars: int) -> dict[str, Any]
             "py_orphans": py_orphan_rows,
             "qc_orphans": qc_orphan_rows,
         },
+        "rung2_bars": rung2_bars(py, trades, pairs),
         "rung4_theoretical": rung4_theoretical(py, trades, pairs, TOL_SAME_DATA),
         "rung5_attribution": aggregate(rows),
         "rung5_trades": rows,
@@ -1204,12 +1357,111 @@ def build_variant(py_path: Path, qc: QcContext, tol_bars: int) -> dict[str, Any]
     }
 
 
+#: Clés du bloc `summary`. **Gelées** : le rapport client les lit par leur nom,
+#: donc on peut en ajouter, jamais en renommer ni en retirer.
+SUMMARY_KEYS: tuple[str, ...] = (
+    "qc_backtest_id",
+    "qc_trades",
+    "py_trades",
+    "match_rate_py_to_qc",
+    "match_rate_qc_to_py",
+    "py_expectancy_r",
+    "qc_expectancy_r",
+    "exit_slippage_r_per_trade",
+    "qc_stop_realised_r",
+    "qc_half_spread_usd",
+    "unattributed_share",
+    "qc_net_return_pct",
+    "healthy",
+)
+
+
+def health_check(qc: QcContext) -> dict[str, Any]:
+    """Les quatre critères de santé, avant toute lecture de performance.
+
+    Un backtest qui les rate ne mesure pas la stratégie : il mesure un défaut du
+    portage. Les publier à part, et en premier, évite de commenter un rendement
+    qui n'a aucun sens — ce qu'on a failli faire avec le v1 et ses −91,8 %.
+    """
+    ledger, pnl = qc.ledger, qc.pnl
+    phantom = phantom_inventory(qc.orders, ledger)
+    # Tout ordre non rempli, y compris la liquidation de fin d'algorithme, que
+    # son tag n'appartient pas à la stratégie et que le registre range donc
+    # ailleurs. Un backtest sain n'en a aucun.
+    unfilled = [
+        {
+            "order_id": int(o["id"]),
+            "time": str(o["time"]),
+            "type": int(o["type"]),
+            "quantity": float(o["quantity"]),
+            "tag": str(o.get("tag") or ""),
+            "reason": _order_reject_reason(o),
+        }
+        for o in qc.orders
+        if int(o.get("status", -1)) != LEAN_STATUS_FILLED
+    ]
+    unretried = len(unfilled)
+    flat_between = phantom["n_fills_leaving_account_flat"]
+    expected_flat = phantom["n_fills"] // 2
+    criteria = {
+        "orders_in_range": len(qc.orders) >= 300,
+        "no_unretried_rejection": unretried == 0,
+        "flat_at_end": abs(pnl["final_position"]) < 1e-9,
+        "flat_between_trades": flat_between >= expected_flat - 1,
+    }
+    return {
+        "criteria": criteria,
+        "healthy": all(criteria.values()),
+        "n_orders": len(qc.orders),
+        "n_rejected_unretried": unretried,
+        "unfilled_orders": unfilled,
+        "final_position_oz": pnl["final_position"],
+        "n_fills": phantom["n_fills"],
+        "n_fills_leaving_account_flat": flat_between,
+        "max_abs_net_position_oz": phantom["max_abs_net_position_oz"],
+    }
+
+
+def build_summary(
+    qc: QcContext, variant: dict[str, Any], healthy: bool
+) -> dict[str, Any]:
+    """Le bloc stable que le rapport client lit, et rien d'autre."""
+    match = variant["rung3_4_entry_matching"]
+    agg = variant["rung5_attribution"]
+    overall = agg.get("overall") or {}
+    rung4 = variant["rung4_theoretical"]
+    by_reason = agg.get("by_exit_reason_py", {})
+    stop_block = by_reason.get("STOP", {})
+    net = qc.pnl["realised_and_unrealised_pnl"]
+    return {
+        "qc_backtest_id": qc.stats.get("backtestId"),
+        "qc_trades": len(qc.ledger.trades),
+        "py_trades": match["n_py_entries"],
+        "match_rate_py_to_qc": match["match_rate_py"],
+        "match_rate_qc_to_py": match["match_rate_qc"],
+        "py_expectancy_r": overall.get("r_py_mean"),
+        "qc_expectancy_r": overall.get("r_qc_on_py_risk_mean"),
+        "exit_slippage_r_per_trade": (
+            overall.get("posts", {}).get("r_exit_slippage", {}).get("mean")
+        ),
+        "qc_stop_realised_r": stop_block.get("r_qc_on_py_risk_mean"),
+        "qc_half_spread_usd": rung4.get("implied_half_spread_qc", {}).get("median"),
+        "unattributed_share": match["unexplained_share_of_entries"],
+        "qc_net_return_pct": 100.0 * net / qc.start_equity if qc.start_equity else None,
+        "healthy": healthy,
+    }
+
+
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     qc = load_qc(args.qc_orders, args.qc_stats)
     variants = {p.stem: build_variant(p, qc, args.tol_bars) for p in args.py_trades}
+    health = health_check(qc)
+    primary = variants[args.py_trades[0].stem]
 
     matched_pnl = sum(t.pnl for t in qc.ledger.trades if t.closed)
     return {
+        "summary": build_summary(qc, primary, health["healthy"]),
+        "health": health,
         "meta": {
             "qc_orders": str(args.qc_orders),
             "qc_backtest": qc.stats.get("backtestId"),
@@ -1347,13 +1599,33 @@ def print_summary(report: dict[str, Any]) -> None:
         f"max={sizing['risk_pct_of_equity']['max']:.4%}  → {sizing['verdict']}"
     )
     print("-" * 74)
-    print(
-        f"composition  {comp['start_equity']:.0f} → {comp['end_equity_reported']:.2f} USD "
-        f"({comp['net_profit_reported'] / comp['start_equity']:+.1%})"
-    )
+    health = report["health"]
+    flags = " ".join(f"{k}={'OK' if v else 'NON'}" for k, v in health["criteria"].items())
+    print(f"santé        {'SAIN' if health['healthy'] else 'NON SAIN'}  {flags}")
+    if health["n_rejected_unretried"]:
+        for row in health["unfilled_orders"][:5]:
+            print(
+                f"             ordre non rempli #{row['order_id']} {row['time']} "
+                f"type={row['type']} qty={row['quantity']:+.0f} — {row['reason'][:70]}"
+            )
+    print("-" * 74)
+    if comp["end_equity_reported"] is None:
+        print(
+            f"composition  départ {comp['start_equity']:.0f} USD ; "
+            "statistiques du backtest non fournies (--qc-stats)"
+        )
+    else:
+        print(
+            f"composition  {comp['start_equity']:.0f} → {comp['end_equity_reported']:.2f} USD "
+            f"({comp['net_profit_reported'] / comp['start_equity']:+.1%})"
+        )
     print(
         f"             PnL du compte reconstruit={comp['account_pnl_from_orders']:+.2f} USD "
-        f"(bouclage vs backtest : {comp['accounting_closure_vs_reported']:+.2f} USD)"
+        + (
+            "(bouclage vs backtest indisponible)"
+            if comp["accounting_closure_vs_reported"] is None
+            else f"(bouclage vs backtest : {comp['accounting_closure_vs_reported']:+.2f} USD)"
+        )
     )
     print(
         f"             dont allers-retours VOULUS = "

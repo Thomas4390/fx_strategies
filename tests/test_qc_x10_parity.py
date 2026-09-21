@@ -63,7 +63,8 @@ from x10_state import CANCEL_REASON_NAMES as QC_CANCEL_REASON_NAMES  # noqa: E40
 from x10_state import CR_BROKER  # noqa: E402
 from x10_state import EVENT_CANCEL as QC_EVENT_CANCEL  # noqa: E402
 from x10_state import EVENT_EXIT as QC_EVENT_EXIT  # noqa: E402
-from x10_state import BrokerSync, X10Feed, _Position  # noqa: E402
+from x10_state import CONTRACT_SIZE as QC_CONTRACT_SIZE  # noqa: E402
+from x10_state import INFLIGHT_TIMEOUT, BrokerSync, X10Feed, _Position, quantize_qty  # noqa: E402
 
 # Two points of the grid of annexe A.2: the one the port defaults to, and a
 # permissive one that arms far more often — the second is what makes a §10
@@ -654,3 +655,78 @@ def test_a_blocked_broker_freezes_the_automaton(sample: dict):
         )
         feed.on_minute(int(minute), quote, {})
     assert len(feed.machine.events) == before  # nothing armed, nothing entered
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# LE GEL DU BACKTEST v3 — un ulp, deux verrous
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def test_lots_times_contract_size_is_not_exact_in_binary():
+    """La prémisse du gel de v3, écrite noir sur blanc.
+
+    §11 dimensionne en lots de 0,01 et multiplie par ``CONTRACT_SIZE``. Sur les
+    dix tailles qu'a utilisées le backtest 2024, une seule rate — et c'est celle
+    de l'ordre 19, le dernier avant onze mois et demi de silence.
+    """
+    assert 0.07 * QC_CONTRACT_SIZE != 7.0
+    assert 0.07 * QC_CONTRACT_SIZE == pytest.approx(7.0, abs=1e-9)
+    exact = [lots for lots in (0.38, 0.21, 0.25, 0.12, 0.09, 0.03, 0.13, 0.10, 0.04)]
+    assert all(lots * QC_CONTRACT_SIZE == round(lots * QC_CONTRACT_SIZE) for lots in exact)
+
+
+def test_broker_sync_survives_the_one_ulp_of_seven_ounces():
+    """Le gel de v3 : intention 7,000000000000001, réalité 7,0.
+
+    Avant correctif, `matches` était un `!=` : l'automate restait `broker_blocked`
+    et `order` renvoyait un delta de 1e-15 que LEAN refusait avant même de créer
+    l'ordre, donc sans `on_order_event`, donc `inflight` pour toujours.
+    """
+    broker = BrokerSync()
+    broker.want(-1.0 * 0.07 * QC_CONTRACT_SIZE, "entry")
+    assert broker.target_qty == -7.0
+
+    delta = broker.order(0.0, True, minute=100)
+    assert delta == pytest.approx(-7.0)
+
+    # LEAN remplit -7 exactement ; l'intention et la réalité doivent coïncider.
+    broker.on_settled()
+    assert broker.matches(-7.0)
+    assert broker.order(-7.0, True, minute=101) is None
+
+    # Et la sortie part normalement.
+    broker.want(0.0, "exit")
+    assert broker.order(-7.0, True, minute=102) == pytest.approx(7.0)
+
+
+def test_an_order_that_never_answers_is_abandoned_not_wedged():
+    """§13 : une sortie finit toujours par aboutir.
+
+    Une quantité sous le pas du broker est refusée par LEAN *avant* de devenir
+    un ordre : aucun événement ne revient. Sans délai de garde, `inflight`
+    resterait vrai et plus aucun ordre ne partirait de l'année.
+    """
+    broker = BrokerSync()
+    broker.want(-7.0, "entry")
+    assert broker.order(0.0, True, minute=10) == pytest.approx(-7.0)
+    assert broker.inflight
+
+    # Aucun événement : on patiente, puis on abandonne et on réessaie.
+    assert broker.order(0.0, True, minute=11) is None
+    assert broker.order(0.0, True, minute=10 + INFLIGHT_TIMEOUT) == pytest.approx(-7.0)
+    assert broker.abandoned == 1
+
+
+def test_a_deferred_exit_is_retried_on_the_next_quoted_minute():
+    """Marché fermé : l'ordre n'est pas perdu, il attend la minute suivante."""
+    broker = BrokerSync()
+    broker.want(0.0, "exit")
+    assert broker.order(-7.0, False, minute=20) is None
+    assert broker.deferred == 1
+    assert broker.order(-7.0, True, minute=21) == pytest.approx(7.0)
+
+
+def test_quantize_kills_the_noise_without_moving_a_real_quantity():
+    assert quantize_qty(0.07 * QC_CONTRACT_SIZE) == 7.0
+    assert quantize_qty(-38.000000000000004) == -38.0
+    assert quantize_qty(7.5) == 7.5

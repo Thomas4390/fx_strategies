@@ -1,0 +1,51 @@
+{
+  "name": "x10_calage_2024_centre_v4_spread029",
+  "backtestId": "947756097ee174d4a82c0e6ad25eccde",
+  "parameterSet": {
+    "start": "2024-01-01",
+    "end": "2024-12-31",
+    "z": 1,
+    "a_min": 0.2,
+    "k_s": 1,
+    "diag": 1,
+    "spread_override": 0.29
+  },
+  "statistics": {
+    "Total Orders": "634",
+    "Average Win": "0.60%",
+    "Average Loss": "-0.34%",
+    "Compounding Annual Return": "-21.489%",
+    "Drawdown": "26.100%",
+    "Expectancy": "-0.222",
+    "Start Equity": "10000.00",
+    "End Equity": "7846.35",
+    "Net Profit": "-21.536%",
+    "Sharpe Ratio": "-2.633",
+    "Sortino Ratio": "-4.181",
+    "Probabilistic Sharpe Ratio": "0.002%",
+    "Loss Rate": "72%",
+    "Win Rate": "28%",
+    "Profit-Loss Ratio": "1.77",
+    "Alpha": "-0.213",
+    "Beta": "-0.064",
+    "Annual Standard Deviation": "0.078",
+    "Annual Variance": "0.006",
+    "Information Ratio": "-1.191",
+    "Tracking Error": "0.095",
+    "Treynor Ratio": "3.22",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$440000.00",
+    "Lowest Capacity Asset": "XAUUSD 8I",
+    "Portfolio Turnover": "470.28%"
+  },
+  "runtimeStatistics": {
+    "Equity": "$7,846.35",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$-2,153.65",
+    "Probabilistic Sharpe Ratio": "0.002%",
+    "Return": "-21.54 %",
+    "Unrealized": "$0.00",
+    "Volume": "$16,166,094.95"
+  }
+}

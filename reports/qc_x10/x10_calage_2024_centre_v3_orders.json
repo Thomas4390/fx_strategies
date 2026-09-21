@@ -1,0 +1,482 @@
+[
+ {
+  "id": 1,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-02T04:26:00Z",
+  "quantity": -38,
+  "price": 2069.79,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2070.000|2024-01-01 23:20:00|2071.119540|2060.000000|3.899469|bm=28402520|c=2069.9700|atr=0.789080|sp=0.360000|v=-0.287254|a=-0.484612|vw=2069.511562|ema=2068.558303",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 1,
+    "status": "filled",
+    "fillPrice": 2069.79,
+    "fillQuantity": -38,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-02T05:13:00Z",
+  "quantity": 38,
+  "price": 2071.31,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2070.000|2024-01-02 00:10:00|2071.119540|2060.000000|3.899469|xr=STOP|xp=2071.120",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 2,
+    "status": "filled",
+    "fillPrice": 2071.31,
+    "fillQuantity": 38,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-02T12:01:00Z",
+  "quantity": -21,
+  "price": 2069.02,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2070.000|2024-01-02 06:55:00|2071.449464|2060.000000|3.936254|bm=28402975|c=2069.2900|atr=1.449464|sp=0.320000|v=0.101187|a=1.494872|vw=2073.196729|ema=2069.690534",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 3,
+    "status": "filled",
+    "fillPrice": 2069.02,
+    "fillQuantity": -21,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-02T15:38:00Z",
+  "quantity": 21,
+  "price": 2058.35,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2070.000|2024-01-02 10:35:00|2071.449464|2060.000000|3.936254|xr=TARGET|xp=2060.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 4,
+    "status": "filled",
+    "fillPrice": 2058.35,
+    "fillQuantity": 21,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-02T20:51:00Z",
+  "quantity": -25,
+  "price": 2058.76,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2060.000|2024-01-02 15:45:00|2060.834732|2050.000000|4.459039|bm=28403505|c=2058.9750|atr=0.834732|sp=0.250000|v=-0.207651|a=0.369459|vw=2068.829272|ema=2068.173625",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 5,
+    "status": "filled",
+    "fillPrice": 2058.76,
+    "fillQuantity": -25,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 6,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-03T00:11:00Z",
+  "quantity": 25,
+  "price": 2060.8,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2060.000|2024-01-02 19:10:00|2060.834732|2050.000000|4.459039|xr=STOP|xp=2060.835",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 6,
+    "status": "filled",
+    "fillPrice": 2060.8,
+    "fillQuantity": 25,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 7,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-03T12:01:00Z",
+  "quantity": -12,
+  "price": 2047.28,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2050.000|2024-01-03 06:55:00|2051.516528|2040.000000|1.846027|bm=28404415|c=2047.6500|atr=1.516528|sp=0.360000|v=-0.351681|a=0.385939|vw=2060.820592|ema=2065.458435",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 7,
+    "status": "filled",
+    "fillPrice": 2047.28,
+    "fillQuantity": -12,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 8,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-03T13:48:00Z",
+  "quantity": 12,
+  "price": 2039.64,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_SHORT|2050.000|2024-01-03 08:45:00|2051.516528|2040.000000|1.846027|xr=TARGET|xp=2040.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 8,
+    "status": "filled",
+    "fillPrice": 2039.64,
+    "fillQuantity": 12,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 9,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-04T10:36:00Z",
+  "quantity": -9,
+  "price": 2048.49,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2050.000|2024-01-04 05:30:00|2051.505908|2040.000000|3.267916|bm=28405770|c=2048.9550|atr=1.141816|sp=0.290000|v=0.024814|a=-0.478141|vw=2046.299574|ema=2051.862912",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 9,
+    "status": "filled",
+    "fillPrice": 2048.49,
+    "fillQuantity": -9,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 10,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-04T13:41:00Z",
+  "quantity": 9,
+  "price": 2040.56,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2050.000|2024-01-04 08:40:00|2051.505908|2040.000000|3.267916|xr=TARGET|xp=2040.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 10,
+    "status": "filled",
+    "fillPrice": 2040.56,
+    "fillQuantity": 9,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 11,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-05T15:21:00Z",
+  "quantity": -3,
+  "price": 2057.91,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2060.000|2024-01-05 10:15:00|2065.382403|2050.000000|1.315789|bm=28407495|c=2058.9000|atr=3.894805|sp=0.320000|v=0.118106|a=-0.896479|vw=2042.598730|ema=2046.213573",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 11,
+    "status": "filled",
+    "fillPrice": 2057.91,
+    "fillQuantity": -3,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 12,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-05T16:48:00Z",
+  "quantity": 3,
+  "price": 2048.59,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2060.000|2024-01-05 11:45:00|2065.382403|2050.000000|1.315789|xr=TARGET|xp=2050.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 12,
+    "status": "filled",
+    "fillPrice": 2048.59,
+    "fillQuantity": 3,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 13,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-08T10:06:00Z",
+  "quantity": -13,
+  "price": 2028.58,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2030.000|2024-01-08 05:00:00|2032.004634|2020.000000|2.249208|bm=28411500|c=2028.4800|atr=1.109268|sp=0.340000|v=-0.392150|a=-1.030642|vw=2032.830694|ema=2042.899332",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 13,
+    "status": "filled",
+    "fillPrice": 2028.58,
+    "fillQuantity": -13,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 14,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-08T11:19:00Z",
+  "quantity": 13,
+  "price": 2021.25,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2030.000|2024-01-08 06:15:00|2032.004634|2020.000000|2.249208|xr=TARGET|xp=2020.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 14,
+    "status": "filled",
+    "fillPrice": 2021.25,
+    "fillQuantity": 13,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 15,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-11T23:26:00Z",
+  "quantity": 10,
+  "price": 2033.66,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_LONG|2030.000|2024-01-11 18:20:00|2028.648962|2040.000000|1.207927|bm=28416620|c=2033.5950|atr=1.351038|sp=0.390000|v=0.635314|a=-0.051354|vw=2028.866036|ema=2029.043988",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 15,
+    "status": "filled",
+    "fillPrice": 2033.66,
+    "fillQuantity": 10,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 16,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-12T02:59:00Z",
+  "quantity": -10,
+  "price": 2033.85,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_LONG|2030.000|2024-01-11 21:55:00|2028.648962|2040.000000|1.207927|xr=SESSION|xp=2033.850",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 16,
+    "status": "filled",
+    "fillPrice": 2033.85,
+    "fillQuantity": -10,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 17,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-12T13:51:00Z",
+  "quantity": 4,
+  "price": 2053.66,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_LONG|2050.000|2024-01-12 08:45:00|2047.681182|2060.000000|1.173084|bm=28417485|c=2053.1850|atr=2.318818|sp=0.330000|v=0.117157|a=-0.968838|vw=2039.748023|ema=2032.966354",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 17,
+    "status": "filled",
+    "fillPrice": 2053.66,
+    "fillQuantity": 4,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 18,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-12T14:33:00Z",
+  "quantity": -4,
+  "price": 2059.72,
+  "type": 0,
+  "status": 3,
+  "tag": "BREAK_LONG|2050.000|2024-01-12 09:30:00|2047.681182|2060.000000|1.173084|xr=TARGET|xp=2060.000",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 18,
+    "status": "filled",
+    "fillPrice": 2059.72,
+    "fillQuantity": -4,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 19,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-01-12T14:51:00Z",
+  "quantity": -7,
+  "price": 2059.07,
+  "type": 0,
+  "status": 3,
+  "tag": "REV_SHORT|2060.000|2024-01-12 09:45:00|2062.695026|2050.000000|2.761460|bm=28417545|c=2059.4800|atr=2.400052|sp=0.320000|v=-0.225690|a=-0.984202|vw=2041.258050|ema=2033.878261",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 19,
+    "status": "filled",
+    "fillPrice": 2059.07,
+    "fillQuantity": -7,
+    "message": null
+   }
+  ]
+ },
+ {
+  "id": 20,
+  "symbol": {
+   "value": "XAUUSD",
+   "id": "XAUUSD 8I",
+   "permtick": "XAUUSD"
+  },
+  "time": "2024-12-31T21:58:00Z",
+  "quantity": 7,
+  "price": 0.0,
+  "type": 4,
+  "status": 7,
+  "tag": "SESSION|end_of_algorithm",
+  "securityType": 6,
+  "events": [
+   {
+    "orderId": 20,
+    "status": "invalid",
+    "fillPrice": 0.0,
+    "fillQuantity": 0,
+    "message": "BrokerageModel declared unable to submit order: [20] Warning - Code: NotSupported - The OandaBrokerageModel does not support MarketOnOpen order type. Only supports [Limit,Market,StopMarket,StopLimit]"
+   }
+  ]
+ }
+]

@@ -31,6 +31,7 @@ from reconcile_x10_events import (  # noqa: E402
     POSTS,
     REFERENCE_HALF_SPREAD,
     VOLUME_MIN,
+    SUMMARY_KEYS,
     QcTag,
     _lots_for_risk,
     account_pnl,
@@ -688,3 +689,86 @@ def test_lots_for_risk_floors_to_the_lot_step(equity, entry, stop, expected):
         equity > 0 and entry != stop
     ) else lots == 0.0
     assert round(lots / VOLUME_MIN) == pytest.approx(lots / VOLUME_MIN, abs=1e-6)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Tags enrichis v4 — les champs k=v derrière le préfixe gelé
+# ═══════════════════════════════════════════════════════════════════════
+
+
+V4_ENTRY = (
+    "REV_SHORT|2070.000|2024-01-01 23:20:00|2071.119540|2060.000000|3.899469"
+    "|bm=28402520|c=2069.9700|atr=0.789080|sp=0.360000"
+    "|v=-0.287254|a=-0.484612|vw=2069.511562|ema=2068.558303"
+)
+V4_EXIT = (
+    "REV_SHORT|2070.000|2024-01-02 00:10:00|2071.119540|2060.000000|3.899469"
+    "|xr=STOP|xp=2071.120"
+)
+
+
+def test_the_frozen_six_fields_still_parse_the_same_way():
+    """Le contrat v1 doit survivre à l'enrichissement : mêmes six champs, même clé."""
+    v1 = parse_tag("REV_SHORT|2070.000|2024-01-01 23:20:00|2071.119540|2060.000000|3.899469")
+    v4 = parse_tag(V4_ENTRY)
+    assert v4.scenario == v1.scenario and v4.level == v1.level
+    assert v4.stop == v1.stop and v4.target == v1.target and v4.r_est == v1.r_est
+    assert v4.key == v1.key
+    assert v1.extra == {}
+
+
+def test_kv_fields_are_read_as_numbers():
+    tag = parse_tag(V4_ENTRY)
+    assert tag.number("bm") == 28402520
+    assert tag.number("c") == pytest.approx(2069.97)
+    assert tag.number("atr") == pytest.approx(0.789080)
+    assert tag.number("sp") == pytest.approx(0.36)
+    assert tag.number("absent") != tag.number("absent")  # NaN
+
+
+def test_exit_reason_is_read_not_inferred_when_the_tag_carries_it():
+    orders = [
+        order(1, "2024-01-02T04:26:00", -38, 2069.79, V4_ENTRY),
+        order(2, "2024-01-02T05:13:00", 38, 2071.31, V4_EXIT),
+    ]
+    trade = reconstruct_qc_trades(orders).trades[0]
+    assert trade.exit_tag.exit_reason == "STOP"
+    assert trade.exit_tag.exit_px == pytest.approx(2071.120)
+    assert infer_qc_exit_reason(trade) == "STOP"
+
+
+def test_a_read_time_exit_gets_a_measurable_slippage():
+    """`xp=` chiffre le glissement des sorties TIME/SESSION, que v1 ne voyait pas."""
+    entry = tag_of() + "|bm=1000|c=2000.5000|atr=1.000000|sp=0.290000"
+    exit_tag = tag_of(ts="2024-01-02 11:00:00") + "|xr=TIME|xp=2003.000"
+    orders = [
+        order(1, "2024-01-02T10:05:00", 10, 2000.5, entry),
+        order(2, "2024-01-02T11:00:00", -10, 2002.4, exit_tag),
+    ]
+    trade = reconstruct_qc_trades(orders).trades[0]
+    row = decompose(py_trade(exit_reason="TIME", exit_px=2003.0), trade)
+    assert row["exit_reason_qc"] == "TIME"
+    assert row["exit_reason_qc_is_read"] is True
+    # 2003,000 visé, 2002,400 rempli : 0,60 $ de glissement, plus un minorant.
+    assert row["exit_slippage_px"] == pytest.approx(-0.6)
+    assert row["r_exit_slippage"] != pytest.approx(0.0)
+    assert row["closure_usd"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_summary_keys_are_frozen():
+    """Le rapport client lit ces noms : on peut en ajouter, jamais en renommer."""
+    assert SUMMARY_KEYS == (
+        "qc_backtest_id",
+        "qc_trades",
+        "py_trades",
+        "match_rate_py_to_qc",
+        "match_rate_qc_to_py",
+        "py_expectancy_r",
+        "qc_expectancy_r",
+        "exit_slippage_r_per_trade",
+        "qc_stop_realised_r",
+        "qc_half_spread_usd",
+        "unattributed_share",
+        "qc_net_return_pct",
+        "healthy",
+    )

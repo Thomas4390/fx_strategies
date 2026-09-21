@@ -1190,6 +1190,29 @@ class X10Feed:
 # ═══════════════════════════════════════════════════════════════════════
 
 
+#: Ounces below which two inventories are the same inventory.
+#:
+#: §11 sizes in lots of 0.01 and multiplies by ``CONTRACT_SIZE``; that product is
+#: **not exact in binary**. ``0.07 * 100.0 == 7.000000000000001``, and it is the
+#: only one of the ten lot sizes the 2024 backtest used that misses. Comparing
+#: an intent of ``7.000000000000001`` to a held quantity of ``7.0`` with ``!=``
+#: froze the v3 run on 2024-01-12 for the remaining eleven and a half months
+#: (order 19; see ``docs/research/xau_x10_reconciliation.md`` §11).
+QTY_EPSILON = 1e-6
+
+#: Quoted minutes after which an order that never produced an event is presumed
+#: dead. LEAN refuses a quantity below the broker's lot step **before** creating
+#: the order, so no ``on_order_event`` ever arrives and ``inflight`` would stay
+#: set forever. §13 asks that an exit always end up filled; this is the timer
+#: that guarantees it.
+INFLIGHT_TIMEOUT = 5
+
+
+def quantize_qty(quantity: float) -> float:
+    """Strip the binary noise of ``lots * CONTRACT_SIZE`` from a quantity."""
+    return round(quantity, 6)
+
+
 class BrokerSync:
     """Decide the one quantity to send, from what is wanted and what is held.
 
@@ -1212,7 +1235,15 @@ class BrokerSync:
       before the first has filled and the position doubles.
     """
 
-    __slots__ = ("target_qty", "tag", "inflight", "deferred", "rejected")
+    __slots__ = (
+        "target_qty",
+        "tag",
+        "inflight",
+        "deferred",
+        "rejected",
+        "abandoned",
+        "sent_at",
+    )
 
     def __init__(self) -> None:
         self.target_qty = 0.0
@@ -1220,26 +1251,55 @@ class BrokerSync:
         self.inflight = False
         self.deferred = 0
         self.rejected = 0
+        # Orders presumed dead because no event ever came back for them.
+        self.abandoned = 0
+        self.sent_at = -1
 
     def want(self, quantity: float, tag: str = "") -> None:
         """Record the inventory the strategy wants, in signed ounces."""
-        self.target_qty = quantity
+        self.target_qty = quantize_qty(quantity)
         self.tag = tag
 
-    def order(self, held: float, market_open: bool) -> float | None:
-        """Quantity to send now, or ``None`` when there is nothing to do."""
-        delta = self.target_qty - held
-        if delta == 0.0 or self.inflight:
+    def matches(self, held: float) -> bool:
+        """Is the account on the wanted inventory, to the ounce?
+
+        Never ``held == target``: see ``QTY_EPSILON``. An exact comparison here
+        is what froze the v3 backtest, and it froze it twice over — the
+        automaton through ``broker_blocked`` and the order path through
+        ``inflight``.
+        """
+        return abs(quantize_qty(held) - self.target_qty) < QTY_EPSILON
+
+    def order(self, held: float, market_open: bool, minute: int = -1) -> float | None:
+        """Quantity to send now, or ``None`` when there is nothing to do.
+
+        ``minute`` is the quoted-minute index; it only drives the ``inflight``
+        timeout, and defaults to ``-1`` so a caller that does not track a clock
+        keeps the previous behaviour.
+        """
+        if self.inflight:
+            if minute < 0 or self.sent_at < 0 or minute - self.sent_at < INFLIGHT_TIMEOUT:
+                return None
+            # No event ever came back: LEAN rejected the request before it
+            # became an order. Give up on it rather than wedge the account.
+            self.abandoned += 1
+            self.inflight = False
+            self.sent_at = -1
+
+        delta = quantize_qty(self.target_qty - quantize_qty(held))
+        if abs(delta) < QTY_EPSILON:
             return None
         if not market_open:
             self.deferred += 1
             return None
         self.inflight = True
+        self.sent_at = minute
         return delta
 
     def on_settled(self) -> None:
         """A terminal fill: the next call to ``order`` may submit again."""
         self.inflight = False
+        self.sent_at = -1
 
     def on_refused(self, held: float) -> bool:
         """Record a refusal; return ``True`` if it was a **phantom entry**.
@@ -1252,7 +1312,8 @@ class BrokerSync:
         """
         self.rejected += 1
         self.inflight = False
-        if self.target_qty != 0.0 and held == 0.0:
+        self.sent_at = -1
+        if abs(self.target_qty) >= QTY_EPSILON and abs(quantize_qty(held)) < QTY_EPSILON:
             self.target_qty = 0.0
             return True
         return False

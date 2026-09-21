@@ -1,7 +1,9 @@
 # XAUUSD niveaux x10 : réconciliation événementielle Python ↔ QuantConnect, 2024
 
-> **Date** : 2026-09-21 · **Statut** : mesuré — **le backtest QC `x10_calage_2024_centre` n'est
-> pas une mesure de la stratégie** et ne doit être cité nulle part comme telle.
+> **Date** : 2026-09-21 · **Statut** : mesuré — **le portage QC est réparé (v4) et son backtest
+> est sain**, mais l'appariement des entrées reste à **33 %** contre une cible de 98 % : le
+> barreau 2 est cassé et **les deux moteurs ne lisent pas les mêmes minutes**. Aucun chiffre de
+> performance QC ne doit être publié tant que ce point n'est pas fermé.
 > **Holdout state** : LOCKED.
 > **Holdout touched by this phase** : **NO** — aucune barre ≥ 2026-01-01 n'est entrée dans un
 > calcul. Date maximale de tout index consommé : M1 `2025-12-31 16:58` (variante P1), et
@@ -21,6 +23,28 @@ uv run python scripts/reconcile_x10_events.py \
     --qc-stats  reports/qc_x10/x10_calage_2024_centre.json \
     --out       results/xau_x10/reconciliation_qc_2024.json
 ```
+
+---
+
+## 0 bis. Historique v1 → v4 (ajouté après correction du portage)
+
+`docs/research/xau_x10_reconciliation.md` a d'abord été écrite sur le backtest **v1**. Le
+portage a ensuite été corrigé deux fois. Les sections 1 à 10 décrivent le **v1** et restent
+valables telles quelles — elles documentent des défauts réels et la méthode qui les a trouvés.
+Les sections **11 et suivantes** portent le résultat courant. Le JSON courant est
+`results/xau_x10/reconciliation_qc_2024.json` (v4) ; celui du v1 est archivé sous
+`results/xau_x10/reconciliation_qc_2024_v1.json`.
+
+| run | backtestId | ordres | rejets | position finale | rendement | appariement |
+|---|---|---|---|---|---|---|
+| **v1** | `ac7bcf55a96ed8e6d67ec506b45a2d5e` | 550 | 9 + 14 appels de marge | **−5 oz** | **−91,82 %** | 28,7 % |
+| **v3** | `8f81be6c2582b44e0d2e58839cc4c490` | **20** | 1 | **−7 oz** | −21,71 %* | **0 %** |
+| **v4** | `90d2b200b364fa7e871d3f07e668bda2` | **632** | **0** | **0 oz** | **−21,71 %** | **33,1 %** |
+| v4 spread 0,29 | `947756097ee174d4a82c0e6ad25eccde` | 634 | 0 | 0 oz | −21,54 % | 33,4 % |
+
+\* le v3 n'a tradé que du 2 au 12 janvier ; son rendement ne mesure rien.
+
+Référence Python 2024, même capital : **−15,34 %** (P2, 305 trades).
 
 ---
 
@@ -551,6 +575,245 @@ moteurs ne prendront pas les mêmes trades tant que le barreau 2 n'est pas vert.
 6. **Le bouclage comptable laisse 4,30 USD** (0,05 % de la perte) entre le PnL reconstruit depuis
    les ordres et celui publié par QC, dû au prix de marque de la position finale, déduit de
    `Holdings / |position|`.
+
+---
+
+## 11. Le portage réparé (v3, puis v4)
+
+### 11.1 v3 — un ulp gèle l'automate pendant onze mois et demi
+
+Le premier correctif (commit `9d2da58`) a réglé D1-D5 et produit un backtest de **20 ordres**.
+Neuf allers-retours propres du 2 au 12 janvier, puis **plus rien jusqu'au 31 décembre**.
+
+**Cause, à la ligne.** §11 dimensionne en lots de 0,01 et multiplie par `CONTRACT_SIZE = 100`.
+Ce produit n'est pas exact en binaire :
+
+```
+0.07 * 100.0 == 7.000000000000001     # et non 7.0
+```
+
+C'est **la seule** des dix tailles de lot du run qui rate — 0,38, 0,21, 0,25, 0,12, 0,09, 0,03,
+0,13, 0,10 et 0,04 tombent toutes juste — et c'est celle de l'**ordre 19**, le dernier ordre du
+backtest. Deux verrous se referment sur cette différence de 8,9 × 10⁻¹⁶ :
+
+1. `main.py:238` (v3) `broker_blocked = held != self._broker.target_qty` → `-7.0` contre
+   `-7.000000000000001` → vrai pour toujours → `x10_state.py:641` gèle l'automate, qui n'émet
+   donc **jamais** la sortie ;
+2. `x10_state.py:1231-1238` (v3) `delta = target - held` = −8,9e-16, jugé non nul → un
+   `market_order(-8.9e-16)` que LEAN refuse **avant de créer l'ordre**, donc sans
+   `on_order_event`, donc `inflight` reste vrai et plus aucun ordre ne part.
+
+La liquidation finale (ordre 20, `MarketOnOpen`) est refusée par OANDA, exactement comme les
+huit sorties du v1 : un ordre émis depuis `on_end_of_algorithm` arrive marché fermé.
+
+### 11.2 v3 — l'horloge décalée de cinq heures
+
+Défaut indépendant, trouvé dans les mêmes tags. `main.py:207/212` (v3) lisait
+`minute_index(bar.time)` ; un `QuoteBar` LEAN porte un horodatage **naïf sur l'horloge de la
+place** — New York pour un CFD OANDA — et `minute_index` lit un stamp naïf comme de l'UTC.
+`ny_fields` reconvertissait ensuite une seconde fois.
+
+Mesure, sur les quatre entrées v3 dont la barre tombe dans les trois premiers jours : en lisant
+`bm` tel quel, le close du tag s'écarte du close de référence de **4 à 17 $** ; en ajoutant
+**300 minutes**, l'écart tombe à **0,005 – 0,77 $**. L'hypothèse « `bm` est de l'UTC » est donc
+réfutée et le décalage est exactement l'offset New York/UTC d'hiver. Conséquences : la clôture
+de séance de 16:55 se déclenchait à **21:55 New York**, sur un marché fermé depuis 17:00 — c'est
+ce que dit le tag `xr=SESSION` de l'ordre 16 — et la fenêtre interdite de §10 glissait d'autant.
+Corollaire : `last_of_session` étant testé par `minute_of_day >= 16:58` **sans borne haute**,
+il était vrai de 16:58 à 23:59 et **chaque minute du soir scellait son propre bin M5**.
+
+### 11.3 Correctifs appliqués
+
+| défaut | fichier:ligne (v4) | correctif |
+|---|---|---|
+| gel sur un ulp | `x10_state.py` `QTY_EPSILON`, `quantize_qty`, `BrokerSync.matches` | la cible est quantifiée, la comparaison passe par une tolérance, plus jamais `!=` |
+| ordre sans réponse | `x10_state.py` `INFLIGHT_TIMEOUT`, `BrokerSync.order` | un ordre resté sans événement 5 minutes cotées est abandonné et réémis |
+| horloge | `main.py:230` | `minute_index(self.utc_time) - 1` ; `quote_bar.time` n'est plus qu'une **sonde** qui rapporte l'offset |
+| scellage du soir | `main.py:94`, `main.py:264-267` | fenêtre bornée `[16:58, 18:00)` |
+| gel silencieux | `main.py:283-305` `_watchdog` | `self.error` explicite dès que le gel franchit une séance |
+| solde final | `main.py:276-279` | la position est soldée **dans `on_data`**, dernière minute cotée de la dernière séance, marché ouvert ; `on_end_of_algorithm` ne garde qu'un filet qui crie s'il sert |
+
+Vérification locale : `tests/test_qc_x10_parity.py` **58 tests verts** (53 + 5 nouveaux qui
+rejouent la cause sans LEAN), parité des événements avec le noyau de référence intacte ;
+`ruff` propre.
+
+### 11.4 v4 — santé du backtest
+
+Les quatre critères, avant toute lecture de performance :
+
+| critère | mesure | verdict |
+|---|---|---|
+| nombre d'ordres ≈ 2 × 307 | **632** | **OK** |
+| aucun ordre rejeté non retenté | **0** rejet, **0** appel de marge | **OK** |
+| position nulle en fin de run | **0 oz**, `Holdings = $0.00` | **OK** |
+| compte à plat entre deux trades | **316 / 632** remplissages, soit toutes les sorties | **OK** |
+
+`health.healthy = true`. Le PnL reconstruit depuis les ordres vaut **−2 171,38 USD** et le
+backtest publie **−2 171,38 USD** : le bouclage comptable est **exact à 0,00 USD** (il était à
+4,30 USD sur le v1, où la position résiduelle devait être marquée).
+
+L'inventaire fantôme a disparu : **0,0 %** de la perte lui revient, contre **81,5 %** au v1.
+
+> ⚠️ Piège rencontré : lu trop tôt, `read_backtest` renvoie un instantané de mi-parcours —
+> `statistics` entièrement à `null` et un `Net Profit` de −1 525,60 USD qui n'est pas le
+> résultat final. Les chiffres ci-dessus sont ceux de la lecture complète (`Total Orders` = 632).
+> Un backtest « completed » n'est pas forcément un backtest matérialisé.
+
+### 11.5 Ce que le v4 mesure
+
+| | Python P2 | QC v4 |
+|---|---|---|
+| trades | 305 | **316** |
+| rendement 2024, capital 10 000 | **−15,34 %** | **−21,71 %** |
+| espérance par trade apparié (R) | **−0,2379** | **−0,2071** |
+
+Sur les **101 trades appariés et clos des deux côtés**, l'écart n'est que de **−0,0309 R par
+trade**, décomposé exactement (résidu max **5,33 × 10⁻¹⁵ USD**, part non attribuée **−8,9 ×
+10⁻¹⁶ R**) :
+
+| poste | somme (R) | moyenne (R/trade) |
+|---|---|---|
+| (iv) taille | +0,071 | +0,0007 |
+| (i) glissement d'entrée | +0,565 | +0,0056 |
+| (v) gap de sortie Python | −0,298 | −0,0030 |
+| (iii) raison de sortie | −0,376 | −0,0037 |
+| **(ii) glissement de sortie** | **−3,079** | **−0,0305** |
+
+Le glissement de sortie reste le poste dominant, mais il vaut désormais **−0,0305 R/trade**
+contre −0,1293 au v1 : la barre 16:55 scellée à l'heure et l'horloge corrigée en retirent
+l'essentiel. **Et il n'est plus un minorant** : le tag porte `xr=` et `xp=`, donc la raison et le
+prix théorique de sortie sont **lus** et non plus devinés, y compris pour les sorties `TIME` et
+`SESSION` que le v1 ne savait pas chiffrer. L'accord de raison de sortie passe de 87,2 %
+(inférée) à **99,0 %** (lue). Glissement de sortie moyen : **+0,148 $** contre +0,241 $ au v1.
+
+### 11.6 Barreau 2 — enfin observable, et cassé
+
+Les champs `k=v` du tag v4 (`bm`, `c`, `atr`, `sp`) rendent le barreau 2 mesurable depuis
+l'API. Sur les 101 entrées appariées, à `bm` identique :
+
+| quantité | écart médian | écart max | identiques à 1e-6 |
+|---|---|---|---|
+| `bm` (barre de décision) | **0 minute** (83/101 exactement la même barre) | ±5 min | — |
+| **close M5** | **0,265 $** | 2,575 $ | **1 / 101** |
+| **ATR M5** | 0,041 $ (ratio médian **0,9943**) | 0,457 $ | **0 / 101** |
+| spread | 0,110 $ (QC vaut **1,38 ×** la référence) | 0,400 $ | — |
+
+**L'horloge est réparée** — plus aucun décalage systématique. **Les barres, non.**
+
+Deux tests séparent les hypothèses, sur les 316 entrées du v4 :
+
+1. **Décalage ?** Pour chaque entrée on cherche le décalage `k` (en barres M5) qui minimise
+   `|close_référence(bm + 5k) − c|`. `k = 0` arrive en tête (119 / 316) et aucun autre `k` ne
+   domine ; le meilleur `k` ne ramène l'écart médian que de 0,325 $ à 0,145 $. **Il n'y a pas de
+   décalage de barres.**
+2. **Minutes manquantes ?** Les **316 bins sur 316** contiennent leurs **cinq** minutes de
+   référence. Et pourtant le close M5 de QC n'est celui d'**aucune** minute du bin : au mieux
+   celle de rang +4 (144 / 316, la dernière), avec un résidu médian de **0,172 $** et seulement
+   **3 / 316** exacts.
+
+**Le parquet de référence est-il du mid, ou du bid/ask ?** L'écart médian de close (0,265 $) est
+du même ordre que le demi-spread QC (0,225 $), ce qui ferait un coupable commode : un parquet en
+**bid** donnerait `close_qc − close_py = +sp/2` partout, un parquet en **ask** `−sp/2`. Trois
+tests, et ils disent tous non.
+
+| test | attendu si bid/ask | mesuré |
+|---|---|---|
+| **signe** de `close_qc − close_py` | ~100 % d'un seul côté | **52,5 % positif / 46,5 % négatif** |
+| médiane de `(close_qc − close_py) / (sp/2)` | **±1** | **+0,204** |
+| **régression** sur `sp/2` : pente / **R²** | ±1 / élevé | **+2,35** / **R² = 0,016** |
+| pente forcée par l'origine | ±1 | +0,258 |
+| recaler de ∓`sp/2` puis retrouver une minute du bin (à 0,005 $) | ~316/316 | **9/316** (`−sp/2`), **5/316** (`+sp/2`), contre **6/316** brut |
+
+Le signe est une pièce de monnaie, le R² est nul, et recaler d'un demi-spread **n'améliore
+rien**. Le champ `price_basis.verdict` du JSON rend `mid_des_deux_cotes_donnees_differentes`.
+
+Une quatrième preuve, indépendante des tags : dans `data/raw_qc/xauusd_minute.txt`, **35,8 %**
+des prix portent une **quatrième décimale, toujours un 5** (`1281.9585`), le reste en ayant
+trois. C'est exactement la signature de `(bid + ask) / 2` sur des cotations à trois décimales —
+une série de bid *ou* d'ask pur n'aurait jamais de quatrième décimale. **Le parquet est bien du
+mid.** Le modèle de coût de la référence (entrée à `close ± s/2` en supposant un mid, §9 et §12)
+est donc **intact** : rien à corriger de ce côté.
+
+**Conclusion : les bornes des bins sont bonnes, les minutes sont toutes là, les deux séries sont
+du mid — et les prix de ces minutes diffèrent quand même.** Les deux moteurs ne lisent pas la même donnée minute. Ce n'est plus un
+défaut de portage — c'est un écart entre `data/XAU-USD_minute_qc.parquet` et ce que le cloud
+sert aujourd'hui pour `XAUUSD` OANDA. La prémisse de §13 (« QC et la référence partagent les
+mêmes barres, donc ≥ 98 % ») est **fausse en l'état**, et la cible de 98 % est hors d'atteinte
+tant que le parquet n'est pas ré-exporté.
+
+### 11.7 Le spread n'explique pas la divergence
+
+Backtest de contrôle `947756097ee174d4a82c0e6ad25eccde`, identique au v4 avec
+`spread_override=0.29` — le spread constant de la référence :
+
+| | v4, spread réel | v4, spread forcé à 0,29 |
+|---|---|---|
+| positions QC | 316 | 317 |
+| **appariement Python → QC** | **33,1 %** | **33,4 %** |
+| rendement | −21,71 % | −21,54 % |
+
+Forcer le spread déplace l'appariement de **+0,3 point**. **L'écart 5 / D7 n'est donc pas la
+cause** des deux tiers de divergence d'entrées : il coûte des dixièmes de point, les barres
+coûtent le reste. C'était la question que ce backtest devait trancher, et elle est tranchée.
+
+### 11.8 Dimensionnement, toujours conforme
+
+Risque engagé médian **0,3038 %** de l'équité (cible 0,5 %), maximum **0,7797 %**, **aucun**
+trade au-dessus de 1,5 × la cible. Même lecture qu'au §5 : pas de bug de taille ni d'unité, le
+biais vers le bas est le plancher de 0,01 lot.
+
+### 11.9 Contrat de sortie pour le rapport client
+
+`results/xau_x10/reconciliation_qc_2024.json`, bloc racine `summary`, **noms gelés** :
+
+```json
+{
+  "qc_backtest_id": "90d2b200b364fa7e871d3f07e668bda2",
+  "qc_trades": 316,
+  "py_trades": 305,
+  "match_rate_py_to_qc": 0.33114754098360655,
+  "match_rate_qc_to_py": 0.31962025316455694,
+  "py_expectancy_r": -0.23791381534131012,
+  "qc_expectancy_r": -0.207053646718123,
+  "exit_slippage_r_per_trade": -0.030482829918751075,
+  "qc_stop_realised_r": -0.9017737933883637,
+  "qc_half_spread_usd": 0.2249992732913779,
+  "unattributed_share": 0.5958132045088567,
+  "qc_net_return_pct": -21.713799999999683,
+  "healthy": true
+}
+```
+
+`qc_stop_realised_r` mérite une lecture : le stop exécuté rend **−0,902 R** au v4, contre
+**−1,944 R** au v1 et **−1,000 R** par construction côté référence. Le portage réparé sort
+désormais *au-dessus* du stop en moyenne — la résolution minute par minute attrape le niveau
+avant que le marché ne s'en éloigne — là où le v1 le franchissait de loin.
+
+### 11.10 Ce qui reste ouvert
+
+1. **Le barreau 2 (§11.6) : les minutes diffèrent, et ce n'est ni un décalage, ni une minute
+   manquante, ni une base de prix bid/ask.** Prochaine action : ré-exporter
+   `data/XAU-USD_minute_qc.parquet` depuis ce compte et rejouer la campagne. Tant que ce n'est
+   pas fait, **l'appariement de 33 % n'est pas imputable au portage** et la lecture hors
+   échantillon reste bloquée au titre de §13.
+
+   ⚠️ **La provenance du parquet n'est pas reproductible.** `docs/specs/gold_momentum_spec.md`
+   §1 et `docs/superpowers/plans/2026-07-25-reconciliation-vbt-mt5-qc.md` affirment tous deux
+   qu'il « a été exporté depuis QuantConnect », mais **aucun script du dépôt ne le produit** et
+   ni la méthode (`history()` en `QuoteBar` ? en `TradeBar` ?) ni la date ni la révision de
+   données ne sont consignées. `data/MANIFEST.json` ne garde que le sha256, la taille et les
+   bornes d'index (`2019-01-01 23:04` → `2026-07-24 03:59`). Le ré-export doit donc **d'abord**
+   écrire le script qui le fabrique, sans quoi le prochain écart sera aussi peu diagnosticable
+   que celui-ci.
+2. **Le canal « chart » n'a rien rendu.** `read_backtest_chart` sur « X10Diag » renvoie une série
+   **vide** alors que le graphique est bien déclaré dans le backtest — même limitation d'API que
+   l'ObjectStore et les logs sur ce compte. La comparaison barre à barre a donc été faite par les
+   tags `k=v`, sur les 316 vraies barres de décision plutôt que sur trois jours : meilleur canal,
+   conclusion inchangée.
+3. **Le barreau 3** (`ARM`/`BREAK`/`SWEEP`/`CANCEL`) reste non observable.
+4. **Les 59,6 % d'entrées sans cause nommée** sont désormais attribuées collectivement au
+   barreau 2 (§11.6), mais pas une par une : le tag ne voyage que sur les entrées **retenues**,
+   jamais sur les candidats refusés.
 
 ---
 

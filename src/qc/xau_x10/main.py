@@ -44,7 +44,7 @@ reconciliation channel and the trace the secondary one.
 from AlgorithmImports import *  # noqa: F403
 # endregion
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from x10_bars import MinuteQuote, minute_index, minute_to_utc, ny_fields
 from x10_indicators import DXY4_LEGS
@@ -86,6 +86,12 @@ INIT_CASH = 10_000.0
 # 18:04). The M5 bin 16:55 therefore never receives a 16:59 minute and cannot
 # close on its own — see ``X10Feed.on_minute(last_of_session=...)``.
 SESSION_LAST_MINUTE = 16 * 60 + 58
+
+# First minute the CFD quotes again after the break, New York clock. It bounds
+# the sealing window above: ``minute_of_day >= SESSION_LAST_MINUTE`` alone is
+# true from 16:58 to 23:59, so every evening minute flushed its own M5 bin and
+# the whole evening session was cut into one-minute bars (backtest v3).
+SESSION_REOPEN_MINUTE = 18 * 60
 
 # LEAN keeps an order tag as free text; the API and the UI truncate long ones,
 # so the enriched entry tag is kept comfortably under this.
@@ -154,6 +160,12 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         self._last_minute = -1
         self._clock_checked = False
         self._audit_day = -1
+        # §10 / D5 — session label of the last day of the window. The position
+        # is squared on the last quoted minute of that session, market open,
+        # because an order issued from ``on_end_of_algorithm`` is too late:
+        # LEAN turns it into ``MarketOnOpen`` and OANDA refuses the type.
+        self._final_session = (end.date() - date(1970, 1, 1)).days
+        self._blocked_session = -1
         self._diag = self._string("diag", "0") == "1"
         self._diag_until = minute_index(start) + DIAG_DAYS * 24 * 60
         self._diag_points = 0
@@ -190,44 +202,48 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
     def on_data(self, slice: Slice) -> None:  # noqa: F405, A002
         """Hand one minute to the feed and route the events it returns.
 
-        The bar label comes from ``quote_bar.time`` — the **start** of the bar —
-        and never from ``self.time``, which is its end. The reference indexes by
-        start (``resample_ohlc(..., label="left", closed="left")``), so reading
-        the end and binning it would shift every M5 bar by one minute, move its
-        open and its close, and change the ATR by a few percent in either
-        direction — exactly the signature of D8
-        (``docs/research/xau_x10_reconciliation.md`` §2.2).
+        The bar label is ``utc_time`` minus one minute, and **not**
+        ``quote_bar.time``. Both are the start of the bar just closed, but they
+        are not on the same clock: ``utc_time`` is UTC by construction, whereas
+        a LEAN bar carries a *naive* stamp on its **exchange** clock — New York
+        for an OANDA CFD. Feeding the second to ``minute_index``, which reads a
+        naive stamp as UTC, produced an index five hours behind the truth;
+        ``ny_fields`` then subtracted the offset a second time and the whole
+        session clock of §2/§10 ran five hours late. The 16:55 flat fired at
+        21:55 New York, on a market that had closed at 17:00 (backtest v3, and
+        the ``xr=SESSION`` tag of its order 16 proves it).
         """
         legs: dict = {}
-        minute = -1
         for symbol, leg in self._legs.items():
             if symbol in slice.quote_bars:
-                bar = slice.quote_bars[symbol]
-                legs[leg] = float(bar.close)
-                minute = minute_index(bar.time)
+                legs[leg] = float(slice.quote_bars[symbol].close)
 
         gold = None
+        exchange_stamp = None
         if self._xau in slice.quote_bars:
             bar = slice.quote_bars[self._xau]
-            minute = minute_index(bar.time)
+            exchange_stamp = bar.time
             gold = self._quote(bar)
-        if minute < 0 or minute <= self._last_minute:
+        if gold is None and not legs:
+            return
+
+        minute = minute_index(self.utc_time) - 1
+        if minute <= self._last_minute:
             return
         self._last_minute = minute
 
-        if not self._clock_checked:
-            # The one assumption this port cannot test locally: that
-            # ``quote_bar.time`` is the bar start, on the algorithm clock (UTC).
-            # If LEAN hands it over on the exchange clock instead, every bar is
-            # hours off and the session boundaries of §2 move with it. Say so in
-            # the first minute rather than discover it in a reconciliation.
+        if not self._clock_checked and exchange_stamp is not None:
+            # Kept as a probe, never as the clock: it measures the very offset
+            # described above, so it must be reported and not consumed.
             self._clock_checked = True
-            expected = minute_index(self.time) - 1
+            offset = minute - minute_index(exchange_stamp)
             message = (
-                f"x10 clock probe: quote_bar.time={minute_to_utc(minute)} "
-                f"self.time-1min={minute_to_utc(expected)}"
+                f"x10 clock probe: utc_time-1min={minute_to_utc(minute)} "
+                f"quote_bar.time={exchange_stamp} offset={offset}min"
             )
-            self.log(message) if minute == expected else self.error(message)
+            self.log(message) if offset == 0 else self.error(message)
+
+        minute_of_day, session_id = ny_fields(minute)
 
         # §11 sizes on the equity; the broker's own valuation is the one that
         # matters here, not the running total the automaton keeps for the
@@ -235,16 +251,20 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         # account on the strategy's inventory — D6 was a consequence of D1.
         self._feed.machine.equity = float(self.portfolio.total_portfolio_value)
         held = float(self.portfolio[self._xau].quantity)
-        self._feed.machine.broker_blocked = held != self._broker.target_qty
+        blocked = not self._broker.matches(held)
+        self._feed.machine.broker_blocked = blocked
+        self._watchdog(blocked, session_id, held)
         self._audit(minute, held)
 
-        minute_of_day, _ = ny_fields(minute)
         events = self._feed.on_minute(
             minute,
             gold,
             legs,
             live=not self.is_warming_up,
-            last_of_session=gold is not None and minute_of_day >= SESSION_LAST_MINUTE,
+            last_of_session=(
+                gold is not None
+                and SESSION_LAST_MINUTE <= minute_of_day < SESSION_REOPEN_MINUTE
+            ),
         )
         for event in events:
             self._route(event)
@@ -253,7 +273,36 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
             self._m5_seen = self._feed.m5_closed
             self._plot_diagnostics(minute)
 
-        self._sync()
+        # Last quoted minute of the last session: square up while the market is
+        # still open. This overrides any entry the automaton just asked for.
+        if session_id >= self._final_session and minute_of_day >= SESSION_LAST_MINUTE:
+            self._broker.want(0.0, "SESSION|end_of_window")
+
+        self._sync(minute)
+
+    def _watchdog(self, blocked: bool, session_id: int, held: float) -> None:
+        """Refuse to stay frozen silently for more than one session.
+
+        ``broker_blocked`` is meant to last a few minutes — the time for an
+        order to fill. In v3 it lasted eleven and a half months because the
+        intent and the fill differed by one ulp. A freeze that survives a
+        session boundary is a defect, and it says so with the state that
+        explains it.
+        """
+        if not blocked:
+            self._blocked_session = -1
+            return
+        if self._blocked_session < 0:
+            self._blocked_session = session_id
+            return
+        if session_id > self._blocked_session:
+            self.error(
+                f"x10 AUTOMATON FROZEN across sessions {self._blocked_session}->{session_id} "
+                f"held={held!r} target={self._broker.target_qty!r} "
+                f"inflight={self._broker.inflight} deferred={self._broker.deferred} "
+                f"rejected={self._broker.rejected} abandoned={self._broker.abandoned}"
+            )
+            self._blocked_session = session_id
 
     @staticmethod
     def _quote(bar) -> MinuteQuote | None:
@@ -284,7 +333,7 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         elif event.event == EVENT_EXIT:
             self._broker.want(0.0, self._exit_tag(event))
 
-    def _sync(self) -> None:
+    def _sync(self, minute: int) -> None:
         """Drive the account onto the wanted inventory, never onto a shut market.
 
         One market order at a time, and none while the XAUUSD exchange is
@@ -297,6 +346,7 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         quantity = self._broker.order(
             float(self.portfolio[self._xau].quantity),
             bool(self.securities[self._xau].exchange.exchange_open),
+            minute,
         )
         if quantity is not None:
             self.market_order(self._xau, quantity, tag=self._broker.tag or "x10|sync")
@@ -336,11 +386,13 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         self._audit_day = day
         believed = self._feed.machine.position_quantity
         target = self._broker.target_qty
-        if held != target or (target != 0.0 and held != believed):
+        if not self._broker.matches(held) or (
+            abs(target) > 0.0 and abs(held - believed) > 1e-6
+        ):
             self.error(
                 f"x10 INVARIANT BROKEN held={held} target={target} "
                 f"automaton={believed} deferred={self._broker.deferred} "
-                f"rejected={self._broker.rejected}"
+                f"rejected={self._broker.rejected} abandoned={self._broker.abandoned}"
             )
 
     def _plot_diagnostics(self, minute: int) -> None:
@@ -358,6 +410,8 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         bar = self._feed.last_bar
         context = self._feed.last_context
         if bar is None or context is None:
+            return
+        if context.atr != context.atr:  # NaN until 14 TRs exist; LEAN cannot plot it
             return
         self._diag_points += 1
         self.plot("X10Diag", "m5_close", bar.close)
@@ -426,18 +480,27 @@ class ApogeeInvestS2XauX10(QCAlgorithm):  # noqa: F405
         of §13 compare. One line per ``ARM`` would blow the log quota on seven
         years of minutes and buy nothing.
         """
-        # D5 / §10: no position survives the end of the file. ``liquidate``
-        # first, so the assertion below measures the result and not the intent.
-        self.liquidate(self._xau, tag="SESSION|end_of_algorithm")
+        # D5 / §10: no position survives the end of the file. The real close
+        # happened on the last quoted minute of the last session, inside
+        # ``on_data``, because an order issued from here is stamped after the
+        # exchange has shut and LEAN turns it into a ``MarketOnOpen`` that OANDA
+        # refuses (v3, order 20). This ``liquidate`` is the belt to that braces:
+        # if it ever has anything to do, the close above failed and that is the
+        # defect to report, not the leftover.
         held = float(self.portfolio[self._xau].quantity)
         if held != 0.0:
-            self.error(f"x10 NOT FLAT at end of algorithm: {held} oz still held")
+            self.error(
+                f"x10 NOT FLAT at end of algorithm: {held} oz still held — "
+                "the end-of-window close did not fill; liquidating late"
+            )
+            self.liquidate(self._xau, tag="SESSION|end_of_algorithm")
         else:
             self.log("x10 flat at end of algorithm")
         self.log(
             f"x10 order health: {self._broker.rejected} refused, "
-            f"{self._broker.deferred} deferred "
-            f"on a closed exchange, {self._feed.dropped_minutes} minutes dropped"
+            f"{self._broker.deferred} deferred on a closed exchange, "
+            f"{self._broker.abandoned} abandoned without an event, "
+            f"{self._feed.dropped_minutes} minutes dropped"
         )
 
         events = self._feed.machine.events
