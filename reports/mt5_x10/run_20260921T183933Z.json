@@ -1,0 +1,29 @@
+{
+  "run_id": "20260921T183933Z",
+  "expert": "XauX10",
+  "exit_code": 182,
+  "duration_sec": 36.080325096001616,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/x10_smoke.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/x10_smoke_report.htm",
+    "symbol": null,
+    "period": "M0 (1970.01.01 - 1970.01.01)",
+    "initial_deposit": "0",
+    "total_net_profit": "0",
+    "profit_factor": "0.00",
+    "recovery_factor": "0.00",
+    "sharpe_ratio": "0.00",
+    "total_trades": "0",
+    "balance_dd_max": "0 (0%)",
+    "equity_dd_max": "0 (0%)",
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260921.log",
+    "init_ok": true,
+    "init_errors": [],
+    "macro_source_resolved": null,
+    "raw_tail": "EQ\t0\t14:19:31.747\tCore 01\t2024.01.25 23:15:00   deal #30 sell 0.43 XAUUSD.c at 2019.890 done (based on order #30)\nHN\t0\t14:19:31.747\tCore 01\t2024.01.25 23:15:00   deal performed [#30 sell 0.43 XAUUSD.c at 2019.890]\nIL\t0\t14:19:31.747\tCore 01\t2024.01.25 23:15:00   order performed sell 0.43 at 2019.890 [#30 sell 0.43 XAUUSD.c at 2019.890]\nJR\t0\t14:19:31.747\tCore 01\t2024.01.25 23:18:40   stop loss triggered #30 sell 0.43 XAUUSD.c 2019.890 sl: 2021.088 tp: 2010.000 [#31 buy 0.43 XAUUSD.c at 2021.088]\nRM\t0\t14:19:31.747\tCore 01\t2024.01.25 23:18:40   deal #31 buy 0.43 XAUUSD.c at 2021.088 done (based on order #31)\nFO\t0\t14:19:31.747\tCore 01\t2024.01.25 23:18:40   deal performed [#31 buy 0.43 XAUUSD.c at 2021.088]\nGM\t0\t14:19:31.747\tCore 01\t2024.01.25 23:18:40   order performed buy 0.43 at 2021.088 [#31 buy 0.43 XAUUSD.c at 2021.088]\nLD\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [OPTIM] z=1.0000 amin=0.2000 ks=1.0000 riskfrac=0.0050 cagr=0.736010 dd=2.4575 sharpe=11.5040 pf=2.2014 rf=1.7581 trades=15 net=463.47 years=0.082\nOK\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [OPTIM][INFO] bars=5771 decisions=5771 frozen=0 arm=110 break=19 sweep=9 entry=15 exit=15 cancel=100 order_failures=0\nJK\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [OPTIM][INFO] dxy_undef_bars=0 spread_samples=5771 spread_zero=0 spread_median_points=250 trace=x10_trace_20240101T0000.csv\nLS\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [OPTIM][INFO] profile: bar_ms=2013334 h1_ms=2013315 seed_ms=0 h1_rebuilds=482 seeds=1 us_per_bar=348870\nON\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [OPTIM] deals exported -> deals_x10_20240130T2359.csv\nLM\t0\t14:19:31.747\tCore 01\tfinal balance 10463.47 USD\nGH\t0\t14:19:31.747\tCore 01\tOnTester result 0.7360096999465451\nRR\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [SUMMARY][INFO] bars=5771 decisions=5771 frozen=0 arm=110 break=19 sweep=9 entry=15 exit=15 cancel=100 order_failures=0\nCP\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [SUMMARY][INFO] dxy_undef_bars=0 spread_samples=5771 spread_zero=0 spread_median_points=250 trace=x10_trace_20240101T0000.csv\nEE\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [SUMMARY][INFO] profile: bar_ms=2013334 h1_ms=2013315 seed_ms=0 h1_rebuilds=482 seeds=1 us_per_bar=348870\nLJ\t0\t14:19:31.747\tCore 01\t2024.01.30 23:59:59   [DEINIT][INFO] EA stopped reason=1\nIH\t0\t14:19:31.747\tCore 01\tXAUUSD.c,M5: 115180 ticks, 5771 bars generated. Environment synchronized in 0:08:23.399. Test passed in 0:33:33.475 (including ticks preprocessing 0:00:00.010).\nRL\t0\t14:19:31.747\tCore 01\tXAUUSD.c,M5: total time from login to stop testing 0:41:56.874 (including 0:41:56.641 for history data synchronization)\nJO\t0\t14:19:31.747\tCore 01\t585387 total ticks for all symbols\nLD\t0\t14:19:31.747\tCore 01\tEURUSD.c: generate 117356 ticks in 0:00:00.000, passed to tester 117305 ticks\nKF\t0\t14:19:31.747\tCore 01\tGBPUSD.c: generate 118407 ticks in 0:00:00.005, passed to tester 118275 ticks\nDR\t0\t14:19:31.747\tCore 01\tUSDCAD.c: generate 116948 ticks in 0:00:00.000, passed to tester 116821 ticks\nOL\t0\t14:19:31.747\tCore 01\tUSDJPY.c: generate 117883 ticks in 0:00:00.005, passed to tester 117806 ticks\nLO\t0\t14:19:31.747\tCore 01\tXAUUSD.c: generate 115180 ticks in 0:00:00.000, passed to tester 115180 ticks\nHE\t0\t14:19:31.747\tCore 01\t108 Mb memory used including 7 Mb of history data, 64 Mb of tick data\nDG\t0\t14:19:31.747\tCore 01\tlog file \"C:\\Program Files\\MetaTrader 5\\Tester\\Agent-127.0.0.1-3001\\logs\\20260921.log\" written\nPJ\t0\t14:19:31.788\tTester\tautomatic testing finished\nGE\t0\t14:19:31.789\tCore 01\tconnection closed\nKP\t0\t14:22:21.915\tTester\tCloud servers switched off\nJI\t2\t14:22:53.002\tTester\tnot synchronized with trade server\nJN\t0\t14:22:53.009\tTester\t\"fx_strategies\\XauX10.ex5\" X64\nKE\t3\t14:28:59.765\tTester\tstop testing\nKE\t3\t14:28:59.765\tTester\ttester is stopped because the account has been changed\nEK\t0\t14:28:59.785\tTester\tautomatic testing finished\nRK\t0\t14:38:58.539\tTester\tCloud servers switched off\nML\t2\t14:39:29.585\tTester\tnot synchronized with trade server\nJH\t2\t14:39:29.585\tTester\tcannot select symbol in market watch\nGS\t0\t14:39:29.593\tTester\t\"fx_strategies\\XauX10.ex5\" X64"
+  }
+}

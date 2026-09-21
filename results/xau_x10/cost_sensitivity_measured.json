@@ -1,0 +1,46 @@
+{
+  "what": "Sensibilité au spread MESURÉ de la configuration au centre de la grille (z=1, a_min=0,2, k_s=1). Aucune grille, aucune re-sélection : table de décision §1.1.",
+  "config": {
+    "z": 1.0,
+    "a_min": 0.2,
+    "k_s": 1.0,
+    "risk_frac": 0.005
+  },
+  "window": {
+    "start": "2019-01-01",
+    "end": "2025-12-31",
+    "n_m5_bars": 502527
+  },
+  "gold_parquet": "/home/thomas/Documents_Thomas/11_CodingProjects/fx_strategies/fx_strategies/data/XAU-USD_minute_qc.parquet",
+  "cost_table_source": "costs_xau_intraday.yml",
+  "variants": {
+    "constant_0.29": {
+      "label": "constant_0.29",
+      "spread_usd_mean": 0.29,
+      "trades": 1723,
+      "expectancy_r": -0.16018528928042608,
+      "profit_factor": 0.7506954531360678,
+      "final_equity": 3741.863009166952
+    },
+    "measured_median": {
+      "label": "measured_median",
+      "spread_usd_mean": 0.2509114556491492,
+      "trades": 1728,
+      "expectancy_r": -0.14748150054636794,
+      "profit_factor": 0.7694958680873983,
+      "final_equity": 4026.5914840821424,
+      "delta_expectancy_r_vs_constant": 0.012703788734058141,
+      "delta_trades_vs_constant": 5
+    },
+    "measured_p75": {
+      "label": "measured_p75",
+      "spread_usd_mean": 0.2763226097025632,
+      "trades": 1726,
+      "expectancy_r": -0.15635857606682446,
+      "profit_factor": 0.7565139156959674,
+      "final_equity": 3808.916633454218,
+      "delta_expectancy_r_vs_constant": 0.003826713213601618,
+      "delta_trades_vs_constant": 3
+    }
+  }
+}

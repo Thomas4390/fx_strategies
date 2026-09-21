@@ -17,8 +17,10 @@ au backtest QC :
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -28,6 +30,7 @@ sys.path.insert(0, str(_REPO / "scripts"))
 from reconcile_x10_events import (  # noqa: E402
     BAR_MINUTES,
     CONTRACT_SIZE,
+    MT5_SUMMARY_KEYS,
     POSTS,
     REFERENCE_HALF_SPREAD,
     VOLUME_MIN,
@@ -36,12 +39,20 @@ from reconcile_x10_events import (  # noqa: E402
     _lots_for_risk,
     account_pnl,
     aggregate,
+    busy_share,
+    clock_offset_check,
     decompose,
+    expectancy_table,
     implied_half_spread,
     infer_qc_exit_reason,
+    load_mt5_deals,
+    load_mt5_trace,
     match_entries,
+    match_on_keys,
+    mt5_positions,
     parse_tag,
     phantom_inventory,
+    read_order_failures,
     reconstruct_qc_trades,
 )
 
@@ -771,4 +782,317 @@ def test_summary_keys_are_frozen():
         "unattributed_share",
         "qc_net_return_pct",
         "healthy",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Branche MT5 — trace de l'EA, deals, appariement, R réalisé
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Mêmes principes qu'au-dessus, sur des artefacts MT5 synthétiques : une trace
+# §13 à 22 colonnes et un CSV de deals UTF-16. Aucun fichier du tester n'est lu.
+
+TRACE_HEADER = (
+    "ts_decision,event,scenario,level,d,atr,v,m,a,ctx_ema,ctx_vwap,ctx_dxy,"
+    "vwap,ema50_h1,dxy,stop,target,r_est,fill_px,exit_px,exit_reason,cancel_reason"
+)
+
+
+def trace_row(
+    ts: str,
+    event: str,
+    *,
+    scenario: str = "",
+    level: float = 2000.0,
+    d: int = 1,
+    atr: float = 1.0,
+    vwap: float = 2000.0,
+    ema50_h1: float = 1999.0,
+    dxy: float = 100.0,
+    stop: str = "",
+    target: str = "",
+    r_est: str = "",
+    fill_px: str = "",
+    exit_px: str = "",
+    exit_reason: str = "",
+    cancel_reason: str = "",
+) -> str:
+    return (
+        f"{ts},{event},{scenario},{level:.3f},{d},{atr:.6f},0.1,0.2,0.3,1,1,1,"
+        f"{vwap:.6f},{ema50_h1:.6f},{dxy:.6f},{stop},{target},{r_est},"
+        f"{fill_px},{exit_px},{exit_reason},{cancel_reason}"
+    )
+
+
+def write_trace(tmp_path: Path, rows: list[str]) -> Path:
+    path = tmp_path / "trace.csv"
+    path.write_text("\n".join([TRACE_HEADER, *rows]) + "\n")
+    return path
+
+
+def write_deals(tmp_path: Path, rows: list[str]) -> Path:
+    """Le CSV des deals tel que l'EA l'écrit : UTF-16 LE avec BOM."""
+    header = (
+        "deal_id,position_id,time_utc,symbol,magic,sleeve,type,entry,volume,"
+        "price,profit,commission,swap"
+    )
+    path = tmp_path / "deals.csv"
+    path.write_bytes(("\n".join([header, *rows]) + "\n").encode("utf-16"))
+    return path
+
+
+def one_position_artifacts(
+    tmp_path: Path,
+    *,
+    scenario: str = "BREAK_LONG",
+    magic: int = 841,
+    fill_px: float = 2000.0,
+    stop: float = 1995.0,
+    volume: float = 0.10,
+    profit: float = 50.0,
+) -> tuple[Path, Path]:
+    trace = write_trace(
+        tmp_path,
+        [
+            trace_row("2024-01-02 10:00:00", "ARM"),
+            trace_row(
+                "2024-01-02 10:05:00",
+                "ENTRY",
+                scenario=scenario,
+                stop=f"{stop:.6f}",
+                target="2010.000000",
+                r_est="2.000000",
+                fill_px=f"{fill_px:.3f}",
+            ),
+            trace_row(
+                "2024-01-02 11:00:00",
+                "EXIT",
+                scenario=scenario,
+                exit_px="2010.000",
+                exit_reason="TARGET",
+            ),
+        ],
+    )
+    deals = write_deals(
+        tmp_path,
+        [
+            "1,0,2024.01.02 00:00:00,,0,OTHER,2,0,0.0000,0.00000,10000.00,0.0000,0.0000",
+            f"2,2,2024.01.02 10:10:00,XAUUSD.c,{magic},{scenario},0,0,{volume:.4f},"
+            f"{fill_px:.5f},0.00,0.0000,0.0000",
+            f"3,2,2024.01.02 11:05:00,XAUUSD.c,{magic},{scenario},1,1,{volume:.4f},"
+            f"2010.00000,{profit:.2f},0.0000,0.0000",
+        ],
+    )
+    return trace, deals
+
+
+def test_the_mt5_trace_is_read_with_its_twenty_second_column(tmp_path):
+    path = write_trace(
+        tmp_path,
+        [
+            trace_row("2024-01-02 10:00:00", "ARM"),
+            trace_row("2024-01-02 10:05:00", "CANCEL", cancel_reason="zone"),
+        ],
+    )
+    frame = load_mt5_trace(path)
+    assert list(frame["event"]) == ["ARM", "CANCEL"]
+    assert list(frame["cancel_reason"]) == ["", "zone"]
+    # L'horodatage est UTC, jamais naïf : c'est ce qui le rend comparable.
+    assert frame["ts_decision"].dt.tz is not None
+
+
+def test_the_deals_csv_is_read_through_its_utf16_encoding(tmp_path):
+    _, deals_path = one_position_artifacts(tmp_path)
+    deals = load_mt5_deals(deals_path)
+    assert len(deals) == 3
+    # `net` réunit résultat, commission et swap : c'est lui qui boucle sur le
+    # profit net du rapport HTML, pas la colonne `profit` seule.
+    assert deals["net"].sum() == pytest.approx(10_050.0)
+
+
+def test_realised_r_divides_the_net_by_the_risk_engaged_at_the_fill(tmp_path):
+    # |2000 − 1995| × 0,10 lot × 100 onces = 50 $ de risque ; 50 $ gagnés = 1 R.
+    trace_path, deals_path = one_position_artifacts(tmp_path)
+    positions = mt5_positions(load_mt5_trace(trace_path), load_mt5_deals(deals_path))
+    assert len(positions) == 1
+    assert positions.loc[0, "risk_amount"] == pytest.approx(50.0)
+    assert positions.loc[0, "r_realised"] == pytest.approx(1.0)
+    assert positions.loc[0, "exit_reason_name"] == "TARGET"
+
+
+def test_realised_r_is_not_r_est_when_the_lot_step_rounds_the_size(tmp_path):
+    """0,07 lot au lieu de 0,10 : le R réalisé suit le risque VRAIMENT porté."""
+    trace_path, deals_path = one_position_artifacts(tmp_path, volume=0.07, profit=50.0)
+    positions = mt5_positions(load_mt5_trace(trace_path), load_mt5_deals(deals_path))
+    assert positions.loc[0, "risk_amount"] == pytest.approx(35.0)
+    assert positions.loc[0, "r_realised"] == pytest.approx(50.0 / 35.0)
+    assert positions.loc[0, "r_est"] == pytest.approx(2.0)
+
+
+def test_positions_refuse_to_be_built_when_trace_and_deals_disagree(tmp_path):
+    trace_path, deals_path = one_position_artifacts(tmp_path)
+    trace = load_mt5_trace(trace_path)
+    extra = trace.iloc[[1]].copy()
+    extra["ts_decision"] = pd.Timestamp("2024-01-03 10:05:00", tz="UTC")
+    with pytest.raises(SystemExit, match="même nombre de positions"):
+        mt5_positions(
+            pd.concat([trace, extra], ignore_index=True), load_mt5_deals(deals_path)
+        )
+
+
+@pytest.mark.parametrize("offset", [0, -BAR_MINUTES, BAR_MINUTES])
+def test_mt5_matching_accepts_exactly_one_bar_of_drift(offset):
+    left = pd.DataFrame(
+        {
+            "ts_decision": [pd.Timestamp("2024-01-02 10:00:00", tz="UTC")],
+            "scenario_name": ["BREAK_LONG"],
+            "level": [2000.0],
+        }
+    )
+    right = left.copy()
+    right["ts_decision"] = right["ts_decision"] + pd.Timedelta(minutes=offset)
+    pairs, _, _ = match_on_keys(left, right, ("scenario_name", "level"))
+    assert pairs == [(0, 0)]
+
+
+def test_mt5_matching_refuses_two_bars_of_drift():
+    left = pd.DataFrame(
+        {
+            "ts_decision": [pd.Timestamp("2024-01-02 10:00:00", tz="UTC")],
+            "scenario_name": ["BREAK_LONG"],
+            "level": [2000.0],
+        }
+    )
+    right = left.copy()
+    right["ts_decision"] = right["ts_decision"] + pd.Timedelta(minutes=2 * BAR_MINUTES)
+    pairs, left_orphans, right_orphans = match_on_keys(
+        left, right, ("scenario_name", "level")
+    )
+    assert pairs == []
+    assert left_orphans == [0] and right_orphans == [0]
+
+
+def test_mt5_matching_is_one_to_one_and_takes_the_nearest():
+    base = pd.Timestamp("2024-01-02 10:00:00", tz="UTC")
+    left = pd.DataFrame(
+        {
+            "ts_decision": [base, base + pd.Timedelta(minutes=BAR_MINUTES)],
+            "scenario_name": ["REV_LONG", "REV_LONG"],
+            "level": [2000.0, 2000.0],
+        }
+    )
+    right = left.copy()
+    pairs, left_orphans, right_orphans = match_on_keys(
+        left, right, ("scenario_name", "level")
+    )
+    assert pairs == [(0, 0), (1, 1)]
+    assert not left_orphans and not right_orphans
+
+
+def test_mt5_matching_requires_the_same_scenario():
+    left = pd.DataFrame(
+        {
+            "ts_decision": [pd.Timestamp("2024-01-02 10:00:00", tz="UTC")],
+            "scenario_name": ["BREAK_LONG"],
+            "level": [2000.0],
+        }
+    )
+    right = left.assign(scenario_name=["REV_LONG"])
+    pairs, _, _ = match_on_keys(left, right, ("scenario_name", "level"))
+    assert pairs == []
+
+
+def test_expectancy_table_counts_trades_expectancy_and_profit_factor():
+    frame = pd.DataFrame(
+        {
+            "scenario_name": ["BREAK_LONG"] * 3 + ["REV_SHORT"],
+            "r_realised": [2.0, -1.0, -1.0, 1.0],
+        }
+    )
+    table = expectancy_table(frame, "scenario_name")
+    assert table["BREAK_LONG"]["trades"] == 3
+    assert table["BREAK_LONG"]["expectancy_r"] == pytest.approx(0.0)
+    assert table["BREAK_LONG"]["profit_factor"] == pytest.approx(1.0)
+    # Aucune perte : le profit factor n'est pas `inf`, il n'est pas défini.
+    assert table["REV_SHORT"]["profit_factor"] is None
+
+
+def test_busy_share_counts_orphans_emitted_while_the_other_engine_held(tmp_path):
+    other = pd.DataFrame(
+        {
+            "ts_fill": pd.to_datetime(["2024-01-02 10:00:00"], utc=True),
+            "ts_exit": pd.to_datetime(["2024-01-02 12:00:00"], utc=True),
+        }
+    )
+    share = busy_share(["2024-01-02 11:00:00+00:00", "2024-01-02 13:00:00+00:00"], other)
+    assert share["n_orphans"] == 2
+    assert share["n_counterpart_busy"] == 1
+    assert share["share"] == pytest.approx(0.5)
+
+
+def test_order_failures_separate_refused_entries_from_exit_retries(tmp_path):
+    """`order_failures` compte des ORDRES, les `[EXIT][WARN]` des réessais."""
+    lines = [
+        "CS\t0\t16:52\tXauX10\t2023.04.16 22:55:00   [ENTRY][WARN] PositionOpen "
+        "REV_LONG lots=0.13 failed retcode=10018",
+        "CS\t0\t16:52\tXauX10\t2023.06.05 22:01:00   [EXIT][WARN] PositionClose "
+        "268 failed retcode=10018",
+        "CS\t0\t16:52\tXauX10\t2023.06.05 22:05:00   [EXIT][WARN] PositionClose "
+        "268 failed retcode=10018",
+    ]
+    path = tmp_path / "agent.log"
+    path.write_bytes(("\n".join(lines) + "\n").encode("utf-16"))
+    failures = read_order_failures(path)
+    assert failures["n_entry_failures"] == 1
+    assert failures["n_exit_retry_lines"] == 2
+    assert failures["n_positions_with_exit_retry"] == 1
+    assert failures["retcodes"] == {"10018": 3}
+    assert failures["entry_failures"][0]["time_utc"] == "2023-04-16 22:55:00"
+
+
+def test_order_failures_say_so_when_the_log_is_missing(tmp_path):
+    failures = read_order_failures(tmp_path / "absent.log")
+    assert failures["measured"] is False
+
+
+def test_the_clock_check_finds_no_hourly_offset_on_an_aligned_feed():
+    index = pd.date_range("2024-01-02", periods=3000, freq="1min", tz="UTC")
+    rng = np.random.default_rng(0)
+    close = 2000.0 + np.cumsum(rng.normal(0, 0.05, len(index)))
+    dump = pd.DataFrame({"close": close, "spread_points": 250}, index=index)
+    reference = pd.DataFrame({"close": close}, index=index)
+    path = Path(tempfile.mkdtemp()) / "ref.parquet"
+    reference.to_parquet(path)
+
+    check = clock_offset_check(dump, path)
+    assert check["server_clock_offset_min"] == 0
+    assert check["server_clock_is_utc"] is True
+    assert check["best_lag_min"] == 0
+
+
+def test_the_clock_check_sees_an_hour_of_offset_when_there_is_one():
+    index = pd.date_range("2024-01-02", periods=3000, freq="1min", tz="UTC")
+    rng = np.random.default_rng(1)
+    close = 2000.0 + np.cumsum(rng.normal(0, 0.05, len(index)))
+    dump = pd.DataFrame({"close": close, "spread_points": 250}, index=index)
+    # Le même signal, publié une heure plus tôt sur l'horloge de référence.
+    reference = pd.DataFrame({"close": close}, index=index - pd.Timedelta(hours=1))
+    path = Path(tempfile.mkdtemp()) / "ref_shifted.parquet"
+    reference.to_parquet(path)
+
+    check = clock_offset_check(dump, path)
+    assert check["server_clock_offset_min"] == -60
+    assert check["server_clock_is_utc"] is False
+
+
+def test_mt5_summary_keys_are_frozen():
+    """La note de recherche lit ces noms : on peut en ajouter, jamais renommer."""
+    assert MT5_SUMMARY_KEYS == (
+        "match_rate_py_to_mt5_same_data",
+        "match_rate_mt5_to_py_same_data",
+        "match_rate_py_to_mt5_diff_data",
+        "py_expectancy_r_same_data",
+        "mt5_expectancy_r",
+        "unattributed_share",
+        "server_clock_offset_min",
     )

@@ -1,9 +1,12 @@
-# XAUUSD niveaux x10 : réconciliation événementielle Python ↔ QuantConnect, 2024
+# XAUUSD niveaux x10 : réconciliation événementielle Python ↔ QuantConnect ↔ MT5
 
 > **Date** : 2026-09-21 · **Statut** : mesuré — **le portage QC est réparé (v4) et son backtest
 > est sain**, mais l'appariement des entrées reste à **33 %** contre une cible de 98 % : le
 > barreau 2 est cassé et **les deux moteurs ne lisent pas les mêmes minutes**. Aucun chiffre de
 > performance QC ne doit être publié tant que ce point n'est pas fermé.
+> **La branche MT5 est mesurée depuis le 2026-09-21** (§9) : appariement **98,1 %** dès que les
+> deux moteurs lisent le même prix, divergence non attribuée **1,1 %**, et **critère 8 en
+> ÉCHEC** — espérance MT5 **−0,1034 R**, du même signe que Python.
 > **Holdout state** : LOCKED.
 > **Holdout touched by this phase** : **NO** — aucune barre ≥ 2026-01-01 n'est entrée dans un
 > calcul. Date maximale de tout index consommé : M1 `2025-12-31 16:58` (variante P1), et
@@ -936,12 +939,354 @@ accident d'échantillon.
 
 ---
 
-## 9. MT5 : en attente
+## 9. MT5 — mesuré, 2022-11-04 → 2025-12-31
 
-*Rien à publier. L'EA `src/mt5/Experts/XauX10.mq5` n'a pas encore tourné dans le tester.*
-`scripts/reconcile_x10_events.py` expose déjà l'option `--mt5-trace` ; elle s'arrête aujourd'hui
-sur un message explicite. Tolérance d'appariement visée par §13 pour cette paire : **≥ 70 %**,
-écart attribué (mid contre bid, niveaux frôlés, flux broker).
+> **Statut** : mesuré. **Critère 8 de la table de décision : ÉCHEC.** L'espérance MT5 vaut
+> **−0,1034 R** ; le critère exige `≥ 0`. Le second membre — même signe que Python — est GO
+> (Python sur la même fenêtre : **−0,1189 R**), ce qui rend l'échec *interprétable* et non
+> « non concluant » : les deux moteurs disent la même chose, et ce qu'ils disent est négatif.
+> **Essais consommés** : **0**. La configuration lue est le centre de la grille
+> (`z = 1 ; a_min = 0,2 ; k_s = 1 ; risk = 0,5 %`), déjà logé par `xau_x10:grid27:v1`.
+> **Holdout** : aucune barre ≥ 2026-01-01 n'entre dans un calcul ; le dump s'arrête au
+> **2025-12-30 23:58 UTC** et le parquet QC est coupé au 2025-12-31.
+
+Tous les chiffres de cette section viennent de trois JSON, aucun n'est recalculé à la main :
+`results/xau_x10/mt5_reference.json`, `results/xau_x10/reconciliation_mt5.json`,
+`results/xau_x10/cost_sensitivity_measured.json`.
+
+```bash
+uv run python scripts/parse_mt5_report.py \
+    --deals reports/mt5_x10/deals_x10_20251230T2359.csv \
+    --html  "…/MetaTrader 5/x10_reference_report.htm" \
+    --run   reports/mt5_x10/run_20260921T205244Z.json \
+    --x10-trace reports/mt5_x10/x10_trace_20221104T0000.csv \
+    --x10-dump  data/XAU-USD_minute_mt5_x10dump.parquet \
+    --x10-log   "…/Tester/Agent-127.0.0.1-3001/logs/20260921.log" \
+    --x10-py-trades reports/qc_x10/py_trades_full_2019_2025.csv \
+    --out results/xau_x10/mt5_reference.json
+
+uv run python scripts/reconcile_x10_events.py \
+    --mt5-trace reports/mt5_x10/x10_trace_20221104T0000.csv \
+    --mt5-deals reports/mt5_x10/deals_x10_20251230T2359.csv \
+    --mt5-dump  data/XAU-USD_minute_mt5_x10dump.parquet \
+    --mt5-log   "…/Tester/Agent-127.0.0.1-3001/logs/20260921.log" \
+    --py-trades reports/qc_x10/py_trades_full_2019_2025.csv \
+    --out results/xau_x10/reconciliation_mt5.json
+
+uv run python scripts/build_xau_intraday_costs.py \
+    --sensitivity-out results/xau_x10/cost_sensitivity_measured.json
+```
+
+### 9.0 Le run
+
+Tester MT5, **modèle 1 (barres M1 OHLC)**, `XAUUSD.c` M5, 2022.11.04 → 2025.12.31, dépôt
+10 000 USD, levier 1:100, spread **flottant historique** du broker SquaredFinancial (démo),
+un seul agent, une seule graine. Compteurs de l'EA : `bars = 222708`, `decisions = 222708`,
+`frozen = 0`, `arm = 7045`, `break = 1638`, `sweep = 764`, `entry = 880`, `exit = 880`,
+`cancel = 6560`, `order_failures = 13`, `dxy_undef_bars = 84`, `spread_zero = 0`,
+`spread_median_points = 250`.
+
+**Bouclage comptable, vérifié avant toute lecture.** Somme des `profit + commission + swap`
+des 1 760 deals de trading = **−3 019,26 USD**, exactement le `Total Net Profit` du rapport
+HTML. 880 positions reconstruites, autant que d'`ENTRY` et d'`EXIT` dans la trace. `fill_px`
+de la trace = prix du deal d'entrée, écart maximal **0,000 $** sur 880 positions. Le scénario
+déduit du magic (841-844) coïncide avec celui de la trace sur **880/880**.
+
+### 9.1 Contrôle d'horloge — l'heure serveur est bien UTC
+
+L'EA suppose « heure serveur = heure UTC » (`Inp_ServerToNYMode = 0`,
+`Inp_ServerToNYOffsetMin = 0`). L'hypothèse est vérifiée en corrélant les rendements minute du
+dump à ceux de `data/XAU-USD_minute_qc.parquet`, qui est en UTC :
+
+| décalage (min) | −180 | −120 | −60 | −5 | −1 | **0** | **+1** | +5 | +60 | +120 | +180 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| corrélation | 0,000 | 0,001 | −0,001 | −0,000 | −0,005 | **0,003** | **0,966** | −0,001 | −0,003 | −0,001 | −0,002 |
+
+**Aucun décalage horaire** : `−180`, `−120`, `−60`, `+60`, `+120`, `+180` sont tous à la
+corrélation d'un bruit. `server_clock_offset_min = 0`, et séance, fenêtres horaires et VWAP de
+l'EA ne sont donc pas décalés.
+
+Le maximum tombe à **+1 minute** parce que les deux fichiers ne datent pas une barre de la même
+façon : **MT5 estampille une barre M1 de son ouverture, LEAN de sa clôture**. La preuve est dans
+les niveaux de prix, pas seulement dans la corrélation — à décalage 0, l'écart QC − dump a un
+p05/p95 de −0,90/+1,24 $ ; à +1 minute il tombe à 0,00/+0,27 $, et en comparant au **mid**
+(`bid + spread/2`) à −0,095/+0,130 $ pour une médiane de **+0,015 $**. C'est une convention de
+datation, pas une horloge, et le JSON les nomme séparément
+(`bar_stamp_convention_lag_min = 1`, `server_clock_offset_min = 0`).
+
+La même convention se lit dans la trace de l'EA : le deal d'entrée tombe **exactement cinq
+minutes** après le `ts_decision` de son `ENTRY`, sur les 880 positions. `ts_decision` est donc
+l'**ouverture** de la barre M5 de décision, et le fill a lieu à l'ouverture de la suivante,
+ce qui est le §9 à la lettre.
+
+### 9.2 Ce que MT5 mesure
+
+| grandeur | valeur |
+|---|---|
+| trades | **880** |
+| espérance | **−0,1034 R** |
+| profit factor (HTML) | **0,83** |
+| rendement net | **−30,19 %** (10 000 → 6 980,74 USD) |
+| repli d'équité maximal | **34,90 %** (tick par tick, mesuré par MT5) |
+| Sharpe (MT5) | −4,72 |
+| spread médian mesuré | **0,25 $** |
+| ordres refusés | **13** |
+
+**Par année** — quatre années sur quatre négatives :
+
+| année | trades | espérance R | profit factor | net USD | Python même fenêtre, espérance R |
+|---|---|---|---|---|---|
+| 2022 (2 mois) | 31 | −0,0776 | 0,884 | −123,98 | −0,2824 |
+| 2023 | 231 | −0,0736 | 0,882 | −618,90 | −0,1479 |
+| 2024 | 289 | −0,1674 | 0,751 | −1 699,75 | −0,1096 |
+| 2025 | 329 | −0,0706 | 0,888 | −576,63 | −0,0905 |
+
+**Par scénario** — quatre scénarios sur quatre négatifs, aucune poche à sauver :
+
+| scénario | trades | espérance R | profit factor | taux de gain | net USD |
+|---|---|---|---|---|---|
+| BREAK_LONG | 206 | −0,1405 | 0,779 | 33,5 % | −778,24 |
+| BREAK_SHORT | 130 | −0,0636 | 0,895 | 36,9 % | −462,55 |
+| REV_LONG | 281 | −0,1160 | 0,817 | 34,5 % | −1 051,27 |
+| REV_SHORT | 263 | −0,0806 | 0,881 | 30,0 % | −727,20 |
+
+**Par raison de sortie** — la structure est celle qu'un stop serré produit :
+
+| raison | trades | espérance R | net USD |
+|---|---|---|---|
+| STOP | 554 (63,0 %) | −1,0010 | −17 329,26 |
+| TARGET | 181 (20,6 %) | +1,9596 | +10 875,24 |
+| TIME | 108 (12,3 %) | +0,7383 | +2 411,51 |
+| SESSION | 37 (4,2 %) | +0,7868 | +1 023,25 |
+
+Le stop est touché sur **63 %** des trades et coûte exactement **1 R** — l'exécution est propre,
+c'est la fréquence qui tue : il faudrait 34 % de cibles à 2 R pour équilibrer, il y en a 20,6 %.
+
+### 9.3 C1 « mêmes données » — la référence Python rejouée sur le dump du broker
+
+La référence tourne sur les **222 708 barres M5** reconstruites depuis le dump M1 du broker
+(prix mid = `bid + spread/2` par barre M1 ; spread par barre M5 = médiane des M1 du bin ; DXY
+lu dans `data/DXY4_h1.parquet`, écart assumé — le broker reconstruit le sien). Le **barreau 1
+est exact** : 222 708 barres M5 des deux côtés.
+
+**Barreau 2 — indicateurs à `ts_decision` identique** (14 373 lignes appariées à l'instant
+exact, soit 81,6 % de la trace Python) :
+
+| indicateur | écart absolu médian | p95 |
+|---|---|---|
+| `atr` | 0,000445 | 0,00536 |
+| `v` | 0,000084 | 0,00669 |
+| `m` | 0,000133 | 0,00721 |
+| `a` | 0,000162 | 0,01201 |
+| **`vwap`** | **0,1183** | 0,1758 |
+| **`ema50_h1`** | **0,1022** | 0,1541 |
+| `dxy` | 0,00540 | 0,02825 |
+
+Ce tableau **nomme le poste d'écart principal à lui seul**. ATR et cinématique sont des
+*différences* de prix : la demi-fourchette s'y annule, et les deux moteurs s'accordent à 1e-4.
+VWAP et EMA50 H1 sont des *niveaux* : ils encaissent la demi-fourchette en entier, et l'écart
+médian (0,118 $ et 0,102 $) vaut précisément la demi-fourchette médiane mesurée (**0,125 $**).
+**L'EA lit les barres BID du terminal ; la référence lit le mid que §9 prescrit.**
+
+Scores de contexte : `ctx_ema` 99,75 % d'accord, `ctx_vwap` 99,88 %, `ctx_dxy` 97,77 %.
+
+**Barreau 3 — automate** (appariement `(level, d, ts ± 1 barre)`) :
+
+| événement | Python | MT5 | appariés | taux Python | taux MT5 |
+|---|---|---|---|---|---|
+| ARM | 7 005 | 7 045 | 6 404 | 91,4 % | 90,9 % |
+| BREAK | 1 633 | 1 638 | 1 341 | 82,1 % | 81,9 % |
+| SWEEP | 762 | 764 | 578 | 75,9 % | 75,7 % |
+| CANCEL | 6 494 | 6 560 | 5 555 | 85,5 % | 84,7 % |
+
+Sur les 15 372 couples appariés tous types confondus, **97,1 %** portent le même événement des
+deux côtés. Les raisons d'annulation se répartissent presque identiquement — `sweep` 2 568 / 2 598,
+`zone` 2 390 / 2 396, `hold` 560 / 574, `r` 520 / 534, `ctx` 397 / 395, `nsweep` 51 / 55,
+`window` 7 / 6, `narm` 1 / 2 : l'automate est le même, il ne bascule pas aux mêmes instants.
+
+**Barreau 4 — entrées.** 911 entrées Python, 880 MT5, **645 appariées** :
+**Python → MT5 = 70,8 %**, **MT5 → Python = 73,3 %**, contre la cible §13 de **95 %**.
+
+**La cible est manquée, et la cause est mesurée.** En rejouant *exactement le même moteur, les
+mêmes réglages et les mêmes barres* mais sur le **bid brut** — le prix que l'EA lit vraiment —
+le même appariement passe à :
+
+| variante de prix | entrées Python | appariées | Python → MT5 | MT5 → Python | `vwap` écart médian | `ema50_h1` écart médian |
+|---|---|---|---|---|---|---|
+| **mid** (§9, le brief) | 911 | 645 | **70,8 %** | 73,3 % | 0,1183 | 0,1022 |
+| **bid** (ce que l'EA lit) | 894 | 877 | **98,1 %** | **99,7 %** | **0,0000** | **0,0000** |
+
+Sur le bid, VWAP et EMA50 H1 coïncident **à zéro exactement**, et l'appariement dépasse la cible
+de 95 %. L'écart de 27,3 points entre les deux lignes n'est donc pas un désaccord d'automate :
+c'est **un seul poste, entièrement attribué**, et le rejeu le chiffre au lieu de le supposer.
+
+**Barreau 4 — quantités théoriques** (645 paires, Python − MT5) :
+
+| quantité | médiane | p05 | p95 |
+|---|---|---|---|
+| `stop` | +0,0755 $ | −0,0017 | +0,1611 |
+| `target` | **0,000000 $** | 0,000 | 0,000 |
+| `r_est` | −0,0130 | −0,2008 | +0,1839 |
+| `fill_px` | 0,000 $ | −0,020 | +0,010 |
+| `lots` | 0,00 | −0,02 | +0,01 |
+
+La **cible est identique au bit près sur les 645 paires** : les niveaux x10 sont les mêmes des
+deux côtés, et le barreau 3 n'a donc rien à voir avec un décalage de grille. Le stop diffère de
+0,076 $ en médiane, soit à nouveau la moitié d'une fourchette pour les scénarios dont le stop
+dérive d'un extrême de prix.
+
+**Barreau 5 — exécution.** Sur les 645 paires : R réalisé Python **−0,0517**, MT5 **−0,0586**,
+écart médian **+0,0000097 R** (p05 −0,116, p95 +0,079). Les raisons de sortie s'accordent sur
+**97,8 %** des paires ; les 14 désaccords sont 5 `SESSION → STOP`, 6 `SESSION → TARGET`,
+1 `TIME → STOP`, 1 `STOP → TARGET`, 1 `TARGET → STOP`.
+
+### 9.4 C2 « données différentes » — la campagne officielle contre MT5
+
+La campagne Python officielle (parquet QC, spread constant 0,29 $) restreinte à la fenêtre du
+run : **879 entrées**, contre 880 pour MT5. Appariées : **248**, soit **28,2 %**, contre la
+cible §13 de **70 %**. Par année : 11,4 % (2022), 31,5 % (2023), 27,4 % (2024), 28,7 % (2025).
+
+Espérance en R sur la fenêtre commune : Python **−0,1189**, MT5 **−0,1034**. **Même signe,
+écart de 0,016 R** — les deux moteurs ne prennent pas les mêmes trades mais disent la même
+chose sur ce que la stratégie rapporte, exactement comme QC au §8.
+
+**Pourquoi C2 s'effondre alors que C1 tient à 98 %** — à moteur strictement identique, trois
+postes séparent les deux, et deux seulement pèsent :
+
+1. **La convention de binning M5.** Le parquet QC date une barre M1 de sa **clôture**, le dump
+   de son **ouverture**. À grille M5 `label="left"` identique, les deux moteurs n'agrègent donc
+   pas les mêmes minutes. Mesuré sur le **même dump**, en ne changeant que la datation :
+   **98,7 % des 222 705 barres M5 ont une clôture différente**, d'un écart absolu médian de
+   **0,24 $** et de p95 **1,37 $** — soit, aux heures calmes, un demi-ATR. C'est le poste
+   structurel, et il touche **chaque barre**.
+2. **Le flux.** Mid du broker contre clôture QC, minute par minute et datation recalée :
+   médiane **+0,015 $**, p05/p95 **−0,095/+0,130 $**, stable d'une année sur l'autre (médiane
+   0,010 à 0,020 $). Négligeable en médiane, mais 0,1 $ vaut 2 à 20 % d'un ATR M5 : de quoi
+   faire basculer un test de seuil.
+3. **La règle de position unique**, en revanche, **n'explique presque rien** : seuls **4,8 %**
+   des orphelins Python et **3,5 %** des orphelins MT5 sont émis pendant que le moteur d'en
+   face tenait une position. L'hypothèse « les deux chemins se bloquent mutuellement » est
+   **mesurée et écartée**.
+
+### 9.5 Attribution, poste par poste
+
+| poste | mesure | statut |
+|---|---|---|
+| **signaux sur bid (EA) contre mid (référence)** | appariement 70,8 % → **98,1 %** en rejouant sur le bid ; `vwap` et `ema50_h1` passent de 0,118/0,102 $ d'écart médian à **0,000** | **mesuré** |
+| **séance du broker qui rouvre plus tard** | cotations reprises à **18:01 New York** (618 jours) ou **18:05** (193 jours) ; les 13 ordres refusés tombent **20 à 59 min** après cette reprise (médiane 34), les fills acceptés à 704 min en médiane. Preuve directe : `retcode 10018 = TRADE_RETCODE_MARKET_CLOSED` | **mesuré** |
+| **sorties TIME/SESSION à l'open de la barre suivante** | 106 trades concernés ; écart de prix de sortie médian **0,000 $** (p05 −4,49, p95 +0,58), écart en R médian **+0,0036** (p05 −0,68, p95 +0,63) | **mesuré** |
+| **double contact tranché par le tester** | **2** inversions `STOP ↔ TARGET` sur 645 paires, soit **0,31 %** | **mesuré** |
+| **spread courant contre constant** | médiane mesurée **0,250 $**, p95 **0,380 $**, contre 0,29 $ constant. Sans effet en C1, qui rejoue le spread mesuré par barre | **mesuré** (C2) |
+| **DXY du broker contre parquet local** | `ctx_dxy` d'accord sur **97,77 %** des lignes ; écart absolu médian sur la valeur brute **0,0054**, p95 0,0283, max 1,238 | **mesuré** |
+| **ordres refusés** | **13** ouvertures refusées (`retcode 10018`), toutes entre 22:01 et 23:00 UTC. Les `[EXIT][WARN]` du log sont des **réessais** : 283 lignes pour **37 positions**, pas 283 incidents | **mesuré** |
+| **convention de binning M5** | **98,7 %** des barres M5 changent de clôture selon la datation M1 retenue ; écart médian 0,24 $ | **mesuré** (C2) |
+| **flux QC contre flux broker** | médiane +0,015 $, p05/p95 −0,095/+0,130 $ | **mesuré** (C2) |
+| **règle de position unique** | 4,8 % / 3,5 % des orphelins | **mesuré, et écarté** |
+
+**Part non attribuée, C1 : 1,1 %** — 13 orphelins sur 1 146 entrées de l'union, contre un seuil
+de blocage de **5 %** (§13). Sur les 501 orphelins de la variante mid, **488** sont expliqués
+par le seul poste bid/mid. **La réconciliation MT5 ne bloque pas la lecture hors échantillon.**
+
+### 9.6 Les 13 ordres refusés
+
+Tous `retcode 10018` (*marché fermé*), tous des **ouvertures**, tous entre 22:01 et 23:00 UTC :
+
+| date UTC | sens | lots | stop | cible |
+|---|---|---|---|---|
+| 2023.04.16 22:55 | buy | 0,13 | 1 998,983 | 2 010,000 |
+| 2023.04.26 22:35 | sell | 0,21 | 1 990,822 | 1 980,000 |
+| 2023.06.11 22:25 | buy | 0,40 | 1 959,468 | 1 970,000 |
+| 2024.05.08 22:35 | sell | 0,29 | 2 311,178 | 2 300,000 |
+| 2024.05.19 22:35 | sell | 0,04 | 2 423,578 | 2 410,000 |
+| 2024.07.28 22:30 | sell | 0,07 | 2 402,537 | 2 390,000 |
+| 2024.09.22 22:35 | buy | 0,20 | 2 619,086 | 2 630,000 |
+| 2025.03.24 22:55 | buy | 0,05 | 3 008,391 | 3 020,000 |
+| 2025.04.01 22:30 | buy | 0,03 | 3 106,979 | 3 120,000 |
+| 2025.07.09 22:40 | sell | 0,15 | 3 321,807 | 3 310,000 |
+| 2025.09.10 22:35 | buy | 0,04 | 3 637,025 | 3 650,000 |
+| 2025.09.28 22:25 | sell | 0,06 | 3 772,375 | 3 760,000 |
+| 2025.10.14 23:00 | sell | 0,03 | 4 163,851 | 4 150,000 |
+
+Toutes les dates tombent en heure d'été de New York, c'est-à-dire entre **18:01 et 19:00 heure
+locale** : la stratégie autorise l'entrée dès 18:15 (§10) alors que la session de négociation du
+symbole n'est pas encore ouverte. **13 trades sur 893 tentatives, soit 1,5 %** : le poste est
+réel, nommé, et trop petit pour renverser quoi que ce soit.
+
+### 9.7 Le spread mesuré, et ce qu'il change
+
+`costs_xau_intraday.yml`, généré par `scripts/build_xau_intraday_costs.py` depuis le dump M1
+(1 111 881 barres) : **médiane globale 0,250 $**, p75 **0,300 $**, p95 **0,380 $**.
+
+| année | source | médiane des heures | heure la plus chère (New York) | heures les moins chères |
+|---|---|---|---|---|
+| 2019 | extrapolée (×0,723) | 0,188 $ | 18 h → 0,268 $ | — |
+| 2020 | extrapolée | 0,237 $ | 18 h → 0,338 $ | — |
+| 2021 | extrapolée (×0,922) | 0,240 $ | 18 h → 0,341 $ | — |
+| 2022 | mesurée (**partielle**, nov-déc) | 0,260 $ | 18 h → 0,370 $ | — |
+| 2023 | mesurée | 0,260 $ | 18 h → 0,370 $ ; 19 h et 23 h → 0,34 $ | 3-5 h → 0,26 $ |
+| 2024 | mesurée | 0,250 $ | 18 h → 0,350 $ ; 19 h → 0,34 $ | 2-4 h → 0,25 $ |
+| 2025 | mesurée | 0,160 $ | 18 h → 0,190 $ | 19-20 h → 0,15 $ |
+
+**L'heure la plus chère est 18 h New York, toutes années confondues** — la reprise de séance,
+celle-là même où la stratégie a le droit d'entrer à partir de 18:15. Le spread s'est **effondré
+en 2025** (0,16 $ contre 0,26 $ en 2023) alors que l'once a doublé : en fraction du prix, la
+fourchette a été divisée par trois.
+
+**Sensibilité, centre de la grille, 2019 → 2025-12-31** (`cost_sensitivity_measured.json`) :
+
+| spread appliqué | moyenne | trades | espérance R | profit factor | Δ espérance |
+|---|---|---|---|---|---|
+| constant 0,29 $ (sélection) | 0,290 $ | 1 723 | **−0,1602** | 0,751 | — |
+| mesuré, médiane heure × année | 0,251 $ | 1 728 | **−0,1475** | 0,769 | **+0,0127** |
+| mesuré, p75 heure × année | 0,276 $ | 1 726 | **−0,1564** | 0,757 | +0,0038 |
+
+La ligne « constant 0,29 $ » **reproduit la campagne officielle au trade près** (1 723 trades,
+−0,1602 R), ce qui valide la chaîne de rejeu. Le spread réel est donc **meilleur marché que
+celui de la sélection**, de 0,039 $ en moyenne — et il rapporte **+0,013 R**, soit **8 %** du
+déficit. Il en manque **0,147 R**. Conformément à §1.1 de la table de décision, cette mesure est
+publiée comme sensibilité et **ne re-sélectionne rien** : la configuration retenue ne bouge pas.
+
+### 9.8 Verdict du critère 8
+
+> | membre du critère | seuil | mesure | verdict |
+> |---|---|---|---|
+> | espérance MT5 | ≥ 0 | **−0,1034 R** | **ÉCHEC** |
+> | même signe que Python | oui | Python −0,1189 R, MT5 −0,1034 R | GO |
+>
+> **Critère 8 : ÉCHEC**, avec une mesure interprétable. Le verdict de la table de décision reste
+> **NE PAS DÉPLOYER** ; MT5 ne le contredit pas, il le confirme sur le moteur d'exécution du
+> client, quatre années sur quatre et quatre scénarios sur quatre.
+
+Le verdict n'est **pas** « NON CONCLUANT » : aucun des quatre déclencheurs du §2 de la table de
+décision n'est armé. La divergence non attribuée vaut 1,1 %, loin du seuil de 5 % ; le chiffre
+MT5 existe et boucle au centime ; la fenêtre est in-sample et non OOS.
+
+### 9.9 Limites, et ce qui n'a pas pu être vérifié
+
+1. **Modèle 1 — barres M1 OHLC, pas de vrais ticks.** Le tester interpole quatre prix par
+   minute. Les 554 sorties au stop sont donc résolues sur une trajectoire reconstruite ; leur
+   espérance mesurée de −1,0010 R est trop propre pour être crédible tick par tick.
+2. **Compte de démo expiré.** Le terminal ne joint plus le serveur du broker depuis au moins le
+   2026-08-05 : le run tourne hors connexion, sur l'historique en cache. Cet historique ne peut
+   pas être revalidé contre le serveur, et un futur re-téléchargement pourrait ne pas le
+   reproduire.
+3. **DXY indéfini sur 84 barres.** §6.3 rend le panier neutre dans ce cas ; l'effet est borné
+   mais non isolé. Par ailleurs le DXY de l'EA est reconstruit depuis les quatre paires du
+   broker, celui de la référence lu dans `data/DXY4_h1.parquet` : accord `ctx_dxy` 97,77 %,
+   écart assumé et non corrigé.
+4. **13 ordres refusés** (§9.6), dont l'effet sur le chemin d'équité n'est pas simulable : on
+   sait ce que l'EA a voulu faire, pas ce que ces trades auraient rapporté.
+5. **2022 n'est pas une année.** Le run démarre le 4 novembre ; les 31 trades et la ligne 2022
+   de la table de coût portent deux mois. Le YAML le déclare (`partial_year: true`).
+6. **La cible §13 de 95 % n'est atteinte qu'en variante bid.** Le brief fixe le mid pour C1, et
+   sur le mid le taux vaut 70,8 %. La lecture honnête est : *la cible est atteinte dès que les
+   deux moteurs lisent le même prix*, et l'écart restant est un poste nommé, pas un résidu.
+7. **L'extrapolation du spread d'avant 2022-11 est une hypothèse**, pas une mesure : profil
+   horaire de 2023 remis à l'échelle du prix médian annuel. Chaque ligne concernée porte
+   `source: extrapolated`.
+8. **Non mesurable en l'état** : l'effet du slippage réel du broker (le run tourne à
+   `Inp_SlippageUSD = 0`), la sensibilité à la graine du générateur de ticks (une seule graine),
+   et le comportement sous modèle 0 ou 4 (ticks réels indisponibles hors connexion).
 
 ---
 

@@ -1,0 +1,29 @@
+{
+  "run_id": "20260921T161010Z",
+  "expert": "XauX10",
+  "exit_code": 124,
+  "duration_sec": 1800.101073064,
+  "ini_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Config/x10_smoke.ini",
+  "metrics": {
+    "report_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/x10_smoke_report.htm",
+    "symbol": null,
+    "period": null,
+    "initial_deposit": null,
+    "total_net_profit": null,
+    "profit_factor": null,
+    "recovery_factor": null,
+    "sharpe_ratio": null,
+    "total_trades": null,
+    "balance_dd_max": null,
+    "equity_dd_max": null,
+    "short_trades_won_pct": null,
+    "long_trades_won_pct": null
+  },
+  "log_summary": {
+    "log_path": "/home/thomas/.mt5/drive_c/Program Files/MetaTrader 5/Tester/logs/20260921.log",
+    "init_ok": false,
+    "init_errors": [],
+    "macro_source_resolved": null,
+    "raw_tail": "KL\t0\t11:40:14.776\tTester\tCloud servers switched off\nRL\t2\t11:40:45.976\tTester\tnot synchronized with trade server\nQK\t0\t11:40:45.983\tTester\t\"fx_strategies\\XauX10.ex5\" X64\nDS\t0\t11:52:40.215\tCore 01\tagent process started on 127.0.0.1:3001\nCD\t0\t11:52:40.215\tCore 01\tconnecting to 127.0.0.1:3001\nFS\t0\t11:52:40.682\tCore 01\tconnected\nLK\t0\t11:52:40.685\tCore 01\tauthorized (agent build 6182)\nJN\t0\t11:52:40.687\tTester\tXAUUSD.c,M5 (SquaredFinancialSC-MT5 Demo): testing of Experts\\fx_strategies\\XauX10.ex5 from 2024.01.01 00:00 to 2024.01.31 00:00"
+  }
+}

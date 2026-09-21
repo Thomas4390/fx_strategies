@@ -609,6 +609,164 @@ def build_reference(
 
 
 # ---------------------------------------------------------------------------
+# Stratégie 2 « XAUUSD niveaux x10 » — ce que le rapport générique ne sait pas
+# ---------------------------------------------------------------------------
+#
+# Le reste de ce fichier a été écrit pour la stratégie 1, dont les sleeves sont
+# des familles de signaux et dont le critère de décision est un CAGR. La
+# stratégie 2 se juge en **R** (§13 de `docs/specs/xau_x10_spec.md`), et le R
+# d'un trade n'est pas dans le CSV des deals : il faut le stop, qui vit dans la
+# trace événementielle. D'où ce bloc, activé par `--x10-trace` et par lui seul —
+# sans cet argument, le JSON produit est exactement celui de la stratégie 1.
+
+
+def x10_block(
+    deals: pd.DataFrame,
+    trace_path: Path,
+    log_path: Path | None = None,
+    dump_path: Path | None = None,
+    py_trades_path: Path | None = None,
+) -> dict[str, Any]:
+    """Trades, espérance en R, profit factor et ventilations de la stratégie 2.
+
+    ``R réalisé = profit net du trade / risque engagé``, le risque engagé étant
+    ``|prix d'entrée − stop| × volume × 100`` avec le stop lu dans la trace, à
+    l'``ENTRY`` correspondante. Ce n'est pas ``r_est`` : celui-ci ignore
+    l'arrondi des lots au pas de 0,01, qui déplace le risque réellement porté de
+    quelques pour cent.
+
+    La reconstruction des positions est déléguée à
+    ``scripts/reconcile_x10_events.py`` : une seule définition du R réalisé dans
+    le dépôt, sinon les deux JSON publieraient deux chiffres différents sous le
+    même nom.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from reconcile_x10_events import (  # noqa: PLC0415
+        expectancy_table,
+        load_mt5_trace,
+        mt5_positions,
+        read_order_failures,
+    )
+
+    trace = load_mt5_trace(trace_path)
+    # ``load_deals`` rend une horloge naïve — la stratégie 1 n'a jamais eu deux
+    # fuseaux à rapprocher. La trace, elle, est explicitement UTC : on localise
+    # ici plutôt que de changer ``load_deals``, que la stratégie 1 consomme.
+    deals = deals.copy()
+    if deals["time_utc"].dt.tz is None:
+        deals["time_utc"] = deals["time_utc"].dt.tz_localize("UTC")
+    positions = mt5_positions(trace, deals)
+    r = positions["r_realised"].to_numpy(dtype=float)
+    finite = r[pd.notna(r)]
+    gains, losses = finite[finite > 0].sum(), -finite[finite <= 0].sum()
+
+    by_year = positions.assign(year=positions["ts_decision"].dt.year)
+    block: dict[str, Any] = {
+        "n_positions": int(len(positions)),
+        "expectancy_r": float(finite.mean()) if len(finite) else float("nan"),
+        "profit_factor_r": float(gains / losses) if losses > 0 else None,
+        "win_rate": float((finite > 0).mean()) if len(finite) else float("nan"),
+        "net_profit_usd": float(positions["net"].sum()),
+        "risk_amount_usd": {
+            "median": float(positions["risk_amount"].median()),
+            "mean": float(positions["risk_amount"].mean()),
+        },
+        "by_year": expectancy_table(by_year, "year"),
+        "by_scenario": expectancy_table(positions, "scenario_name"),
+        "by_exit_reason": expectancy_table(positions, "exit_reason_name"),
+        "net_usd_by_year": {
+            str(year): float(chunk["net"].sum())
+            for year, chunk in by_year.groupby("year")
+        },
+        "net_usd_by_scenario": {
+            str(name): float(chunk["net"].sum())
+            for name, chunk in positions.groupby("scenario_name")
+        },
+        "net_usd_by_exit_reason": {
+            str(name): float(chunk["net"].sum())
+            for name, chunk in positions.groupby("exit_reason_name")
+        },
+        "controls": {
+            "trace_fill_px_vs_deal_price_max_abs": positions.attrs[
+                "price_gap_trace_vs_deals"
+            ],
+            "scenario_magic_mismatches": positions.attrs["scenario_magic_mismatches"],
+            "fill_lag_minutes": positions.attrs["fill_lag_minutes"],
+        },
+        "order_failures": read_order_failures(log_path),
+    }
+
+    if dump_path is not None and dump_path.exists():
+        dump = pd.read_parquet(dump_path)
+        spread = dump["spread_points"].to_numpy(dtype=float) * 0.001
+        block["spread_usd"] = {
+            "source": "mt5_dump",
+            "median": float(pd.Series(spread).median()),
+            "p75": float(pd.Series(spread).quantile(0.75)),
+            "p95": float(pd.Series(spread).quantile(0.95)),
+            "n_bars_m1": int(len(spread)),
+        }
+
+    if py_trades_path is not None and py_trades_path.exists():
+        py = pd.read_csv(py_trades_path)
+        py["ts_decision_utc"] = pd.to_datetime(py["ts_decision_utc"], utc=True)
+        lo, hi = positions["ts_decision"].min(), positions["ts_decision"].max()
+        same = py[(py["ts_decision_utc"] >= lo) & (py["ts_decision_utc"] <= hi)]
+        py_r = (
+            (same["equity_after"] - same["equity_before"]) / same["risk_amount"]
+        ).to_numpy(dtype=float)
+        block["python_same_window"] = {
+            "source": str(py_trades_path),
+            "window_utc": [str(lo), str(hi)],
+            "trades": int(len(same)),
+            "expectancy_r": float(py_r.mean()) if len(py_r) else float("nan"),
+            "profit_factor_r": (
+                float(py_r[py_r > 0].sum() / -py_r[py_r <= 0].sum())
+                if (py_r <= 0).any()
+                else None
+            ),
+        }
+    return block
+
+
+def build_x10_summary(reference: dict[str, Any], x10: dict[str, Any]) -> dict[str, Any]:
+    """Le bloc racine stable du critère 8 de la table de décision.
+
+    Le critère est double et il faut les deux moitiés : l'espérance MT5 doit
+    être **positive**, et elle doit avoir le **même signe** que celle de la
+    campagne Python sur la même fenêtre. Un moteur qui perdrait pour d'autres
+    raisons que la stratégie donnerait un signe opposé, et c'est cela que la
+    seconde moitié attrape.
+    """
+    head = reference["headline"]
+    deposit = reference["run"]["initial_deposit"]
+    same_window = x10.get("python_same_window") or {}
+    mt5_expectancy = x10["expectancy_r"]
+    py_expectancy = same_window.get("expectancy_r")
+    same_sign = (
+        None
+        if py_expectancy is None or not pd.notna(py_expectancy)
+        else bool((mt5_expectancy >= 0) == (py_expectancy >= 0))
+    )
+    return {
+        "mt5_trades": x10["n_positions"],
+        "mt5_expectancy_r": mt5_expectancy,
+        "mt5_profit_factor": head.get("profit_factor"),
+        "mt5_net_return_pct": (
+            100.0 * head["total_net_profit"] / deposit if deposit else None
+        ),
+        "mt5_max_equity_dd_pct": head["drawdowns"]["equity_max_money_mt5_pct"],
+        "mt5_spread_median_usd": (x10.get("spread_usd") or {}).get("median"),
+        "mt5_order_failures": (x10["order_failures"] or {}).get("n_entry_failures"),
+        "py_same_window_trades": same_window.get("trades"),
+        "py_same_window_expectancy_r": py_expectancy,
+        "same_sign": same_sign,
+        # §1 de la table de décision : « espérance ≥ 0 ET même signe que Python ».
+        "criterion_8_pass": bool(mt5_expectancy >= 0 and bool(same_sign)),
+    }
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -661,6 +819,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run", type=Path, default=None,
                         help="JSON reports/mt5/run_*.json d'où lire le chemin du HTML")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    # Stratégie 2 : sans --x10-trace, rien de ce qui suit n'est lu et le JSON
+    # reste strictement celui de la stratégie 1.
+    parser.add_argument("--x10-trace", type=Path, default=None,
+                        help="trace §13 de l'EA XauX10 ; active le bloc x10 et le "
+                             "bloc racine `summary` du critère 8")
+    parser.add_argument("--x10-dump", type=Path, default=None,
+                        help="parquet M1 du dump broker, pour le spread mesuré")
+    parser.add_argument("--x10-log", type=Path, default=None,
+                        help="log de l'agent du tester, pour les ordres refusés")
+    parser.add_argument("--x10-py-trades", type=Path, default=None,
+                        help="registre de trades de la campagne Python, pour le "
+                             "second membre du critère 8")
     return parser.parse_args()
 
 
@@ -711,8 +881,32 @@ def main() -> int:
         )
         return 2
 
+    if args.x10_trace is not None:
+        x10 = x10_block(
+            deals, args.x10_trace, args.x10_log, args.x10_dump, args.x10_py_trades
+        )
+        reference["x10"] = x10
+        reference["summary"] = build_x10_summary(reference, x10)
+        reference["provenance"]["x10_trace"] = _artifact_fingerprint(args.x10_trace)
+        reference["provenance"]["x10_dump"] = _artifact_fingerprint(args.x10_dump)
+
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(reference, indent=2, ensure_ascii=False))
+
+    if "summary" in reference:
+        summary = reference["summary"]
+        print(
+            f"\n  x10 : {summary['mt5_trades']} trades  "
+            f"espérance {summary['mt5_expectancy_r']:+.4f} R  "
+            f"PF {summary['mt5_profit_factor']}  "
+            f"rendement net {summary['mt5_net_return_pct']:+.2f} %  "
+            f"repli d'équité {summary['mt5_max_equity_dd_pct']:.2f} %"
+        )
+        print(
+            f"        Python même fenêtre : {summary['py_same_window_trades']} trades  "
+            f"espérance {summary['py_same_window_expectancy_r']:+.4f} R  "
+            f"→ critère 8 {'GO' if summary['criterion_8_pass'] else 'ÉCHEC'}"
+        )
 
     head = reference["headline"]
     print(

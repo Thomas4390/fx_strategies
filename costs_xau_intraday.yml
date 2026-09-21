@@ -1,0 +1,703 @@
+# Généré par scripts/build_xau_intraday_costs.py — ne pas éditer à la main.
+# Spread XAUUSD mesuré sur le dump M1 du run de référence MT5 (§12).
+# Sensibilité publiée, jamais un critère de sélection (table de décision §1.1).
+symbol: XAUUSD
+unit: USD par once, fourchette complète (pas la demi-fourchette)
+point: 0.001
+timezone: America/New_York
+measured_window_utc:
+- '2022-11-04 00:00:00+00:00'
+- '2025-12-30 23:58:00+00:00'
+overall:
+  median: 0.25
+  p75: 0.3
+  p95: 0.38
+  n_bars: 1111881
+catalog_snapshot_usd: 0.29
+by_year:
+  '2022':
+    source: mt5_dump
+    partial_year: true
+    n_bars: 54521
+    price_median_usd: 1775.93
+    hours:
+      '0':
+        median: 0.3
+        p75: 0.34
+        n_bars: 2400
+      '1':
+        median: 0.3
+        p75: 0.35000000000000003
+        n_bars: 2400
+      '2':
+        median: 0.26
+        p75: 0.28
+        n_bars: 2400
+      '3':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '4':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '5':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '6':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '7':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '8':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '9':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2399
+      '10':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '11':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2400
+      '12':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2399
+      '13':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2385
+      '14':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2306
+      '15':
+        median: 0.26
+        p75: 0.26
+        n_bars: 2280
+      '16':
+        median: 0.28
+        p75: 0.34
+        n_bars: 2199
+      '18':
+        median: 0.37
+        p75: 0.42
+        n_bars: 2213
+      '19':
+        median: 0.34
+        p75: 0.39
+        n_bars: 2340
+      '20':
+        median: 0.31
+        p75: 0.35000000000000003
+        n_bars: 2400
+      '21':
+        median: 0.31
+        p75: 0.35000000000000003
+        n_bars: 2400
+      '22':
+        median: 0.32
+        p75: 0.36
+        n_bars: 2400
+      '23':
+        median: 0.31
+        p75: 0.35000000000000003
+        n_bars: 2400
+  '2023':
+    source: mt5_dump
+    partial_year: false
+    n_bars: 352237
+    price_median_usd: 1945.0
+    hours:
+      '0':
+        median: 0.33
+        p75: 0.37
+        n_bars: 15420
+      '1':
+        median: 0.33
+        p75: 0.37
+        n_bars: 15420
+      '2':
+        median: 0.27
+        p75: 0.3
+        n_bars: 15403
+      '3':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15415
+      '4':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15405
+      '5':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15403
+      '6':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15400
+      '7':
+        median: 0.26
+        p75: 0.28
+        n_bars: 15411
+      '8':
+        median: 0.26
+        p75: 0.277
+        n_bars: 15416
+      '9':
+        median: 0.26
+        p75: 0.27
+        n_bars: 15392
+      '10':
+        median: 0.26
+        p75: 0.27
+        n_bars: 15379
+      '11':
+        median: 0.26
+        p75: 0.27
+        n_bars: 15420
+      '12':
+        median: 0.26
+        p75: 0.28
+        n_bars: 15420
+      '13':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15377
+      '14':
+        median: 0.26
+        p75: 0.29
+        n_bars: 15134
+      '15':
+        median: 0.26
+        p75: 0.29
+        n_bars: 14936
+      '16':
+        median: 0.33
+        p75: 0.36
+        n_bars: 14473
+      '18':
+        median: 0.37
+        p75: 0.43
+        n_bars: 14924
+      '19':
+        median: 0.34
+        p75: 0.39
+        n_bars: 15410
+      '20':
+        median: 0.33
+        p75: 0.37
+        n_bars: 15420
+      '21':
+        median: 0.32
+        p75: 0.37
+        n_bars: 15420
+      '22':
+        median: 0.33
+        p75: 0.37
+        n_bars: 15420
+      '23':
+        median: 0.34
+        p75: 0.38
+        n_bars: 15419
+  '2024':
+    source: mt5_dump
+    partial_year: false
+    n_bars: 354964
+    price_median_usd: 2380.77
+    hours:
+      '0':
+        median: 0.33
+        p75: 0.35000000000000003
+        n_bars: 15540
+      '1':
+        median: 0.33
+        p75: 0.35000000000000003
+        n_bars: 15540
+      '2':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15538
+      '3':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15540
+      '4':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15539
+      '5':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15526
+      '6':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15538
+      '7':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15539
+      '8':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15540
+      '9':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15532
+      '10':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15538
+      '11':
+        median: 0.25
+        p75: 0.25
+        n_bars: 15540
+      '12':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15539
+      '13':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15515
+      '14':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15256
+      '15':
+        median: 0.25
+        p75: 0.26
+        n_bars: 15000
+      '16':
+        median: 0.26
+        p75: 0.3
+        n_bars: 14543
+      '18':
+        median: 0.35000000000000003
+        p75: 0.37
+        n_bars: 14981
+      '19':
+        median: 0.34
+        p75: 0.36
+        n_bars: 15522
+      '20':
+        median: 0.32
+        p75: 0.35000000000000003
+        n_bars: 15540
+      '21':
+        median: 0.32
+        p75: 0.35000000000000003
+        n_bars: 15540
+      '22':
+        median: 0.32
+        p75: 0.35000000000000003
+        n_bars: 15540
+      '23':
+        median: 0.33
+        p75: 0.35000000000000003
+        n_bars: 15538
+  '2025':
+    source: mt5_dump
+    partial_year: false
+    n_bars: 350159
+    price_median_usd: 3343.655
+    hours:
+      '0':
+        median: 0.18
+        p75: 0.23
+        n_bars: 15356
+      '1':
+        median: 0.18
+        p75: 0.23
+        n_bars: 15361
+      '2':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15394
+      '3':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15283
+      '4':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15332
+      '5':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15415
+      '6':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15419
+      '7':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15397
+      '8':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15386
+      '9':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15357
+      '10':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15364
+      '11':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15419
+      '12':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15405
+      '13':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15299
+      '14':
+        median: 0.16
+        p75: 0.18
+        n_bars: 15082
+      '15':
+        median: 0.16
+        p75: 0.18
+        n_bars: 14849
+      '16':
+        median: 0.16
+        p75: 0.18
+        n_bars: 13385
+      '18':
+        median: 0.19
+        p75: 0.25
+        n_bars: 14865
+      '19':
+        median: 0.15
+        p75: 0.24
+        n_bars: 15357
+      '20':
+        median: 0.15
+        p75: 0.24
+        n_bars: 15354
+      '21':
+        median: 0.18
+        p75: 0.24
+        n_bars: 15360
+      '22':
+        median: 0.18
+        p75: 0.23
+        n_bars: 15360
+      '23':
+        median: 0.18
+        p75: 0.23
+        n_bars: 15360
+  '2019':
+    source: extrapolated
+    extrapolated_from: 2023
+    price_median_usd: 1406.23775
+    scale: 0.7230014138817481
+    hours:
+      '0':
+        median: 0.23859
+        p75: 0.267511
+        n_bars: 0
+      '1':
+        median: 0.23859
+        p75: 0.267511
+        n_bars: 0
+      '2':
+        median: 0.19521
+        p75: 0.2169
+        n_bars: 0
+      '3':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '4':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '5':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '6':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '7':
+        median: 0.18798
+        p75: 0.20244
+        n_bars: 0
+      '8':
+        median: 0.18798
+        p75: 0.200271
+        n_bars: 0
+      '9':
+        median: 0.18798
+        p75: 0.19521
+        n_bars: 0
+      '10':
+        median: 0.18798
+        p75: 0.19521
+        n_bars: 0
+      '11':
+        median: 0.18798
+        p75: 0.19521
+        n_bars: 0
+      '12':
+        median: 0.18798
+        p75: 0.20244
+        n_bars: 0
+      '13':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '14':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '15':
+        median: 0.18798
+        p75: 0.20967
+        n_bars: 0
+      '16':
+        median: 0.23859
+        p75: 0.260281
+        n_bars: 0
+      '18':
+        median: 0.267511
+        p75: 0.310891
+        n_bars: 0
+      '19':
+        median: 0.24582
+        p75: 0.281971
+        n_bars: 0
+      '20':
+        median: 0.23859
+        p75: 0.267511
+        n_bars: 0
+      '21':
+        median: 0.23136
+        p75: 0.267511
+        n_bars: 0
+      '22':
+        median: 0.23859
+        p75: 0.267511
+        n_bars: 0
+      '23':
+        median: 0.24582
+        p75: 0.274741
+        n_bars: 0
+  '2020':
+    source: extrapolated
+    extrapolated_from: 2023
+    price_median_usd: 1774.675
+    scale: 0.9124293059125964
+    hours:
+      '0':
+        median: 0.301102
+        p75: 0.337599
+        n_bars: 0
+      '1':
+        median: 0.301102
+        p75: 0.337599
+        n_bars: 0
+      '2':
+        median: 0.246356
+        p75: 0.273729
+        n_bars: 0
+      '3':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '4':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '5':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '6':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '7':
+        median: 0.237232
+        p75: 0.25548
+        n_bars: 0
+      '8':
+        median: 0.237232
+        p75: 0.252743
+        n_bars: 0
+      '9':
+        median: 0.237232
+        p75: 0.246356
+        n_bars: 0
+      '10':
+        median: 0.237232
+        p75: 0.246356
+        n_bars: 0
+      '11':
+        median: 0.237232
+        p75: 0.246356
+        n_bars: 0
+      '12':
+        median: 0.237232
+        p75: 0.25548
+        n_bars: 0
+      '13':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '14':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '15':
+        median: 0.237232
+        p75: 0.264604
+        n_bars: 0
+      '16':
+        median: 0.301102
+        p75: 0.328475
+        n_bars: 0
+      '18':
+        median: 0.337599
+        p75: 0.392345
+        n_bars: 0
+      '19':
+        median: 0.310226
+        p75: 0.355847
+        n_bars: 0
+      '20':
+        median: 0.301102
+        p75: 0.337599
+        n_bars: 0
+      '21':
+        median: 0.291977
+        p75: 0.337599
+        n_bars: 0
+      '22':
+        median: 0.301102
+        p75: 0.337599
+        n_bars: 0
+      '23':
+        median: 0.310226
+        p75: 0.346723
+        n_bars: 0
+  '2021':
+    source: extrapolated
+    extrapolated_from: 2023
+    price_median_usd: 1793.895
+    scale: 0.9223110539845758
+    hours:
+      '0':
+        median: 0.304363
+        p75: 0.341255
+        n_bars: 0
+      '1':
+        median: 0.304363
+        p75: 0.341255
+        n_bars: 0
+      '2':
+        median: 0.249024
+        p75: 0.276693
+        n_bars: 0
+      '3':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '4':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '5':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '6':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '7':
+        median: 0.239801
+        p75: 0.258247
+        n_bars: 0
+      '8':
+        median: 0.239801
+        p75: 0.25548
+        n_bars: 0
+      '9':
+        median: 0.239801
+        p75: 0.249024
+        n_bars: 0
+      '10':
+        median: 0.239801
+        p75: 0.249024
+        n_bars: 0
+      '11':
+        median: 0.239801
+        p75: 0.249024
+        n_bars: 0
+      '12':
+        median: 0.239801
+        p75: 0.258247
+        n_bars: 0
+      '13':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '14':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '15':
+        median: 0.239801
+        p75: 0.26747
+        n_bars: 0
+      '16':
+        median: 0.304363
+        p75: 0.332032
+        n_bars: 0
+      '18':
+        median: 0.341255
+        p75: 0.396594
+        n_bars: 0
+      '19':
+        median: 0.313586
+        p75: 0.359701
+        n_bars: 0
+      '20':
+        median: 0.304363
+        p75: 0.341255
+        n_bars: 0
+      '21':
+        median: 0.29514
+        p75: 0.341255
+        n_bars: 0
+      '22':
+        median: 0.304363
+        p75: 0.341255
+        n_bars: 0
+      '23':
+        median: 0.313586
+        p75: 0.350478
+        n_bars: 0
