@@ -1134,10 +1134,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="ne pas rejouer la référence sur le bid brut (poste « signaux bid » non mesuré)",
     )
-    # Variante « index redaté » : la référence rejouée avec l'index du parquet
-    # décalé, pour tester si la convention de datation des minutes explique
-    # l'écart d'appariement avec QC.
-    parser.add_argument("--py-stamp-shift-min", type=int, default=None)
+    # Rejeu de la référence sur le parquet de campagne : c'est cette variante
+    # qui porte le bloc `summary`, les `--py-trades` restant des comparaisons.
+    parser.add_argument(
+        "--py-replay",
+        action="store_true",
+        help="rejouer la référence sur --py-parquet et en faire la variante primaire",
+    )
     parser.add_argument(
         "--py-parquet", type=Path, default=_REPO / "data/XAU-USD_minute_qc.parquet"
     )
@@ -1147,10 +1150,8 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--py-replay-out",
         type=Path,
-        default=_REPO / "reports/qc_x10/py_trades_2024_stamp_shift.csv",
+        default=_REPO / "reports/qc_x10/py_trades_2024_v2.csv",
     )
-    parser.add_argument("--campaign-start", default=None)
-    parser.add_argument("--campaign-end", default=None)
     parser.add_argument("--tol-bars", type=int, default=1)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -1158,8 +1159,8 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         parser.error("--qc-orders est requis hors branche MT5")
     if args.mt5_trace is not None and (args.mt5_deals is None or args.mt5_dump is None):
         parser.error("la branche MT5 exige --mt5-deals et --mt5-dump")
-    if args.mt5_trace is None and not args.py_trades:
-        parser.error("--py-trades est requis hors branche MT5")
+    if args.mt5_trace is None and not args.py_trades and not args.py_replay:
+        parser.error("--py-trades ou --py-replay est requis hors branche MT5")
     return args
 
 
@@ -1594,82 +1595,44 @@ def build_summary(
     }
 
 
-STAMP_SHIFT_VARIANT = "stamp_shift_minus_1min"
-
-
-def stamp_shift_sections(
-    args: argparse.Namespace, qc: QcContext
-) -> tuple[dict[str, Any], dict[str, Any]] | None:
-    """La variante « index redaté » et son bloc racine, ou `None` si non demandée.
-
-    Elle s'ajoute aux variantes existantes sans rien leur prendre : les blocs
-    `summary` et `variants` déjà publiés restent mot pour mot ce qu'ils étaient,
-    et le nouveau chiffre vit sous `summary_stamp_shift`. Une réconciliation qui
-    réécrirait ses propres chiffres antérieurs ne serait plus une mesure.
-    """
-    if args.py_stamp_shift_min is None:
-        return None
-
-    registry = replay_reference_on_parquet(
-        args.py_parquet,
-        args.py_replay_start,
-        args.py_replay_end,
-        stamp_shift_min=args.py_stamp_shift_min,
-        spread=args.py_replay_spread,
-    )
-    args.py_replay_out.parent.mkdir(parents=True, exist_ok=True)
-    registry.to_csv(args.py_replay_out, index=False)
-    variant = build_variant(args.py_replay_out, qc, args.tol_bars)
-
-    campaign: dict[str, Any] = {"measured": False, "why": "--campaign-start/-end absents"}
-    if args.campaign_start and args.campaign_end:
-        campaign = campaign_counts(
-            replay_reference_on_parquet(
-                args.py_parquet,
-                args.campaign_start,
-                args.campaign_end,
-                stamp_shift_min=args.py_stamp_shift_min,
-                spread=args.py_replay_spread,
-            )
-        )
-        campaign["measured"] = True
-        campaign["window"] = [args.campaign_start, args.campaign_end]
-
-    match = variant["rung3_4_entry_matching"]
-    rung2 = variant["rung2_bars"]
-    summary = {
-        "stamp_shift_min": args.py_stamp_shift_min,
-        "py_replay": str(args.py_replay_out),
-        "match_rate_py_to_qc": match["match_rate_py"],
-        "match_rate_qc_to_py": match["match_rate_qc"],
-        "decision_close_abs_diff_median_usd": (
-            rung2.get("close", {}).get("abs", {}).get("median")
-        ),
-        "atr_ratio_median": rung2.get("atr", {}).get("ratio_qc_over_py", {}).get("median"),
-        "campaign_trades_shifted": campaign.get("trades"),
-        "campaign_expectancy_r_shifted": campaign.get("expectancy_r"),
-        "campaign_profit_factor_shifted": campaign.get("profit_factor"),
-    }
-    variant["campaign_shifted"] = campaign
-    return variant, summary
-
-
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     qc = load_qc(args.qc_orders, args.qc_stats)
-    variants = {p.stem: build_variant(p, qc, args.tol_bars) for p in args.py_trades}
-    health = health_check(qc)
-    primary = variants[args.py_trades[0].stem]
 
-    shifted = stamp_shift_sections(args, qc)
-    stamp_summary: dict[str, Any] | None = None
-    if shifted is not None:
-        variants[STAMP_SHIFT_VARIANT], stamp_summary = shifted
+    # La variante rejouée par `--py-replay` est la référence **corrigée** : elle
+    # passe en tête et c'est donc elle qui porte le bloc `summary`. Les registres
+    # passés par `--py-trades` restent des variantes nommées, et le `summary`
+    # qu'aurait produit le premier d'entre eux est conservé sous
+    # `summary_v1_close_stamped` : un JSON de réconciliation doit pouvoir dire ce
+    # que la correction a changé, pas seulement où elle mène.
+    variants: dict[str, Any] = {}
+    replay_name: str | None = None
+    if args.py_replay:
+        registry = replay_reference_on_parquet(
+            args.py_parquet,
+            args.py_replay_start,
+            args.py_replay_end,
+            spread=args.py_replay_spread,
+        )
+        args.py_replay_out.parent.mkdir(parents=True, exist_ok=True)
+        registry.to_csv(args.py_replay_out, index=False)
+        replay_name = args.py_replay_out.stem
+        variants[replay_name] = build_variant(args.py_replay_out, qc, args.tol_bars)
+
+    variants.update({p.stem: build_variant(p, qc, args.tol_bars) for p in args.py_trades})
+    health = health_check(qc)
+    primary_name = replay_name or args.py_trades[0].stem
+    primary = variants[primary_name]
+
+    legacy: dict[str, Any] = {}
+    if replay_name is not None and args.py_trades:
+        legacy["summary_v1_close_stamped"] = build_summary(
+            qc, variants[args.py_trades[0].stem], health["healthy"]
+        )
 
     matched_pnl = sum(t.pnl for t in qc.ledger.trades if t.closed)
-    report_extra = {"summary_stamp_shift": stamp_summary} if stamp_summary else {}
     return {
         "summary": build_summary(qc, primary, health["healthy"]),
-        **report_extra,
+        **legacy,
         "by_year": primary["by_year"],
         "health": health,
         "meta": {
@@ -1679,6 +1642,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "qc_parameters": qc.stats.get("parameterSet"),
             "qc_statistics": qc.stats.get("statistics"),
             "tol_bars": args.tol_bars,
+            "py_primary": primary_name,
+            "data_convention": "bar_open (parquet close-stamped, re-dated −1 min)",
             "py_variants": [str(p) for p in args.py_trades],
             "mt5": "en attente — aucune trace MT5 fournie",
         },
@@ -2093,6 +2058,7 @@ def replay_reference_on_dump(
     sys.path.insert(0, str(_REPO / "src"))
     from framework.x10_engine import TRADE_COLUMNS, run_engine  # noqa: PLC0415
     from strategies.xau_x10 import (  # noqa: PLC0415
+        SOURCE_STAMP_OPEN,
         X10Indicator,
         _events_frame,
         _trades_frame,
@@ -2101,7 +2067,10 @@ def replay_reference_on_dump(
     )
 
     m1 = mt5_dump_to_m1(dump, price=price)
-    inputs = prepare_inputs(m1)
+    # Le dump du tester est déjà daté à l'ouverture (`iTime`) : le redater comme
+    # le parquet de campagne décalerait la grille M5 d'une minute dans l'autre
+    # sens, ce qui casserait précisément ce que C1 mesure.
+    inputs = prepare_inputs(m1, source_stamp=SOURCE_STAMP_OPEN)
     kwargs = inputs.kernel_kwargs(0.0)
     kwargs["spread"] = mt5_spread_per_m5(dump, inputs)
     events, trades = run_engine(
@@ -2146,36 +2115,26 @@ def replay_reference_on_parquet(
     start: str,
     end: str,
     *,
-    stamp_shift_min: int = 0,
     spread: float = 0.29,
     init_cash: float = 10_000.0,
     z: float = 1.0,
     a_min: float = 0.2,
     k_s: float = 1.0,
 ) -> pd.DataFrame:
-    """Rejouer la référence sur un parquet M1, éventuellement **redaté**.
+    """Rejouer la référence sur le parquet de campagne, fenêtre `[start, end]`.
 
-    `stamp_shift_min` déplace l'index du parquet avant toute agrégation. Il
-    existe pour une raison précise et une seule : LEAN date une barre M1 de sa
-    **clôture** (`end_time`), le portage QC et MT5 la rangent par son **début**,
-    et la référence traite l'index du parquet comme un début. Avec
-    `stamp_shift_min = -1`, l'index redevient un début de barre et la grille M5
-    de la référence couvre `[t, t+5 min)` comme celle des deux autres moteurs,
-    au lieu de `[t−1 min, t+4 min)`.
-
-    Le DXY subit **le même décalage** : `data/DXY4_h1.parquet` est agrégé depuis
-    les parquets FX, qui portent la même convention de datation que l'or (vérifié
-    par corrélation contre l'export MT5 d'EURUSD, § « convention de datation »
-    de la note de réconciliation).
+    La redatation des minutes vit désormais dans `prepare_inputs`
+    (`SOURCE_STAMP = "close"`, `strategies.xau_x10._to_bar_open`) : ce rejeu est
+    donc celui de la référence **corrigée**, sans rien à décaler ici. Le DXY est
+    lu dans `data/DXY4_h1.parquet`, que `scripts/build_dxy_synthetic.py` écrit
+    déjà daté à l'ouverture.
 
     Rendu : un registre de trades au format exact de `load_py_trades`, prêt à
     être écrit sur disque et relu par `build_variant`.
     """
     sys.path.insert(0, str(_REPO / "src"))
     from framework.x10_engine import TRADE_COLUMNS, run_engine  # noqa: PLC0415
-    from framework.x10_context import to_session_clock  # noqa: PLC0415
     from strategies.xau_x10 import (  # noqa: PLC0415
-        DXY4_H1_PATH,
         X10Indicator,
         _events_frame,
         _trades_frame,
@@ -2184,21 +2143,9 @@ def replay_reference_on_parquet(
     from utils import load_gold_data  # noqa: PLC0415
 
     raw, _ = load_gold_data(str(parquet))
-    shift = pd.Timedelta(minutes=stamp_shift_min)
-    raw = raw.copy()
-    raw.index = raw.index + shift
     raw = raw.loc[start:end]
 
-    dxy = None
-    if Path(DXY4_H1_PATH).exists():
-        frame = pd.read_parquet(DXY4_H1_PATH)
-        if "date" in frame.columns:
-            frame = frame.set_index("date")
-        series = frame["close"] if "close" in frame.columns else frame.iloc[:, 0]
-        series.index = to_session_clock(pd.DatetimeIndex(series.index)) + shift
-        dxy = series.sort_index().rename("dxy4")
-
-    inputs = prepare_inputs(raw, dxy=dxy)
+    inputs = prepare_inputs(raw)
     events, trades = run_engine(
         **inputs.kernel_kwargs(spread),
         z=z,

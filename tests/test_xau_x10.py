@@ -291,3 +291,102 @@ def test_a_splitter_built_on_frozen_bars_is_refused_at_construction():
     splitter = vbt.Splitter.from_purged_walkforward(daily, n_folds=5, n_test_folds=1)
     with pytest.raises(RuntimeError, match="frozen slice"):
         create_cv_pipeline(splitter)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Convention de datation des minutes (§1) — le parquet dit la CLÔTURE
+# ═══════════════════════════════════════════════════════════════════════
+#
+# `data/XAU-USD_minute_qc.parquet` vient de LEAN, qui date une barre M1 de son
+# `end_time`. MT5 et le portage QC rangent les minutes par leur DÉBUT. Sans
+# redatation, la grille M5 de la référence couvrait `[t−1 min, t+4 min)` quand
+# celle des deux autres moteurs couvre `[t, t+5 min)`, et l'appariement des
+# entrées plafonnait à 33 % au lieu de 98,7 %.
+#
+# Preuve, `docs/research/xau_x10_reconciliation.md` §11.6 bis : la clôture M5
+# publiée par QC vaut la ligne du parquet estampillée `bm + 5 min` sur
+# **316 tags sur 316**, au centime près.
+
+
+def labelled_m1(start: str = "2024-03-04 00:00", n: int = 900) -> pd.DataFrame:
+    """Un M1 dont chaque clôture identifie sa ligne sans ambiguïté."""
+    index = pd.date_range(start, periods=n, freq="1min", name="date")
+    close = 2000.0 + np.arange(n, dtype=float)
+    return pd.DataFrame(
+        {"open": close - 0.5, "high": close + 0.5, "low": close - 1.0, "close": close},
+        index=index,
+    )
+
+
+def test_a_minute_stamped_at_its_close_enters_the_bin_that_opened_before_it():
+    """Le parquet dit 10:05 → la minute couvre 10:04-10:05 → bin M5 **10:00**."""
+    inputs = prepare_inputs(labelled_m1(), dxy=None, dxy_path="/nonexistent")
+    owner = inputs.m5.index[
+        np.searchsorted(inputs.m5.index, pd.Timestamp("2024-03-04 10:04"), "right") - 1
+    ]
+    assert owner == pd.Timestamp("2024-03-04 10:00")
+
+    # Et la minute estampillée 10:00 couvre 09:59-10:00 : elle appartient au
+    # bin 09:55, pas au bin 10:00. C'est tout le défaut, en une ligne.
+    owner = inputs.m5.index[
+        np.searchsorted(inputs.m5.index, pd.Timestamp("2024-03-04 09:59"), "right") - 1
+    ]
+    assert owner == pd.Timestamp("2024-03-04 09:55")
+
+
+def test_the_m5_close_is_the_source_row_stamped_five_minutes_later():
+    """Non-régression : retirer la redatation fait échouer cette assertion.
+
+    Sans redatation, le bin 10:00 se fermerait sur la ligne estampillée 10:04.
+    Avec, il se ferme sur celle estampillée 10:05 — ce que publie QC.
+    """
+    source = labelled_m1()
+    inputs = prepare_inputs(source, dxy=None, dxy_path="/nonexistent")
+    bin_close = float(inputs.m5.loc[pd.Timestamp("2024-03-04 10:00"), "close"])
+    assert bin_close == pytest.approx(float(source.loc["2024-03-04 10:05", "close"]))
+    assert bin_close != pytest.approx(float(source.loc["2024-03-04 10:04", "close"]))
+
+
+def test_the_m5_open_is_the_source_row_stamped_one_minute_after_the_label():
+    source = labelled_m1()
+    inputs = prepare_inputs(source, dxy=None, dxy_path="/nonexistent")
+    assert float(inputs.m5.loc[pd.Timestamp("2024-03-04 10:00"), "open"]) == pytest.approx(
+        float(source.loc["2024-03-04 10:01", "open"])
+    )
+
+
+def test_a_source_already_stamped_at_the_bar_open_is_not_re_dated():
+    """Le dump MT5 date déjà à l'ouverture : le redater serait une erreur."""
+    source = labelled_m1()
+    inputs = prepare_inputs(
+        source, dxy=None, dxy_path="/nonexistent", source_stamp="open"
+    )
+    assert float(inputs.m5.loc[pd.Timestamp("2024-03-04 10:00"), "close"]) == pytest.approx(
+        float(source.loc["2024-03-04 10:04", "close"])
+    )
+    assert float(inputs.m5.loc[pd.Timestamp("2024-03-04 10:00"), "open"]) == pytest.approx(
+        float(source.loc["2024-03-04 10:00", "open"])
+    )
+
+
+def test_an_unknown_stamp_convention_is_refused():
+    with pytest.raises(ValueError, match="source_stamp"):
+        prepare_inputs(labelled_m1(), dxy=None, dxy_path="/nonexistent", source_stamp="middle")
+
+
+def test_the_m5_grid_sits_on_the_wall_clock_five_minute_boundaries():
+    """§2 : la grille M5 est sur l'horloge murale, minutes multiples de 5."""
+    inputs = prepare_inputs(labelled_m1(), dxy=None, dxy_path="/nonexistent")
+    assert set(np.unique(inputs.m5.index.minute % 5)) == {0}
+
+
+def test_the_trace_stamps_stay_the_bar_open_in_utc():
+    """`ts_decision` reste l'ouverture de la barre M5, vue en UTC (§13)."""
+    source = labelled_m1(n=60 * 24 * 12)
+    pf, ind = pipeline(source, inputs=prepare_inputs(source, dxy=None, dxy_path="/nonexistent"))
+    trace = emit_event_trace(ind)
+    stamps = pd.to_datetime(trace["ts_decision"], utc=True)
+    assert (stamps.dt.minute % 5 == 0).all()
+    naive = pd.DatetimeIndex(ind.events["ts_decision"])
+    expected = naive.tz_localize("America/New_York", ambiguous=True).tz_convert("UTC")
+    assert list(stamps) == list(expected)

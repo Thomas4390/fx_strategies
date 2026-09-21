@@ -12,14 +12,21 @@ the FX minute index being New York wall clock and the gold export being UTC.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from framework.x10_context import DXY4_CONSTANT, DXY4_WEIGHTS, dxy4
+from framework.x10_context import DXY4_CONSTANT, DXY4_WEIGHTS, dxy4, resample_ohlc
 from utils import GOLD_DATA_PATH, load_fx_data
+
+_SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from build_dxy_synthetic import to_bar_open  # noqa: E402
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EURUSD_PATH = _PROJECT_ROOT / "data" / "EUR-USD_minute.parquet"
@@ -158,3 +165,70 @@ def test_gold_minute_export_is_tz_aware_utc():
     head = pd.read_parquet(GOLD_PATH, columns=["close"]).head(10)
     assert head.index.tz is not None
     assert str(head.index.tz) == "UTC"
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Convention de datation des jambes FX (§1)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Les parquets FX datent une barre de sa CLÔTURE, comme celui de l'or. Preuve :
+# contre l'export MT5 d'EURUSD, daté à l'ouverture, la corrélation des
+# rendements minute vaut 0,991 au décalage +1 min et 0,07 partout ailleurs, sur
+# 61 175 minutes de recouvrement (`docs/research/xau_x10_reconciliation.md`
+# §11.6 bis). Sans redatation, les bins H1 du panier couvrent
+# `[h−1 min, h+59 min)` au lieu de `[h, h+60 min)`.
+
+
+def test_a_leg_is_restamped_by_the_instant_its_bar_opens():
+    index = pd.date_range("2024-06-03 10:00", periods=5, freq="1min", name="date")
+    frame = pd.DataFrame({"close": np.arange(5.0)}, index=index)
+    shifted = to_bar_open(frame)
+    assert list(shifted.index) == list(index - pd.Timedelta(minutes=1))
+    # Les valeurs ne bougent pas : seule l'étiquette change.
+    np.testing.assert_array_equal(shifted["close"].to_numpy(), frame["close"].to_numpy())
+
+
+def test_an_already_open_stamped_leg_is_left_alone():
+    index = pd.date_range("2024-06-03 10:00", periods=5, freq="1min", name="date")
+    frame = pd.DataFrame({"close": np.arange(5.0)}, index=index)
+    assert list(to_bar_open(frame, "open").index) == list(index)
+
+
+def test_an_unknown_leg_stamp_convention_is_refused():
+    frame = pd.DataFrame(
+        {"close": [1.0]}, index=pd.DatetimeIndex(["2024-06-03 10:00"], name="date")
+    )
+    with pytest.raises(ValueError, match="source_stamp"):
+        to_bar_open(frame, "middle")
+
+
+def test_restamping_moves_an_h1_bin_by_one_minute_of_content():
+    """Non-régression : retirer la redatation change la clôture du bin H1."""
+    index = pd.date_range("2024-06-03 10:00", periods=121, freq="1min", name="date")
+    frame = pd.DataFrame({"close": np.arange(121.0)}, index=index)
+    raw = resample_ohlc(frame.assign(open=frame["close"], high=frame["close"],
+                                     low=frame["close"]), "1h")["close"]
+    redated = to_bar_open(frame)
+    fixed = resample_ohlc(redated.assign(open=redated["close"], high=redated["close"],
+                                         low=redated["close"]), "1h")["close"]
+    # Le bin 11:00 se fermait sur la minute 11:59 ; il se ferme maintenant sur
+    # 12:00, c'est-à-dire la valeur suivante.
+    assert float(raw.loc["2024-06-03 11:00"]) == pytest.approx(119.0)
+    assert float(fixed.loc["2024-06-03 11:00"]) == pytest.approx(120.0)
+
+
+@pytest.mark.skipif(not EURUSD_PATH.exists(), reason="data/EUR-USD_minute.parquet absent")
+def test_the_weekly_reopen_stays_in_the_seventeen_oclock_hour_after_restamping():
+    """La reprise hebdomadaire passe de 17:04 à 17:03 : même heure, même séance.
+
+    Le test de fuseau au-dessus lit le fichier tel qu'il est écrit ; celui-ci
+    vérifie que la redatation ne fait pas basculer la reprise dans l'heure
+    précédente, ce qui déplacerait la frontière de séance de §2.
+    """
+    raw, _ = load_fx_data("data/EUR-USD_minute.parquet")
+    redated = to_bar_open(raw)
+    gaps = redated.index.to_series().diff()
+    reopen = redated.index[(gaps > pd.Timedelta(hours=24)).to_numpy()]
+    assert len(reopen) > 300
+    assert float(np.mean(reopen.hour == 17)) >= 0.99
+    assert float(np.mean(reopen.dayofweek == 6)) >= 0.95

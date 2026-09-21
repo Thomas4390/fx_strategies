@@ -2,9 +2,11 @@
   "strategy": "XAUUSD niveaux x10 (Apogée Invest, stratégie 2)",
   "phase": "campagne in-sample officielle",
   "date": "2026-09-21",
-  "git_head": "b0096acd428c5c7ee9c8b4d906b298a97e6e08da",
+  "git_head": "c249c404031a921cecae495a3c9bbc98fa27aca6",
   "spec": "docs/specs/xau_x10_spec.md",
   "decision_table_doc": "docs/research/xau_x10_decision_table.md",
+  "data_convention": "bar_open (parquet close-stamped, re-dated −1 min)",
+  "supersedes": "v1_close_stamped",
   "holdout": {
     "state": "LOCKED",
     "touched_by_this_phase": false,
@@ -17,7 +19,7 @@
     "start": "2019-01-01",
     "end": "2025-12-31",
     "n_m1_bars": 2503156,
-    "n_m5_bars": 502455,
+    "n_m5_bars": 502452,
     "n_sessions": 1824
   },
   "cost_model": {
@@ -85,32 +87,32 @@
     "retained_config": null,
     "n_passing_plateau": 0,
     "peak_config": "z0.5_a0.3_k1.5",
-    "peak_sharpe_net": -1.1775539409150295,
+    "peak_sharpe_net": -1.0089117608760043,
     "analysed_config": "z1_a0.2_k1",
     "analysed_is_a_selection": false,
-    "analysed_sharpe_net": -1.6606853901686005,
+    "analysed_sharpe_net": -1.941378472595146,
     "plateau_versus_peak": {
       "peak_config": "z0.5_a0.3_k1.5",
-      "peak_sharpe": -1.1775539409150295,
+      "peak_sharpe": -1.0089117608760043,
       "analysed_config": "z1_a0.2_k1",
-      "analysed_sharpe": -1.6606853901686005,
-      "sharpe_gap": -0.483131449253571
+      "analysed_sharpe": -1.941378472595146,
+      "sharpe_gap": -0.9324667117191416
     }
   },
   "headline_metrics": {
-    "sharpe_net_annualised_252": -1.6606853901686005,
-    "n_trades": 1723,
-    "expectancy_r": -0.16018528928042608,
-    "profit_factor": 0.7369067965330649,
-    "net_pnl_usd": -6258.136990833048,
-    "win_rate": 0.3116656993615786,
-    "max_drawdown": -0.6365918898510511
+    "sharpe_net_annualised_252": -1.941378472595146,
+    "n_trades": 1762,
+    "expectancy_r": -0.16785330640578566,
+    "profit_factor": 0.7278119668560723,
+    "net_pnl_usd": -6721.803892409014,
+    "win_rate": 0.3098751418842225,
+    "max_drawdown": -0.6799420267877803
   },
   "decision_table": {
     "criteria": {
       "trades_in_sample": {
         "label": "Trades in-sample 2019 → 2025-12-31",
-        "measured": 1723,
+        "measured": 1762,
         "threshold": ">= 300",
         "pass": true,
         "scenarios_with_enough_trades": [
@@ -124,8 +126,8 @@
       "expectancy_and_profit_factor": {
         "label": "Espérance nette / profit factor",
         "measured": {
-          "expectancy_r": -0.16018528928042608,
-          "profit_factor": 0.7369067965330649
+          "expectancy_r": -0.16785330640578566,
+          "profit_factor": 0.7278119668560723
         },
         "threshold": ">= +0.1 R / >= 1.15",
         "pass": false
@@ -139,16 +141,16 @@
       },
       "pbo": {
         "label": "PBO (CSCV, matrice 27 x jours)",
-        "measured": 0.41546231546231543,
+        "measured": 0.245998445998446,
         "threshold": "<= 0.35",
-        "pass": false
+        "pass": true
       },
       "plateau": {
         "label": "Plateau",
         "measured": {
           "share_neighbours_positive": 0.0,
-          "median_neighbour_sharpe": -1.6026125675422231,
-          "peak_sharpe": -1.1775539409150295,
+          "median_neighbour_sharpe": -1.7138674770867446,
+          "peak_sharpe": -1.0089117608760043,
           "n_passing_plateau": 0
         },
         "threshold": ">= 60% voisins à Sharpe > 0 ; médiane des voisins >= 0.5 x pic",
@@ -158,14 +160,14 @@
         "label": "Walk-forward annuel",
         "measured": {
           "share_positive_years": 0.0,
-          "max_year_share_of_net": 0.34817177855071213
+          "max_year_share_of_net": 0.2868095550479723
         },
         "threshold": ">= 60% d'années positives ; aucune année > 50% du net total",
         "pass": false
       },
       "spread_x1_5": {
         "label": "Spread x1,5",
-        "measured": -0.20116548160059064,
+        "measured": -0.207773043455577,
         "threshold": "espérance > 0",
         "pass": false
       },
@@ -185,13 +187,12 @@
       }
     },
     "n_criteria": 9,
-    "n_passing": 1,
+    "n_passing": 2,
     "failed": [
       "dsr",
       "expectancy_and_profit_factor",
       "mt5_model_1",
       "oos_2026",
-      "pbo",
       "plateau",
       "spread_x1_5",
       "walk_forward"
@@ -199,7 +200,6 @@
     "failed_with_an_interpretable_measure": [
       "dsr",
       "expectancy_and_profit_factor",
-      "pbo",
       "plateau",
       "spread_x1_5",
       "walk_forward"

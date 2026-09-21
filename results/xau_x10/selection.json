@@ -10,9 +10,9 @@
     "z": 0.5,
     "a_min": 0.3,
     "k_s": 1.5,
-    "sharpe_net": -1.1775539409150295
+    "sharpe_net": -1.0089117608760043
   },
-  "plateau_median_threshold": -0.5887769704575148,
+  "plateau_median_threshold": -0.5044558804380022,
   "n_passing_plateau": 0,
   "selected": null,
   "candidates": [
@@ -26,7 +26,7 @@
       "z": 0.5,
       "a_min": 0.1,
       "k_s": 0.75,
-      "sharpe_net": -1.8837919172558768,
+      "sharpe_net": -1.7998204977693075,
       "n_neighbours": 3,
       "neighbours": [
         "z0.5_a0.1_k1",
@@ -34,12 +34,12 @@
         "z1_a0.1_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.905464771832591,
-        -1.3444959262409255,
-        -1.735178808370773
+        -1.882900330862288,
+        -1.6149433482037516,
+        -1.7928420965295495
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.735178808370773,
+      "median_neighbour_sharpe": -1.7928420965295495,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -54,7 +54,7 @@
       "z": 0.5,
       "a_min": 0.1,
       "k_s": 1.0,
-      "sharpe_net": -1.905464771832591,
+      "sharpe_net": -1.882900330862288,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.1_k0.75",
@@ -63,13 +63,13 @@
         "z1_a0.1_k1"
       ],
       "neighbour_sharpes": [
-        -1.8837919172558768,
-        -1.8493092964962987,
-        -1.3808521710979909,
-        -1.8553070084359595
+        -1.7998204977693075,
+        -1.893756325347187,
+        -1.672857907750108,
+        -1.993951971295104
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8523081524661291,
+      "median_neighbour_sharpe": -1.8467884115582471,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -84,7 +84,7 @@
       "z": 0.5,
       "a_min": 0.1,
       "k_s": 1.5,
-      "sharpe_net": -1.8493092964962987,
+      "sharpe_net": -1.893756325347187,
       "n_neighbours": 3,
       "neighbours": [
         "z0.5_a0.1_k1",
@@ -92,12 +92,12 @@
         "z1_a0.1_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.905464771832591,
-        -1.3307915923148996,
-        -1.8606442689397236
+        -1.882900330862288,
+        -1.6541284215441974,
+        -1.817701151489134
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8606442689397236,
+      "median_neighbour_sharpe": -1.817701151489134,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -112,7 +112,7 @@
       "z": 0.5,
       "a_min": 0.2,
       "k_s": 0.75,
-      "sharpe_net": -1.3444959262409255,
+      "sharpe_net": -1.6149433482037516,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.1_k0.75",
@@ -121,13 +121,13 @@
         "z1_a0.2_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.8837919172558768,
-        -1.3808521710979909,
-        -1.2507670821029502,
-        -1.6073514152181752
+        -1.7998204977693075,
+        -1.672857907750108,
+        -1.031803329394502,
+        -1.7748656811884511
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.494101793158083,
+      "median_neighbour_sharpe": -1.7238617944692796,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -142,7 +142,7 @@
       "z": 0.5,
       "a_min": 0.2,
       "k_s": 1.0,
-      "sharpe_net": -1.3808521710979909,
+      "sharpe_net": -1.672857907750108,
       "n_neighbours": 5,
       "neighbours": [
         "z0.5_a0.1_k1",
@@ -152,14 +152,14 @@
         "z1_a0.2_k1"
       ],
       "neighbour_sharpes": [
-        -1.905464771832591,
-        -1.3444959262409255,
-        -1.3307915923148996,
-        -1.225516341633559,
-        -1.6606853901686005
+        -1.882900330862288,
+        -1.6149433482037516,
+        -1.6541284215441974,
+        -1.0870526984546462,
+        -1.941378472595146
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.3444959262409255,
+      "median_neighbour_sharpe": -1.6541284215441974,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -174,7 +174,7 @@
       "z": 0.5,
       "a_min": 0.2,
       "k_s": 1.5,
-      "sharpe_net": -1.3307915923148996,
+      "sharpe_net": -1.6541284215441974,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.1_k1.5",
@@ -183,13 +183,13 @@
         "z1_a0.2_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.8493092964962987,
-        -1.3808521710979909,
-        -1.1775539409150295,
-        -1.5978737198662711
+        -1.893756325347187,
+        -1.672857907750108,
+        -1.0089117608760043,
+        -1.7548770464233812
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.489362945482131,
+      "median_neighbour_sharpe": -1.7138674770867446,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -204,7 +204,7 @@
       "z": 0.5,
       "a_min": 0.3,
       "k_s": 0.75,
-      "sharpe_net": -1.2507670821029502,
+      "sharpe_net": -1.031803329394502,
       "n_neighbours": 3,
       "neighbours": [
         "z0.5_a0.2_k0.75",
@@ -212,12 +212,12 @@
         "z1_a0.3_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.3444959262409255,
-        -1.225516341633559,
-        -1.430746985479823
+        -1.6149433482037516,
+        -1.0870526984546462,
+        -1.4112591778922234
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.3444959262409255,
+      "median_neighbour_sharpe": -1.4112591778922234,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -232,7 +232,7 @@
       "z": 0.5,
       "a_min": 0.3,
       "k_s": 1.0,
-      "sharpe_net": -1.225516341633559,
+      "sharpe_net": -1.0870526984546462,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.2_k1",
@@ -241,13 +241,13 @@
         "z1_a0.3_k1"
       ],
       "neighbour_sharpes": [
-        -1.3808521710979909,
-        -1.2507670821029502,
-        -1.1775539409150295,
-        -1.4686667202842325
+        -1.672857907750108,
+        -1.031803329394502,
+        -1.0089117608760043,
+        -1.5879639705429245
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.3158096266004704,
+      "median_neighbour_sharpe": -1.3098836499687132,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -262,7 +262,7 @@
       "z": 0.5,
       "a_min": 0.3,
       "k_s": 1.5,
-      "sharpe_net": -1.1775539409150295,
+      "sharpe_net": -1.0089117608760043,
       "n_neighbours": 3,
       "neighbours": [
         "z0.5_a0.2_k1.5",
@@ -270,12 +270,12 @@
         "z1_a0.3_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.3307915923148996,
-        -1.225516341633559,
-        -1.3942762318044866
+        -1.6541284215441974,
+        -1.0870526984546462,
+        -1.409696862045442
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.3307915923148996,
+      "median_neighbour_sharpe": -1.409696862045442,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -290,7 +290,7 @@
       "z": 1.0,
       "a_min": 0.1,
       "k_s": 0.75,
-      "sharpe_net": -1.735178808370773,
+      "sharpe_net": -1.7928420965295495,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.1_k0.75",
@@ -299,13 +299,13 @@
         "z1.5_a0.1_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.8837919172558768,
-        -1.8553070084359595,
-        -1.6073514152181752,
-        -2.008873482868614
+        -1.7998204977693075,
+        -1.993951971295104,
+        -1.7748656811884511,
+        -1.220440580508348
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8695494628459182,
+      "median_neighbour_sharpe": -1.7873430894788793,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -320,7 +320,7 @@
       "z": 1.0,
       "a_min": 0.1,
       "k_s": 1.0,
-      "sharpe_net": -1.8553070084359595,
+      "sharpe_net": -1.993951971295104,
       "n_neighbours": 5,
       "neighbours": [
         "z0.5_a0.1_k1",
@@ -330,14 +330,14 @@
         "z1.5_a0.1_k1"
       ],
       "neighbour_sharpes": [
-        -1.905464771832591,
-        -1.735178808370773,
-        -1.8606442689397236,
-        -1.6606853901686005,
-        -2.2196715601023573
+        -1.882900330862288,
+        -1.7928420965295495,
+        -1.817701151489134,
+        -1.941378472595146,
+        -1.399271581959325
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8606442689397236,
+      "median_neighbour_sharpe": -1.817701151489134,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -352,7 +352,7 @@
       "z": 1.0,
       "a_min": 0.1,
       "k_s": 1.5,
-      "sharpe_net": -1.8606442689397236,
+      "sharpe_net": -1.817701151489134,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.1_k1.5",
@@ -361,13 +361,13 @@
         "z1.5_a0.1_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.8493092964962987,
-        -1.8553070084359595,
-        -1.5978737198662711,
-        -2.1963781757426117
+        -1.893756325347187,
+        -1.993951971295104,
+        -1.7548770464233812,
+        -1.350875085965579
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8523081524661291,
+      "median_neighbour_sharpe": -1.8243166858852842,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -382,7 +382,7 @@
       "z": 1.0,
       "a_min": 0.2,
       "k_s": 0.75,
-      "sharpe_net": -1.6073514152181752,
+      "sharpe_net": -1.7748656811884511,
       "n_neighbours": 5,
       "neighbours": [
         "z0.5_a0.2_k0.75",
@@ -392,14 +392,14 @@
         "z1.5_a0.2_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.3444959262409255,
-        -1.735178808370773,
-        -1.6606853901686005,
-        -1.430746985479823,
-        -1.5545099157620337
+        -1.6149433482037516,
+        -1.7928420965295495,
+        -1.941378472595146,
+        -1.4112591778922234,
+        -1.2432754020217682
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.5545099157620337,
+      "median_neighbour_sharpe": -1.6149433482037516,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -414,7 +414,7 @@
       "z": 1.0,
       "a_min": 0.2,
       "k_s": 1.0,
-      "sharpe_net": -1.6606853901686005,
+      "sharpe_net": -1.941378472595146,
       "n_neighbours": 6,
       "neighbours": [
         "z0.5_a0.2_k1",
@@ -425,15 +425,15 @@
         "z1.5_a0.2_k1"
       ],
       "neighbour_sharpes": [
-        -1.3808521710979909,
-        -1.8553070084359595,
-        -1.6073514152181752,
-        -1.5978737198662711,
-        -1.4686667202842325,
-        -1.7074814861459455
+        -1.672857907750108,
+        -1.993951971295104,
+        -1.7748656811884511,
+        -1.7548770464233812,
+        -1.5879639705429245,
+        -1.388262309629666
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6026125675422231,
+      "median_neighbour_sharpe": -1.7138674770867446,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -448,7 +448,7 @@
       "z": 1.0,
       "a_min": 0.2,
       "k_s": 1.5,
-      "sharpe_net": -1.5978737198662711,
+      "sharpe_net": -1.7548770464233812,
       "n_neighbours": 5,
       "neighbours": [
         "z0.5_a0.2_k1.5",
@@ -458,14 +458,14 @@
         "z1.5_a0.2_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.3307915923148996,
-        -1.8606442689397236,
-        -1.6606853901686005,
-        -1.3942762318044866,
-        -1.6688648899198404
+        -1.6541284215441974,
+        -1.817701151489134,
+        -1.941378472595146,
+        -1.409696862045442,
+        -1.297724504375626
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6606853901686005,
+      "median_neighbour_sharpe": -1.6541284215441974,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -480,7 +480,7 @@
       "z": 1.0,
       "a_min": 0.3,
       "k_s": 0.75,
-      "sharpe_net": -1.430746985479823,
+      "sharpe_net": -1.4112591778922234,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.3_k0.75",
@@ -489,13 +489,13 @@
         "z1.5_a0.3_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.2507670821029502,
-        -1.6073514152181752,
-        -1.4686667202842325,
-        -1.5379434021270963
+        -1.031803329394502,
+        -1.7748656811884511,
+        -1.5879639705429245,
+        -1.1858711377991669
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.5033050612056644,
+      "median_neighbour_sharpe": -1.3869175541710457,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -510,7 +510,7 @@
       "z": 1.0,
       "a_min": 0.3,
       "k_s": 1.0,
-      "sharpe_net": -1.4686667202842325,
+      "sharpe_net": -1.5879639705429245,
       "n_neighbours": 5,
       "neighbours": [
         "z0.5_a0.3_k1",
@@ -520,14 +520,14 @@
         "z1.5_a0.3_k1"
       ],
       "neighbour_sharpes": [
-        -1.225516341633559,
-        -1.6606853901686005,
-        -1.430746985479823,
-        -1.3942762318044866,
-        -1.6656641912150445
+        -1.0870526984546462,
+        -1.941378472595146,
+        -1.4112591778922234,
+        -1.409696862045442,
+        -1.3288850843692008
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.430746985479823,
+      "median_neighbour_sharpe": -1.409696862045442,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -542,7 +542,7 @@
       "z": 1.0,
       "a_min": 0.3,
       "k_s": 1.5,
-      "sharpe_net": -1.3942762318044866,
+      "sharpe_net": -1.409696862045442,
       "n_neighbours": 4,
       "neighbours": [
         "z0.5_a0.3_k1.5",
@@ -551,13 +551,13 @@
         "z1.5_a0.3_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.1775539409150295,
-        -1.5978737198662711,
-        -1.4686667202842325,
-        -1.6678619690330128
+        -1.0089117608760043,
+        -1.7548770464233812,
+        -1.5879639705429245,
+        -1.1890946568519731
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.5332702200752517,
+      "median_neighbour_sharpe": -1.3885293136974488,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -572,7 +572,7 @@
       "z": 1.5,
       "a_min": 0.1,
       "k_s": 0.75,
-      "sharpe_net": -2.008873482868614,
+      "sharpe_net": -1.220440580508348,
       "n_neighbours": 3,
       "neighbours": [
         "z1_a0.1_k0.75",
@@ -580,12 +580,12 @@
         "z1.5_a0.2_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.735178808370773,
-        -2.2196715601023573,
-        -1.5545099157620337
+        -1.7928420965295495,
+        -1.399271581959325,
+        -1.2432754020217682
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.735178808370773,
+      "median_neighbour_sharpe": -1.399271581959325,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -600,7 +600,7 @@
       "z": 1.5,
       "a_min": 0.1,
       "k_s": 1.0,
-      "sharpe_net": -2.2196715601023573,
+      "sharpe_net": -1.399271581959325,
       "n_neighbours": 4,
       "neighbours": [
         "z1_a0.1_k1",
@@ -609,13 +609,13 @@
         "z1.5_a0.2_k1"
       ],
       "neighbour_sharpes": [
-        -1.8553070084359595,
-        -2.008873482868614,
-        -2.1963781757426117,
-        -1.7074814861459455
+        -1.993951971295104,
+        -1.220440580508348,
+        -1.350875085965579,
+        -1.388262309629666
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.9320902456522866,
+      "median_neighbour_sharpe": -1.3695686977976225,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -630,7 +630,7 @@
       "z": 1.5,
       "a_min": 0.1,
       "k_s": 1.5,
-      "sharpe_net": -2.1963781757426117,
+      "sharpe_net": -1.350875085965579,
       "n_neighbours": 3,
       "neighbours": [
         "z1_a0.1_k1.5",
@@ -638,12 +638,12 @@
         "z1.5_a0.2_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.8606442689397236,
-        -2.2196715601023573,
-        -1.6688648899198404
+        -1.817701151489134,
+        -1.399271581959325,
+        -1.297724504375626
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.8606442689397236,
+      "median_neighbour_sharpe": -1.399271581959325,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -658,7 +658,7 @@
       "z": 1.5,
       "a_min": 0.2,
       "k_s": 0.75,
-      "sharpe_net": -1.5545099157620337,
+      "sharpe_net": -1.2432754020217682,
       "n_neighbours": 4,
       "neighbours": [
         "z1_a0.2_k0.75",
@@ -667,13 +667,13 @@
         "z1.5_a0.3_k0.75"
       ],
       "neighbour_sharpes": [
-        -1.6073514152181752,
-        -2.008873482868614,
-        -1.7074814861459455,
-        -1.5379434021270963
+        -1.7748656811884511,
+        -1.220440580508348,
+        -1.388262309629666,
+        -1.1858711377991669
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6574164506820603,
+      "median_neighbour_sharpe": -1.304351445069007,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -688,7 +688,7 @@
       "z": 1.5,
       "a_min": 0.2,
       "k_s": 1.0,
-      "sharpe_net": -1.7074814861459455,
+      "sharpe_net": -1.388262309629666,
       "n_neighbours": 5,
       "neighbours": [
         "z1_a0.2_k1",
@@ -698,14 +698,14 @@
         "z1.5_a0.3_k1"
       ],
       "neighbour_sharpes": [
-        -1.6606853901686005,
-        -2.2196715601023573,
-        -1.5545099157620337,
-        -1.6688648899198404,
-        -1.6656641912150445
+        -1.941378472595146,
+        -1.399271581959325,
+        -1.2432754020217682,
+        -1.297724504375626,
+        -1.3288850843692008
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6656641912150445,
+      "median_neighbour_sharpe": -1.3288850843692008,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -720,7 +720,7 @@
       "z": 1.5,
       "a_min": 0.2,
       "k_s": 1.5,
-      "sharpe_net": -1.6688648899198404,
+      "sharpe_net": -1.297724504375626,
       "n_neighbours": 4,
       "neighbours": [
         "z1_a0.2_k1.5",
@@ -729,13 +729,13 @@
         "z1.5_a0.3_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.5978737198662711,
-        -2.1963781757426117,
-        -1.7074814861459455,
-        -1.6678619690330128
+        -1.7548770464233812,
+        -1.350875085965579,
+        -1.388262309629666,
+        -1.1890946568519731
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6876717275894793,
+      "median_neighbour_sharpe": -1.3695686977976225,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -750,7 +750,7 @@
       "z": 1.5,
       "a_min": 0.3,
       "k_s": 0.75,
-      "sharpe_net": -1.5379434021270963,
+      "sharpe_net": -1.1858711377991669,
       "n_neighbours": 3,
       "neighbours": [
         "z1_a0.3_k0.75",
@@ -758,12 +758,12 @@
         "z1.5_a0.3_k1"
       ],
       "neighbour_sharpes": [
-        -1.430746985479823,
-        -1.5545099157620337,
-        -1.6656641912150445
+        -1.4112591778922234,
+        -1.2432754020217682,
+        -1.3288850843692008
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.5545099157620337,
+      "median_neighbour_sharpe": -1.3288850843692008,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -778,7 +778,7 @@
       "z": 1.5,
       "a_min": 0.3,
       "k_s": 1.0,
-      "sharpe_net": -1.6656641912150445,
+      "sharpe_net": -1.3288850843692008,
       "n_neighbours": 4,
       "neighbours": [
         "z1_a0.3_k1",
@@ -787,13 +787,13 @@
         "z1.5_a0.3_k1.5"
       ],
       "neighbour_sharpes": [
-        -1.4686667202842325,
-        -1.7074814861459455,
-        -1.5379434021270963,
-        -1.6678619690330128
+        -1.5879639705429245,
+        -1.388262309629666,
+        -1.1858711377991669,
+        -1.1890946568519731
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6029026855800546,
+      "median_neighbour_sharpe": -1.2886784832408196,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -808,7 +808,7 @@
       "z": 1.5,
       "a_min": 0.3,
       "k_s": 1.5,
-      "sharpe_net": -1.6678619690330128,
+      "sharpe_net": -1.1890946568519731,
       "n_neighbours": 3,
       "neighbours": [
         "z1_a0.3_k1.5",
@@ -816,12 +816,12 @@
         "z1.5_a0.3_k1"
       ],
       "neighbour_sharpes": [
-        -1.3942762318044866,
-        -1.6688648899198404,
-        -1.6656641912150445
+        -1.409696862045442,
+        -1.297724504375626,
+        -1.3288850843692008
       ],
       "share_neighbours_positive": 0.0,
-      "median_neighbour_sharpe": -1.6656641912150445,
+      "median_neighbour_sharpe": -1.3288850843692008,
       "passes_positive_share": false,
       "passes_median": false,
       "passes_plateau": false
@@ -842,9 +842,9 @@
   },
   "plateau_versus_peak": {
     "peak_config": "z0.5_a0.3_k1.5",
-    "peak_sharpe": -1.1775539409150295,
+    "peak_sharpe": -1.0089117608760043,
     "analysed_config": "z1_a0.2_k1",
-    "analysed_sharpe": -1.6606853901686005,
-    "sharpe_gap": -0.483131449253571
+    "analysed_sharpe": -1.941378472595146,
+    "sharpe_gap": -0.9324667117191416
   }
 }

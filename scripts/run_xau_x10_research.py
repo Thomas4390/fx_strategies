@@ -1384,6 +1384,13 @@ def step_summary(sample: Sample) -> None:
         "git_head": git_head(),
         "spec": "docs/specs/xau_x10_spec.md",
         "decision_table_doc": "docs/research/xau_x10_decision_table.md",
+        # §1 de la spec : le parquet exporté de LEAN date une minute à sa
+        # CLÔTURE ; la référence la redate à l'OUVERTURE pour que la grille M5
+        # de §2 tombe sur l'horloge murale, comme MT5 et comme le portage QC.
+        # La campagne v1 tournait sans cette redatation ; ses chiffres sont
+        # archivés sous results/xau_x10/v1_close_stamped/.
+        "data_convention": "bar_open (parquet close-stamped, re-dated −1 min)",
+        "supersedes": "v1_close_stamped",
         "holdout": {
             "state": "LOCKED",
             "touched_by_this_phase": False,

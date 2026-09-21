@@ -54,6 +54,26 @@ Ce n'est pas un P&L, mais ce n'est pas neutre. Aucun paramètre gelé n'a été 
 de cette lecture ; le centre de la grille est l'une des 27 configurations et sera logué avec
 elles.
 
+### 1.2 Correction de datation du 2026-09-21
+
+**Nature du défaut.** Le parquet exporté de LEAN date une barre M1 de sa **clôture** ; la
+référence Python traitait cet horodatage comme un **début**. Sa grille M5 couvrait donc
+`[t−1 min, t+4 min)` là où MT5 et le portage QC couvrent `[t, t+5 min)` — une minute d'écart sur
+toutes les barres, prouvée par 316 tags QC sur 316 (`xau_x10_reconciliation.md` §11.6 bis). La
+référence redate désormais à l'ouverture (`strategies.xau_x10.SOURCE_STAMP`), le panier DXY4
+aussi, et la campagne a été **intégralement rejouée**.
+
+**Aucun seuil, aucune règle, aucun paramètre gelé de ce document n'est modifié.** La grille reste
+celle des 27 configurations, le budget celui de 34 essais (`distinct_trials("xau_x10") = 34`
+après rejeu, les `config_key` dédoublonnant les deux sweeps), le spread de sélection celui de
+0,29 $ du §1.1. Ce n'est pas une re-sélection : c'est la même mesure, faite sur la grille que la
+spec décrit.
+
+**Verdict inchangé : NE PAS DÉPLOYER.** Espérance −0,1602 → **−0,1679 R**, profit factor
+0,737 → **0,728**, 1 723 → 1 762 trades. Un seul critère change de camp, et dans le sens
+favorable : le PBO passe de 0,415 à **0,246** (GO). Huit critères en échec deviennent sept ;
+il en faut zéro.
+
 ## 2. Les trois verdicts
 
 Un seul verdict est prononcé, et il est prononcé une seule fois.

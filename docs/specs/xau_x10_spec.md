@@ -68,6 +68,46 @@ XAUUSD **n'a aucun volume exploitable** sur QC : `load_gold_data` (`src/utils.py
 `volume = 1,0`. Toute grandeur de cette spec est donc calculée **sans volume**, ce qui décide
 la définition du VWAP au §6.
 
+**Convention de datation des minutes — normatif.** Une barre M1 est un intervalle ; son
+horodatage peut en désigner le début ou la fin, et les trois moteurs ne choisissent pas
+pareil :
+
+| source | l'horodatage d'une barre M1 désigne | conséquence |
+|---|---|---|
+| `data/XAU-USD_minute_qc.parquet` (export LEAN) | la **clôture** (`end_time`) : la ligne `10:05` couvre `[10:04, 10:05)` | **à redater** |
+| `data/{EUR-USD,USD-JPY,GBP-USD,USD-CAD}_minute.parquet` | la **clôture**, même convention | **à redater** |
+| dump de barres MT5 (`Inp_DumpBars`, `iTime`) | l'**ouverture** | tel quel |
+| portage QuantConnect (`minute_index(utc_time) − 1`) | l'**ouverture** | tel quel |
+
+La référence Python **redate à l'ouverture** : `strategies.xau_x10.SOURCE_STAMP = "close"` et
+`_to_bar_open()` retranchent une minute à l'index avant toute agrégation ; le panier DXY4 subit
+le même traitement dans `scripts/build_dxy_synthetic.py`. `src/utils.py` n'est **pas** modifié :
+il est partagé avec la stratégie 1.
+
+Sans cette redatation, la grille M5 de la référence couvre `[t−1 min, t+4 min)` quand celle des
+deux autres moteurs couvre `[t, t+5 min)`. Le défaut est invisible à un test de décalage en
+*barres* et il a tenu l'appariement des entrées Python ↔ QC à 33 % pendant toute la campagne v1
+(`docs/research/xau_x10_reconciliation.md` §11.6 bis). Preuves : la clôture M5 publiée par QC
+vaut la ligne du parquet estampillée `bm + 5 min` sur **316 tags sur 316** ; les parquets FX
+corrèlent à **0,991** au décalage `+1` minute contre l'export MT5 d'EURUSD, et à 0,07 partout
+ailleurs.
+
+**Bornes de flux, après redatation.** Mesuré sur `data/XAU-USD_minute_qc.parquet` : la dernière
+minute d'une séance or est estampillée `16:58` (1 966 séances sur 1 972) et la première de la
+suivante `18:04` (1 967). Ce sont des **clôtures** : les barres sont `[16:57, 16:58)` et
+`[18:03, 18:04)`, et après redatation elles portent les étiquettes **`16:57`** et **`18:03`**.
+
+⚠️ **Point ouvert, à ne pas refermer en silence.** Le portage QC raisonne déjà en début de barre
+(`minute_index(utc_time) − 1`) et fixe `SESSION_LAST_MINUTE = 16:58`
+(`src/qc/xau_x10/main.py:88`). Or le début de la dernière barre du parquet est `16:57`, et
+`16:58 ≤ 16:57` est faux : la condition de scellage `last_of_session` ne devrait jamais se
+déclencher. Elle se déclenche pourtant dans le cloud — le backtest v4 produit **10 sorties
+`SESSION` estampillées 16:55** et se termine à plat. Le flux LEAN du cloud porte donc, au bord
+de séance, une minute que l'export ne contient pas, ou LEAN émet une dernière tranche à `17:00`.
+La constante est **empiriquement juste et théoriquement non vérifiée** ; la valeur robuste aux
+deux flux serait `16:57`. Aucun changement n'est fait ici : `src/qc` n'est pas modifié tant que
+l'hypothèse n'est pas tranchée sur le cloud.
+
 ## 2. Horloge, séance et bornes
 
 ```

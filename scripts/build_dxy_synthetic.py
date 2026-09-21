@@ -50,7 +50,8 @@ from utils import load_fx_data, validate_ohlc_frame  # noqa: E402
 # Leg -> source parquet. The four files share the naive New York minute index of
 # the FX exports (weekly reopen at 17:00 New York, asserted in
 # tests/test_dxy_synthetic.py), which is also the clock `load_gold_data` puts
-# the gold bars on. No conversion is needed, and none must be added.
+# the gold bars on. No timezone conversion is needed, and none must be added —
+# but a one-minute re-dating is, see `SOURCE_STAMP` below.
 LEG_SOURCES: dict[str, str] = {
     "eurusd": "data/EUR-USD_minute.parquet",
     "usdjpy": "data/USD-JPY_minute.parquet",
@@ -61,6 +62,37 @@ LEG_SOURCES: dict[str, str] = {
 OUT_H1 = "data/DXY4_h1.parquet"
 OUT_MINUTE = "data/DXY4_minute.parquet"
 DTWEXBGS = "data/DTWEXBGS_daily.parquet"
+
+# The FX minute parquets stamp a bar at its **close**, exactly like the gold
+# parquet: measured against the MT5 export of EURUSD, which is open-stamped,
+# their minute returns correlate at 0.991 at a +1 minute lag and at 0.07
+# everywhere else, over 61 175 overlapping minutes
+# (docs/research/xau_x10_reconciliation.md §11.6 bis). The basket must therefore
+# be re-dated to the bar open before any resampling, or its H1 bins cover
+# [h-1 min, h+59 min) while the M5 grid they feed covers [h, h+5 min) — the very
+# defect that held the Python/QC entry matching at 33 %.
+#
+# This is deliberately local to the x10 chain: `utils.load_fx_data` is shared
+# with strategy 1, whose published figures were produced under the old
+# convention and must not move under it.
+SOURCE_STAMP = "close"
+BAR_OPEN_SHIFT = pd.Timedelta(minutes=1)
+
+
+def to_bar_open(frame: pd.DataFrame, source_stamp: str = SOURCE_STAMP) -> pd.DataFrame:
+    """Re-stamp a minute frame by the instant its bar opens.
+
+    Pure, and tested on its own: a row stamped ``10:05`` under the ``close``
+    convention describes ``[10:04, 10:05)`` and becomes ``10:04``. Under
+    ``open`` the frame is returned untouched.
+    """
+    if source_stamp == "open":
+        return frame
+    if source_stamp != "close":
+        raise ValueError(f"source_stamp={source_stamp!r} inconnu ; 'close' ou 'open'")
+    shifted = frame.copy()
+    shifted.index = shifted.index - BAR_OPEN_SHIFT
+    return shifted
 
 # FRED fixes DTWEXBGS at noon New York; the H1 bar stamped 11:00 closes there.
 NOON_FIXING_HOUR = 11
@@ -75,6 +107,10 @@ def load_legs(data_dir: Path) -> dict[str, pd.DataFrame]:
             raise FileNotFoundError(f"{leg}: missing source {path}")
         raw, _ = load_fx_data(str(path))
         validate_ohlc_frame(raw, name=leg.upper())
+        # Validation d'abord, redatation ensuite : `validate_ohlc_frame` parle
+        # des barres, pas de leur étiquette, et la preuve doit porter sur le
+        # fichier tel qu'il est écrit.
+        raw = to_bar_open(raw)
         legs[leg] = raw
         span = f"{raw.index[0]} -> {raw.index[-1]}"
         print(f"  {leg.upper():7s} {len(raw):>9,} M1 bars   {span}")

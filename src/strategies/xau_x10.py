@@ -141,8 +141,19 @@ _TRACE_DECIMALS: dict[str, int] = {
     "exit_px": 3,
 }
 
+# §1 — comment le parquet source date ses minutes. LEAN exporte l'horodatage de
+# CLÔTURE (`end_time`) ; MT5 (`iTime`) et le portage QC (`utc_time − 1 min`)
+# datent à l'ouverture. La référence redate pour que la grille M5 de §2 tombe
+# sur l'horloge murale — voir `_to_bar_open` pour la preuve chiffrée.
+SOURCE_STAMP_CLOSE = "close"
+SOURCE_STAMP_OPEN = "open"
+SOURCE_STAMP = SOURCE_STAMP_CLOSE
+
 __all__ = [
     "DXY4_H1_PATH",
+    "SOURCE_STAMP",
+    "SOURCE_STAMP_CLOSE",
+    "SOURCE_STAMP_OPEN",
     "X10_INIT_CASH",
     "X10_SPREAD_DEFAULT",
     "X10Indicator",
@@ -220,19 +231,65 @@ class X10Inputs:
         )
 
 
-def _m1_frame(data: Any) -> pd.DataFrame:
-    """Lower-cased M1 OHLC on the naive New York clock of §2.
+def _to_bar_open(index: pd.DatetimeIndex, source_stamp: str) -> pd.DatetimeIndex:
+    """Re-date a minute index so that each stamp is the bar's **opening** time.
+
+    ``source_stamp="close"`` — the convention of ``data/XAU-USD_minute_qc.parquet``
+    and of the FX minute parquets — means a row stamped ``10:05`` describes the
+    minute ``[10:04, 10:05)``. One minute is subtracted so the row is stamped by
+    the instant it starts, which is what MT5 (``iTime``) and the QuantConnect
+    port (``minute_index(utc_time) - 1``) both do. ``source_stamp="open"`` leaves
+    the index alone: the MT5 bar dump already stamps at the open.
+
+    Why this matters, and how it is known. Without the shift, ``resample_ohlc``
+    builds M5 bins that cover ``[t-1 min, t+4 min)`` in wall-clock time while the
+    two other engines cover ``[t, t+5 min)`` — a one-minute offset on every bar,
+    invisible to a test that looks for a whole-bar shift. Two independent
+    measurements pin it down (``docs/research/xau_x10_reconciliation.md``
+    §11.6 bis):
+
+    * the M5 close published by the QuantConnect port equals the parquet row
+      stamped ``bm + 5 min`` on **316 tags out of 316**, to the cent;
+    * the FX minute parquets carry the same convention: against the MT5 export
+      of EURUSD, which is open-stamped, their minute returns correlate at
+      **0.991** at a ``+1`` minute lag and at 0.07 everywhere else, over 61 175
+      overlapping minutes.
+
+    Correcting it took the Python/QC entry matching from 33.1 % to **98.7 %** and
+    the decision-bar close difference from 0.265 $ to **0.000 $**.
+
+    Subtracting on the naive New York clock is safe: gold has no bar in the
+    17:00-18:00 break where the DST fold happens (§2), so no stamp is ambiguous.
+    """
+    if source_stamp == SOURCE_STAMP_OPEN:
+        return index
+    if source_stamp != SOURCE_STAMP_CLOSE:
+        raise ValueError(
+            f"source_stamp={source_stamp!r} inconnu ; attendu "
+            f"{SOURCE_STAMP_CLOSE!r} ou {SOURCE_STAMP_OPEN!r}"
+        )
+    return index - pd.Timedelta(minutes=1)
+
+
+def _m1_frame(data: Any, source_stamp: str = SOURCE_STAMP) -> pd.DataFrame:
+    """Lower-cased M1 OHLC on the naive New York clock of §2, stamped at the open.
 
     Accepts the two shapes the repo passes around: the ``vbt.Data`` wrapper
     (capitalised columns) returned by ``load_gold_data`` and the raw frame next
     to it. A tz-aware index is converted, never assumed.
+
+    ``source_stamp`` says which convention the caller's index carries; see
+    ``_to_bar_open``. The default is the one of the campaign parquet, so a caller
+    that says nothing gets the spec's wall-clock grid.
     """
     frame = data.get() if isinstance(data, vbt.Data) else data
     if isinstance(frame.columns, pd.MultiIndex):
         frame = frame.droplevel(-1, axis=1)
     frame = frame.rename(columns=str.lower)
     frame = frame[["open", "high", "low", "close"]].copy()
-    frame.index = to_session_clock(pd.DatetimeIndex(frame.index))
+    frame.index = _to_bar_open(
+        to_session_clock(pd.DatetimeIndex(frame.index)), source_stamp
+    )
     return frame.sort_index()
 
 
@@ -259,6 +316,7 @@ def prepare_inputs(
     *,
     dxy: pd.Series | None = None,
     dxy_path: str | Path = DXY4_H1_PATH,
+    source_stamp: str = SOURCE_STAMP,
 ) -> X10Inputs:
     """Aggregate M1 gold into the M5 decision grid and its context (§3-§6).
 
@@ -267,8 +325,13 @@ def prepare_inputs(
     goes through ``align_h1_to_m5`` — ``shift(1)`` then ``ffill`` — while the
     session VWAP does not: they are the two families of §6 and the whole point
     is that they obey different causality rules.
+
+    ``source_stamp`` declares whether the caller's minute index is stamped at the
+    bar's close (the campaign parquet, the default) or at its open (the MT5 bar
+    dump). It is re-dated to the open either way, so that the M5 grid of §2 sits
+    on the wall clock — see ``_to_bar_open``.
     """
-    m1 = _m1_frame(data)
+    m1 = _m1_frame(data, source_stamp)
     m5 = resample_ohlc(m1, "5min")
     h1 = resample_ohlc(m1, "1h")
 

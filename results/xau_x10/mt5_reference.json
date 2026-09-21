@@ -1,7 +1,7 @@
 {
   "source": "MetaTrader 5 Strategy Tester",
   "provenance": {
-    "generated_at_utc": "2026-09-21T22:18:33Z",
+    "generated_at_utc": "2026-09-21T22:43:45Z",
     "generator": "scripts/parse_mt5_report.py",
     "expert": "XauX10",
     "deals_csv": {
@@ -2723,9 +2723,9 @@
         "2022-11-07 14:55:00+00:00",
         "2025-12-26 10:30:00+00:00"
       ],
-      "trades": 879,
-      "expectancy_r": -0.11891247291928649,
-      "profit_factor_r": 0.8125767953182702
+      "trades": 880,
+      "expectancy_r": -0.1522406668182441,
+      "profit_factor_r": 0.7684065744298804
     }
   },
   "summary": {
@@ -2736,8 +2736,8 @@
     "mt5_max_equity_dd_pct": 34.9,
     "mt5_spread_median_usd": 0.25,
     "mt5_order_failures": 13,
-    "py_same_window_trades": 879,
-    "py_same_window_expectancy_r": -0.11891247291928649,
+    "py_same_window_trades": 880,
+    "py_same_window_expectancy_r": -0.1522406668182441,
     "same_sign": true,
     "criterion_8_pass": false
   }

@@ -54,6 +54,10 @@ from framework.x10_engine import (
 )
 from strategies.xau_x10 import prepare_inputs
 
+#: §1 — le parquet source date une minute à sa CLÔTURE ; les deux moteurs la
+#: redatent à son ouverture. Le harnais doit faire pareil, des deux côtés.
+_BAR_OPEN_SHIFT = pd.Timedelta(minutes=1)
+
 _QC_DIR = Path(__file__).resolve().parent.parent / "src" / "qc" / "xau_x10"
 if str(_QC_DIR) not in sys.path:
     sys.path.insert(0, str(_QC_DIR))
@@ -101,10 +105,15 @@ def _gold_minutes() -> pd.DatetimeIndex:
     ny = idx.tz_convert(SESSION_TZ)
     minute = ny.hour * 60 + ny.minute
     dow = ny.dayofweek  # Monday = 0, Sunday = 6
-    keep = ~((minute >= 17 * 60) & (minute < 18 * 60))
-    keep &= ~((dow == 4) & (minute >= 17 * 60))
+    # Les bornes sont écrites en CLÔTURE de minute, comme le parquet (§1) : la
+    # dernière minute d'une séance est estampillée 17:00 — elle couvre
+    # 16:59-17:00 — et la première de la suivante 18:01. Une fois redatées à
+    # l'ouverture, elles tombent sur 16:59 et 18:00, donc sur les bins M5 16:55
+    # et 18:00, et la coupure laisse bien 65 minutes entre deux barres M5.
+    keep = ~((minute > 17 * 60) & (minute <= 18 * 60))
+    keep &= ~((dow == 4) & (minute > 17 * 60))
     keep &= ~(dow == 5)
-    keep &= ~((dow == 6) & (minute < 18 * 60))
+    keep &= ~((dow == 6) & (minute <= 18 * 60))
     for hour, first, last in ((8, 0, 37), (13, 12, 49), (21, 5, 42)):
         keep &= ~((ny.hour == hour) & (ny.minute >= first) & (ny.minute < last))
     return idx[keep]
@@ -150,10 +159,17 @@ def sample(request) -> dict:
 
     # The reference clock is naive New York (``prepare_inputs`` converts the
     # gold index itself; the DXY series is handed over already converted).
+    #
+    # ``index`` is a CLOSE-stamped minute index, like the parquets the campaign
+    # reads (spec §1). ``prepare_inputs`` re-dates the gold to the bar open on
+    # its own; the DXY legs must be re-dated here, exactly as
+    # ``scripts/build_dxy_synthetic.py`` does before resampling — otherwise the
+    # H1 grid handed to the reference is one minute away from the one the port
+    # builds from the same minutes.
     legs_ny = {}
     for leg, frame in legs_utc.items():
         local = frame.copy()
-        local.index = to_session_clock(pd.DatetimeIndex(local.index))
+        local.index = to_session_clock(pd.DatetimeIndex(local.index)) - _BAR_OPEN_SHIFT
         legs_ny[leg] = local
     dxy_h1 = dxy4(**{leg: resample_ohlc(f, "1h")["close"] for leg, f in legs_ny.items()})
 
@@ -209,7 +225,12 @@ def replay(sample: dict) -> _RecordingFeed:
     gold = sample["gold"]
     legs = sample["legs"]
 
-    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64)
+    # ``main.py`` indexes a LEAN minute by ``minute_index(utc_time) - 1``: the
+    # bar's opening instant, not its closing stamp (spec §1). The sample index
+    # is close-stamped, so the same subtraction is applied here — without it the
+    # port and the reference bin different minutes and every rung below is a
+    # comparison of two different grids.
+    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64) - 1
     o, h, low, c = (gold[col].to_numpy(dtype=np.float64) for col in gold.columns)
     leg_closes = {leg: frame["close"].to_numpy(dtype=np.float64) for leg, frame in legs.items()}
 
@@ -219,8 +240,15 @@ def replay(sample: dict) -> _RecordingFeed:
             o[i] - HALF, h[i] - HALF, low[i] - HALF, c[i] - HALF,
             o[i] + HALF, h[i] + HALF, low[i] + HALF, c[i] + HALF,
         )
+        # La dernière minute de l'échantillon n'a pas de successeur : sans le
+        # drapeau, le dernier bin M5 (et le dernier H1) resteraient ouverts et
+        # le port rendrait une barre de moins que la référence. C'est ce que
+        # ``main.py`` fait en production via ``SESSION_LAST_MINUTE``.
         feed.on_minute(
-            int(minute), quote, {leg: arr[i] for leg, arr in leg_closes.items()}
+            int(minute),
+            quote,
+            {leg: arr[i] for leg, arr in leg_closes.items()},
+            last_of_session=(i == len(minutes) - 1),
         )
     return feed
 
@@ -275,7 +303,7 @@ def test_m5_bars_match_the_reference_resampling(sample: dict, replay: _Recording
 
 def test_h1_bars_match_the_reference_resampling(sample: dict, replay: _RecordingFeed):
     m1 = sample["gold"].copy()
-    m1.index = to_session_clock(pd.DatetimeIndex(m1.index))
+    m1.index = to_session_clock(pd.DatetimeIndex(m1.index)) - _BAR_OPEN_SHIFT
     ref = resample_ohlc(m1, "1h")
     assert len(replay.h1_bars) == len(ref)
     np.testing.assert_array_equal(
@@ -645,7 +673,12 @@ def test_a_blocked_broker_freezes_the_automaton(sample: dict):
     before = len(feed.machine.events)
     index = sample["index"][:400]
     gold = sample["gold"].iloc[:400]
-    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64)
+    # ``main.py`` indexes a LEAN minute by ``minute_index(utc_time) - 1``: the
+    # bar's opening instant, not its closing stamp (spec §1). The sample index
+    # is close-stamped, so the same subtraction is applied here — without it the
+    # port and the reference bin different minutes and every rung below is a
+    # comparison of two different grids.
+    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64) - 1
     o, h, low, c = (gold[col].to_numpy(dtype=np.float64) for col in gold.columns)
     for i, minute in enumerate(minutes):
         quote = MinuteQuote(
