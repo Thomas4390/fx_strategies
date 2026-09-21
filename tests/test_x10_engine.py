@@ -71,6 +71,7 @@ def build_case(
     minute0=600,
     session=0,
     m1: dict[int, list[tuple[float, float, float, float]]] | None = None,
+    gap_before: dict[int, int] | None = None,
 ) -> dict:
     """Kernel inputs from hand-written M5 bars.
 
@@ -80,6 +81,10 @@ def build_case(
     grid of §3 is never worth faking — and the wall clock advances five minutes
     per bar, modulo a day, so the 16:30/16:55/18:15 rules of §10 can be walked
     into by choosing ``minute0``.
+
+    ``gap_before={i: 10}`` makes bar ``i`` start ten minutes after bar ``i-1``
+    instead of five — a data hole inside a session, which §2 forbids filling
+    across.
     """
     n = len(bars)
     m1 = m1 or {}
@@ -96,7 +101,11 @@ def build_case(
     m5 = np.asarray(bars, dtype=np.float64)
     close = m5[:, 3].copy()
     l_inf, l_sup = x10_levels_nb(close)
-    minutes = (minute0 + 5 * np.arange(n)) % 1440
+
+    gap_before = gap_before or {}
+    steps = np.array([0] + [gap_before.get(i, 5) for i in range(1, n)], dtype=np.int64)
+    offsets = np.cumsum(steps)
+    minutes = (minute0 + offsets) % 1440
 
     return dict(
         m5_open=m5[:, 0].copy(),
@@ -116,6 +125,7 @@ def build_case(
         dxy_ema50_h1=_as_array(dxy_ema, n),
         minute_of_day=minutes.astype(np.float64),
         session_id=_as_array(session, n).astype(np.int64),
+        bar_minute=(minute0 + offsets).astype(np.int64),
         spread=_as_array(spread, n),
         m1_open=m1_arr[:, 0].copy(),
         m1_high=m1_arr[:, 1].copy(),
@@ -544,6 +554,12 @@ def test_the_spread_enters_r_once_on_each_side():
 
 _QUIET = (2001.5, 2001.6, 2001.4, 2001.5)
 _FILL_BAR = (2001.3, 2002.0, 2001.0, 2001.8)
+_TARGET_BAR = (2005.0, 2010.5, 2004.0, 2010.2)
+_AFTER_TARGET = (2010.2, 2010.4, 2010.0, 2010.1)
+# Fill on bar 5, target on bar 6: the shortest complete trade.
+_TARGET_TAIL = [_FILL_BAR, _TARGET_BAR, _QUIET]
+# Same, with one idle bar in between: the position has to survive two closes.
+_SLOW_TARGET_TAIL = [_FILL_BAR, (2001.8, 2002.5, 2001.5, 2002.0), _TARGET_BAR, _AFTER_TARGET]
 
 
 def test_the_fill_is_the_next_open_plus_half_a_spread():
@@ -580,6 +596,25 @@ def test_a_gap_beyond_the_stop_fills_at_the_open():
     assert t.exit_px == 1995.0  # the open, not the theoretical 1999.0
 
 
+def test_a_gap_beyond_the_target_exits_at_the_open_even_if_the_stop_follows():
+    """§9: the open is the first price of the minute, and it is known.
+
+    The pessimistic rule of §9 — "double contact inside one M1, the stop wins" —
+    arbitrates the order the bar does *not* tell us. It does not apply here: the
+    open is chronologically first, the position is already closed at the target
+    when the low is printed, and the low belongs to a position that no longer
+    exists. Frozen by this test; §9 is being amended to say so.
+    """
+    case = long_case(
+        [_FILL_BAR, (2012.0, 2012.5, 1990.0, 1991.0), _QUIET],
+        m1={6: [(2012.0, 2012.5, 1990.0, 1991.0)]},
+    )
+    _, trades = run_case(case)
+    t = trades.iloc[0]
+    assert EXIT_REASON_NAMES[int(t.exit_reason)] == "TARGET"
+    assert t.exit_px == 2012.0  # the open, on the bid side (s = 0 here)
+
+
 def test_the_target_is_only_hit_when_the_trigger_side_reaches_it():
     """Long exits are sold at the bid: a mid high grazing the target is not one."""
     case = long_case(
@@ -613,9 +648,39 @@ def test_the_position_is_flat_at_1655_new_york():
     case = long_case([_FILL_BAR] + [_QUIET] * 8, minute0=960)
     _, trades = run_case(case)
     t = trades.iloc[0]
+    assert case["minute_of_day"][8] == 16 * 60 + 40  # still open at 16:40
     assert EXIT_REASON_NAMES[int(t.exit_reason)] == "SESSION"
     assert t.i_exit_m5 == 11.0  # 16:00 + 55 min
     assert case["minute_of_day"][11] == 16 * 60 + 55
+
+
+@pytest.mark.parametrize("fill_minute", [18 * 60 + 15, 19 * 60, 21 * 60, 23 * 60 + 30])
+def test_an_evening_position_is_not_closed_on_its_own_fill_bar(fill_minute):
+    """§10: 16:55 flattens the session, it does not flatten the whole evening.
+
+    ``minute_of_day`` counts from New York midnight, so an unbounded
+    ``>= 16:55`` test is also true at 18:15, 21:00 and 23:30 — every evening
+    entry would be shut on the bar that opened it, one bar held and the spread
+    paid for nothing. The forced close lives in ``[16:55, 18:00)``.
+    """
+    case = long_case(_SLOW_TARGET_TAIL, minute0=(fill_minute - 25) % 1440)
+    _, trades = run_case(case)
+    t = trades.iloc[0]
+    assert case["minute_of_day"][5] == fill_minute
+    assert EXIT_REASON_NAMES[int(t.exit_reason)] == "TARGET"
+    assert t.bars_held == 3.0
+    assert t.i_exit_m5 == 7.0
+
+
+def test_a_position_crossing_new_york_midnight_is_kept():
+    """Midnight is the middle of a session (§2), not a boundary of any kind."""
+    case = long_case(_SLOW_TARGET_TAIL, minute0=23 * 60 + 25)
+    _, trades = run_case(case)
+    t = trades.iloc[0]
+    assert case["minute_of_day"][6] == 23 * 60 + 55
+    assert case["minute_of_day"][7] == 0  # the wrap happens inside the trade
+    assert EXIT_REASON_NAMES[int(t.exit_reason)] == "TARGET"
+    assert t.bars_held == 3.0
 
 
 @pytest.mark.parametrize(
@@ -624,11 +689,34 @@ def test_the_position_is_flat_at_1655_new_york():
 )
 def test_no_entry_fills_between_1630_and_1815(fill_minute, entered):
     """§10: the window bites on the fill bar, which is the decision bar plus one."""
-    case = long_case([_FILL_BAR, _QUIET, _QUIET], minute0=(fill_minute - 25) % 1440)
-    events, _ = run_case(case)
+    case = long_case(_TARGET_TAIL, minute0=(fill_minute - 25) % 1440)
+    events, trades = run_case(case)
     labels = _events_str(events)
     assert ("4 ENTRY BREAK_LONG" in labels) is entered
     assert ("4 CANCEL(window) BREAK_LONG" in labels) is not entered
+    if entered:
+        # An entry allowed at 18:15 must also be allowed to live past its bar.
+        assert EXIT_REASON_NAMES[int(trades.iloc[0].exit_reason)] == "TARGET"
+        assert trades.iloc[0].bars_held == 2.0
+
+
+def test_an_entry_is_refused_when_the_next_bar_is_not_the_next_five_minutes():
+    """§2: ``fill[t] := open of bar t+1`` means the bar five minutes later.
+
+    After a hole in the feed the next *existing* bar can be hours away; filling
+    there would execute a decision on a price the decision never saw.
+    """
+    case = long_case(_TARGET_TAIL, gap_before={5: 10})
+    events, trades = run_case(case)
+    assert "4 CANCEL(window) BREAK_LONG" in _events_str(events)
+    assert len(trades) == 0
+
+
+def test_a_contiguous_grid_still_fills_on_the_next_bar():
+    case = long_case(_TARGET_TAIL)
+    events, trades = run_case(case)
+    assert "4 ENTRY BREAK_LONG" in _events_str(events)
+    assert len(trades) == 1
 
 
 def test_only_one_position_at_a_time():
@@ -653,8 +741,6 @@ def test_only_one_position_at_a_time():
 # ═══════════════════════════════════════════════════════════════════════
 # 8. SIZING (§11)
 # ═══════════════════════════════════════════════════════════════════════
-
-_TARGET_TAIL = [_FILL_BAR, (2005.0, 2010.5, 2004.0, 2010.2), _QUIET]
 
 
 def test_lots_follow_the_risk_fraction_and_round_down():

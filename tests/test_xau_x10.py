@@ -26,6 +26,7 @@ from strategies.xau_x10 import (
     create_cv_pipeline,
     emit_event_trace,
     pipeline,
+    pipeline_nb,
     prepare_inputs,
     run_grid,
 )
@@ -261,6 +262,21 @@ def test_run_grid_refuses_the_frozen_slice():
     assert frozen.index.max() >= pd.Timestamp("2026-01-01")
     with pytest.raises(RuntimeError, match="frozen slice"):
         run_grid(frozen, z=[0.5, 1.0], a_min=0.2, k_s=1.0)
+
+
+@pytest.mark.parametrize("tz", [None, "UTC"])
+def test_pipeline_nb_refuses_the_frozen_slice(tz):
+    """The scalar-metric path is a ranking path: it needs the guard too.
+
+    ``run_grid`` is the usual door but not the only one — a sweep script can
+    call ``pipeline_nb`` directly with ``vbt.Param`` values, and a guard that
+    only lives in the wrapper is a guard one import away from being bypassed.
+    """
+    frozen = synthetic_m1(start="2025-12-20", days=20)
+    if tz is not None:
+        frozen.index = frozen.index.tz_localize("America/New_York").tz_convert(tz)
+    with pytest.raises(RuntimeError, match="frozen slice"):
+        pipeline_nb(frozen, z=1.0, a_min=0.2, k_s=1.0)
 
 
 def test_the_cv_pipeline_refuses_the_frozen_slice():

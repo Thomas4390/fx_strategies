@@ -226,6 +226,15 @@ LEVEL_SIZE = 10.0  # §3
 ENTRY_BLOCK_START = 16 * 60 + 30
 ENTRY_BLOCK_END = 18 * 60 + 15
 SESSION_FORCE_MINUTE = 16 * 60 + 55
+# ... and the flat applies until the session reopens at 18:00, not until
+# midnight. ``minute_of_day`` is counted from New York midnight, so an
+# unbounded ``>= 16:55`` test is equally true at 21:00 and would close every
+# evening position on the bar that filled it.
+SESSION_FORCE_END = 18 * 60
+
+# §2 — ``fill[t] := open of bar t+1``: the bar five minutes later, not merely
+# the next one that exists. Across a hole in the feed the two differ.
+M5_MINUTES = 5
 
 # Cooldowns last 6 bars and at most one is opened per bar, so a handful of
 # slots always suffices; the ring is sized well above that and scanned in full.
@@ -317,6 +326,7 @@ def x10_engine_nb(
     dxy_ema50_h1: np.ndarray,
     minute_of_day: np.ndarray,
     session_id: np.ndarray,
+    bar_minute: np.ndarray,
     spread: np.ndarray,
     m1_open: np.ndarray,
     m1_high: np.ndarray,
@@ -354,6 +364,12 @@ def x10_engine_nb(
     position at a time, §9), on a bar where ``atr``, ``v``, ``m`` or ``a`` is
     undefined (§5), or on the last bar of the input — which has no ``i+1`` to
     fill in, and is also what makes the whole scan causal.
+
+    ``bar_minute`` is the start of each M5 bar in whole minutes on a monotonic
+    clock (epoch minutes in production). It exists for one test: an entry fills
+    only if the next bar starts exactly five minutes later. Every other counter
+    of the spec — ``N_arm``, ``N_hold``, ``N_sweep``, the 48-bar life and the
+    cooldown — keeps counting *existing* bars.
     """
     n5 = len(m5_close)
     cap_ev = events.shape[0]
@@ -567,16 +583,18 @@ def x10_engine_nb(
                     if j_exit >= 0:
                         break
 
-            if j_exit < 0 and (
+            # §10: flat from 16:55 up to the 18:00 reopen — a window, not a
+            # half-line. Outside it the position lives on, evening included.
+            session_close = (
                 minute_of_day[i] >= SESSION_FORCE_MINUTE
-                or bars_held >= MAX_HOLD_BARS
-                or i == n5 - 1
-            ):
+                and minute_of_day[i] < SESSION_FORCE_END
+            )
+            if j_exit < 0 and (session_close or bars_held >= MAX_HOLD_BARS or i == n5 - 1):
                 j_exit = j1 - 1
                 exit_px = (
                     m1_close[j1 - 1] - half if pos_q > 0 else m1_close[j1 - 1] + half
                 )
-                if minute_of_day[i] >= SESSION_FORCE_MINUTE or i == n5 - 1:
+                if session_close or i == n5 - 1:
                     exit_reason = XR_SESSION
                 else:
                     exit_reason = XR_TIME
@@ -915,6 +933,11 @@ def x10_engine_nb(
             r_est = num / denom if denom > 0.0 else np.nan
             if not np.isfinite(r_est) or r_est < R_MIN:
                 refuse = CR_R
+        if refuse == CR_NONE and bar_minute[i + 1] - bar_minute[i] != M5_MINUTES:
+            # §2: the fill bar is the one five minutes later. After a hole in
+            # the feed the next existing bar is not it, and filling there would
+            # execute a decision at a price it never saw.
+            refuse = CR_WINDOW
         if refuse == CR_NONE and (
             minute_of_day[i + 1] >= ENTRY_BLOCK_START
             and minute_of_day[i + 1] < ENTRY_BLOCK_END
@@ -996,6 +1019,7 @@ def run_engine(
     dxy_ema50_h1: np.ndarray,
     minute_of_day: np.ndarray,
     session_id: np.ndarray,
+    bar_minute: np.ndarray,
     spread: np.ndarray,
     m1_open: np.ndarray,
     m1_high: np.ndarray,
@@ -1040,6 +1064,7 @@ def run_engine(
             dxy_ema50_h1,
             minute_of_day,
             session_id,
+            bar_minute,
             spread,
             m1_open,
             m1_high,

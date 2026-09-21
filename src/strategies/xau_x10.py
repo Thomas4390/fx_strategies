@@ -185,6 +185,7 @@ class X10Inputs:
     dxy_ema50_h1: np.ndarray
     minute_of_day: np.ndarray
     session_id: np.ndarray
+    bar_minute: np.ndarray
     m1_start: np.ndarray
     m1_end: np.ndarray
 
@@ -208,6 +209,7 @@ class X10Inputs:
             dxy_ema50_h1=self.dxy_ema50_h1,
             minute_of_day=self.minute_of_day,
             session_id=self.session_id,
+            bar_minute=self.bar_minute,
             spread=np.full(len(self.m5), float(spread)),
             m1_open=self.m1["open"].to_numpy(dtype=np.float64),
             m1_high=self.m1["high"].to_numpy(dtype=np.float64),
@@ -312,6 +314,11 @@ def prepare_inputs(
         dxy_ema50_h1=dxy_ema_arr,
         minute_of_day=(m5.index.hour * 60 + m5.index.minute).to_numpy(dtype=np.float64),
         session_id=session_ids(m5.index),
+        # Monotonic clock in whole minutes: the engine only reads differences,
+        # to tell the bar five minutes later from the next one that exists.
+        bar_minute=(
+            (m5.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(minutes=1)
+        ).to_numpy(dtype=np.int64),
         m1_start=m1_start,
         m1_end=m1_end,
     )
@@ -574,6 +581,13 @@ def count_summary(indicator: X10Indicator) -> dict[str, Any]:
 # ═══════════════════════════════════════════════════════════════════════
 
 
+def _selection_index(data: Any) -> pd.DatetimeIndex:
+    """The index a sweep would be ranked on, whatever shape the data has."""
+    if isinstance(data, vbt.Data):
+        return pd.DatetimeIndex(data.wrapper.index)
+    return pd.DatetimeIndex(data.index)
+
+
 @vbt.parameterized(
     merge_func="concat",
     execute_kwargs=make_execute_kwargs("XAU x10 grid"),
@@ -595,7 +609,13 @@ def pipeline_nb(
 
     Numerically identical to ``pipeline()``: the same kernel, the same
     portfolio. The parallelism is the decorator's, not a second code path.
+
+    The holdout guard sits here and not only in ``run_grid``: this function
+    returns a *ranking* number, and it is importable and callable directly with
+    ``vbt.Param`` values. A guard that only lives in the convenience wrapper is
+    one import away from being bypassed.
     """
+    assert_not_optimizing(_selection_index(data))
     pf, _ = pipeline(
         data,
         z=z,
@@ -610,12 +630,6 @@ def pipeline_nb(
     if returns.ndim > 1:
         returns = returns[:, 0]
     return float(compute_metric_nb(returns, metric_type, ann_factor, cutoff))
-
-
-def _selection_index(data: Any) -> pd.DatetimeIndex:
-    if isinstance(data, vbt.Data):
-        return pd.DatetimeIndex(data.wrapper.index)
-    return pd.DatetimeIndex(data.index)
 
 
 def run_grid(

@@ -88,6 +88,17 @@ fill[t]     := a l'open de la barre M5 t+1
 Aucune décision ne consomme un prix postérieur à `C[t]`. C'est le point où la stratégie 1
 s'autorisait une idéalisation (`fill = close[t]`, `gold_momentum_spec.md` §6) ; **ici non**.
 
+**Adjacence du fill — normatif.** Une entrée n'est exécutée que si la barre M5 de fill commence
+**exactement 5 minutes** après la barre de décision. Sinon — trou de données, halte de
+cotation, réouverture de séance — l'entrée est abandonnée : `CANCEL` de raison `window`. On ne
+remplit jamais « à la prochaine barre disponible », quelle que soit sa distance.
+
+**Les compteurs, eux, se comptent en barres EXISTANTES.** `N_arm`, `N_hold`, `N_sweep`, la
+durée maximale de 48 barres (§10) et le cooldown (§9) décomptent des **barres présentes dans
+les données**, pas des minutes d'horloge. L'équivalence « 48 barres M5 = 4 heures » n'est donc
+exacte que sur une grille continue ; sur un échantillon troué, une position peut vivre plus de
+4 heures d'horloge. Écart assumé, identique dans les trois moteurs.
+
 ## 3. Niveaux x10
 
 ```
@@ -444,7 +455,7 @@ actif, chiffres à l'appui.
 | instant | `fill` à l'**open de la barre M5 suivant la décision** |
 | côté | achat à `mid + s/2`, vente à `mid − s/2` |
 | résolution stop/cible | sur les barres **M1** à l'intérieur de la barre M5 |
-| double contact dans une même M1 | **le stop l'emporte** (règle pessimiste, sans exception) |
+| double contact dans une même M1 | **le stop l'emporte** — règle pessimiste, voir sa portée exacte ci-dessous |
 | gap | si l'open dépasse déjà le stop ou la cible, fill à l'**open**, pas au niveau théorique |
 | cooldown | **par niveau**, 6 barres M5 (voir ci-dessous) |
 | position | **une seule à la fois**, tous scénarios confondus |
@@ -459,6 +470,17 @@ cooldown est **par niveau, jamais global**.
 le côté déclencheur est **déjà au-delà du stop**, la sortie a lieu **à cet open**. Aucune
 minute de grâce n'est accordée : c'est la même règle pessimiste que le double contact.
 
+**Portée exacte de la règle pessimiste.** L'open d'une barre M1 est **chronologiquement son
+premier prix** : il n'y a rien à départager. Donc, dans l'ordre :
+
+1. si l'open est **déjà au-delà du stop** → `STOP` à l'open ;
+2. sinon, si l'open est **déjà au-delà de la cible** → `TARGET` à l'open ;
+
+et ce **même si la même M1 touche ensuite l'autre borne** — la position n'existe plus. La règle
+« le stop l'emporte » tranche uniquement l'ordre **inconnu** entre le haut et le bas **à
+l'intérieur** d'une M1 ; elle ne s'applique **pas** à l'open. C'est aussi le comportement natif
+des SL/TP broker sous MT5, ce qui évite un poste d'écart de réconciliation.
+
 La règle pessimiste du double contact est la raison pour laquelle l'architecture Python passe
 par un registre d'ordres et `Portfolio.from_orders` sur l'index M1 : `from_signals` ne la
 garantit pas. QC la gère à la main dans `on_data`.
@@ -470,10 +492,24 @@ longue, `+ s/2` pour une position courte.
 ## 10. Sorties temporelles
 
 ```
-DUREE_MAX     := 48 barres M5 (4 heures)      # gele
-CLOTURE_JOUR  := 16:55 New York, inconditionnelle
+DUREE_MAX     := 48 barres M5 (4 heures sur grille continue, §2)   # gele
+CLOTURE_JOUR  := fenetre [ 16:55 , 18:00 [  New York
 FENETRE_INTERDITE := [ 16:30 , 18:15 [  New York, bornes incluse / exclue
 ```
+
+**La clôture de séance est une FENÊTRE, pas un seuil.** Toute position ouverte est fermée,
+raison `SESSION`, à la **première barre M5 dont l'heure de New York tombe dans
+`[16:55, 18:00[`**. En dehors de cette fenêtre, l'heure ne ferme rien.
+
+Conséquence explicite : **une position ouverte le soir (à partir de 18:15 New York) vit
+normalement, traverse minuit New York, et n'est fermée qu'au 16:55 suivant** — sauf `STOP`,
+`TARGET` ou les 48 barres avant.
+
+⚠️ **L'heure se compte depuis minuit New York.** Un test `heure ≥ 16:55` **sans borne
+supérieure** ferme à tort toute la séance du soir : de 18:15 à minuit, l'heure locale est
+supérieure à 16:55 et la position serait liquidée dès la barre suivant son entrée. Bug trouvé
+et corrigé dans le moteur de référence le **2026-09-21** ; MT5 et QC doivent implémenter la
+fenêtre bornée des deux côtés.
 
 Les **sorties** possibles, et leur `exit_reason` dans la trace : `STOP`, `TARGET`, `TIME`
 (48 barres), `SESSION` (16:55), et rien d'autre. Aucune position n'est tenue pendant la coupure
@@ -506,7 +542,14 @@ f       := 0,005                      # 0,5 % de l'equite, gele
 f       := 0,0025  si ctx_dxy < 0     # DXY adverse : risque * 0,5 (§6)
 e_fill  := open M5 suivant  +/- s/2   # prix de fill REEL, cote du §9
 lots    := arrondi_inferieur_0,01( f * equite / ( |e_fill - stop| * 100 ) )
+lots    := min( lots, arrondi_inferieur_0,01( equite * LEVERAGE_CAP / (100 * e_fill) ) )
 ```
+
+**Plafond de levier.** Après le calcul par le risque, la taille est bornée par le levier du
+compte : `LEVERAGE_CAP = 100` (1:100, celui du compte broker **et** du tester MT5), constante
+gelée. Ce plafond mord quand la distance au stop devient très faible —
+`|e_fill − stop| < prix / 20 000`, soit environ **0,10 $ pour un or à 2 000 $**. Un moteur qui
+l'omet ouvrira, sur ces cas, des positions que le broker refuserait.
 
 **Le dimensionnement se calcule au fill, avec `e_fill`, jamais avec `e_mid`.** `e_mid` sert au
 test `R` (§8) et à rien d'autre ; utiliser `e_mid` ici décalerait les lots de la moitié d'une
@@ -649,6 +692,7 @@ sur ce fichier, pas sur leur propre convention d'arrondi.
 | `s_min` (profondeur du sweep) | 0,3 | §7.3 |
 | `v_min` (vitesse minimale) | 0,2 | §7.1 |
 | risque par trade | 0,5 % de l'équité (0,25 % si DXY adverse) | §11 |
+| `LEVERAGE_CAP` (plafond de levier) | 100 (1:100) | §11 |
 | durée maximale | 48 barres M5 | §10 |
 | `R_min` | 1 | §8 |
 | cooldown | 6 barres par niveau | §9 |
