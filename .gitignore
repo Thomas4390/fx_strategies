@@ -24,6 +24,12 @@ results/*
 !results/production_report/
 results/production_report/*
 !results/production_report/*.json
+# Strategie 2 (XAUUSD niveaux x10) : memes raisons. JSON et CSV de la campagne
+# versionnes ; la matrice parquet et les logits PBO (gros, regenerables) non.
+!results/xau_x10/
+results/xau_x10/*
+!results/xau_x10/*.json
+!results/xau_x10/grid27.csv
 
 # Sorties de recherche nichees (src/strategies/results/...). L'ancien motif
 # `results/` les couvrait par effet de bord ; le motif ancre ci-dessus ne le

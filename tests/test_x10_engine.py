@@ -947,3 +947,96 @@ def test_truncating_the_input_leaves_the_earlier_events_untouched():
         got = cut[cut[:, 0] < k - 1]
         assert len(keep) > 10
         np.testing.assert_array_equal(keep, got)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 12. ABLATION SWITCHES (campaign only — annexe A.3)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# The three flags remove one *decision* each, never a measurement: the scores
+# keep being computed and traced. Each test below pins both halves — what the
+# spec does, and what the ablation does instead — so that a flag silently
+# widening its reach fails here rather than in a campaign JSON.
+
+# Bar 5 fills the breakout decided at bar 4, bar 6 reaches the target.
+ABLATION_TAIL = [
+    (2001.3, 2002.0, 2001.0, 2001.8),
+    (2005.0, 2010.5, 2004.0, 2010.2),
+    (2010.2, 2010.4, 2010.0, 2010.1),
+]
+
+
+def test_use_ema_false_lets_a_breakout_through_an_adverse_ema():
+    """§6.4 usage 1, half of it: ``ctx_ema > 0`` stops the entry, or does not."""
+    case = long_case(ABLATION_TAIL, ema=2010.0, vwap=1995.0)
+
+    events, trades = run_case(case)
+    assert _events_str(events)[-1] == "4 CANCEL(ctx) BREAK_LONG"
+    assert len(trades) == 0
+
+    events, trades = run_case(case, use_ema=False)
+    assert _events_str(events) == [
+        "0 ARM",
+        "1 BREAK BREAK_LONG",
+        "4 ENTRY BREAK_LONG",
+        "6 EXIT(TARGET) BREAK_LONG",
+    ]
+    # The score is still measured and still adverse — only the gate is gone.
+    assert trades.iloc[0].ctx_ema == -1.0
+    assert trades.iloc[0].ctx_vwap == 1.0
+
+
+def test_use_vwap_false_lets_a_breakout_through_an_adverse_vwap():
+    """§6.4 usage 1, the other half. ``use_ema`` is untouched and still bites."""
+    case = long_case(ABLATION_TAIL, ema=1990.0, vwap=2010.0)
+
+    events, trades = run_case(case)
+    assert _events_str(events)[-1] == "4 CANCEL(ctx) BREAK_LONG"
+    assert len(trades) == 0
+
+    events, trades = run_case(case, use_vwap=False)
+    assert _events_str(events) == [
+        "0 ARM",
+        "1 BREAK BREAK_LONG",
+        "4 ENTRY BREAK_LONG",
+        "6 EXIT(TARGET) BREAK_LONG",
+    ]
+    assert trades.iloc[0].ctx_ema == 1.0
+    assert trades.iloc[0].ctx_vwap == -1.0
+
+
+def test_use_dxy_false_stops_halving_the_risk_on_an_adverse_dollar():
+    """§6.4 usage 3 / §11: the flag moves the lots, never the entry itself."""
+    # q = +1 and DXY above its EMA50 H1 -> ctx_dxy = sign(-(dxy - ema)) = -1.
+    case = long_case(ABLATION_TAIL, dxy=101.0, dxy_ema=100.0)
+
+    _, trades = run_case(case)
+    assert len(trades) == 1
+    assert trades.iloc[0].ctx_dxy == -1.0
+    # 0.25 % of 10 000 over a 2.3 $ stop on a 100 oz contract.
+    assert trades.iloc[0].lots == pytest.approx(0.10)
+
+    _, ablated = run_case(case, use_dxy=False)
+    assert len(ablated) == 1
+    assert ablated.iloc[0].ctx_dxy == -1.0  # still measured, still adverse
+    assert ablated.iloc[0].lots == pytest.approx(0.21)  # the undivided 0.5 %
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [
+        {},
+        dict(use_ema=True),
+        dict(use_vwap=True),
+        dict(use_dxy=True),
+        dict(use_ema=True, use_vwap=True, use_dxy=True),
+    ],
+)
+def test_the_flags_at_their_defaults_change_nothing(flags):
+    """Bit-for-bit: the spec run is the ``True, True, True`` run."""
+    case = random_case()
+    reference = run_engine(**case)
+    got = run_engine(**case, **flags)
+    np.testing.assert_array_equal(reference[0], got[0])
+    np.testing.assert_array_equal(reference[1], got[1])
+    assert len(reference[0]) > 50  # the fixture is not vacuous

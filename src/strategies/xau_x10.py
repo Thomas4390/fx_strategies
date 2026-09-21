@@ -412,12 +412,21 @@ def pipeline(
     init_cash: float = X10_INIT_CASH,
     risk_frac: float = RISK_FRAC,
     inputs: X10Inputs | None = None,
+    *,
+    use_ema: bool = True,
+    use_vwap: bool = True,
+    use_dxy: bool = True,
 ) -> tuple[vbt.Portfolio, X10Indicator]:
     """Run the x10 engine and wrap its orders in a portfolio.
 
     ``z``, ``a_min`` and ``k_s`` are the three axes of annexe A.2; everything
     else the spec freezes lives in ``framework.x10_engine`` and is not
     reachable from here.
+
+    ``use_ema`` / ``use_vwap`` / ``use_dxy`` are the ablation switches of
+    ``framework.x10_engine.run_engine``: they exist for the seven ablation
+    trials of annexe A.3 and for nothing else. Left at their defaults — which
+    every other caller does — the run is the spec's, bit for bit.
 
     The portfolio is built on the **M1** index with ``from_orders`` at the
     kernel's own fill and exit prices, zero fees and zero slippage: the spread
@@ -433,6 +442,9 @@ def pipeline(
         k_s=k_s,
         init_cash=init_cash,
         risk_frac=risk_frac,
+        use_ema=use_ema,
+        use_vwap=use_vwap,
+        use_dxy=use_dxy,
     )
 
     close_m1 = inputs.m1["close"]
@@ -462,6 +474,9 @@ def pipeline(
             spread=spread,
             init_cash=init_cash,
             risk_frac=risk_frac,
+            use_ema=use_ema,
+            use_vwap=use_vwap,
+            use_dxy=use_dxy,
         ),
     )
     return pf, indicator

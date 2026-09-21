@@ -123,8 +123,18 @@ def test_annotating_an_unknown_entry_raises(tmp_registry):
         trials.annotate_config_key("2020-01-01T00:00:00+00:00", "whatever")
 
 
+# Chiffres publiés au 2026-07-28, avant la campagne XAUUSD x10. Chaque
+# campagne postérieure s'AJOUTE à ce socle et déclare sa consommation ici :
+# une famille qui grandit en silence est exactement ce que ce test empêche.
+_LOCKED_DISTINCT_2026_07_28 = 382
+_LOCKED_DISTINCT_EXCL_SEED_2026_07_28 = 92
+# Campagne in-sample x10 : 27 configurations de grille + 7 ablations
+# (docs/specs/xau_x10_spec.md annexe A.3, docs/research/xau_x10_is_results.md).
+_X10_CAMPAIGN = 34
+
+
 def test_committed_registry_totals_are_locked():
-    """382 distinct / 92 hors fx_legacy — les chiffres publiés.
+    """382 distinct + 34 de la campagne x10 / 92 hors fx_legacy, idem.
 
     Ce test est le garde-fou qui aurait attrapé les 6 re-runs de
     ``tsmom_universe`` comptés comme des tests nouveaux.
@@ -135,10 +145,18 @@ def test_committed_registry_totals_are_locked():
     chaque fois, c'est-à-dire à faire du garde-fou une formalité. Le brut est
     une borne conservatrice qui a le droit de croître ; ce qui ne doit pas
     bouger sans décision, c'est le nombre d'espaces de configurations explorés.
+
+    Les constantes ne sont pas fusionnées en un seul nombre : le socle publié
+    et la consommation de chaque campagne restent lisibles séparément, sinon
+    « 416 » ne dit plus d'où viennent les 34 derniers.
     """
     entries = json.loads(_REAL_REGISTRY.read_text())
     sweeps = [e for e in entries if e.get("kind") != "annotation"]
 
-    assert trials.distinct_trials() == 382
-    assert trials.distinct_trials() - trials.distinct_trials("fx_legacy") == 92
+    assert trials.distinct_trials("xau_x10") == _X10_CAMPAIGN
+    assert trials.distinct_trials() == _LOCKED_DISTINCT_2026_07_28 + _X10_CAMPAIGN
+    assert (
+        trials.distinct_trials() - trials.distinct_trials("fx_legacy")
+        == _LOCKED_DISTINCT_EXCL_SEED_2026_07_28 + _X10_CAMPAIGN
+    )
     assert sum(int(e["n"]) for e in sweeps) >= trials.distinct_trials()

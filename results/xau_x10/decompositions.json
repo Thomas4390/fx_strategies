@@ -1,0 +1,335 @@
+{
+  "config": "z1_a0.2_k1",
+  "is_a_selection": false,
+  "spread": 0.29,
+  "overall": {
+    "n": 1723,
+    "expectancy_r": -0.16018528928042608,
+    "profit_factor": 0.7369067965330649,
+    "pnl": -6258.136990833048,
+    "win_rate": 0.3116656993615786
+  },
+  "by_scenario": {
+    "BREAK_LONG": {
+      "n": 377,
+      "expectancy_r": -0.08701817527667718,
+      "profit_factor": 0.7964443991274391,
+      "pnl": -1013.0783925570495,
+      "win_rate": 0.35278514588859416
+    },
+    "BREAK_SHORT": {
+      "n": 280,
+      "expectancy_r": -0.1487884986503809,
+      "profit_factor": 0.8137243262163455,
+      "pnl": -772.1121339596561,
+      "win_rate": 0.30714285714285716
+    },
+    "REV_LONG": {
+      "n": 513,
+      "expectancy_r": -0.155401618545979,
+      "profit_factor": 0.7554870040147256,
+      "pnl": -1711.2896451108768,
+      "win_rate": 0.3138401559454191
+    },
+    "REV_SHORT": {
+      "n": 553,
+      "expectancy_r": -0.22027412552382092,
+      "profit_factor": 0.639756835089036,
+      "pnl": -2761.6568192054656,
+      "win_rate": 0.28390596745027125
+    }
+  },
+  "by_ny_session": {
+    "Asie 18:00-03:00": {
+      "n": 595,
+      "expectancy_r": -0.25671225031475725,
+      "profit_factor": 0.6019224488203812,
+      "pnl": -3605.447492607316,
+      "win_rate": 0.2689075630252101
+    },
+    "Londres 03:00-08:00": {
+      "n": 379,
+      "expectancy_r": -0.13667555018355354,
+      "profit_factor": 0.8407232848486327,
+      "pnl": -910.6370761323319,
+      "win_rate": 0.28232189973614774
+    },
+    "New York 08:00-17:00": {
+      "n": 749,
+      "expectancy_r": -0.095401109443694,
+      "profit_factor": 0.8067026300852383,
+      "pnl": -1742.0524220934003,
+      "win_rate": 0.3604806408544726
+    }
+  },
+  "by_atr_tercile": {
+    "ATR bas": {
+      "n": 575,
+      "expectancy_r": -0.18975085408484954,
+      "profit_factor": 0.7249514271221477,
+      "pnl": -2572.0223449644477,
+      "win_rate": 0.2643478260869565
+    },
+    "ATR haut": {
+      "n": 574,
+      "expectancy_r": -0.13620383093406968,
+      "profit_factor": 0.762835078312248,
+      "pnl": -1525.6208312216795,
+      "win_rate": 0.35714285714285715
+    },
+    "ATR moyen": {
+      "n": 574,
+      "expectancy_r": -0.15454967486973809,
+      "profit_factor": 0.7300350830826123,
+      "pnl": -2160.493814646921,
+      "win_rate": 0.313588850174216
+    }
+  },
+  "by_dollars_per_atr": {
+    "3-6": {
+      "n": 700,
+      "expectancy_r": -0.16441383799253653,
+      "profit_factor": 0.6926276288986899,
+      "pnl": -2642.870920074868,
+      "win_rate": 0.3485714285714286
+    },
+    "6-10": {
+      "n": 560,
+      "expectancy_r": -0.06027137551716633,
+      "profit_factor": 0.8661279057428,
+      "pnl": -1052.9413518084712,
+      "win_rate": 0.3107142857142857
+    },
+    "<3": {
+      "n": 145,
+      "expectancy_r": -0.2644782999582237,
+      "profit_factor": 0.6698791988371198,
+      "pnl": -499.31471540552275,
+      "win_rate": 0.30344827586206896
+    },
+    ">10": {
+      "n": 318,
+      "expectancy_r": -0.27927120456554394,
+      "profit_factor": 0.6449634179366339,
+      "pnl": -2063.010003544186,
+      "win_rate": 0.2358490566037736
+    }
+  },
+  "by_year": {
+    "2019": {
+      "n": 149,
+      "expectancy_r": -0.044433255119971704,
+      "profit_factor": 0.9647362092750228,
+      "pnl": -114.21241530922634,
+      "win_rate": 0.33557046979865773
+    },
+    "2020": {
+      "n": 246,
+      "expectancy_r": -0.2740070429571403,
+      "profit_factor": 0.5798284303383139,
+      "pnl": -2178.906686512344,
+      "win_rate": 0.2886178861788618
+    },
+    "2021": {
+      "n": 234,
+      "expectancy_r": -0.2195812949852191,
+      "profit_factor": 0.6342626035101082,
+      "pnl": -1465.2103292126585,
+      "win_rate": 0.27350427350427353
+    },
+    "2022": {
+      "n": 247,
+      "expectancy_r": -0.22345007209186354,
+      "profit_factor": 0.660266022698871,
+      "pnl": -1146.3655737219906,
+      "win_rate": 0.2874493927125506
+    },
+    "2023": {
+      "n": 216,
+      "expectancy_r": -0.14787572970033788,
+      "profit_factor": 0.7642733050498035,
+      "pnl": -548.1908891335133,
+      "win_rate": 0.3194444444444444
+    },
+    "2024": {
+      "n": 307,
+      "expectancy_r": -0.10960853094859281,
+      "profit_factor": 0.7882471008612945,
+      "pnl": -646.3799488471113,
+      "win_rate": 0.31921824104234525
+    },
+    "2025": {
+      "n": 324,
+      "expectancy_r": -0.091999377778146,
+      "profit_factor": 0.9389818686540462,
+      "pnl": -158.8711480962038,
+      "win_rate": 0.35185185185185186
+    }
+  },
+  "by_exit_reason": {
+    "SESSION": {
+      "n": 107,
+      "expectancy_r": 0.31274182133172024,
+      "profit_factor": 2.898301693925256,
+      "pnl": 649.9785000000147,
+      "win_rate": 0.6261682242990654
+    },
+    "STOP": {
+      "n": 1072,
+      "expectancy_r": -1.0001607456218147,
+      "profit_factor": 0.0,
+      "pnl": -23072.55699083318,
+      "win_rate": 0.0
+    },
+    "TARGET": {
+      "n": 265,
+      "expectancy_r": 2.08696431032513,
+      "profit_factor": null,
+      "pnl": 10980.09950000003,
+      "win_rate": 1.0
+    },
+    "TIME": {
+      "n": 279,
+      "expectancy_r": 0.7514844041496688,
+      "profit_factor": 14.943487416995245,
+      "pnl": 5184.342000000091,
+      "win_rate": 0.7347670250896058
+    }
+  },
+  "reversals_extended_vs_not": {
+    "non étendu": {
+      "n": 630,
+      "expectancy_r": -0.2311739439779276,
+      "profit_factor": 0.6452994785158992,
+      "pnl": -3268.339010139943,
+      "win_rate": 0.26825396825396824
+    },
+    "étendu": {
+      "n": 436,
+      "expectancy_r": -0.12819503904281151,
+      "profit_factor": 0.7789912415678437,
+      "pnl": -1204.6074541763992,
+      "win_rate": 0.34174311926605505
+    }
+  },
+  "by_dxy_context": {
+    "adverse": {
+      "n": 766,
+      "expectancy_r": -0.17785067313968367,
+      "profit_factor": 0.7161804508846801,
+      "pnl": -1823.8247882438418,
+      "win_rate": 0.3093994778067885
+    },
+    "favorable": {
+      "n": 957,
+      "expectancy_r": -0.14604559854250415,
+      "profit_factor": 0.744578550097799,
+      "pnl": -4434.312202589206,
+      "win_rate": 0.31347962382445144
+    }
+  },
+  "by_retest": {
+    "retest": {
+      "n": 770,
+      "expectancy_r": -0.18709266651273668,
+      "profit_factor": 0.6899249437322403,
+      "pnl": -3227.6311524469934,
+      "win_rate": 0.2987012987012987
+    },
+    "sans retest": {
+      "n": 953,
+      "expectancy_r": -0.1384448061021689,
+      "profit_factor": 0.7734637350194292,
+      "pnl": -3030.5058383860546,
+      "win_rate": 0.32214060860440713
+    }
+  },
+  "concentration": {
+    "total_net": -6258.136990833048,
+    "share_top5_days": null,
+    "share_best_month": null,
+    "share_top10_trades": null,
+    "pnl_top5_days": 1261.484000000014,
+    "pnl_best_month": 325.9668768455995,
+    "pnl_top10_trades": 1997.786000000011,
+    "gross_profit": 17528.631000000114,
+    "share_of_gross_profit_top5_days": 0.0719670577810672,
+    "share_of_gross_profit_top10_trades": 0.11397273409429395,
+    "top5_days": {
+      "2019-08-12": 204.58199999999852,
+      "2019-02-13": 252.58200000001125,
+      "2019-03-28": 264.5880000000034,
+      "2019-10-15": 269.6620000000021,
+      "2021-08-23": 270.0699999999988
+    },
+    "best_month": "2019-08",
+    "n_profitable_days": 376,
+    "n_losing_days": 756
+  },
+  "r_rule_rejection_by_year": {
+    "2019": {
+      "candidates": 166,
+      "rejected": 11,
+      "rejection_rate": 0.06626506024096386
+    },
+    "2020": {
+      "candidates": 338,
+      "rejected": 90,
+      "rejection_rate": 0.26627218934911245
+    },
+    "2021": {
+      "candidates": 274,
+      "rejected": 39,
+      "rejection_rate": 0.14233576642335766
+    },
+    "2022": {
+      "candidates": 296,
+      "rejected": 49,
+      "rejection_rate": 0.16554054054054054
+    },
+    "2023": {
+      "candidates": 272,
+      "rejected": 55,
+      "rejection_rate": 0.20220588235294118
+    },
+    "2024": {
+      "candidates": 412,
+      "rejected": 103,
+      "rejection_rate": 0.25
+    },
+    "2025": {
+      "candidates": 741,
+      "rejected": 412,
+      "rejection_rate": 0.5560053981106613
+    }
+  },
+  "r_rule_note": "candidats à R < 1 sur candidats AYANT ATTEINT le test R (§8) : un refus au contexte n'a pas de r_est et n'entre pas au dénominateur",
+  "time_exits": {
+    "n": 279,
+    "share_of_trades": 0.16192687173534534,
+    "max_hold_bars": 48
+  },
+  "bars_held": {
+    "mean": 19.585026117237376,
+    "median": 13.0
+  },
+  "events_by_type": {
+    "ARM": 12433,
+    "CANCEL": 11428,
+    "BREAK": 2727,
+    "ENTRY": 1723,
+    "EXIT": 1723,
+    "SWEEP": 1369
+  },
+  "cancels_by_reason": {
+    "sweep": 4742,
+    "zone": 4227,
+    "hold": 1008,
+    "r": 759,
+    "ctx": 589,
+    "nsweep": 84,
+    "window": 17,
+    "narm": 2
+  },
+  "context_refusals": 589
+}

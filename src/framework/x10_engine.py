@@ -339,6 +339,9 @@ def x10_engine_nb(
     k_s: float,
     init_cash: float,
     risk_frac: float,
+    use_ema: bool,
+    use_vwap: bool,
+    use_dxy: bool,
     events: np.ndarray,
     trades: np.ndarray,
 ) -> tuple[int, int]:
@@ -370,6 +373,14 @@ def x10_engine_nb(
     only if the next bar starts exactly five minutes later. Every other counter
     of the spec — ``N_arm``, ``N_hold``, ``N_sweep``, the 48-bar life and the
     cooldown — keeps counting *existing* bars.
+
+    ``use_ema`` / ``use_vwap`` / ``use_dxy`` switch off the three context uses
+    of §6.4 one at a time, and **only** those three: the breakout gate on
+    ``ctx_ema``, the breakout gate on ``ctx_vwap``, and the halving of the risk
+    on an adverse dollar. All three default to the spec (``True`` everywhere in
+    the callers), so the campaign's ablation run is the only thing that ever
+    sees them off. The scores themselves keep being computed and traced —
+    an ablation removes a *decision*, not a measurement.
     """
     n5 = len(m5_close)
     cap_ev = events.shape[0]
@@ -438,7 +449,11 @@ def x10_engine_nb(
             fill_px = mid_open + half if p_q > 0 else mid_open - half
             # §6.4 usage 3 / §11: an adverse dollar halves the risk, it never
             # blocks the trade — and it does so for the four scenarios.
-            frac = risk_frac * DXY_ADVERSE_FACTOR if p_ctx_dxy < 0 else risk_frac
+            frac = (
+                risk_frac * DXY_ADVERSE_FACTOR
+                if (use_dxy and p_ctx_dxy < 0)
+                else risk_frac
+            )
             stop_dist = abs(fill_px - p_stop)
             lots = 0.0
             if stop_dist > 0.0 and equity > 0.0:
@@ -924,7 +939,7 @@ def x10_engine_nb(
         refuse = CR_NONE
         r_est = np.nan
         if entry_scn == SC_BREAK_LONG or entry_scn == SC_BREAK_SHORT:
-            if ctx_ema <= 0 or ctx_vwap <= 0:
+            if (use_ema and ctx_ema <= 0) or (use_vwap and ctx_vwap <= 0):
                 refuse = CR_CTX
         if refuse == CR_NONE:
             # §8: one half-spread, once, on each side of the ratio.
@@ -1033,6 +1048,9 @@ def run_engine(
     k_s: float = 1.0,
     init_cash: float = 10_000.0,
     risk_frac: float = RISK_FRAC,
+    use_ema: bool = True,
+    use_vwap: bool = True,
+    use_dxy: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
     """``x10_engine_nb`` with its output buffers sized and trimmed.
 
@@ -1040,6 +1058,9 @@ def run_engine(
     the number of rows written. The capacity starts small and quadruples on
     overflow: events are rare (a handful per hundred bars) and a buffer sized
     for the worst case would dwarf the price history it scans.
+
+    The three ablation flags sit at the **end** of the keyword list and default
+    to the spec, so every existing call site keeps its exact behaviour.
     """
     n5 = len(m5_close)
     cap = max(256, n5 // 8)
@@ -1077,6 +1098,9 @@ def run_engine(
             float(k_s),
             float(init_cash),
             float(risk_frac),
+            bool(use_ema),
+            bool(use_vwap),
+            bool(use_dxy),
             events,
             trades,
         )

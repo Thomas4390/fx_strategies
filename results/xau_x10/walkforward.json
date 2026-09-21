@@ -1,0 +1,76 @@
+{
+  "config": "z1_a0.2_k1",
+  "is_a_selection": false,
+  "spread": 0.29,
+  "total_net": -6258.136990833048,
+  "years": [
+    {
+      "year": 2019,
+      "n": 149,
+      "expectancy_r": -0.044433255119971704,
+      "profit_factor": 0.9647362092750228,
+      "pnl": -114.21241530922634,
+      "win_rate": 0.33557046979865773,
+      "share_of_total_net": 0.01825022614182548
+    },
+    {
+      "year": 2020,
+      "n": 246,
+      "expectancy_r": -0.2740070429571403,
+      "profit_factor": 0.5798284303383139,
+      "pnl": -2178.906686512344,
+      "win_rate": 0.2886178861788618,
+      "share_of_total_net": 0.34817177855071213
+    },
+    {
+      "year": 2021,
+      "n": 234,
+      "expectancy_r": -0.2195812949852191,
+      "profit_factor": 0.6342626035101082,
+      "pnl": -1465.2103292126585,
+      "win_rate": 0.27350427350427353,
+      "share_of_total_net": 0.23412883600325565
+    },
+    {
+      "year": 2022,
+      "n": 247,
+      "expectancy_r": -0.22345007209186354,
+      "profit_factor": 0.660266022698871,
+      "pnl": -1146.3655737219906,
+      "win_rate": 0.2874493927125506,
+      "share_of_total_net": 0.18318000635032325
+    },
+    {
+      "year": 2023,
+      "n": 216,
+      "expectancy_r": -0.14787572970033788,
+      "profit_factor": 0.7642733050498035,
+      "pnl": -548.1908891335133,
+      "win_rate": 0.3194444444444444,
+      "share_of_total_net": 0.08759649875618035
+    },
+    {
+      "year": 2024,
+      "n": 307,
+      "expectancy_r": -0.10960853094859281,
+      "profit_factor": 0.7882471008612945,
+      "pnl": -646.3799488471113,
+      "win_rate": 0.31921824104234525,
+      "share_of_total_net": 0.10328632143942072
+    },
+    {
+      "year": 2025,
+      "n": 324,
+      "expectancy_r": -0.091999377778146,
+      "profit_factor": 0.9389818686540462,
+      "pnl": -158.8711480962038,
+      "win_rate": 0.35185185185185186,
+      "share_of_total_net": 0.025386332758282393
+    }
+  ],
+  "n_years": 7,
+  "n_positive_years": 0,
+  "share_positive_years": 0.0,
+  "max_year_share_of_net": 0.34817177855071213,
+  "note": "`share_of_total_net` est signée et peut sortir de [0, 1] quand le net total est négatif ; `max_year_share_of_net` prend les valeurs absolues, qui est ce que le critère du §1 veut dire."
+}

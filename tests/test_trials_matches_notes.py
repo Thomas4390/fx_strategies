@@ -44,11 +44,21 @@ DECLARED: dict[str, int] = {
     "xau_x10": 40,             # 27 grille + 7 ablations + 6 réserve
 }
 
-# Familles dont le budget est **gelé avant mesure** : la note existe, le
-# registre est encore vide. Le budget est alors un plafond (``<=``), pas une
-# égalité, et il ne compte pas dans les totaux publiés jusqu'au premier sweep.
-# Source : docs/specs/xau_x10_spec.md annexe A.3.
+# Familles dont le budget est **gelé avant mesure**. Le budget est alors un
+# plafond (``<=``), pas une égalité : la famille compte ce qu'elle a réellement
+# logué, pas ce qu'elle s'est autorisé. ``xau_x10`` est dans ce cas depuis que
+# la campagne in-sample a consommé 27 + 7 = 34 de ses 40 essais — les 6 de
+# réserve n'ont pas été dépensés, et le test doit continuer à passer si
+# quelqu'un les dépense, mais rougir au 41ᵉ.
+# Source : docs/specs/xau_x10_spec.md annexe A.3,
+#          docs/research/xau_x10_is_results.md.
 BUDGETED_NOT_YET_RUN: frozenset[str] = frozenset({"xau_x10"})
+
+# Le total publié jusqu'au 2026-07-28, avant que ``xau_x10`` ne loge quoi que
+# ce soit. Il est figé ici parce que les livrables le citent ; la campagne x10
+# s'y ajoute, elle ne le remplace pas.
+PUBLISHED_TOTAL_BEFORE_X10 = 382
+PUBLISHED_TOTAL_EXCLUDING_SEED_BEFORE_X10 = 92
 
 
 @pytest.mark.parametrize("family,expected", sorted(DECLARED.items()))
@@ -84,10 +94,30 @@ def test_no_family_is_logged_without_being_declared():
 
 
 def test_the_published_totals_hold():
-    """Les trois chiffres que les livrables citent."""
-    consumed = sum(v for k, v in DECLARED.items() if k not in BUDGETED_NOT_YET_RUN)
-    assert trials.distinct_trials() == consumed == 382
-    assert trials.distinct_trials() - trials.distinct_trials("fx_legacy") == 92
+    """Les trois chiffres que les livrables citent.
+
+    Les familles au budget gelé sont comptées à leur consommation **réelle** :
+    une note qui déclare un plafond n'a pas dépensé ce plafond, et le publier
+    déflaterait des Sharpe pour des essais que personne n'a faits.
+    """
+    fixed = sum(v for k, v in DECLARED.items() if k not in BUDGETED_NOT_YET_RUN)
+    budgeted = sum(trials.distinct_trials(k) for k in BUDGETED_NOT_YET_RUN)
+    assert fixed == PUBLISHED_TOTAL_BEFORE_X10
+    assert trials.distinct_trials() == fixed + budgeted
+    assert (
+        trials.distinct_trials() - trials.distinct_trials("fx_legacy")
+        == PUBLISHED_TOTAL_EXCLUDING_SEED_BEFORE_X10 + budgeted
+    )
     assert trials.total_trials() >= trials.distinct_trials(), (
         "le total brut ne peut pas être inférieur au distinct"
     )
+
+
+def test_the_x10_campaign_consumed_its_twentyseven_plus_seven():
+    """La campagne in-sample x10 : 27 configurations de grille + 7 ablations.
+
+    Verrouillé parce que c'est le ``n_trials`` qui déflate le DSR publié dans
+    ``docs/research/xau_x10_is_results.md``. Un 35ᵉ essai logué sans note
+    correspondante invaliderait ce chiffre.
+    """
+    assert trials.distinct_trials("xau_x10") == 34

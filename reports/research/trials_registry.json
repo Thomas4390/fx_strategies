@@ -296,5 +296,68 @@
     "n": 24,
     "note": "passe 1 pr\u00e9-filtre vbt, config unique d\u00e9fauts or",
     "config_key": "tsmom_universe:21instr:gold_prod_defaults:selection_end_2025-12-31"
+  },
+  {
+    "ts": "2026-09-21T16:24:35.059122+00:00",
+    "family": "xau_x10",
+    "n": 27,
+    "note": "grille annexe A.2 (z x a_min x k_s), XAUUSD x10, in-sample 2019-01-01 \u2192 2025-12-31, spread constant 0.29 $",
+    "config_key": "xau_x10:grid27:v1"
+  },
+  {
+    "ts": "2026-09-21T16:27:21.812850+00:00",
+    "family": "xau_x10",
+    "n": 7,
+    "note": "ablations EMA50 H1 / VWAP / DXY (7 combinaisons hors la spec) \u00e0 la configuration z1_a0.2_k1, in-sample 2019-01-01 \u2192 2025-12-31",
+    "config_key": "xau_x10:ablations:v1"
+  },
+  {
+    "ts": "2026-09-21T16:30:55.794361+00:00",
+    "family": "xau_x10",
+    "n": 27,
+    "note": "grille annexe A.2 (z x a_min x k_s), XAUUSD x10, in-sample 2019-01-01 \u2192 2025-12-31, spread constant 0.29 $",
+    "config_key": "xau_x10:grid27:v1"
+  },
+  {
+    "ts": "2026-09-21T16:33:01.322323+00:00",
+    "family": "xau_x10",
+    "n": 7,
+    "note": "ablations EMA50 H1 / VWAP / DXY (7 combinaisons hors la spec) \u00e0 la configuration z1_a0.2_k1, in-sample 2019-01-01 \u2192 2025-12-31",
+    "config_key": "xau_x10:ablations:v1"
+  },
+  {
+    "ts": "2026-09-21T16:39:24.975872+00:00",
+    "family": "xau_x10",
+    "n": 27,
+    "note": "grille annexe A.2 (z x a_min x k_s), XAUUSD x10, in-sample 2019-01-01 \u2192 2025-12-31, spread constant 0.29 $",
+    "config_key": "xau_x10:grid27:v1"
+  },
+  {
+    "ts": "2026-09-21T16:41:34.819986+00:00",
+    "family": "xau_x10",
+    "n": 7,
+    "note": "ablations EMA50 H1 / VWAP / DXY (7 combinaisons hors la spec) \u00e0 la configuration z1_a0.2_k1, in-sample 2019-01-01 \u2192 2025-12-31",
+    "config_key": "xau_x10:ablations:v1"
+  },
+  {
+    "ts": "2026-09-21T16:46:29.452316+00:00",
+    "family": "xau_x10",
+    "n": 27,
+    "note": "grille annexe A.2 (z x a_min x k_s), XAUUSD x10, in-sample 2019-01-01 \u2192 2025-12-31, spread constant 0.29 $",
+    "config_key": "xau_x10:grid27:v1"
+  },
+  {
+    "ts": "2026-09-21T16:48:42.703710+00:00",
+    "family": "xau_x10",
+    "n": 7,
+    "note": "ablations EMA50 H1 / VWAP / DXY (7 combinaisons hors la spec) \u00e0 la configuration z1_a0.2_k1, in-sample 2019-01-01 \u2192 2025-12-31",
+    "config_key": "xau_x10:ablations:v1"
+  },
+  {
+    "ts": "2026-09-21T16:49:10.194866+00:00",
+    "family": "xau_x10",
+    "n": 27,
+    "note": "grille annexe A.2 (z x a_min x k_s), XAUUSD x10, in-sample 2019-01-01 \u2192 2025-12-31, spread constant 0.29 $",
+    "config_key": "xau_x10:grid27:v1"
   }
 ]
