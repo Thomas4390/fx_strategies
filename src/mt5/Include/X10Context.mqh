@@ -183,6 +183,114 @@ void X10EmaSpan(const double &x[], int n, int span, int min_periods,
     }
 }
 
+//--- How many closed H1 bars are re-read when topping a cache up.
+//--- Two would do; six absorbs a handful of missing hours before the
+//--- cache falls back to a full copy.
+#define X10_H1_APPEND 6
+
+//+------------------------------------------------------------------+
+//| CX10H1Cache - the last 'cap' closed H1 bars of one symbol, kept   |
+//| between rebuilds and topped up one bar at a time.                 |
+//|                                                                   |
+//| Measured on this broker: CopyRates of 500 H1 bars of a FOREIGN    |
+//| symbol costs the tester ~0.8 s, because it rebuilds the hourly    |
+//| series from M1 on every call. Five such calls per simulated hour  |
+//| were 99.999% of a one-month run (33 minutes of the 33). The bars  |
+//| themselves never change once closed, so they are read once and    |
+//| appended thereafter.                                              |
+//|                                                                   |
+//| The window is kept EXACTLY 'cap' bars deep, oldest dropped one    |
+//| by one, so every consumer sees the same window CopyRates(1, cap)  |
+//| would have returned - the EMA and the ATR below are seeded at the |
+//| same position as before, and their values are unchanged.          |
+//+------------------------------------------------------------------+
+class CX10H1Cache
+{
+private:
+    datetime m_time[];
+    double   m_high[];
+    double   m_low[];
+    double   m_close[];
+    int      m_n;
+    int      m_cap;
+
+    void Append(const MqlRates &bar)
+    {
+        if(m_n >= m_cap)
+        {
+            for(int i = 1; i < m_cap; i++)
+            {
+                m_time[i - 1]  = m_time[i];
+                m_high[i - 1]  = m_high[i];
+                m_low[i - 1]   = m_low[i];
+                m_close[i - 1] = m_close[i];
+            }
+            m_n = m_cap - 1;
+        }
+        m_time[m_n]  = bar.time;
+        m_high[m_n]  = bar.high;
+        m_low[m_n]   = bar.low;
+        m_close[m_n] = bar.close;
+        m_n++;
+    }
+
+    void FullCopy(string symbol)
+    {
+        MqlRates r[];
+        ArraySetAsSeries(r, false);
+        int k = CopyRates(symbol, PERIOD_H1, 1, m_cap, r);
+        m_n = 0;
+        if(k <= 0) return;
+        for(int i = 0; i < k; i++) Append(r[i]);
+    }
+
+public:
+    CX10H1Cache() : m_n(0), m_cap(0) {}
+
+    void Init(int cap)
+    {
+        m_cap = cap;
+        m_n   = 0;
+        ArrayResize(m_time, cap);
+        ArrayResize(m_high, cap);
+        ArrayResize(m_low, cap);
+        ArrayResize(m_close, cap);
+    }
+
+    int      N() const { return m_n; }
+    datetime Time(int i) const { return m_time[i]; }
+    double   Close(int i) const { return m_close[i]; }
+
+    void Times(datetime &out[]) const { ArrayCopy(out, m_time, 0, 0, m_n); }
+    void Highs(double &out[]) const { ArrayCopy(out, m_high, 0, 0, m_n); }
+    void Lows(double &out[]) const { ArrayCopy(out, m_low, 0, 0, m_n); }
+    void Closes(double &out[]) const { ArrayCopy(out, m_close, 0, 0, m_n); }
+
+    //--- Bring the window up to the last closed H1 bar; returns its depth.
+    int Refresh(string symbol)
+    {
+        if(m_n == 0)
+        {
+            FullCopy(symbol);
+            return m_n;
+        }
+        MqlRates r[];
+        ArraySetAsSeries(r, false);
+        int k = CopyRates(symbol, PERIOD_H1, 1, X10_H1_APPEND, r);
+        if(k <= 0) return m_n;
+        if(r[0].time > m_time[m_n - 1])
+        {
+            //--- Even the oldest bar read is newer than the cache: a hole
+            //--- wider than the top-up window, so re-read the lot.
+            FullCopy(symbol);
+            return m_n;
+        }
+        for(int i = 0; i < k; i++)
+            if(r[i].time > m_time[m_n - 1]) Append(r[i]);
+        return m_n;
+    }
+};
+
 //+------------------------------------------------------------------+
 //| §6.1 alignment: index of the last H1 bar whose close time is at  |
 //| or before 'm5_open'. Returns -1 when no bar qualifies.           |

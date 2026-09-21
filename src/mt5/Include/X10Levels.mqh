@@ -85,4 +85,67 @@ void X10WilderATR(const double &high[], const double &low[],
     }
 }
 
+//+------------------------------------------------------------------+
+//| CX10WilderATR - the same recursion, fed one bar at a time.        |
+//|                                                                  |
+//| X10WilderATR above rescans a whole window; this object carries    |
+//| the two scalars that window was only ever used to rebuild. The    |
+//| arithmetic is copied character for character (same alpha, same    |
+//| order of operations), so seeding it with X10WilderATR's window    |
+//| and then pushing bars reproduces the swept values bit for bit at  |
+//| the seed and within (13/14)^n of them afterwards - n being the    |
+//| number of bars since the seed, i.e. below 1e-22 after one window. |
+//+------------------------------------------------------------------+
+class CX10WilderATR
+{
+private:
+    int    m_period;
+    double m_run;
+    int    m_seen;
+    double m_prev_close;
+    bool   m_has_prev;
+
+public:
+    CX10WilderATR() : m_period(X10_ATR_PERIOD) { Reset(); }
+
+    void Init(int period)
+    {
+        m_period = (period < 1) ? 1 : period;
+        Reset();
+    }
+
+    void Reset()
+    {
+        m_run        = 0.0;
+        m_seen       = 0;
+        m_prev_close = 0.0;
+        m_has_prev   = false;
+    }
+
+    //--- One bar, chronological. Returns the published ATR, or
+    //--- X10_UNDEF while fewer than 'period' true ranges have been seen.
+    double Push(double high, double low, double close)
+    {
+        if(!m_has_prev)
+        {
+            //--- TR[0] is undefined: it needs C[-1]. Same skip as the
+            //--- sweep, whose loop starts at i = 1.
+            m_prev_close = close;
+            m_has_prev   = true;
+            return X10_UNDEF;
+        }
+        double alpha = 1.0 / m_period;
+        double tr = high - low;
+        double up = MathAbs(high - m_prev_close);
+        double dn = MathAbs(low - m_prev_close);
+        if(up > tr) tr = up;
+        if(dn > tr) tr = dn;
+        m_prev_close = close;
+
+        m_seen++;
+        m_run = (m_seen == 1) ? tr : m_run + alpha * (tr - m_run);
+        return (m_seen >= m_period) ? m_run : X10_UNDEF;
+    }
+};
+
 #endif // __X10_LEVELS_MQH__

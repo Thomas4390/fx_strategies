@@ -53,4 +53,87 @@ void X10Kinematics(const double &close[], const double &atr[], int n,
         if(X10Def(v[i]) && X10Def(v[i - h_v])) a[i] = v[i] - v[i - h_v];
 }
 
+//--- Ring size: the deepest lookback any of v/m/a needs is h_m = 12,
+//--- plus the current bar and v[t-1] for the deceleration test of §7.3.
+#define X10_KIN_RING 16
+
+//+------------------------------------------------------------------+
+//| CX10Kinematics - the same three formulas, fed one bar at a time. |
+//|                                                                  |
+//| X10Kinematics above rebuilds three full arrays to read their last |
+//| element; this object keeps only what those formulas reach back    |
+//| to: thirteen closes and four velocities. Same divisions, same     |
+//| operand order, same undefined-propagation rules, so the values    |
+//| are identical to the swept ones, not merely close.                |
+//+------------------------------------------------------------------+
+class CX10Kinematics
+{
+private:
+    double m_close[X10_KIN_RING];
+    double m_v[X10_KIN_RING];
+    int    m_head;     // ring slot of the last bar pushed
+    long   m_count;    // bars pushed since the seed = absolute index + 1
+    int    m_h_v;
+    int    m_h_m;
+    double m_sqrt_h_m;
+
+    double CloseBack(int back) const
+    {
+        return m_close[((m_head - back) % X10_KIN_RING + X10_KIN_RING) % X10_KIN_RING];
+    }
+    double VBack(int back) const
+    {
+        return m_v[((m_head - back) % X10_KIN_RING + X10_KIN_RING) % X10_KIN_RING];
+    }
+
+public:
+    CX10Kinematics() { Init(X10_H_VELOCITY, X10_H_MOMENTUM); }
+
+    void Init(int h_v, int h_m)
+    {
+        m_h_v      = h_v;
+        m_h_m      = h_m;
+        m_sqrt_h_m = MathSqrt((double)h_m);
+        Reset();
+    }
+
+    void Reset()
+    {
+        for(int i = 0; i < X10_KIN_RING; i++)
+        {
+            m_close[i] = X10_UNDEF;
+            m_v[i]     = X10_UNDEF;
+        }
+        m_head  = 0;
+        m_count = 0;
+    }
+
+    //--- v[t-1], the only past velocity §7.3 reads outside of 'a'.
+    double VPrev() const { return (m_count >= 2) ? VBack(1) : X10_UNDEF; }
+
+    //--- One bar, chronological, with the ATR of that same bar.
+    void Push(double close, double atr, double &v, double &m, double &a)
+    {
+        m_head = (m_head + 1) % X10_KIN_RING;
+        m_close[m_head] = close;
+        m_count++;
+        long i = m_count - 1;   // absolute index, as in the swept version
+
+        v = X10_UNDEF;
+        m = X10_UNDEF;
+        a = X10_UNDEF;
+        if(X10Def(atr) && atr > 0.0)
+        {
+            if(i >= m_h_v)
+                v = (close - CloseBack(m_h_v)) / (m_h_v * atr);
+            if(i >= m_h_m)
+                m = (close - CloseBack(m_h_m)) / (atr * m_sqrt_h_m);
+        }
+        m_v[m_head] = v;
+
+        if(i >= m_h_v && X10Def(v) && X10Def(VBack(m_h_v)))
+            a = v - VBack(m_h_v);
+    }
+};
+
 #endif // __X10_KINEMATICS_MQH__

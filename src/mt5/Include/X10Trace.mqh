@@ -207,6 +207,7 @@ public:
     void Close()
     {
         if(m_handle == INVALID_HANDLE) return;
+        FileFlush(m_handle);
         FileClose(m_handle);
         m_handle = INVALID_HANDLE;
     }
@@ -232,7 +233,10 @@ public:
             X10ExitReasonName(e.exit_reason),
             X10CancelReasonName(e.cancel_reason));
         FileWriteString(m_handle, line);
-        FileFlush(m_handle);
+        //--- Flushing every row cost a disk round trip per event; the
+        //--- file is closed (and flushed) in OnDeinit, and batching keeps
+        //--- a killed run readable to within 32 events.
+        if((m_rows % 32) == 0) FileFlush(m_handle);
     }
 };
 

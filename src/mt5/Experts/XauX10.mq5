@@ -110,6 +110,28 @@ datetime g_last_m1 = 0;
 long     g_bar_index = -1;
 datetime g_session_start = 0;
 
+//--- Incremental M5 state. The indicators of §4-§6.2 used to be swept
+//--- over a 700-bar window on every decision; they are recursions, so
+//--- they are now carried forward one bar at a time and the window is
+//--- only ever used to SEED them (once at the first decision, and
+//--- again if a bar is ever missed). Same recursions, same operand
+//--- order: the seeded values are identical and the drift afterwards
+//--- is the Wilder memory itself, below 1e-22 after one window.
+CX10WilderATR       g_atr_m5;
+CX10Kinematics      g_kin_m5;
+CSessionMeanTypical g_vwap_m5;
+bool     g_seeded = false;
+int      g_last_bars_m5 = 0;    // Bars() at the previous decision, to catch a skip
+
+//--- H1 bar caches: read once, appended one bar at a time. The five
+//--- series below were being re-copied in full every simulated hour,
+//--- which the profiler charged with 99.99% of the run.
+CX10H1Cache g_h1_gold;
+CX10H1Cache g_h1_eur;
+CX10H1Cache g_h1_jpy;
+CX10H1Cache g_h1_gbp;
+CX10H1Cache g_h1_cad;
+
 //--- H1 context cache, rebuilt only when a new H1 bar closes.
 datetime g_h1_cache_key = 0;
 int      g_h1_n = 0;
@@ -145,6 +167,17 @@ long     g_spread_samples = 0;
 long     g_spread_zero = 0;
 int      g_dump_handle = INVALID_HANDLE;
 string   g_trace_file = "";
+
+//--- Where the wall clock goes, in microseconds. Kept in the build:
+//--- the first profile of this EA cost a 33-minute run to obtain, and
+//--- the next person to widen the window will want it for free.
+ulong    g_us_bar = 0;      // whole new-bar handler
+ulong    g_us_h1 = 0;       // H1 context rebuilds
+ulong    g_us_h1_gold = 0;  // of which: gold H1 bar reads
+ulong    g_us_h1_legs = 0;  // of which: the four DXY legs
+ulong    g_us_seed = 0;     // window seeding
+long     g_n_h1_rebuilds = 0;
+long     g_n_seeds = 0;
 
 //============================================================ HELPERS
 
@@ -200,20 +233,21 @@ int X10SpreadMedianPoints()
 //| X10_DXY_FFILL_LIMIT bars: a frozen leg would keep scoring the    |
 //| dollar on a quote that no longer exists.                         |
 //+------------------------------------------------------------------+
-void X10AlignLeg(const MqlRates &leg[], int n_leg,
-                 const datetime &labels[], int n, double &out[])
+void X10AlignLeg(const CX10H1Cache &leg, const datetime &labels[], int n,
+                 double &out[])
 {
     ArrayResize(out, n);
+    int n_leg = leg.N();
     int j = 0;
     for(int i = 0; i < n; i++)
     {
         out[i] = X10_UNDEF;
-        while(j < n_leg && leg[j].time <= labels[i]) j++;
+        while(j < n_leg && leg.Time(j) <= labels[i]) j++;
         int k = j - 1;
         if(k < 0) continue;
-        if((long)labels[i] - (long)leg[k].time > X10_DXY_FFILL_LIMIT * 3600)
+        if((long)labels[i] - (long)leg.Time(k) > X10_DXY_FFILL_LIMIT * 3600)
             continue;
-        out[i] = leg[k].close;
+        out[i] = leg.Close(k);
     }
 }
 
@@ -224,27 +258,33 @@ void X10AlignLeg(const MqlRates &leg[], int n_leg,
 //+------------------------------------------------------------------+
 bool RefreshH1Context()
 {
-    MqlRates rh[];
-    ArraySetAsSeries(rh, false);
-    int nh = CopyRates(g_symbol, PERIOD_H1, 1, X10_H1_WINDOW, rh);
-    if(nh < X10_H1_MIN_BARS) return false;
-    if(rh[nh - 1].time == g_h1_cache_key && g_h1_n == nh) return true;
+    //--- Gate BEFORE any data copy: the H1 series only moves when an H1
+    //--- bar closes, i.e. once every twelve decisions. iTime is a lookup,
+    //--- CopyRates is a transfer - asking the cheap one first is what
+    //--- turns twelve rebuilds per hour into one.
+    datetime h1_last = iTime(g_symbol, PERIOD_H1, 1);
+    if(h1_last == 0) return (g_h1_n >= X10_H1_MIN_BARS);
+    if(h1_last == g_h1_cache_key) return (g_h1_n >= X10_H1_MIN_BARS);
 
-    g_h1_cache_key = rh[nh - 1].time;
+    ulong t0 = GetMicrosecondCount();
+    ulong t_copy = GetMicrosecondCount();
+    int nh = g_h1_gold.Refresh(g_symbol);
+    g_us_h1_gold += GetMicrosecondCount() - t_copy;
+    if(nh < X10_H1_MIN_BARS)
+    {
+        g_us_h1 += GetMicrosecondCount() - t0;
+        return false;
+    }
+
+    g_h1_cache_key = g_h1_gold.Time(nh - 1);
     g_h1_n = nh;
+    g_n_h1_rebuilds++;
 
     double high[], low[], close[];
-    ArrayResize(high, nh);
-    ArrayResize(low, nh);
-    ArrayResize(close, nh);
-    ArrayResize(g_h1_time, nh);
-    for(int i = 0; i < nh; i++)
-    {
-        g_h1_time[i] = rh[i].time;
-        high[i]  = rh[i].high;
-        low[i]   = rh[i].low;
-        close[i] = rh[i].close;
-    }
+    g_h1_gold.Times(g_h1_time);
+    g_h1_gold.Highs(high);
+    g_h1_gold.Lows(low);
+    g_h1_gold.Closes(close);
 
     X10EmaSpan(close, nh, X10_EMA_SPAN_H1, X10_EMA_SPAN_H1, g_h1_ema);
     X10WilderATR(high, low, close, nh, X10_ATR_PERIOD, g_h1_atr);
@@ -257,84 +297,130 @@ bool RefreshH1Context()
 
     if(g_legs_ok)
     {
-        MqlRates re[], rj[], rg[], rc[];
-        ArraySetAsSeries(re, false);
-        ArraySetAsSeries(rj, false);
-        ArraySetAsSeries(rg, false);
-        ArraySetAsSeries(rc, false);
-        int ne = CopyRates(g_leg_eur, PERIOD_H1, 1, X10_H1_WINDOW, re);
-        int nj = CopyRates(g_leg_jpy, PERIOD_H1, 1, X10_H1_WINDOW, rj);
-        int ng = CopyRates(g_leg_gbp, PERIOD_H1, 1, X10_H1_WINDOW, rg);
-        int nc = CopyRates(g_leg_cad, PERIOD_H1, 1, X10_H1_WINDOW, rc);
+        t_copy = GetMicrosecondCount();
+        int ne = g_h1_eur.Refresh(g_leg_eur);
+        int nj = g_h1_jpy.Refresh(g_leg_jpy);
+        int ng = g_h1_gbp.Refresh(g_leg_gbp);
+        int nc = g_h1_cad.Refresh(g_leg_cad);
+        g_us_h1_legs += GetMicrosecondCount() - t_copy;
         if(ne > 0 && nj > 0 && ng > 0 && nc > 0)
         {
             double ae[], aj[], ag[], ac[];
-            X10AlignLeg(re, ne, g_h1_time, nh, ae);
-            X10AlignLeg(rj, nj, g_h1_time, nh, aj);
-            X10AlignLeg(rg, ng, g_h1_time, nh, ag);
-            X10AlignLeg(rc, nc, g_h1_time, nh, ac);
+            X10AlignLeg(g_h1_eur, g_h1_time, nh, ae);
+            X10AlignLeg(g_h1_jpy, g_h1_time, nh, aj);
+            X10AlignLeg(g_h1_gbp, g_h1_time, nh, ag);
+            X10AlignLeg(g_h1_cad, g_h1_time, nh, ac);
             for(int i = 0; i < nh; i++)
                 g_h1_dxy[i] = X10Dxy4(ae[i], aj[i], ag[i], ac[i]);
         }
     }
     X10EmaSpan(g_h1_dxy, nh, X10_EMA_SPAN_H1, X10_EMA_SPAN_H1, g_h1_dxy_ema);
+    g_us_h1 += GetMicrosecondCount() - t0;
+    return true;
+}
+
+//+------------------------------------------------------------------+
+//| Seed the incremental M5 state from the window ending at the bar   |
+//| that just closed - once at the first decision, and again only if  |
+//| a bar was ever missed.                                            |
+//|                                                                   |
+//| This IS the old per-bar computation: the same window, the same    |
+//| left-to-right recursions, the same seeding position. Running it   |
+//| once and then carrying the recursions forward is what makes the   |
+//| decision O(1) instead of O(window), and the value it publishes on |
+//| the seeding bar is identical, not merely equivalent.              |
+//+------------------------------------------------------------------+
+bool SeedM5State(double &atr_out, double &v_out, double &m_out,
+                 double &a_out, double &v_prev_out, double &vwap_out)
+{
+    ulong t0 = GetMicrosecondCount();
+    MqlRates r5[];
+    ArraySetAsSeries(r5, false);
+    int n5 = CopyRates(g_symbol, PERIOD_M5, 1, X10_M5_WINDOW, r5);
+    if(n5 < X10_H_MOMENTUM + X10_ATR_PERIOD + 2)
+    {
+        g_us_seed += GetMicrosecondCount() - t0;
+        return false;
+    }
+
+    g_atr_m5.Init(X10_ATR_PERIOD);
+    g_kin_m5.Init(X10_H_VELOCITY, X10_H_MOMENTUM);
+    g_vwap_m5.Init(X10_VWAP_MIN_BARS);
+
+    atr_out = X10_UNDEF;
+    v_out = X10_UNDEF;
+    m_out = X10_UNDEF;
+    a_out = X10_UNDEF;
+    v_prev_out = X10_UNDEF;
+    for(int i = 0; i < n5; i++)
+    {
+        atr_out = g_atr_m5.Push(r5[i].high, r5[i].low, r5[i].close);
+        g_kin_m5.Push(r5[i].close, atr_out, v_out, m_out, a_out);
+        v_prev_out = g_kin_m5.VPrev();   // v[i-1], read after the push
+        g_vwap_m5.Push(r5[i].high, r5[i].low, r5[i].close,
+                       X10SessionId(r5[i].time));
+    }
+    vwap_out = g_vwap_m5.Value();
+
+    g_seeded = true;
+    g_n_seeds++;
+    g_us_seed += GetMicrosecondCount() - t0;
     return true;
 }
 
 //+------------------------------------------------------------------+
 //| Build the snapshot of the M5 bar that just closed (index 1).     |
-//| Every series is recomputed left to right over a fixed window, so |
-//| the value written for bar i reads only [i-window, i] - the same  |
-//| causality property the Python kernels are tested on.             |
+//| The indicators are carried forward one bar at a time; the value  |
+//| for bar i still reads only [.., i], which is the causality        |
+//| property the Python kernels are tested on.                        |
 //+------------------------------------------------------------------+
 bool BuildSnapshot(X10Snapshot &s)
 {
     MqlRates r5[];
     ArraySetAsSeries(r5, false);
-    int n5 = CopyRates(g_symbol, PERIOD_M5, 1, X10_M5_WINDOW, r5);
-    if(n5 < X10_H_MOMENTUM + X10_ATR_PERIOD + 2) return false;
+    if(CopyRates(g_symbol, PERIOD_M5, 1, 1, r5) != 1) return false;
 
-    double high[], low[], close[];
-    ArrayResize(high, n5);
-    ArrayResize(low, n5);
-    ArrayResize(close, n5);
-    for(int i = 0; i < n5; i++)
+    //--- A skipped decision would leave the recursions one bar short of
+    //--- the truth, silently and forever. Bars() is a counter, not a
+    //--- transfer: asking it every bar costs nothing and makes the
+    //--- incremental state self-healing.
+    int bars_now = Bars(g_symbol, PERIOD_M5);
+    bool contiguous = (g_seeded && bars_now == g_last_bars_m5 + 1);
+    g_last_bars_m5 = bars_now;
+
+    double atr_i, v_i, m_i, a_i, v_prev, vwap_i;
+    if(!contiguous)
     {
-        high[i]  = r5[i].high;
-        low[i]   = r5[i].low;
-        close[i] = r5[i].close;
+        if(!SeedM5State(atr_i, v_i, m_i, a_i, v_prev, vwap_i)) return false;
+    }
+    else
+    {
+        atr_i  = g_atr_m5.Push(r5[0].high, r5[0].low, r5[0].close);
+        g_kin_m5.Push(r5[0].close, atr_i, v_i, m_i, a_i);
+        v_prev = g_kin_m5.VPrev();       // v[i-1], read after the push
+        g_vwap_m5.Push(r5[0].high, r5[0].low, r5[0].close,
+                       X10SessionId(r5[0].time));
+        vwap_i = g_vwap_m5.Value();
     }
 
-    double atr[], v[], m[], a[];
-    X10WilderATR(high, low, close, n5, X10_ATR_PERIOD, atr);
-    X10Kinematics(close, atr, n5, v, m, a);
-
-    //--- §6.2: unweighted cumulative session mean, reset at 18:00 New
-    //--- York, valid after 12 bars, NOT shifted.
-    CSessionMeanTypical vwap;
-    vwap.Init(X10_VWAP_MIN_BARS);
-    for(int i = 0; i < n5; i++)
-        vwap.Push(high[i], low[i], close[i], X10SessionId(r5[i].time));
-
-    int last = n5 - 1;
     s.index         = g_bar_index;
-    s.bar_open      = r5[last].time;
+    s.bar_open      = r5[0].time;
     s.fill_bar_open = iTime(g_symbol, PERIOD_M5, 0);
     //--- §2: the fill only exists on the bar that opens exactly 300 s
     //--- after the decision bar. A hole or a session reopen is not one.
     s.fill_bar_contiguous = ((long)s.fill_bar_open - (long)s.bar_open == 300);
-    s.open   = r5[last].open;
-    s.high   = high[last];
-    s.low    = low[last];
-    s.close  = close[last];
-    s.atr    = atr[last];
-    s.v      = v[last];
-    s.v_prev = (last >= 1) ? v[last - 1] : X10_UNDEF;
-    s.m      = m[last];
-    s.a      = a[last];
+    s.open   = r5[0].open;
+    s.high   = r5[0].high;
+    s.low    = r5[0].low;
+    s.close  = r5[0].close;
+    s.atr    = atr_i;
+    s.v      = v_i;
+    s.v_prev = v_prev;
+    s.m      = m_i;
+    s.a      = a_i;
     s.l_inf  = X10LevelInf(s.close);
     s.l_sup  = s.l_inf + X10_LEVEL_SIZE;
-    s.vwap   = vwap.Value();
+    s.vwap   = vwap_i;
     s.minute_ny  = X10NYMinuteOfDay(s.bar_open);
     s.session_id = X10SessionId(s.bar_open);
 
@@ -576,11 +662,16 @@ void ExecuteIntent(const X10Snapshot &s, const X10Intent &intent)
 
 void OnNewM5Bar()
 {
+    ulong t_bar = GetMicrosecondCount();
     g_bar_index++;
     g_bars_seen++;
 
     X10Snapshot s;
-    if(!BuildSnapshot(s)) return;
+    if(!BuildSnapshot(s))
+    {
+        g_us_bar += GetMicrosecondCount() - t_bar;
+        return;
+    }
     if(s.ok) g_decisions++; else g_frozen_bars++;
 
     //--- 1. an open position, resolved before anything is decided (§9).
@@ -589,11 +680,23 @@ void OnNewM5Bar()
         if(!PositionSelectByTicket(g_pos_id)) HarvestBrokerExit(s);
         else                                  CheckTimeExits(s);
     }
-    if(g_pos_id != 0) return;   // one position at a time (§9)
+    if(g_pos_id == 0)
+    {
+        //--- 2. the automaton, at the close of this bar (§2, §7). Skipped
+        //--- while a position is open: one at a time (§9).
+        X10Intent intent;
+        if(g_sm.Decide(s, intent) && intent.enter) ExecuteIntent(s, intent);
+    }
+    g_us_bar += GetMicrosecondCount() - t_bar;
+}
 
-    //--- 2. the automaton, at the close of this bar (§2, §7).
-    X10Intent intent;
-    if(g_sm.Decide(s, intent) && intent.enter) ExecuteIntent(s, intent);
+//--- New-M1-bar detection, only ever reached when Inp_DumpBars is on.
+void DumpTick()
+{
+    datetime t1 = iTime(g_symbol, PERIOD_M1, 0);
+    if(t1 == g_last_m1) return;
+    if(g_last_m1 != 0) DumpM1Bar();
+    g_last_m1 = t1;
 }
 
 //--- Inp_DumpBars: one row per closed M1 bar, used to measure the
@@ -704,6 +807,12 @@ int OnInit()
             "time_utc,open,high,low,close,spread_points,tick_volume\n");
     }
 
+    g_h1_gold.Init(X10_H1_WINDOW);
+    g_h1_eur.Init(X10_H1_WINDOW);
+    g_h1_jpy.Init(X10_H1_WINDOW);
+    g_h1_gbp.Init(X10_H1_WINDOW);
+    g_h1_cad.Init(X10_H1_WINDOW);
+
     g_sm.Init(Inp_Z, Inp_AMin, Inp_KS, Inp_SlippageUSD, GetPointer(g_trace));
     g_trade.SetExpertMagicNumber(Inp_MagicBreakLong);
     g_trade.SetDeviationInPoints(FX_DEVIATION_POINTS);
@@ -741,6 +850,13 @@ void LogSummary(string tag)
         "spread_median_points=%d trace=%s",
         g_dxy_undef_bars, g_spread_samples, g_spread_zero,
         X10SpreadMedianPoints(), g_trace_file));
+    g_logger.Info(tag, StringFormat(
+        "profile: bar_ms=%I64u h1_ms=%I64u (gold=%I64u legs=%I64u) "
+        "seed_ms=%I64u h1_rebuilds=%I64d seeds=%I64d us_per_bar=%I64u",
+        g_us_bar / 1000, g_us_h1 / 1000, g_us_h1_gold / 1000,
+        g_us_h1_legs / 1000, g_us_seed / 1000,
+        g_n_h1_rebuilds, g_n_seeds,
+        (g_bars_seen > 0 ? g_us_bar / (ulong)g_bars_seen : 0)));
 }
 
 void OnDeinit(const int reason)
@@ -761,16 +877,20 @@ void OnDeinit(const int reason)
 void OnTick()
 {
     //--- Nothing is decided on a tick (§2): only the arrival of a new
-    //--- M5 bar of the chart symbol opens a decision.
-    if(Inp_DumpBars)
+    //--- M5 bar of the chart symbol opens a decision. This guard is the
+    //--- very first instruction and costs one integer division: every
+    //--- tick of every bar but the first pays only that. TimeCurrent()
+    //--- is the modelled server clock in the tester, and M5 bars start
+    //--- on 300-second boundaries, so flooring it identifies the bar
+    //--- without touching the history at all.
+    datetime now = TimeCurrent();
+    if((datetime)((long)now - (long)now % 300) == g_last_m5)
     {
-        datetime t1 = iTime(g_symbol, PERIOD_M1, 0);
-        if(t1 != g_last_m1)
-        {
-            if(g_last_m1 != 0) DumpM1Bar();
-            g_last_m1 = t1;
-        }
+        if(Inp_DumpBars) DumpTick();
+        return;
     }
+
+    if(Inp_DumpBars) DumpTick();
 
     datetime t5 = iTime(g_symbol, PERIOD_M5, 0);
     if(t5 == 0 || t5 == g_last_m5) return;
