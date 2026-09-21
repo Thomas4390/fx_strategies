@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 10:17
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 10:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -531,7 +531,7 @@ Package: longtable 2025-10-13 v4.24 Multi-page Table package (DPC)
 \c@LT@chunks=\count320
 \LT@p@ftn=\toks26
 )
-Class scrartcl Info: longtable captions redefined on input line 96.
+Class scrartcl Info: longtable captions redefined on input line 109.
 
 (/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
 Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
@@ -765,7 +765,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 127.
+(scrartcl)              package `titlesec' on input line 140.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 Package: titlesec 2025/01/04 v2.17 Sectioning titles
@@ -812,7 +812,7 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 148.
+(scrartcl)              package `fancyhdr' on input line 161.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
@@ -2050,10 +2050,10 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 41375 strings out of 468173
- 946644 string characters out of 5435520
- 1530160 words of memory out of 5000000
- 69464 multiletter control sequences out of 15000+600000
+ 41380 strings out of 468173
+ 946726 string characters out of 5435520
+ 1530240 words of memory out of 5000000
+ 69469 multiletter control sequences out of 15000+600000
  634940 words of font info for 131 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  108i,13n,118p,11244b,1302s stack positions out of 10000i,1000n,20000p,200000b,200000s

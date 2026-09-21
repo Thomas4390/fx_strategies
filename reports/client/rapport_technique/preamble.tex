@@ -3,6 +3,19 @@
 %  Préambule LaTeX (XeLaTeX + KOMA-Script)
 % ═══════════════════════════════════════════════════════════════════════
 
+% ── Identité du document ──────────────────────────────────────────
+% Ce préambule est partagé par plusieurs stratégies. Les libellés qui
+% nommaient la stratégie 1 en dur (en-tête courant, pied de page, métadonnées
+% PDF) passent par des macros : un document qui les définit AVANT
+% \input{preamble.tex} impose les siennes, les autres gardent les valeurs
+% historiques ci-dessous. Les documents qui surchargent fancyhdr ou hyperref
+% APRÈS l'inclusion continuent de primer, comme auparavant.
+\providecommand{\ReportRunningTitle}{Stratégie FX Multi-Moteurs}
+\providecommand{\ReportFooterLabel}{Rapport d'investissement --- Juillet 2026}
+\providecommand{\ReportPdfTitle}{Stratégie FX Multi-Moteurs --- Rapport d'investissement}
+\providecommand{\ReportPdfSubject}{Stratégie quantitative FX diversifiée à quatre moteurs de rendement}
+\providecommand{\ReportPdfKeywords}{FX, mean reversion, momentum, portfolio, risk management}
+
 % ── Language & fonts ──────────────────────────────────────────────
 \usepackage{fontspec}
 \usepackage{polyglossia}
@@ -147,10 +160,10 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{Stratégie FX Multi-Moteurs}}
+\fancyhead[L]{\footnotesize\color{slateGrey}\textsf{\ReportRunningTitle}}
 \fancyhead[R]{\footnotesize\color{slateGrey}\textsf{\leftmark}}
 \fancyfoot[C]{\footnotesize\color{slateGrey}\thepage}
-\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{Rapport d'investissement --- Juillet 2026}}
+\fancyfoot[R]{\footnotesize\color{slateGrey}\textsf{\ReportFooterLabel}}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.0pt}
 \renewcommand{\headrule}{\color{primary}\hrule width\headwidth height\headrulewidth}
@@ -262,10 +275,10 @@
   pdfborder={0 0 0},
   bookmarks=true,
   bookmarksnumbered=true,
-  pdftitle={Stratégie FX Multi-Moteurs --- Rapport d'investissement},
+  pdftitle={\ReportPdfTitle},
   pdfauthor={Thomas Vaudescal},
-  pdfsubject={Stratégie quantitative FX diversifiée à quatre moteurs de rendement},
-  pdfkeywords={FX, mean reversion, momentum, portfolio, risk management}
+  pdfsubject={\ReportPdfSubject},
+  pdfkeywords={\ReportPdfKeywords}
 ]{hyperref}
 
 % ── Custom commands ──────────────────────────────────────────────
