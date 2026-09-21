@@ -58,9 +58,12 @@ _QC_DIR = Path(__file__).resolve().parent.parent / "src" / "qc" / "xau_x10"
 if str(_QC_DIR) not in sys.path:
     sys.path.insert(0, str(_QC_DIR))
 
-from x10_bars import MinuteQuote  # noqa: E402
+from x10_bars import M5_MINUTES, BarBuilder, MinuteQuote  # noqa: E402
+from x10_state import CANCEL_REASON_NAMES as QC_CANCEL_REASON_NAMES  # noqa: E402
+from x10_state import CR_BROKER  # noqa: E402
+from x10_state import EVENT_CANCEL as QC_EVENT_CANCEL  # noqa: E402
 from x10_state import EVENT_EXIT as QC_EVENT_EXIT  # noqa: E402
-from x10_state import X10Feed  # noqa: E402
+from x10_state import BrokerSync, X10Feed, _Position  # noqa: E402
 
 # Two points of the grid of annexe A.2: the one the port defaults to, and a
 # permissive one that arms far more often — the second is what makes a §10
@@ -459,3 +462,195 @@ def test_the_port_closes_positions_and_does_not_leak_them(replay: _RecordingFeed
     exits = [e for e in replay.machine.events if e.event == QC_EVENT_EXIT]
     assert entries, "the sample must open at least one position"
     assert len(entries) - len(exits) in (0, 1)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BINNING — le label d'une barre est son DEBUT
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _epoch_minute(stamp: str) -> int:
+    return int((pd.Timestamp(stamp, tz="UTC") - _EPOCH_UTC) // pd.Timedelta(minutes=1))
+
+
+@pytest.mark.parametrize(
+    ("start", "expected_bin"),
+    [
+        ("2024-06-05 09:55", "2024-06-05 09:55"),
+        ("2024-06-05 09:59", "2024-06-05 09:55"),
+        ("2024-06-05 10:00", "2024-06-05 10:00"),
+        ("2024-06-05 10:04", "2024-06-05 10:00"),
+    ],
+)
+def test_a_minute_is_binned_by_its_start_never_by_its_end(start: str, expected_bin: str):
+    """The trap LEAN sets: its minute bar is stamped with its ``end_time``.
+
+    A minute whose **start** is 09:59 belongs to the M5 bar 09:55; reading the
+    end (10:00) would file it under 10:00 instead and shift every bar of the
+    backtest by one minute — which moves the open, the close, and therefore the
+    ATR by a few percent in either direction.
+    """
+    builder = BarBuilder(M5_MINUTES)
+    assert builder.bin_of(_epoch_minute(start)) == _epoch_minute(expected_bin)
+
+
+def test_the_end_of_a_minute_would_land_in_the_wrong_bin():
+    """Twin of the test above, on the faulty convention: it must disagree."""
+    builder = BarBuilder(M5_MINUTES)
+    start = _epoch_minute("2024-06-05 09:59")
+    assert builder.bin_of(start) != builder.bin_of(start + 1)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CLOTURE DE SEANCE — le flush du dernier bin coté
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def _feed_one_session(*, flush: bool) -> tuple[_RecordingFeed, pd.DataFrame]:
+    """Feed NY 16:40-16:58, the real tail of a XAUUSD session in the export."""
+    index = pd.date_range("2024-06-05 20:40", "2024-06-05 20:58", freq="1min", tz="UTC")
+    frame = _walk(index, 2000.0, 0.2, seed=7)
+    feed = _RecordingFeed()
+    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64)
+    o, h, low, c = (frame[col].to_numpy(dtype=np.float64) for col in frame.columns)
+    for i, minute in enumerate(minutes):
+        quote = MinuteQuote(
+            o[i], h[i], low[i], c[i],
+            o[i] - HALF, h[i] - HALF, low[i] - HALF, c[i] - HALF,
+            o[i] + HALF, h[i] + HALF, low[i] + HALF, c[i] + HALF,
+        )
+        last = flush and i == len(minutes) - 1
+        feed.on_minute(int(minute), quote, {}, live=False, last_of_session=last)
+    return feed, frame
+
+
+def test_the_session_flush_closes_the_1655_bar_on_its_last_quoted_minute():
+    """§10 can only fire while the exchange is open, so the bar must close early.
+
+    The XAUUSD CFD stops quoting after the minute starting 16:58 and only
+    resumes at 18:04, while the FX legs resume at 17:04. Without the flush the
+    16:55 bin waits for a 16:59 minute that never comes and is only closed by
+    an FX minute at 17:04 — four minutes after the exchange shut, which is
+    exactly when the eight refused exits of 2024 were sent.
+    """
+    feed, frame = _feed_one_session(flush=True)
+    assert feed.m5_closed == 4
+    assert feed.dropped_minutes == 0
+
+    local = frame.copy()
+    local.index = to_session_clock(pd.DatetimeIndex(local.index))
+    reference = resample_ohlc(local, "5min")
+    assert len(feed.m5_bars) == len(reference)
+    for bar, (_, row) in zip(feed.m5_bars, reference.iterrows()):
+        assert (bar.open, bar.high, bar.low, bar.close) == (
+            row["open"], row["high"], row["low"], row["close"]
+        )
+
+
+def test_without_the_flush_the_last_bar_of_the_session_stays_open():
+    """Twin of the test above: it proves the flush is what closes the bar."""
+    feed, _ = _feed_one_session(flush=False)
+    assert feed.m5_closed == 3  # 16:40, 16:45, 16:50 — the 16:55 bin is orphaned
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SYNCHRONISATION BROKER — intention contre realite
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def test_broker_sync_never_orders_on_a_closed_exchange():
+    """D2: a market order on a shut exchange becomes MarketOnOpen, which OANDA
+    refuses. It must be deferred, not dropped."""
+    broker = BrokerSync()
+    broker.want(25.0, "tag")
+    assert broker.order(held=0.0, market_open=False) is None
+    assert broker.deferred == 1
+    assert broker.order(held=0.0, market_open=True) == 25.0
+
+
+def test_broker_sync_retries_a_refused_exit_until_the_account_is_flat():
+    """D1: the exit that was never filled is re-sent, and the inventory dies."""
+    broker = BrokerSync()
+    broker.want(0.0, "exit")
+    assert broker.order(held=-25.0, market_open=True) == 25.0  # submitted
+    assert broker.on_refused(held=-25.0) is False  # still short 25
+    assert broker.target_qty == 0.0
+    assert broker.order(held=-25.0, market_open=True) == 25.0  # retried
+    broker.on_settled()
+    assert broker.order(held=0.0, market_open=True) is None  # nothing left to do
+
+
+def test_broker_sync_drops_a_phantom_entry():
+    """D3 / §4.2: a refused entry must not leave the automaton believing it is
+    in a trade, or the matching exit opens an inverse position out of nothing."""
+    broker = BrokerSync()
+    broker.want(23.0, "entry")
+    assert broker.order(held=0.0, market_open=True) == 23.0
+    assert broker.on_refused(held=0.0) is True  # phantom: the account is flat
+    assert broker.target_qty == 0.0
+    assert broker.order(held=0.0, market_open=True) is None
+
+
+def test_broker_sync_sends_one_order_at_a_time():
+    """Re-submitting the same delta before the first fill doubles the position."""
+    broker = BrokerSync()
+    broker.want(25.0, "entry")
+    assert broker.order(held=0.0, market_open=True) == 25.0
+    assert broker.order(held=0.0, market_open=True) is None
+    broker.on_settled()
+    assert broker.order(held=0.0, market_open=True) == 25.0
+
+
+def test_broker_sync_flattens_leftover_inventory_at_the_end():
+    """D5: the final liquidation is the same mechanism, with a target of zero."""
+    broker = BrokerSync()
+    broker.want(0.0, "SESSION|end_of_algorithm")
+    assert broker.order(held=-5.0, market_open=True) == 5.0
+    broker.on_settled()
+    assert broker.order(held=0.0, market_open=True) is None
+
+
+def test_force_flat_emits_a_broker_cancel_and_frees_the_automaton():
+    """The phantom entry leaves a named row, not a silent desynchronisation."""
+    feed = X10Feed()
+    machine = feed.machine
+    machine._pos = _Position(
+        q=1,
+        lots=0.25,
+        stop=1995.0,
+        target=2010.0,
+        fill_px=2000.0,
+        level=2000.0,
+        scenario=1,
+        r_est=1.5,
+        session_id=0,
+    )
+    assert machine.position_quantity == 25.0
+    machine.force_flat(bar_index=10, bar_minute=_epoch_minute("2024-06-05 14:00"))
+    assert machine.position_quantity == 0.0
+    assert machine.events[-1].event == QC_EVENT_CANCEL
+    assert machine.events[-1].cancel_reason == CR_BROKER
+    # ``broker`` exists on the QuantConnect side only, and only in the 22nd
+    # column: the reference kernel has no notion of an order being refused.
+    assert QC_CANCEL_REASON_NAMES[CR_BROKER] == "broker"
+    assert CR_BROKER >= len(CANCEL_REASON_NAMES)
+    assert QC_CANCEL_REASON_NAMES[: len(CANCEL_REASON_NAMES)] == CANCEL_REASON_NAMES
+
+
+def test_a_blocked_broker_freezes_the_automaton(sample: dict):
+    """§9 allows one position at a time; inventory nobody flattened still counts."""
+    feed = X10Feed()
+    feed.machine.broker_blocked = True
+    before = len(feed.machine.events)
+    index = sample["index"][:400]
+    gold = sample["gold"].iloc[:400]
+    minutes = ((index - _EPOCH_UTC) // pd.Timedelta(minutes=1)).to_numpy(dtype=np.int64)
+    o, h, low, c = (gold[col].to_numpy(dtype=np.float64) for col in gold.columns)
+    for i, minute in enumerate(minutes):
+        quote = MinuteQuote(
+            o[i], h[i], low[i], c[i],
+            o[i] - HALF, h[i] - HALF, low[i] - HALF, c[i] - HALF,
+            o[i] + HALF, h[i] + HALF, low[i] + HALF, c[i] + HALF,
+        )
+        feed.on_minute(int(minute), quote, {})
+    assert len(feed.machine.events) == before  # nothing armed, nothing entered

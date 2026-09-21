@@ -97,6 +97,13 @@ CR_CTX = 6  # §6.4 — breakout refused by EMA50 H1 or VWAP
 CR_R = 7  # §8 — R < 1
 CR_WINDOW = 8  # §10 / §2 — forbidden window, or fill bar not at decision + 5 min
 CR_SIZE = 9  # §11 — lots below volume_min
+# Not a rule of the spec: the broker refused the order. It exists so that a
+# position the automaton believes it holds and the account does not leaves a
+# named row in the trace instead of a silent desynchronisation — the defect
+# that cost 81.5 % of the 2024 QuantConnect account
+# (``docs/research/xau_x10_reconciliation.md`` §4.1). It only ever appears in
+# the 22nd column; the 21 columns of §13 are untouched.
+CR_BROKER = 10
 CANCEL_REASON_NAMES: tuple[str, ...] = (
     "",
     "zone",
@@ -108,6 +115,7 @@ CANCEL_REASON_NAMES: tuple[str, ...] = (
     "r",
     "window",
     "size",
+    "broker",
 )
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -188,11 +196,13 @@ _TRACE_DECIMALS: dict[str, int] = {
 __all__ = [
     "CANCEL_REASON_NAMES",
     "CONTRACT_SIZE",
+    "CR_BROKER",
     "EVENT_NAMES",
     "EXIT_REASON_NAMES",
     "SCENARIO_NAMES",
     "TRACE_COLUMNS",
     "BarContext",
+    "BrokerSync",
     "X10Event",
     "X10Feed",
     "X10Machine",
@@ -371,6 +381,51 @@ class X10Machine:
         self._prev_v = NAN
         self._exited_this_bar = False
         self._exit_to_patch: tuple[X10Event, int] | None = None
+
+        # Set by the caller when the account is not where the automaton thinks
+        # it is — an exit the broker refused, an inventory still to flatten.
+        # While it is true the automaton takes no new decision: §9 allows one
+        # position at a time, and an unflattened one still counts.
+        self.broker_blocked = False
+
+    @property
+    def position_quantity(self) -> float:
+        """Signed ounces the automaton believes it holds — §11, lots of 100."""
+        pos = self._pos
+        return 0.0 if pos is None else pos.q * pos.lots * CONTRACT_SIZE
+
+    def force_flat(self, bar_index: int, bar_minute: int) -> None:
+        """Drop a position the broker never opened, and say so in the trace.
+
+        Called when an entry order comes back ``Invalid`` or ``Canceled``. The
+        automaton is holding a position that does not exist; leaving it there
+        makes the next exit order open an inverse position out of thin air
+        (``…_reconciliation.md`` §4.2). The row is a ``CANCEL`` rather than an
+        ``EXIT`` because nothing was ever bought: there is no price and no P&L.
+        """
+        pos = self._pos
+        if pos is None:
+            return
+        event = X10Event(
+            bar_index=bar_index,
+            bar_minute=bar_minute,
+            event=EVENT_CANCEL,
+            scenario=pos.scenario,
+            level=pos.level,
+            d=self._d,
+            stop=pos.stop,
+            target=pos.target,
+            r_est=pos.r_est,
+            cancel_reason=CR_BROKER,
+            lots=pos.lots,
+            q=pos.q,
+        )
+        self.events.append(event)
+        self._exit_to_patch = (event, pos.q)
+        self._cooldown[pos.level] = bar_index + COOLDOWN_BARS
+        self._pos = None
+        self._state = _ST_IDLE
+        self._exited_this_bar = True
 
     # ── step 1 ────────────────────────────────────────────────────────
     def open_bar(
@@ -583,7 +638,7 @@ class X10Machine:
         prev_v = self._prev_v
         self._prev_v = ctx.v
 
-        if self._pos is not None or self._pend is not None:
+        if self._pos is not None or self._pend is not None or self.broker_blocked:
             return
         if (
             not isfinite(ctx.atr)
@@ -951,11 +1006,18 @@ class X10Feed:
         k_s: float = 1.0,
         init_cash: float = 10_000.0,
         risk_frac: float = RISK_FRAC,
+        spread_override: float | None = None,
     ) -> None:
         self.machine = X10Machine(
             z=z, a_min=a_min, k_s=k_s, init_cash=init_cash, risk_frac=risk_frac
         )
         self.bar_index = -1
+        # §8: when set, ``R`` is computed on this constant spread instead of the
+        # real bid-ask of the decision bar. The reference charges 0.29 $ while
+        # OANDA quotes ~0.48 $ (``…_reconciliation.md`` §2.2), which moves the
+        # whole candidate flow across ``R_MIN``; the override is what makes a
+        # "comparable signals" run possible next to the "real execution" one.
+        self.spread_override = spread_override
 
         self._m5 = BarBuilder(M5_MINUTES)
         self._h1 = BarBuilder(H1_MINUTES)
@@ -974,6 +1036,9 @@ class X10Feed:
         self._dxy_hour: int | None = None
         self._last_quote: MinuteQuote | None = None
         self.last_context: BarContext | None = None
+        self.last_bar: Bar | None = None
+        self.last_half_spread = NAN
+        self.m5_closed = 0
 
     # ── public API ────────────────────────────────────────────────────
     def on_minute(
@@ -982,8 +1047,23 @@ class X10Feed:
         gold: MinuteQuote | None,
         legs: dict[str, float] | None = None,
         live: bool = True,
+        last_of_session: bool = False,
     ) -> list[X10Event]:
-        """Feed one minute; return the events it produced, in order."""
+        """Feed one minute; return the events it produced, in order.
+
+        ``last_of_session`` tells the feed that no further gold minute will
+        arrive before the daily break, so the running M5 and H1 bins must be
+        closed **now** rather than waiting for a minute that never comes. It is
+        not a convenience: the XAUUSD CFD stops quoting after the minute
+        starting 16:58 New York and only resumes at 18:04, while the four FX
+        legs resume at 17:04 — so without this flush the 16:55 bar is decided
+        by an FX minute at 17:04, and the §10 session exit is sent to an
+        exchange that has been shut for four minutes
+        (``docs/research/xau_x10_reconciliation.md`` §4.1).
+
+        The bar itself is unchanged: the reference's 16:55 bar also holds only
+        16:55-16:58, because its parquet has no 16:59 either.
+        """
         first = len(self.machine.events)
 
         # 1. bins a gap left open
@@ -1021,10 +1101,10 @@ class X10Feed:
             self._h1.add(minute, gold.mid_open, gold.mid_high, gold.mid_low, gold.mid_close)
             self._last_quote = gold
 
-            bar = self._m5.seal()
+            bar = self._m5.seal() if not last_of_session else self._m5.flush()
             if bar is not None:
                 self._close_m5(bar, live)
-            bar = self._h1.seal()
+            bar = self._h1.seal() if not last_of_session else self._h1.flush()
             if bar is not None:
                 self._close_h1(bar)
 
@@ -1035,6 +1115,16 @@ class X10Feed:
                     builder.add(minute, price, price, price, price)
 
         return self.machine.events[first:]
+
+    def force_flat(self) -> None:
+        """The broker refused an entry: drop the position it never opened."""
+        bar = self.last_bar
+        self.machine.force_flat(self.bar_index, bar.start if bar is not None else 0)
+
+    @property
+    def dropped_minutes(self) -> int:
+        """Minutes the accumulators refused. Anything but zero is a defect."""
+        return self._m5.dropped + self._h1.dropped
 
     # ── internals ─────────────────────────────────────────────────────
     def _close_m5(self, bar: Bar, live: bool) -> None:
@@ -1057,12 +1147,18 @@ class X10Feed:
             dxy_ema50_h1=self._ctx.dxy_ema50_h1,
         )
         self.last_context = ctx
+        self.last_bar = bar
+        self.m5_closed += 1
 
         quote = self._last_quote
         if not live or quote is None:
             return
         next_minute_of_day, _ = ny_fields(bar.start + M5_MINUTES)
-        half_spread = 0.5 * (quote.ask_close - quote.bid_close)
+        if self.spread_override is not None:
+            half_spread = 0.5 * self.spread_override
+        else:
+            half_spread = 0.5 * (quote.ask_close - quote.bid_close)
+        self.last_half_spread = half_spread
         self.machine.close_bar(
             self.bar_index,
             bar,
@@ -1087,6 +1183,79 @@ class X10Feed:
             return  # no leg produced a bar: the union index has no entry here
         self._ctx.dxy = self._basket.update(closes)
         self._ctx.dxy_ema50_h1 = self._dxy_ema.update(self._ctx.dxy)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BROKER SYNCHRONISATION — intent against reality
+# ═══════════════════════════════════════════════════════════════════════
+
+
+class BrokerSync:
+    """Decide the one quantity to send, from what is wanted and what is held.
+
+    Kept out of ``main.py`` on purpose: this is the logic whose absence cost
+    81.5 % of the 2024 QuantConnect account
+    (``docs/research/xau_x10_reconciliation.md`` §4), and it has to be testable
+    without LEAN. It knows nothing about QuantConnect — the caller passes the
+    held quantity and whether the exchange is open, and gets back the quantity
+    to order, or ``None``.
+
+    Three rules, each paid for by a defect:
+
+    * an order is **never** assumed filled (D1): the target is an intent, the
+      held quantity is the fact, and the difference is re-ordered until it is
+      zero;
+    * an order is **never** sent on a closed exchange (D2): ``market_order``
+      silently becomes ``MarketOnOpen`` there and OANDA rejects that type, so
+      the order is deferred to the next quoted minute rather than lost;
+    * one order at a time (``inflight``), or the same delta is submitted again
+      before the first has filled and the position doubles.
+    """
+
+    __slots__ = ("target_qty", "tag", "inflight", "deferred", "rejected")
+
+    def __init__(self) -> None:
+        self.target_qty = 0.0
+        self.tag = ""
+        self.inflight = False
+        self.deferred = 0
+        self.rejected = 0
+
+    def want(self, quantity: float, tag: str = "") -> None:
+        """Record the inventory the strategy wants, in signed ounces."""
+        self.target_qty = quantity
+        self.tag = tag
+
+    def order(self, held: float, market_open: bool) -> float | None:
+        """Quantity to send now, or ``None`` when there is nothing to do."""
+        delta = self.target_qty - held
+        if delta == 0.0 or self.inflight:
+            return None
+        if not market_open:
+            self.deferred += 1
+            return None
+        self.inflight = True
+        return delta
+
+    def on_settled(self) -> None:
+        """A terminal fill: the next call to ``order`` may submit again."""
+        self.inflight = False
+
+    def on_refused(self, held: float) -> bool:
+        """Record a refusal; return ``True`` if it was a **phantom entry**.
+
+        A refused entry with a flat account means the automaton is holding a
+        position that was never opened — the caller must force it flat, or the
+        matching exit order will open an inverse position out of nothing
+        (§4.2). A refused exit needs nothing: the target is already zero and
+        ``order`` will retry on the next open minute.
+        """
+        self.rejected += 1
+        self.inflight = False
+        if self.target_qty != 0.0 and held == 0.0:
+            self.target_qty = 0.0
+            return True
+        return False
 
 
 # ═══════════════════════════════════════════════════════════════════════

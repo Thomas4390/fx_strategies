@@ -155,10 +155,25 @@ class BarBuilder:
     * ``seal()`` closes the bin when the minute just added was its last.
     """
 
-    __slots__ = ("period", "_start", "_last", "_closed", "_live", "_o", "_h", "_l", "_c")
+    __slots__ = (
+        "period",
+        "dropped",
+        "_start",
+        "_last",
+        "_closed",
+        "_live",
+        "_o",
+        "_h",
+        "_l",
+        "_c",
+    )
 
     def __init__(self, period: int) -> None:
         self.period = period
+        # Minutes refused because their bin had already been emitted. Must stay
+        # at zero: a non-zero count means the session flush closed a bin the
+        # feed had not finished, and the bars stop matching the reference.
+        self.dropped = 0
         self._start = -1
         self._last = -1
         self._closed = -1
@@ -182,6 +197,7 @@ class BarBuilder:
         start = self.bin_of(minute)
         if not self._live:
             if start <= self._closed:
+                self.dropped += 1
                 return  # duplicate or out-of-order minute: the bin is already out
             self._start = start
             self._o, self._h, self._l, self._c = o, h, low, c
