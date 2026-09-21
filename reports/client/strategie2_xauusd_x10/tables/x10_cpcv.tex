@@ -1,0 +1,19 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Validation croisée combinatoire purgée~: les cinq meilleures configurations sur la médiane hors échantillon. Aucune des vingt-sept n'est positive sur un seul des splits. La métrique est le Sharpe des rendements minute du portefeuille et ne se compare au reste du rapport qu'en signe.}
+\label{tab:x10_cpcv}
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Configuration} & \textbf{Médiane OOS} & \textbf{q05} & \textbf{q95} & \textbf{Splits positifs} \\
+\midrule
+$z=0{,}5$ ; $a_{\min}=0{,}3$ ; $k_s=1{,}50$ & $-1{,}129$ & $-1{,}788$ & $-0{,}242$ & $0$\,\% \\
+$z=0{,}5$ ; $a_{\min}=0{,}3$ ; $k_s=0{,}75$ & $-1{,}223$ & $-1{,}837$ & $-0{,}561$ & $0$\,\% \\
+$z=0{,}5$ ; $a_{\min}=0{,}2$ ; $k_s=1{,}50$ & $-1{,}265$ & $-2{,}140$ & $-0{,}454$ & $0$\,\% \\
+$z=0{,}5$ ; $a_{\min}=0{,}3$ ; $k_s=1{,}00$ & $-1{,}310$ & $-1{,}995$ & $-0{,}378$ & $0$\,\% \\
+$z=1{,}0$ ; $a_{\min}=0{,}3$ ; $k_s=0{,}75$ & $-1{,}317$ & $-1{,}899$ & $-0{,}899$ & $0$\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,17 +1,116 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. La lecture hors échantillon n'a PAS
+%  eu lieu : cette section explique pourquoi, elle ne publie aucun chiffre
+%  postérieur au 2025-12-31.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Hors échantillon}
 \label{sec:x10_hors_echantillon}
 
-% TODO L2 : lire le holdout une seule fois, après gel, et rapporter l'écart avec l'in-sample quel qu'en soit le signe.
+\begin{warningbox}[title=\textbf{\color{white}\textsf{La tranche 2026 n'a pas été lue}}]
+Le holdout de cette stratégie --- tout ce qui est postérieur au 31 décembre
+2025 --- est resté verrouillé. Aucune métrique de performance n'a été calculée
+dessus, par aucun des trois moteurs, et aucune ligne n'a été ajoutée au
+journal de consommation du holdout, puisqu'il n'y a pas eu de lecture. Le
+critère correspondant de la table de décision reste \emph{non mesuré}, donc
+\textbf{en échec}.
+\end{warningbox}
 
-\subsection{Périmètre et date de gel}
+\lettrine[lines=2, findent=2pt, nindent=0pt]{C}{ette} section n'est pas un
+aveu de travail inachevé. Ne pas lire le hors échantillon est ici une
+décision, prise au vu des résultats in-sample, et c'est la bonne. Elle mérite
+d'être expliquée, parce qu'elle est contre-intuitive~: on s'attend à ce qu'un
+chercheur veuille toujours une mesure de plus.
 
-\subsection{Résultats du holdout}
+\subsection{Le dispositif de gel, tel qu'il avait été prévu}
 
-\subsection{Écart avec l'in-sample}
+La table de décision prévoyait un protocole strict pour cette lecture~: une
+section à remplir et à \emph{committer} avant que la moindre métrique
+postérieure au 31 décembre 2025 soit calculée. Elle devait contenir la
+configuration retenue, la fenêtre de lecture, le nombre de transactions
+attendu et des intervalles de non-contradiction pour chaque métrique.
 
-\subsection{Régime du holdout comparé à celui de la sélection}
+Le principe derrière ce formalisme est simple~: \textbf{une lecture hors
+échantillon ne valide rien, elle peut seulement contredire}. Si l'on n'écrit
+pas d'avance ce qui constituerait une contradiction, on trouvera toujours une
+manière de lire le résultat qui arrange.
+
+\begin{insightbox}
+\textbf{Cette section du protocole est restée vide, et elle ne pouvait pas
+être remplie.} Son premier champ est la configuration gelée. Or
+\XTenPlateauPassing{} configuration ne passe le critère de plateau~: il n'y a
+rien à geler. Le dispositif se bloque de lui-même, exactement comme il avait
+été conçu pour le faire.
+\end{insightbox}
+
+\subsection{Trois raisons de ne pas dépenser le holdout}
+
+\begin{description}
+  \item[Le verdict est acquis in-sample.] Sur les \XTenCriteriaCount{}
+  critères, \XTenCriteriaPassing{} passe. Six échecs portent une mesure
+  interprétable~: espérance, profit factor, Sharpe déflaté, probabilité de
+  surajustement, plateau, walk-forward, sensibilité au coût. La table de
+  décision est explicite~: un seul critère en échec avec une mesure
+  interprétable suffit à prononcer « ne pas déployer ». Une lecture hors
+  échantillon ne peut donc rien sauver --- elle ne fait pas partie des
+  conditions de réouverture.
+
+  \item[Le holdout est un budget, pas une ressource renouvelable.] Chaque
+  lecture consomme définitivement une tranche de données. La tranche 2026 de
+  l'or est la seule qui existe, et elle servira à tout travail futur sur cet
+  instrument --- y compris à une éventuelle stratégie issue des pistes de la
+  section~\ref{sec:x10_non_deploiement}. La dépenser sur un dossier déjà
+  tranché n'apprendrait rien et appauvrirait le suivant.
+
+  \item[Le régime 2026 est hors de la distribution in-sample.] Le pas de la
+  grille exprimé en \code{ATR} vaut \XTenDollarsPerAtrFirst{} au début de
+  l'échantillon et \XTenDollarsPerAtrLast{} à la fin~; la tendance ne
+  s'inverse pas en 2026, elle se poursuit, et le régime récent est plus fin
+  que tout ce que la sélection a vu. La table de décision avait d'ailleurs
+  \emph{pré-écrit} ce déclencheur~: un régime hors distribution rend la
+  lecture « non concluante » par construction, avant même de la faire.
+\end{description}
+
+\subsection{Pourquoi un chiffre de 2026 serait trompeur dans les deux sens}
+
+C'est le point qui justifie le plus directement la décision.
+
+Supposons un résultat \textbf{positif} sur le premier trimestre 2026. Il
+porterait sur quelques dizaines de transactions, dans un régime absent de
+l'échantillon, face à sept années négatives et plusieurs milliers de
+transactions. Le publier reviendrait à opposer un échantillon minuscule et
+non représentatif à une mesure massive et cohérente --- et il se trouverait
+toujours quelqu'un pour y lire un espoir.
+
+Supposons maintenant un résultat \textbf{négatif}. Il n'ajouterait rien~: il
+confirmerait ce que sept années établissent déjà, au prix d'une tranche de
+données brûlée.
+
+\begin{warningbox}
+\textbf{Une mesure dont aucun résultat possible ne changerait la décision ne
+doit pas être faite.} C'est le cas ici, et c'est la formulation la plus courte
+de cette section. Le seul effet d'une lecture 2026 serait d'introduire, dans
+un dossier par ailleurs net, un chiffre dont l'interprétation prêterait à
+discussion.
+\end{warningbox}
+
+\subsection{Ce que la limite de données impose de toute façon}
+
+Même si la lecture avait été décidée, sa portée aurait été réduite. Le
+contexte dollar repose sur quatre paires de devises dont les historiques
+locaux s'arrêtent au premier trimestre 2026, alors que l'or va plus loin. La
+fenêtre \emph{commune aux trois moteurs} se serait donc limitée à un
+trimestre. Un trimestre de barres de cinq minutes fournit beaucoup de barres,
+mais peu de transactions indépendantes~: le seuil minimal de trente
+transactions de la table de décision n'était même pas garanti. Dans ce cas, le
+verdict prévu était « non concluant » --- et un verdict non concluant n'aurait
+pas davantage autorisé le déploiement.
+
+\subsection{Ce qui a tout de même touché des barres de 2026}
+
+Par souci de complétude, deux mesures purement descriptives ont consommé des
+barres postérieures au 31 décembre 2025, avant la campagne et sans aucun
+calcul de performance~: l'\code{ATR} de cinq minutes et la fréquence de
+croisement des niveaux, qui servent à établir la dérive de régime de la
+section~\ref{sec:x10_grille}. Elles sont déclarées comme telles dans les
+notes de recherche, et le tableau publié dans ce rapport s'arrête
+volontairement à 2025 --- il ne contient aucune ligne postérieure.

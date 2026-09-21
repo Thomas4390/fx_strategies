@@ -1,17 +1,163 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Méthodologie des tests de robustesse}
 \label{app:x10_methodologie_robustesse}
 
-% TODO L2 : donner les références et les formules des tests de la section~11, pour que le client puisse les rejouer.
+Cette annexe explique, sans formalisme, ce que mesure chacun des tests de la
+section~\ref{sec:x10_robustesse}, et ce qu'il ne mesure pas. Elle est écrite
+pour être lisible sans bagage statistique.
 
-\subsection{Bootstrap stationnaire}
+\subsection{Bootstrap stationnaire par blocs}
 
-\subsection{Deflated Sharpe Ratio}
+\paragraph{La question.} Si l'histoire s'était déroulée un peu autrement,
+quel résultat aurait-on obtenu~?
+
+\paragraph{Le principe.} On ne peut pas rejouer l'histoire, mais on peut la
+recoller autrement. Le bootstrap découpe la série des rendements en tronçons
+de longueur aléatoire --- vingt séances en moyenne ici --- puis en tire un
+grand nombre avec remise et les recolle bout à bout. On obtient une
+trajectoire plausible qui n'a jamais eu lieu. Répété
+\XTenBootReplicates{} fois, le procédé donne une distribution complète pour
+chaque métrique, d'où l'on extrait un intervalle de confiance.
+
+\paragraph{Pourquoi par blocs.} Un bootstrap qui tirerait les rendements un
+par un détruirait la structure temporelle~: les séries de pertes, la
+persistance de la volatilité, les regroupements. Les tronçons la préservent
+\emph{localement}~; seul leur ordre change.
+
+\paragraph{Ce qu'il ne dit pas.} Rien sur le futur, et rien sur le
+surajustement. Il redistribue l'information de l'échantillon, il n'en crée
+pas.
+
+\subsection{Probabilistic Sharpe Ratio et Deflated Sharpe Ratio}
+
+\paragraph{La question du PSR.} Compte tenu de la longueur de l'échantillon
+et de la forme de la distribution des rendements --- asymétrie, épaisseur des
+queues --- quelle est la probabilité que le vrai Sharpe soit supérieur à
+zéro~?
+
+\paragraph{La question du DSR.} La même, mais en tenant compte du nombre de
+fois où l'on a cherché.
+
+\begin{examplebox}
+\textbf{Pourquoi la déflation est indispensable.} Tirez cent pièces cent fois
+chacune. La meilleure série contiendra environ soixante faces, non parce que
+la pièce est truquée, mais parce que vous avez pris le maximum de cent
+tirages. Le même effet joue sur une grille de configurations~: le meilleur des
+$N$ essais paraît d'autant meilleur que $N$ est grand.
+
+Le \code{DSR} corrige exactement cela. Avec \XTenTrialsCount{} essais, le
+Sharpe attendu du meilleur --- sous l'hypothèse qu'aucun ne vaut rien --- est
+de \metric{\XTenExpectedMaxSharpe}. C'est le seuil réel, et il est positif.
+\end{examplebox}
+
+\paragraph{Le comptage des essais.} Chaque configuration évaluée est inscrite
+dans un registre, avec une clé nommant l'espace de configurations exploré. Un
+même balayage relancé ne compte qu'une fois~; un balayage non nommé compte
+pour lui-même. C'est ce registre qui alimente la déflation --- ce qui rend le
+budget d'essais opposable plutôt que déclaratif.
+
+\paragraph{Le haircut Sharpe.} Variante du même raisonnement, appliquée à la
+$p$-valeur~: elle corrige pour tests multiples et rend le Sharpe « après
+correction ». Une $p$-valeur ajustée de \XTenHaircutPValue{} signifie que le
+résultat est indistinguable de l'absence totale de signal.
+
+\paragraph{La longueur minimale de backtest.} Elle répond à « combien
+d'années faudrait-il pour que ce Sharpe soit crédible~? ». Elle n'est définie
+que pour un Sharpe observé positif, et n'est donc pas calculable ici.
 
 \subsection{Probability of Backtest Overfitting}
 
-\subsection{Seuils retenus et leur justification}
+\paragraph{La question.} Si je choisis le meilleur réglage sur une moitié des
+données, quelle est la probabilité qu'il se retrouve dans la moitié
+\emph{inférieure} du classement sur l'autre~?
+
+\paragraph{Le principe.} On découpe l'échantillon en un nombre pair de blocs,
+on considère \emph{toutes} les manières de les répartir en deux moitiés ---
+\XTenPBOSplits{} combinaisons ici --- et pour chacune, on sélectionne le
+meilleur réglage sur la première moitié, puis on regarde son rang sur la
+seconde. La proportion de cas où il tombe sous la médiane est le \code{PBO}.
+
+\paragraph{La lecture.} Un \code{PBO} bas signifie que le classement des
+configurations est stable~: le choix opéré sur une partie des données se
+transporte. Un \code{PBO} proche de la moitié signifie que le classement est
+du bruit.
+
+\paragraph{Le piège, dans ce dossier précis.} Un \code{PBO} élevé sur une
+grille intégralement perdante ne veut \emph{pas} dire « le surajustement
+explique la perte ». Il veut dire qu'il n'y a rien à classer. La
+section~\ref{sec:x10_robustesse} le souligne, parce que c'est une confusion
+facile.
+
+\subsection{Validation croisée combinatoire purgée}
+
+\paragraph{La question.} Que donne la stratégie sur des portions de données
+qui n'ont pas servi à la choisir, en considérant \emph{plusieurs} découpages
+plutôt qu'un seul~?
+
+\paragraph{Les deux précautions.} La \emph{purge} retire les observations à
+cheval sur la frontière entre apprentissage et test, pour qu'une position
+ouverte d'un côté ne soit pas évaluée de l'autre. L'\emph{embargo} écarte en
+plus une petite marge après la frontière, contre la persistance
+d'information.
+
+\paragraph{Ce qu'on en tire.} Non pas un chiffre, mais une distribution~: la
+médiane hors échantillon de chaque configuration, ses quantiles, et la part
+de découpages où elle est positive.
+
+\subsection{Rééchantillonnage de l'ordre des transactions}
+
+\paragraph{La question.} Le résultat vient-il de l'espérance, ou de la
+séquence~?
+
+\paragraph{Le principe.} On conserve exactement les résultats des
+\XTenMCTrades{} transactions et on les remélange \XTenMCSims{} fois. Si le
+repli réellement observé se situe dans la queue défavorable de la
+distribution des replis simulés, la séquence a été malchanceuse. S'il se
+situe au milieu, le résultat est celui qu'il devait être.
+
+\paragraph{Le score de chance de séquence.} Il mesure cet écart en nombre
+d'écarts-types. Ici il vaut \XTenSequenceZ~: l'ordre réalisé a été, si
+quelque chose, marginalement \emph{plus favorable} que le tirage moyen.
+
+\subsection{Risque de ruine}
+
+\paragraph{La question.} Sur un grand nombre de chemins de capital plausibles,
+que devient le compte~?
+
+\paragraph{Ce qu'il faut savoir lire.} Sous un dimensionnement à fraction fixe
+du capital, la probabilité de ruine \emph{littérale} est presque toujours
+nulle, parce qu'une fraction d'une quantité positive reste positive. Le
+chiffre informatif n'est donc pas la ruine, mais la probabilité de franchir
+un seuil de perte --- ici \XTenLossFiftyProb{} de perdre plus de la moitié du
+capital --- et le capital terminal médian, \XTenTerminalMedian{} du capital de
+départ.
+
+\subsection{Les seuils retenus, et leur justification}
+
+Les seuils gelés avant la mesure sont conventionnels dans la littérature du
+domaine~: au moins $0{,}95$ pour le \code{DSR}, au plus $0{,}35$ pour le
+\code{PBO}, au moins 60~\% de voisins positifs pour le plateau et au moins
+60~\% d'années positives pour le walk-forward.
+
+\begin{insightbox}
+\textbf{Ce qui rend un seuil valable n'est pas son niveau, c'est son
+antériorité.} Un seuil de $0{,}95$ pour le \code{DSR} est discutable~; un
+seuil déplacé à $0{,}80$ après avoir constaté qu'on obtenait $0{,}85$ ne l'est
+pas --- il est disqualifiant. C'est pourquoi la table de décision est
+committée avant la campagne, et pourquoi le hash de ce commit est reproduit
+en annexe~\ref{app:x10_table_decision}.
+
+Dans ce dossier, la question ne se pose pas~: le \code{DSR} mesuré vaut
+\XTenDSR. Aucun déplacement de seuil raisonnable ne le sauverait.
+\end{insightbox}
+
+\subsection{Reproduire ces mesures}
+
+Toutes les mesures publiées sortent d'une commande unique du dépôt, à graine
+fixe, écrivant ses résultats dans des fichiers versionnés. Les tables et
+figures de ce rapport sont produites par un générateur distinct qui lit
+uniquement ces fichiers, et un test de la suite échoue si un chiffre publié
+cesse de correspondre à sa source. La révision du dépôt ayant produit les
+résultats est \code{\XTenGitHead}.

@@ -6,9 +6,6 @@
 \section{Mandat et périmètre}
 \label{sec:x10_mandat}
 
-% TODO L2 : compléter par ce que le mandat interdit une fois le gel posé
-% (aucune re-sélection après lecture du holdout) et par la date de gel.
-
 \subsection{La demande du client}
 
 Apogée Invest demande une deuxième stratégie, indépendante de la première par
@@ -56,4 +53,57 @@ sur QuantConnect, portage sur MetaTrader~5, réconciliation des trois moteurs,
 batterie de robustesse, puis verdict. Le verdict peut être négatif~; il est
 alors publié tel quel, au même titre qu'un verdict favorable.
 
+La partie \emph{recherche} de cette chaîne est complète et rendue ici. Les
+deux portages d'exécution et la réconciliation événementielle sont en cours
+d'intégration~; les sections qui les portent le signalent et n'avancent aucun
+chiffre en attendant.
+
+\subsection{Ce que le gel interdit}
+
+Trois documents ont été écrits, relus et committés \textbf{avant} la première
+mesure, et ils sont opposables au rédacteur de ce rapport autant qu'au
+mandant.
+
+\begin{description}
+  \item[La spécification.] Elle fixe la machine à états, les paramètres gelés,
+  les trois axes de la grille et le budget d'essais. Une divergence entre un
+  moteur et la spécification est un défaut du moteur, jamais une correction de
+  la spécification~: si celle-ci est jugée fausse, elle se corrige
+  \emph{d'abord}, puis se propage.
+  \item[La table de décision.] Elle fixe les seuils de réussite, la règle de
+  sélection et les trois verdicts possibles. Son seul pouvoir est d'être
+  antérieure~: le commit de gel, \code{\XTenFreezeCommit}, est reproduit en
+  annexe~\ref{app:x10_table_decision}. Un seuil déplacé après une mesure
+  n'est plus un seuil, c'est une sélection déguisée.
+  \item[La note de faisabilité.] Elle a mesuré, avant tout code, que le pas de
+  la grille de dix dollars ne représente pas la même chose selon l'année, et
+  elle a conclu malgré tout à la construction --- parce que le mandat
+  l'impose et qu'un verdict négatif est un livrable.
+\end{description}
+
+Le gel interdit en particulier~: d'ajouter un axe à la grille après avoir vu
+les vingt-sept résultats~; de remplacer la grille en dollars par une grille
+en multiples d'\code{ATR} au vu de la dérive de régime~; de relancer la grille
+sans clé de configuration, ce qui compterait double au registre d'essais et
+dégraderait le \code{DSR} publié~; et de lire deux fois la tranche hors
+échantillon, sous quelque prétexte que ce soit.
+
 \subsection{Ce qui reste hors périmètre}
+
+Quatre questions sont explicitement en dehors de ce travail, et aucune
+n'est traitée par prétérition~:
+
+\begin{itemize}
+  \item \textbf{la corrélation de cette stratégie au portefeuille de la
+  stratégie~1} n'a pas été mesurée~: un actif dont l'espérance est négative
+  n'entre pas dans une allocation, quelle que soit sa corrélation~;
+  \item \textbf{le filtrage des annonces macroéconomiques} n'est pas
+  implémenté --- le mandat demande la séance entière, sans calendrier~;
+  \item \textbf{le spread réel heure par heure} n'a pas pu être relevé, le
+  terminal du courtier ne joignant plus son serveur de démonstration~; le
+  repli et sa sensibilité obligatoire sont décrits en
+  section~\ref{sec:x10_couts}~;
+  \item \textbf{toute variante du mandat} --- niveaux en \code{ATR}, scénario
+  unique, restriction de séance --- relève d'une autre spécification et d'un
+  autre budget d'essais, jamais d'un ajustement de celui-ci.
+\end{itemize}

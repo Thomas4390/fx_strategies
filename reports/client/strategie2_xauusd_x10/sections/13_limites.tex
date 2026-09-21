@@ -1,17 +1,143 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Limites}
 \label{sec:x10_limites}
 
-% TODO L2 : énumérer sans atténuation ce que ce travail ne démontre pas.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{C}{ette} section énumère, sans
+atténuation, ce que ce travail ne démontre pas. Sur un dossier négatif, elle
+a une fonction particulière~: elle dit à quelles conditions le verdict
+pourrait être contesté --- et, pour chacune, si la contestation tiendrait.
 
-\subsection{Profondeur d'historique disponible}
+\subsection{Le spread est constant}
 
-\subsection{Absence de filtre d'annonces}
+C'est la limite la plus lourde. Le modèle de coût de sélection applique
+\XTenSpreadUsd{} à chaque aller-retour, quelle que soit l'heure et quelle que
+soit l'année, faute d'avoir pu mesurer le spread historique sur le flux du
+courtier. Ce constant est trop cher en séance liquide et trop bon marché en
+heures creuses, et il pèse de moins en moins en proportion à mesure que le
+prix de l'or monte.
 
-\subsection{Dépendance au régime de volatilité}
+\emph{Cette limite pourrait-elle renverser le verdict~?} Non. La
+section~\ref{sec:x10_couts} montre que même une exécution gratuite laisserait
+l'espérance négative. Un spread mieux mesuré déplacerait le chiffre, pas son
+signe.
 
-\subsection{Ce que la réconciliation ne couvre pas}
+\subsection{Le seuil d'accélération a un double rôle}
+
+Le même curseur règle deux choses~: la sensibilité de l'armement --- combien
+d'accélération il faut pour commencer à surveiller un niveau --- et le
+basculement du \emph{reversal} --- combien de décélération il faut pour jouer
+le retour. C'est l'axe le plus discriminant de la grille, et il n'est donc
+\textbf{pas interprétable scénario par scénario}~: on ne peut pas dire si les
+valeurs élevées aident les \emph{breakouts}, aident les \emph{reversals}, ou
+n'aident que parce qu'elles font trader moins.
+
+Ce couplage était connu et publié avant la campagne, assumé pour tenir un
+budget de vingt-sept configurations. Le découpler reviendrait à ajouter un axe
+à la grille, ce que le gel interdit.
+
+\subsection{La distance du stop n'agit que sur la moitié des scénarios}
+
+Le troisième axe de la grille règle le stop du \emph{breakout}. Le stop du
+\emph{reversal}, lui, est une constante gelée --- l'extrême du débordement
+augmenté d'un demi-\code{ATR}. Un tiers de la grille ne concerne donc que la
+moitié des scénarios, et c'est exactement l'axe qui ne classe rien dans les
+résultats. Ce n'est pas une découverte de la campagne~: c'était une limite
+annoncée de la grille.
+
+\subsection{L'amorçage de la moyenne horaire}
+
+La moyenne mobile exponentielle à 50~périodes horaires exige 50~barres closes.
+Elle est donc indéfinie sur les deux premiers jours de l'échantillon, où le
+contexte vaut zéro et où \textbf{aucun \emph{breakout} n'est possible} --- les
+\emph{reversals}, eux, ne sont pas empêchés. L'effet est borné à deux séances
+sur \XTenSampleSessions~: négligeable, mais il fallait le dire, parce qu'il
+constitue une asymétrie de traitement entre les deux familles de scénarios sur
+cette amorce.
+
+\subsection{La durée maximale coupe des positions gagnantes}
+
+\XTenTimeShare{} des transactions sortent à la 48\textsuperscript{e} barre,
+avec une espérance de \metric{\XTenTimeR{}~R}. La durée de vie maximale gelée
+tranche donc, en moyenne, des positions qui gagnaient.
+
+\emph{Cette limite pourrait-elle renverser le verdict~?} On ne le sait pas, et
+c'est précisément le problème~: allonger la durée maximale au vu de ce chiffre
+serait un paramètre choisi après mesure, donc une sélection interdite. C'est
+un point de conception à rouvrir si le mandat l'est
+(section~\ref{sec:x10_non_deploiement}), sous une nouvelle spécification.
+
+\subsection{Le Sharpe porte sur les rendements d'une stratégie souvent plate}
+
+Les ratios publiés sont calculés sur des rendements \emph{de séance}. Or, sur
+\XTenSampleSessions{} séances, une part importante ne porte aucune
+transaction et vaut structurellement zéro~; et parmi celles qui en portent,
+les séances à transaction unique dominent.
+
+Un Sharpe annualisé sur cette base est une \textbf{convention de comparaison},
+pas une propriété de la stratégie. Il permet de classer les vingt-sept
+configurations entre elles --- ce pour quoi il est employé ici --- et il ne se
+compare pas au Sharpe d'une stratégie continuellement exposée. Les séances
+plates sont volontairement conservées dans l'index~: les retirer gonflerait le
+ratio sans changer un dollar du résultat.
+
+\subsection{Deux tests statistiques ne sont pas publiés}
+
+Le test de supériorité prédictive du dépôt a une orientation inversée et rend,
+sur une grille intégralement perdante, une valeur qui signifie l'inverse de ce
+qu'elle paraît dire. Le test descendant de Romano--Wolf, lui, échoue
+carrément. Les deux sont des limites préexistantes du module de tests
+statistiques, signalées et \textbf{non corrigées} par cette campagne, et
+aucun critère de la table de décision n'en dépend.
+
+C'est une limite de \emph{couverture}~: le dossier aurait été plus complet
+avec ces deux tests. Ce n'est pas une limite d'\emph{interprétation}~: leur
+absence ne change rien au sens des six critères mesurés.
+
+\subsection{Le portage d'exécution repose sur un modèle interpolé}
+
+Le testeur MetaTrader~5 tourne en mode « OHLC M1 », qui interpole les
+remplissages à l'intérieur de la minute. Les chiffres qu'il produira sont donc
+un \textbf{majorant} de ce qu'un compte réel obtiendrait, et ils devront être
+lus comme tels.
+
+S'ajoute une limite de couverture~: l'historique de l'or chez le courtier ne
+remonte qu'à la fin 2022. Un peu plus de la moitié de l'échantillon --- et
+précisément la moitié où le coût pèse le plus lourd --- ne sera jamais
+vérifiable sur le moteur d'exécution.
+
+\subsection{Une fenêtre horaire interdite, écart au mandat}
+
+Aucune entrée n'est prise entre 16:30 et 18:15, heure de New York, autour de
+la coupure quotidienne. Le mandat demandait la séance entière~: la stratégie
+ne trade donc pas la réouverture asiatique. L'écart est inscrit dans la
+spécification et son volume est faible --- c'est la plus petite des raisons
+d'annulation de l'automate --- mais il existe.
+
+\subsection{Aucun filtre d'annonces}
+
+La stratégie ne connaît pas le calendrier économique. Une publication de
+statistique américaine produit sur l'or des mouvements qui déclenchent
+mécaniquement vitesse, accélération et franchissement de niveau. Le mandat
+demandait la séance entière sans calendrier~; ce choix est respecté, et il
+n'est pas mesuré séparément.
+
+\subsection{Ce que ce rapport ne prétend pas établir}
+
+\begin{insightbox}
+\textbf{Ce document ne démontre pas qu'aucune stratégie de niveaux ronds ne
+peut fonctionner sur l'or.} Il démontre que \emph{celle-ci} --- telle que le
+mandat la définit, telle que la spécification la fige, dans les vingt-sept
+réglages autorisés et sur sept années --- perd de l'argent, à toutes les
+coupes examinées, et que cette perte survit au rééchantillonnage.
+
+Une famille de signaux différente, une définition adaptative de la grille, ou
+une restriction de séance sont des \emph{hypothèses non testées}. La
+section~\ref{sec:x10_non_deploiement} les énonce comme telles.
+\end{insightbox}
+
+Enfin, ce rapport n'établit rien sur la \textbf{corrélation} de cette
+stratégie au portefeuille existant du mandant. La question ne se pose pas~: un
+actif dont l'espérance est négative n'améliore pas une allocation, quelle que
+soit sa corrélation.

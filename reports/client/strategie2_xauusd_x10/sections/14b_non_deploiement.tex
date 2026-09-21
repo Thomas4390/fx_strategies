@@ -1,17 +1,196 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
+%  Les pistes du §3 sont des HYPOTHÈSES, formulées comme telles. Aucune
+%  n'est une promesse, aucune n'est testée.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Motifs de non-déploiement}
 \label{sec:x10_non_deploiement}
 
-% TODO L2 : section livrée sous verdict NOGO ou INCONCLUSIF : ce qui manque pour conclure et à quelle condition le dossier se rouvre.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} recommandation est de
+\textbf{ne pas déployer} la stratégie XAUUSD sur les niveaux x10, ni en
+capital réel ni sur un compte de démonstration. Cette section énumère les
+motifs, dit ce qui manque encore, et distingue soigneusement ce que les
+mesures autorisent à penser de ce qu'elles ne permettent que de supposer.
 
 \subsection{Ce que les mesures établissent}
 
-\subsection{Ce qui manque pour conclure}
+Six constats, tous mesurés, tous cohérents entre eux.
 
-\subsection{Condition de réouverture du dossier}
+\begin{enumerate}
+  \item \textbf{L'espérance nette est négative et large.}
+  \metric{\XTenExpectancyR{}~R} par transaction, sur \XTenTradesIS{}
+  transactions, pour un profit factor de \XTenProfitFactor. Le seuil gelé
+  demandait une espérance d'au moins $+0{,}10$~R et un profit factor d'au
+  moins $1{,}15$.
 
-\subsection{Ce qui a été appris malgré tout}
+  \item \textbf{Aucun réglage ne tient.} Les vingt-sept Sharpes nets sont
+  négatifs, de \XTenPeakSharpe{} à \XTenWorstGridSharpe.
+  \XTenPlateauPassing{} configuration passe le critère de plateau, et la règle
+  gelée interdit de se rabattre sur le pic.
+
+  \item \textbf{Aucune période ne tient.} \XTenPositiveYears{} année sur
+  \XTenYearsCount{} est positive. La perte est diffuse~:
+  \XTenProfitableSessions{} séances gagnantes contre
+  \XTenLosingSessions{} perdantes, sans concentration sur un épisode
+  particulier.
+
+  \item \textbf{Aucune population de transactions ne tient.} Les quatre
+  scénarios, les trois séances, les trois terciles de volatilité et les
+  quatre tranches de régime sont tous négatifs. La coupe la moins mauvaise
+  --- la tranche de régime intermédiaire --- reste à
+  \XTenBestDollarBandR{}~R.
+
+  \item \textbf{Le résultat survit au rééchantillonnage.} L'intervalle de
+  confiance à 95~\% du Sharpe, \XTenSharpeCILow{} à \XTenSharpeCIHigh, ne
+  contient pas zéro. Le rééchantillonnage de l'ordre des transactions montre
+  que la séquence réalisée n'a \emph{pas} été malchanceuse.
+
+  \item \textbf{Le coût n'est pas la cause.} À coût nul extrapolé,
+  l'espérance resterait autour de \XTenZeroCostExtrapolation{}~R --- une
+  extrapolation indicative, non mesurée, qui suffit à écarter l'explication
+  par les frais.
+\end{enumerate}
+
+\begin{warningbox}
+\textbf{Le \emph{Deflated Sharpe Ratio} vaut \XTenDSR.} Compte tenu des
+\XTenTrialsCount{} essais consommés, le meilleur d'entre eux aurait un Sharpe
+attendu de \XTenExpectedMaxSharpe{} par pur hasard. Le Sharpe observé est
+\XTenSharpeIS. La stratégie ne bat pas le bruit~; elle lui est très
+inférieure.
+\end{warningbox}
+
+\subsection{Ce qui manque encore, et pourquoi cela ne change rien}
+
+Deux critères sur neuf sont en échec par \emph{non-mesure}~: le portage
+MetaTrader~5 et la lecture hors échantillon. La table de décision impose de
+les compter comme des échecs, jamais comme « non applicables ».
+
+\begin{description}
+  \item[Le portage MetaTrader~5.] Sa campagne est en cours
+  (section~\ref{sec:x10_reconciliation}). Deux remarques~: il ne couvrira
+  qu'un peu moins de la moitié de l'échantillon, faute d'historique plus
+  ancien chez le courtier~; et son modèle de remplissage interpolé en fait un
+  \emph{majorant}. Un chiffre d'exécution qui contredirait six critères de
+  recherche serait un motif d'enquête sur le portage, pas un motif de
+  déploiement.
+  \item[La lecture hors échantillon.] Elle n'a pas eu lieu, et la
+  section~\ref{sec:x10_hors_echantillon} explique pourquoi c'est la bonne
+  décision~: le verdict est acquis, le holdout est un budget non
+  renouvelable, et le régime récent est hors de la distribution de sélection.
+\end{description}
+
+\subsection{Ce qui pourrait rouvrir le dossier}
+
+Cette sous-section est la plus délicate du rapport, et elle appelle un
+avertissement préalable.
+
+\begin{warningbox}
+\textbf{Une décomposition \emph{ex post} n'est pas une preuve.} Les pistes
+ci-dessous viennent toutes de coupes faites \emph{après} avoir vu les
+résultats. Découper un échantillon perdant en sous-groupes produit
+mécaniquement des sous-groupes moins perdants que d'autres, même quand aucune
+structure n'existe. Aucune de ces pistes n'est testée, aucune n'est
+recommandée, et aucune ne doit être lue comme une promesse de rendement.
+
+Chacune relève d'une \textbf{nouvelle spécification et d'un nouveau budget
+d'essais}, avec sa propre table de décision gelée avant mesure. Les greffer
+sur la spécification actuelle serait exactement la faute que tout le
+dispositif de cette phase cherchait à empêcher.
+\end{warningbox}
+
+\paragraph{Hypothèse 1 --- une grille adaptative en volatilité.}
+La dérive du pas de grille est le fait le plus massif du dossier~: dix
+dollars valent \XTenDollarsPerAtrFirst{} \code{ATR} en début d'échantillon et
+\XTenDollarsPerAtrLast{} à la fin, et les deux tranches extrêmes de régime
+sont les pires. On pourrait supposer qu'une grille dont le pas s'exprimerait
+en multiples d'\code{ATR} --- et non en dollars --- présenterait au signal un
+objet stable d'une année à l'autre.
+
+\emph{Ce qui s'y oppose.} Ce ne serait plus la stratégie commandée~: le
+mandat désigne les niveaux psychologiques de dix dollars, c'est-à-dire des
+prix ronds, et un niveau « à 3,2~\code{ATR} du précédent » n'a aucune
+existence psychologique. L'hypothèse mérite d'être formulée~; elle change
+d'objet d'étude.
+
+\paragraph{Hypothèse 2 --- un scénario unique.}
+Les \emph{breakouts} perdent moins que les \emph{reversals}, et le
+\emph{Breakout Long} est le moins mauvais des quatre à
+\XTenBestScenarioR{}~R. On pourrait supposer qu'une stratégie réduite à cette
+seule famille, avec un budget de conception qui lui serait entièrement
+consacré, se comporterait différemment.
+
+\emph{Ce qui s'y oppose.} Le \emph{Breakout Long} reste négatif, sur un
+nombre de transactions suffisant pour que ce ne soit pas du bruit. Et une
+partie de son avantage vient probablement du fait qu'il est le seul, avec son
+symétrique, à passer un filtre de contexte --- filtre dont les ablations
+montrent qu'il améliore sans redresser.
+
+\paragraph{Hypothèse 3 --- une restriction de séance.}
+C'est la coupe la plus contrastée de la campagne~: la séance asiatique porte
+\XTenAsiaLossShare{} de la perte pour \XTenAsiaTradeShare{} des transactions,
+avec \XTenAsiaExpectancyR{}~R contre \XTenNewYorkExpectancyR{}~R en séance
+new-yorkaise. On pourrait supposer qu'une stratégie limitée aux heures de
+Londres et de New York éviterait la part la plus coûteuse du flux.
+
+\emph{Ce qui s'y oppose.} D'abord, la séance new-yorkaise \emph{reste
+négative}~: retirer l'Asie ne ferait pas passer l'espérance du bon côté de
+zéro, cela la rapprocherait seulement. Ensuite, le mandat demande
+explicitement la séance entière. Enfin, un précédent du dépôt --- une
+composante horaire intraday abandonnée --- avait identifié l'absence de
+restriction de séance comme facteur aggravant~; le reprendre ici serait
+cohérent, mais cela resterait un choix fait après avoir vu la décomposition.
+
+\paragraph{Hypothèse 4 --- l'extension au VWAP comme filtre.}
+C'est la seule variable descriptive de la campagne qui sépare réellement
+quelque chose~: les \emph{reversals} pris loin du \code{VWAP} de séance
+perdent \XTenExtendedR{}~R contre \XTenNotExtendedR{}~R pour les autres.
+La spécification l'avait figée comme tracée et non bloquante, par décision du
+mandat.
+
+\emph{Ce qui s'y oppose.} L'écart est net mais les deux branches sont
+négatives~: en faire un filtre bloquant ne produirait pas une espérance
+positive. Et c'est exactement le type de variable qu'un échantillon perdant
+fait apparaître par construction.
+
+\subsection{Ce qui a été appris, indépendamment du verdict}
+
+Un dossier négatif produit tout de même des acquis, et ceux-ci survivront à ce
+rapport.
+
+\begin{itemize}
+  \item \textbf{Une chaîne de décision complète, spécifiée et testée} pour une
+  stratégie intraday sur niveaux, portable sur trois moteurs~: horloge de
+  séance, causalité multi-échelles, machine à états, exécution pessimiste,
+  contrat de trace événementielle.
+
+  \item \textbf{Une mesure durable de la non-stationnarité de l'or.} Le
+  tableau du pas de grille en \code{ATR} n'est pas propre à cette stratégie~:
+  il s'applique à toute règle fondée sur une distance en dollars, et il
+  documente un régime qui a changé d'un facteur supérieur à quatre en sept
+  ans.
+
+  \item \textbf{Un contre-exemple sur le retest.} Le mandat le citait comme
+  une confirmation~; la mesure le montre contre-prédictif
+  (\XTenRetestR{}~R avec, \XTenNoRetestR{}~R sans). C'est une information
+  utile au-delà de ce dossier.
+
+  \item \textbf{Une erreur de méthode documentée.} Le garde-fou gain/risque
+  avait été jugé inopérant \emph{par raisonnement}, sur une hypothèse
+  d'entrée idéalisée~; le comptage l'a réfuté --- il rejette
+  \XTenRRejectLastYear{} des candidats en fin d'échantillon. La leçon est
+  conservée dans les notes de recherche.
+
+  \item \textbf{Deux défauts d'outillage identifiés}~: le test de supériorité
+  prédictive à orientation inversée et le test descendant qui échoue sur une
+  grille sans gagnant. Ils étaient préexistants~; ils sont désormais nommés.
+\end{itemize}
+
+\begin{insightbox}
+\textbf{Le risque réel de ce chantier n'était pas de mesurer un échec~: c'était
+de re-sélectionner après l'avoir mesuré.} Une grille figée à vingt-sept
+points, un budget de \XTenTrialsCeiling{} essais dont \XTenTrialsReserve{}
+restent inutilisés, des seuils gelés et committés avant la première mesure, un
+plateau exigé plutôt qu'un pic, et un holdout qui n'a pas été ouvert. Le
+dispositif a tenu~: le verdict de ce rapport est le verdict que la table de
+décision prévoyait, appliquée à la lettre.
+\end{insightbox}

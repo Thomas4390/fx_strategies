@@ -1,19 +1,305 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
+%  Les constantes de la spécification (14, 50, 3, 12, 48, 0,5 %, 16:55) sont
+%  des définitions, pas des mesures : elles s'écrivent en clair.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Mécanique de la stratégie}
 \label{sec:x10_mecanique}
 
-% TODO L2 : poser la machine à états complète, du contexte H1 à la sortie, sans aucune valeur de paramètre tant que la sélection n'est pas gelée.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{T}{oute} la stratégie tient en
+une question~: \emph{comment le prix arrive-t-il sur le niveau~?} Un même
+niveau atteint en glissant ou atteint en accélérant ne raconte pas la même
+histoire, et c'est ce que le mandat demande de mesurer. Cette section déroule
+la chaîne complète, du contexte de fond jusqu'au passage de l'ordre.
 
-\subsection{Le contexte H1 : EMA50, VWAP, DXY}
+\subsection{L'unité de mesure : tout se compte en ATR}
+
+Aucune distance de cette stratégie ne s'exprime en dollars. Largeur de la zone
+de surveillance, force d'une cassure, profondeur d'un débordement, distance du
+stop~: tout se compte en multiples de l'\code{ATR} --- l'amplitude vraie
+moyenne, sur 14~barres, de la barre de cinq minutes.
+
+\begin{examplebox}
+\textbf{Pourquoi cette normalisation est indispensable.} Un stop placé à un
+dollar de l'entrée est un stop large quand la barre de cinq minutes parcourt
+en médiane \XTenAtrFirst{} dollar, et un stop dérisoire quand elle en parcourt
+\XTenAtrLast. Les deux situations existent dans l'échantillon --- ce sont 2019
+et 2025. En exprimant le stop en multiples d'\code{ATR}, la règle garde le
+même sens d'un régime à l'autre.
+
+Ce qui ne se normalise pas, en revanche, c'est la \textbf{cible}~: elle vaut
+dix dollars, toujours, parce que c'est le pas de la grille. C'est exactement
+la tension décrite en section~\ref{sec:x10_grille}, et le rapport gain/risque
+en dépend directement.
+\end{examplebox}
+
+L'\code{ATR} retenu est celui de Wilder, calculé par récursion, et la valeur
+n'est publiée qu'une fois 14~amplitudes accumulées~: avant, elle est
+\emph{indéfinie}, et non nulle. Le point mérite d'être noté parce que
+l'indicateur natif de MetaTrader~5 ne s'amorce pas ainsi --- il part d'une
+moyenne simple, ce qui décale durablement la série. L'expert advisor recalcule
+donc l'\code{ATR} à la main~; s'il ne le faisait pas, l'écart d'amorçage se
+propagerait à \emph{tous} les seuils de la stratégie.
 
 \subsection{L'approche du niveau : vitesse, momentum, accélération}
 
-\subsection{Normalisation par l'ATR}
+Trois grandeurs, toutes normalisées par l'\code{ATR}, décrivent la manière
+dont le prix aborde le barreau.
 
-\subsection{Déclenchement, cible et stop}
+\begin{description}
+  \item[La vitesse.] La pente moyenne des trois dernières barres, exprimée en
+  \code{ATR} par barre. Elle répond à « à quelle allure le prix se
+  déplace-t-il, maintenant~? ».
+  \item[Le momentum.] Le déplacement sur les douze dernières barres --- une
+  heure --- normalisé par la racine du nombre de barres, ce qui le rend
+  comparable à ce qu'une marche aléatoire produirait. Il répond à « ce
+  déplacement est-il une tendance ou du bruit~? ».
+  \item[L'accélération.] La variation de la vitesse sur trois barres. Elle
+  répond à « le mouvement se renforce-t-il ou s'essouffle-t-il~? ».
+\end{description}
 
-\subsection{Machine à états et transitions}
+\begin{warningbox}
+\textbf{Ces trois grandeurs ne sont pas homogènes entre elles.} La vitesse est
+une pente par barre, le momentum un déplacement normalisé en racine du temps,
+l'accélération une différence de vitesses. Deux seuils de la spécification
+--- celui de vitesse et celui d'accélération --- ont des ordres de grandeur
+voisins \emph{par coïncidence}~: ils ne mesurent pas la même chose et ne se
+comparent pas. Ce rapport ne les met jamais en regard.
+\end{warningbox}
+
+Le momentum joue un rôle particulier~: son seuil est gelé à zéro. Ce n'est pas
+un paramètre à régler, c'est un test de signe --- le prix doit arriver au
+niveau avec un déplacement horaire orienté \emph{vers} lui. La formulation du
+mandat, « le prix arrive au niveau avec du momentum », est reprise telle
+quelle, sans degré de liberté ajouté.
+
+\subsection{Le contexte : EMA50 horaire, VWAP de séance, dollar}
+
+Le mandat demande trois lectures de fond. Elles n'obéissent pas toutes aux
+mêmes règles, et c'est le point le plus délicat de la construction.
+
+\paragraph{La moyenne mobile exponentielle à 50 périodes horaires.}
+Elle dit de quel côté du fond de marché on se trouve. Elle est construite sur
+des barres horaires, donc soumise à la règle anti-anticipation de la
+section~\ref{sec:x10_methodologie}~: une barre horaire n'est visible qu'après
+sa clôture. Elle exige 50~barres horaires closes, donc elle est indéfinie
+pendant les deux premiers jours de l'échantillon --- pendant lesquels aucun
+\emph{breakout} n'est possible.
+
+\paragraph{Le VWAP de séance.}
+Il dit où se situe le prix par rapport à la moyenne de la séance en cours.
+Deux choix de construction méritent explication.
+
+\begin{itemize}
+  \item \textbf{Il n'est pas pondéré par le volume}, malgré son nom d'usage.
+  L'or au comptant n'a pas de volume exploitable sur la source de données de
+  référence~; la pondérer par un volume fictif rendrait les trois moteurs
+  incomparables. La grandeur retenue est donc la moyenne cumulée du
+  \emph{prix typique} --- moyenne du haut, du bas et de la clôture --- sur
+  toutes les barres de la séance.
+  \item \textbf{Il n'est pas décalé.} Contrairement aux séries horaires, il se
+  calcule sur les barres de cinq minutes elles-mêmes, et il est entièrement
+  connu à la clôture de la barre de décision. Le décaler serait ici une
+  erreur, pas une précaution.
+\end{itemize}
+
+Il est remis à zéro à 18:00 New York, à chaque nouvelle séance, et n'est
+considéré comme valide qu'après 12~barres.
+
+\paragraph{Le panier dollar.}
+Le mandat demande un filtre dollar. Aucun flux d'indice dollar n'étant
+disponible localement à la minute, un panier synthétique à quatre jambes ---
+euro, yen, livre, dollar canadien --- a été construit avec les poids de
+l'indice de référence renormalisés. Le contrôle de vraisemblance donne une
+corrélation de rendements journaliers de 0,87 avec l'indice large de la
+Réserve fédérale, au fixing de midi New York. L'écart au chiffre de fin de
+journée est purement horloger, et la cible initialement inscrite au plan
+--- calibrée sur un indice qui compte 26~devises, pas 4~--- a été abandonnée
+plutôt que corrigée à la hausse par un ajustement de construction.
+
+Seul le \emph{signe} de l'écart entre le panier et sa propre moyenne mobile
+est consommé~: le niveau absolu du panier n'a aucune influence.
+
+\subsection{Comment le contexte est utilisé --- et comment il ne l'est pas}
+
+Les trois lectures sont toujours évaluées \textbf{dans le sens du trade
+envisagé}, jamais dans la direction d'approche. Pour un \emph{breakout} les
+deux coïncident~; pour un \emph{reversal} elles sont opposées, et c'est le
+sens de la position qui compte --- un contexte « favorable » doit vouloir dire
+favorable à ce qu'on achète ou vend.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{3.2cm}p{10.8cm}}
+\toprule
+\textbf{Breakout} & Exige que le prix soit du bon côté de l'\code{EMA50}
+horaire \textbf{et} du \code{VWAP} de séance. Sinon, pas d'entrée. \\
+\textbf{Reversal} & \textbf{Aucune exigence} de contexte. Il est
+contre-tendance par construction, donc explicitement autorisé contre la
+moyenne horaire. Les deux scores sont tracés et servent aux décompositions,
+pas au filtrage. \\
+\textbf{Dollar adverse} & Le trade \textbf{reste autorisé}~; c'est la
+\emph{taille} qui est divisée par deux. C'est la lecture retenue de « le
+dollar filtre sans bloquer », et elle s'applique aux quatre scénarios. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Cette dernière règle a une conséquence vérifiable, et la campagne la vérifie~:
+retirer le filtre dollar ne change \emph{ni} le nombre de transactions
+\emph{ni} l'espérance en R --- seulement le montant perdu
+(section~\ref{sec:x10_in_sample}). Le garde-fou est donc implémenté exactement
+comme le mandat le demande.
+
+\subsection{La machine à états}
+
+Deux invariants gouvernent l'automate~: \textbf{un seul niveau armé à la
+fois}, et \textbf{une seule position à la fois}. Tant qu'une position est
+ouverte, l'automate est à l'arrêt~: un signal par ailleurs valide est ignoré,
+jamais mis en file d'attente ni rejoué après la sortie. Et une barre qui
+annule un niveau ne peut pas en armer un autre~; l'armement suivant s'examine à
+la barre d'après. Ces deux règles rendent la trace déterministe et comparable
+d'un moteur à l'autre.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{2.4cm}p{11.6cm}}
+\toprule
+\textbf{\textcolor{primary}{IDLE}} & Rien n'est surveillé. \\
+\textbf{\textcolor{primary}{ARMED}} & Le prix est entré dans la zone devant un
+niveau, sa vitesse et son accélération vers ce niveau dépassent leurs seuils,
+et son momentum horaire est orienté vers lui. L'armement expire au bout de
+12~barres sans événement, ou dès que le prix ressort de la zone vers
+l'arrière. \\
+\textbf{\textcolor{breakoutBlue}{BREAK}} & Le prix a clôturé au-delà du niveau
+d'au moins un quart d'\code{ATR}, et la clôture est dans la moitié
+directionnelle de sa barre --- ce dernier point écarte les barres qui
+dépassent en mèche et referment contre. S'ensuit un \emph{maintien} de
+3~barres sans clôture repassée du mauvais côté. \\
+\textbf{\textcolor{reversalOrange}{SWEEP}} & Le prix a débordé le niveau d'au
+moins trois dixièmes d'\code{ATR}, puis est revenu clôturer du côté d'origine
+dans les 3~barres, en décélérant et avec une accélération qui a basculé de
+signe. \\
+\textbf{\textcolor{primary}{ENTRY}} & Ouverture de la barre suivante, dans le
+sens du scénario. \\
+\textbf{\textcolor{primary}{EXIT}} & Stop, cible, durée maximale ou clôture de
+séance --- et rien d'autre. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Un chemin mérite d'être signalé parce qu'il relie les deux familles~: le
+\textbf{breakout raté}. Si, pendant la période de maintien, une clôture repasse
+du mauvais côté du niveau, le \emph{breakout} est annulé et cette barre même
+devient candidate à un \emph{reversal}, si la profondeur du débordement, la
+décélération et le basculement de l'accélération sont réunis. Aucun nouvel
+armement n'est requis~: le \emph{reversal} se greffe sur l'armement qui avait
+produit la cassure.
+
+\subsection{Cible, stop et le garde-fou du rapport gain/risque}
+
+La cible est toujours le \textbf{prochain niveau x10} dans le sens de la
+position. Le stop dépend du scénario~: pour un \emph{breakout}, il se place à
+une distance du niveau proportionnelle à l'\code{ATR} --- c'est le troisième
+axe de la grille~; pour un \emph{reversal}, il se place au-delà de l'extrême
+du débordement, augmenté d'un demi-\code{ATR}, une constante gelée.
+
+Le mandat exige que le gain visé vaille au moins la perte acceptée. Le test
+est fait à la décision, spread compris, et une seule demi-fourchette y est
+facturée --- celle payée à l'entrée. La sortie, elle, se fait au prix du
+niveau dès que le côté déclencheur l'atteint~; facturer le spread entier des
+deux côtés, comme le faisait la formule initiale, le comptait deux fois.
+
+% <<< LITERAL-OK : exemple pédagogique entièrement fictif. Aucun de ces
+% nombres n'est une mesure ; ils illustrent l'arithmétique de la spécification
+% sur un cas rond, et ne peuvent donc pas venir d'une macro de résultat.
+\begin{examplebox}[title=\textbf{\color{white}\textsf{Un breakout, chiffres à l'appui}}]
+Le prix approche le niveau de 2\,000~\$ par en dessous. L'\code{ATR} de cinq
+minutes vaut 1,20~\$.
+
+\begin{enumerate}
+  \item \textbf{Zone.} Avec une largeur de zone d'un \code{ATR}, le niveau est
+  surveillé dès que le prix dépasse $2\,000 - 1{,}20 = 1\,998{,}80$~\$.
+  \item \textbf{Armement.} La vitesse vers le niveau vaut 0,25~\code{ATR} par
+  barre (seuil~: 0,20), l'accélération 0,22 (seuil~: 0,20), et le déplacement
+  de la dernière heure est orienté vers le haut. L'automate arme.
+  \item \textbf{Cassure.} Le prix clôture à 2\,000,45~\$, soit
+  $0{,}375$~\code{ATR} au-dessus du niveau --- plus que le quart d'\code{ATR}
+  exigé --- et cette clôture est dans la moitié haute de sa barre.
+  \item \textbf{Maintien.} Pendant 3~barres, aucune clôture ne repasse sous
+  2\,000~\$.
+  \item \textbf{Géométrie.} À la fin du maintien, le prix vaut 2\,001,10~\$.
+  La cible est 2\,010~\$, le stop $2\,000 - 1 \times 1{,}20 = 1\,998{,}80$~\$.
+  Gain visé~: 8,90~\$. Perte acceptée~: 2,30~\$. Rapport~: environ 3,7, donc
+  très au-dessus du minimum de~1.
+  \item \textbf{Taille.} Avec 0,5~\% d'un capital de 10\,000~\$ risqués, soit
+  50~\$, et une distance au stop de 2,30~\$ sur un contrat de 100~onces, la
+  position vaut $50 / (2{,}30 \times 100) = 0{,}21$~lot, arrondi \emph{vers le
+  bas} au centième.
+\end{enumerate}
+
+Notez le point~5~: l'entrée n'a pas lieu au niveau, mais 1,10~\$ au-dessus. Le
+maintien a mangé un huitième de la cible et a éloigné le stop d'autant. C'est
+la raison structurelle pour laquelle le rapport gain/risque effectif est
+toujours inférieur au rapport théorique, et pourquoi le garde-fou finit par
+mordre.
+\end{examplebox}
+% >>> LITERAL-OK
+
+\subsection{Exécution : le moteur joue contre lui-même}
+
+Les règles d'exécution sont systématiquement choisies dans le sens
+défavorable, pour que le chiffre publié ne doive rien à une idéalisation.
+
+\begin{itemize}
+  \item La décision se prend à la \emph{clôture} d'une barre de cinq minutes~;
+  l'ordre s'exécute à l'\emph{ouverture} de la suivante. Aucune décision ne
+  consomme un prix qu'elle ne pouvait pas connaître.
+  \item Si la barre d'exécution ne commence pas exactement cinq minutes après
+  la barre de décision --- trou de données, halte de cotation, réouverture ---
+  l'entrée est \textbf{abandonnée}. On ne remplit jamais « à la prochaine
+  barre disponible ».
+  \item Le stop et la cible sont résolus sur les barres d'une \emph{minute}
+  internes. Si les deux sont touchés dans la même minute, \textbf{le stop
+  l'emporte}.
+  \item Si l'ouverture d'une minute est déjà au-delà du stop, la sortie a lieu
+  à cette ouverture, sans minute de grâce --- y compris dans la minute même du
+  remplissage.
+  \item En cas d'écart de cotation au-delà du stop ou de la cible, le
+  remplissage se fait à l'ouverture réelle, pas au niveau théorique.
+\end{itemize}
+
+\subsection{Sorties temporelles et fenêtre interdite}
+
+Une position vit au plus 48~barres de cinq minutes. Elle est en outre fermée à
+la première barre dont l'heure de New York tombe dans la fenêtre
+$[16{:}55, 18{:}00[$, qui est la coupure quotidienne du marché de l'or.
+Aucune position n'est tenue pendant cette coupure, ce qui rend le coût de
+portage sans objet.
+
+\begin{warningbox}
+\textbf{Un écart au mandat, assumé et mesuré.} Aucune entrée n'est prise entre
+16:30 et 18:15, heure de New York. Le mandat dit « toute la journée »~: la
+stratégie ne trade donc pas l'ouverture de la séance asiatique, et la dernière
+entrée d'une séance a lieu avant 16:30. Cet écart est inscrit dans la
+spécification, et il est faible en volume --- il représente la plus petite des
+huit raisons d'annulation de l'automate.
+
+C'est aussi sur cette fenêtre que portait le défaut trouvé par la relecture
+indépendante (section~\ref{sec:x10_methodologie})~: testée comme un seuil et
+non comme une fenêtre, la clôture de 16:55 liquidait toute la séance du soir.
+Corrigé avant la première lecture de performance.
+\end{warningbox}
+
+\subsection{Dimensionnement}
+
+Le risque par position vaut 0,5~\% du capital, réduit à 0,25~\% lorsque le
+contexte dollar est adverse au sens du trade. La taille se déduit de la
+distance au stop, au prix de remplissage \emph{réel}, et s'arrondit vers le
+bas au centième de lot. Une taille calculée sous le lot minimum annule la
+transaction.
+
+Une borne de levier à 1:100 --- celle du compte et du testeur --- plafonne
+ensuite la taille. Elle mord lorsque la distance au stop devient très petite,
+de l'ordre du dixième de dollar sur un or à deux mille dollars. Un moteur qui
+l'omettrait ouvrirait, dans ces cas, des positions que le courtier refuserait.

@@ -1,17 +1,134 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{La grille x10 et sa non-stationnarité}
 \label{sec:x10_grille}
 
-% TODO L2 : montrer que le pas de la grille, mesuré en ATR, n'est pas le même d'une année à l'autre, et ce que cela impose au reste du rapport.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{'intuition} des niveaux ronds
+est familière et elle n'est pas absurde~: les ordres à cours limité
+s'accumulent sur les prix ronds, les seuils de prise de bénéfice y sont
+posés, les stops s'y regroupent. Un prix qui arrive sur un chiffre rond
+rencontre donc, en principe, plus de contrepartie qu'ailleurs. La stratégie
+commandée par Apogée Invest fait de cette intuition son unique objet~: elle ne
+regarde que la façon dont l'or aborde les prix multiples de dix dollars.
 
 \subsection{Définition de la grille}
 
+La grille est la suite des multiples de 10~\$. À tout instant, le prix se
+situe entre deux barreaux~: celui du dessous et celui du dessus. La stratégie
+ne s'intéresse qu'à celui vers lequel le prix se dirige, et la cible d'une
+position est toujours le barreau suivant dans le sens du trade.
+
+Le calcul du barreau passe par l'arithmétique entière au millième de dollar,
+qui est le pas de cotation du symbole. Ce détail n'est pas cosmétique~: un
+prix stocké en virgule flottante peut valoir $4409{,}999999996$ et tomber du
+mauvais côté de la grille si on le divise naïvement.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig01_grille.png}
+\caption{La grille des niveaux x10 et la zone d'approche. Le prix est surveillé
+dès qu'il entre dans une bande de largeur $z \cdot ATR$ devant le barreau~;
+selon que le niveau cède ou tient, la position vise le barreau suivant
+(\emph{breakout}) ou le barreau précédent (\emph{reversal}).}
+\end{figure}
+
 \subsection{Le pas de grille mesuré en ATR, année par année}
 
-\subsection{Fréquence des croisements}
+Voici le constat qui gouverne tout le reste de ce rapport. Dix dollars ne
+valent pas la même chose selon l'année, non pas en pouvoir d'achat, mais
+\textbf{en unités de volatilité de la barre de travail}.
 
-\subsection{Ce que la dérive du régime interdit de conclure}
+\input{tables/x10_feasibility.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig02_dollars_par_atr.png}
+\caption{À gauche, le pas de la grille exprimé en \code{ATR} de cinq minutes~;
+à droite, le nombre médian de croisements de niveau par jour. Les deux
+courbes sont le même fait, vu de deux côtés.}
+\end{figure}
+
+\begin{insightbox}
+\textbf{En 2019, franchir un niveau x10 demandait \XTenDollarsPerAtrFirst{}
+écarts-types de barre~; en 2025, il en faut \XTenDollarsPerAtrLast.} La
+« même » stratégie ne désigne pas le même objet d'une année à l'autre. L'or
+traversait la grille \XTenCrossingsFirst{} fois par jour en 2019~; il la
+traverse \XTenCrossingsLast{} fois par jour en 2025. Un niveau psychologique
+franchi toutes les dix minutes n'est plus un niveau psychologique.
+\end{insightbox}
+
+Le mécanisme est simple~: le prix de l'or a plus que doublé sur la période et
+sa volatilité absolue a suivi, tandis que le pas de la grille --- dix dollars
+--- est resté ce qu'il est. L'\code{ATR} de cinq minutes passe de
+\XTenAtrFirst{} à \XTenAtrLast{} dollars entre le début et la fin de
+l'échantillon.
+
+\subsection{Ce que la dérive du régime change pour le signal}
+
+Trois conséquences, toutes défavorables et toutes vérifiées plus loin dans ce
+rapport.
+
+\begin{description}
+  \item[La cible change de nature.] La cible d'une position est le barreau
+  suivant. Elle valait dix-sept écarts-types de barre en 2019 --- une sortie
+  pratiquement hors de portée dans la durée de vie maximale d'une position ---
+  et moins de quatre en 2025, c'est-à-dire un déplacement que le bruit
+  produit seul. La décomposition par tranche de régime
+  (section~\ref{sec:x10_in_sample}) montre effectivement que les deux extrêmes
+  sont les pires~: \XTenWorstDollarBandR{}~R quand dix dollars valent plus de
+  dix \code{ATR}, et le meilleur résultat --- encore négatif ---
+  \XTenBestDollarBandR{}~R dans la tranche intermédiaire.
+  \item[Le coût relatif s'effondre, au mauvais moment.] Le spread de
+  \XTenSpreadUsd{} représente la moitié d'un \code{ATR} de cinq minutes en
+  2019 et un dixième en 2025. Le régime le plus favorable au coût est
+  précisément celui où la cible est du bruit~: les deux effets tirent en sens
+  contraire et ne se compensent pas.
+  \item[Le garde-fou de rapport gain/risque devient mordant.] Le mandat exige
+  qu'une position ne soit prise que si le gain visé vaut au moins la perte
+  acceptée. Sur un régime où la cible rétrécit en unités de volatilité tandis
+  que le stop reste proportionnel à cette volatilité, ce test se met à
+  refuser. Il rejetait \XTenRRejectFirstYear{} des candidats en 2019~; il en
+  rejette \XTenRRejectLastYear{} en 2025.
+\end{description}
+
+\input{tables/x10_r_rule.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{x10_fig08_regle_r.png}
+\caption{Taux de rejet annuel du garde-fou de rapport gain/risque. Le
+dénominateur ne compte que les candidats ayant atteint ce test~: un candidat
+refusé plus tôt, au contexte, n'a pas de rapport estimé et n'y figure pas.}
+\end{figure}
+
+\begin{warningbox}
+\textbf{Ce filtre avait été jugé inopérant avant d'être compté, et ce jugement
+était faux.} Le raisonnement initial supposait une entrée \emph{au niveau}~;
+l'entrée réelle n'a jamais lieu au niveau. Pour un \emph{breakout}, elle suit
+une période de maintien, pendant laquelle le prix a déjà parcouru une part de
+la cible. Pour un \emph{reversal}, elle suit une excursion au-delà du niveau,
+dont la profondeur éloigne le stop. Dans les deux cas, le rapport effectif est
+structurellement inférieur au rapport théorique, et l'écart grandit avec la
+volatilité --- d'où le décrochage de la dernière année. L'erreur est conservée
+et signalée dans les notes de recherche~: raisonner sur une entrée idéalisée
+avant d'avoir un moteur est une méthode qui se paie.
+\end{warningbox}
+
+\subsection{Ce que cette dérive interdit de conclure}
+
+Deux interdictions, posées avant la mesure et tenues après elle.
+
+D'abord, on ne peut pas \textbf{remplacer la grille en dollars par une grille
+en multiples d'\code{ATR}} au vu de ce tableau. Ce serait une autre stratégie
+que celle commandée~: une autre spécification, un autre budget d'essais, et
+surtout une décision prise après avoir vu les données, ce qui est précisément
+ce que le dispositif de cette phase cherche à empêcher.
+
+Ensuite, on ne peut pas \textbf{lire la moindre tendance temporelle du
+résultat comme une amélioration}. La perte s'atténue au fil des années
+(section~\ref{sec:x10_in_sample}), et deux explications purement mécaniques
+suffisent à en rendre compte --- un spread constant qui pèse de moins en moins
+en proportion d'un prix qui monte, et un garde-fou qui écarte de plus en plus
+de candidats. Cette campagne ne les sépare pas, et aucune des deux ne
+constitue un signal.

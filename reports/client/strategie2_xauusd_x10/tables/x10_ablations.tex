@@ -1,0 +1,22 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Ablations des trois filtres de contexte, à la configuration analysée. Le classement est monotone~: plus on retire de contexte, plus on perd.}
+\label{tab:x10_ablations}
+\begin{tabular}{c c l r r r r r}
+\toprule
+\textbf{EMA50 H1} & \textbf{VWAP} & \textbf{DXY} & \textbf{Trades} & \textbf{Sharpe} & \textbf{E[R]} & \textbf{PF} & \textbf{PnL} \\
+\midrule
+\checkmark & \checkmark & \checkmark \emph{(spec)} & $1\,723$ & $-1{,}661$ & $-0{,}1602$ & $0{,}737$ & $-6\,258{,}1$~\$ \\
+\checkmark & \checkmark & --- & $1\,723$ & $-1{,}786$ & $-0{,}1602$ & $0{,}727$ & $-7\,256{,}6$~\$ \\
+\checkmark & --- & \checkmark & $1\,803$ & $-1{,}781$ & $-0{,}1653$ & $0{,}725$ & $-6\,574{,}5$~\$ \\
+\checkmark & --- & --- & $1\,804$ & $-1{,}949$ & $-0{,}1646$ & $0{,}714$ & $-7\,613{,}4$~\$ \\
+--- & \checkmark & \checkmark & $1\,909$ & $-1{,}859$ & $-0{,}1665$ & $0{,}723$ & $-6\,744{,}6$~\$ \\
+--- & \checkmark & --- & $1\,911$ & $-2{,}028$ & $-0{,}1663$ & $0{,}709$ & $-7\,780{,}2$~\$ \\
+--- & --- & \checkmark & $2\,102$ & $-2{,}029$ & $-0{,}1722$ & $0{,}709$ & $-7\,122{,}3$~\$ \\
+--- & --- & --- & $2\,117$ & $-2{,}285$ & $-0{,}1722$ & $0{,}685$ & $-8\,212{,}1$~\$ \\
+\bottomrule
+\end{tabular}
+\end{table}

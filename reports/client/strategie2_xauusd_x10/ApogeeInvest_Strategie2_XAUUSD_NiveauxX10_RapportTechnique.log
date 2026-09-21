@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 10:29
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 13:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1402,7 +1402,14 @@ Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count416
 ))
-(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
+(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux
+
+LaTeX Warning: Label `tab:x10_trade_examples' multiply defined.
+
+
+LaTeX Warning: Label `tab:x10_decision' multiply defined.
+
+)
 \openout1 = `ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 33.
@@ -1597,11 +1604,11 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 88.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.10568pt on input line 122.
+(Font)              scaled to size 7.10568pt on input line 128.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 7.10568pt on input line 122.
+(Font)              scaled to size 7.10568pt on input line 128.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 109--123
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 115--129
  [][][][][][] 
  []
 
@@ -1609,11 +1616,11 @@ Overfull \hbox (9.64635pt too wide) in paragraph at lines 109--123
 
 ]
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 11.36908pt on input line 137.
+(Font)              scaled to size 11.36908pt on input line 143.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 11.36908pt on input line 137.
+(Font)              scaled to size 11.36908pt on input line 143.
 
-Underfull \hbox (badness 10000) in paragraph at lines 137--139
+Underfull \hbox (badness 10000) in paragraph at lines 143--145
 
  []
 
@@ -1623,34 +1630,300 @@ Package polyglossia Warning: Failed to patch part for French
 
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 (Font)              scaled to size 8.64523pt on input line 2.
-[1] [2])
+[1] [2] [3])
 \tf@toc=\write4
 \openout4 = `ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.toc'.
 
- [3] (./sections/00_resume_verdict.tex
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 21.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 21.
+ [4] (./sections/00_resume_verdict.tex
+
+LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 39
+.
+
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.80363pt (A);
+(lettrine.sty)             reported on input line 39.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 9.47424pt on input line 44.
+(Font)              scaled to size 9.47424pt on input line 48.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 9.47424pt on input line 44.
-) (./sections/01_mandat.tex
+(Font)              scaled to size 9.47424pt on input line 48.
+(./tables/x10_decision.tex
+
+LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
+(Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 6.
+
+
+
+Underfull \hbox (badness 6725) in paragraph at lines 12--12
+[]|\TU/LatinModernRoman(0)/m/n/9 Trades in-sample 2019 $\OMS/cmsy/m/n/9 !$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
+ []
+
+
+Underfull \hbox (badness 2495) in paragraph at lines 17--17
+[]|$\OT1/cmr/m/n/9 0$\TU/LatinModernRoman(0)/m/n/9 % d’années positives;
+ []
+
+
+Underfull \hbox (badness 1152) in paragraph at lines 20--20
+[]|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
+)/m/n/9 30, sinon NON
+ []
+
+) [1
+
+]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 24.
+(enumitem)                sense, on input line 106.
 
-[1
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
+(Font)              scaled to size 10.95pt on input line 131.
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 131.
+[2]) (./sections/01_mandat.tex
 
-]) (./sections/02_methodologie.tex) (./sections/03_grille_x10.tex)
-(./sections/04_mecanique.tex) (./sections/05_scenarios.tex [2])
-(./sections/06_recherche_vs_execution.tex) (./sections/07_risque.tex)
-(./sections/08_in_sample.tex) (./sections/09_hors_echantillon.tex)
-(./sections/10_bootstrap_mc_ruine.tex [3])
-(./sections/11_robustesse_avancee.tex) (./sections/12_sensibilite_couts.tex)
-(./sections/13_limites.tex) (./sections/14b_non_deploiement.tex)
-(./sections/annexe_a_glossaire.tex [4]
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 21.
+
+[3]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 68.
+
+) (./sections/02_methodologie.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (L);
+(lettrine.sty)             reported on input line 8.
+ [4] [5]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 108.
+
+[6]) (./sections/03_grille_x10.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (L);
+(lettrine.sty)             reported on input line 7.
+File: figures/x10_fig01_grille.png Graphic file (type bmp)
+<figures/x10_fig01_grille.png>
+ (./tables/x10_feasibility.tex [7])
+File: figures/x10_fig02_dollars_par_atr.png Graphic file (type bmp)
+<figures/x10_fig02_dollars_par_atr.png>
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/it' will be
+(Font)              scaled to size 10.0pt on input line 49.
+ [8]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 73.
+
+(./tables/x10_r_rule.tex)
+File: figures/x10_fig08_regle_r.png Graphic file (type bmp)
+<figures/x10_fig08_regle_r.png>
+ [9]
+
+LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
+(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 123
+.
+
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
+(Font)              scaled to size 10.0pt on input line 123.
+) (./sections/04_mecanique.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.15294pt (T);
+(lettrine.sty)             reported on input line 9.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap T doesn't fit on page 10.
+(lettrine)                Missing vertical space: 6.37364pt. 
+(lettrine)                Reported on input line 9.
+
+[10]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 50.
+
+[11] [12] [13] [14]) (./sections/05_scenarios.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.74706pt (Q);
+(lettrine.sty)             reported on input line 7.
+ (./tables/x10_scenarios.tex)
+File: figures/x10_fig07_scenario_session.png Graphic file (type bmp)
+<figures/x10_fig07_scenario_session.png>
+
+[15]
+File: figures/x10_fig12_trade_break_long.png Graphic file (type bmp)
+<figures/x10_fig12_trade_break_long.png>
+File: figures/x10_fig12_trade_break_short.png Graphic file (type bmp)
+<figures/x10_fig12_trade_break_short.png>
+ [16]
+File: figures/x10_fig12_trade_rev_long.png Graphic file (type bmp)
+<figures/x10_fig12_trade_rev_long.png>
+File: figures/x10_fig12_trade_rev_short.png Graphic file (type bmp)
+<figures/x10_fig12_trade_rev_short.png>
+ (./tables/x10_trade_examples.tex
+Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
+ [][] 
+ []
+
+) [17]
+Underfull \hbox (badness 4001) in paragraph at lines 115--115
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Qualité de la
+ []
+
+[18]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 129.
+
+) (./sections/06_recherche_vs_execution.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (U);
+(lettrine.sty)             reported on input line 9.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap U doesn't fit on page 19.
+(lettrine)                Missing vertical space: 37.35548pt. 
+(lettrine)                Reported on input line 9.
+
+[19]
+Underfull \hbox (badness 3735) in paragraph at lines 37--37
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Moteur vecto-
+ []
+
+[20]
+Underfull \hbox (badness 1728) in paragraph at lines 92--93
+\TU/LatinModernRoman(0)/m/sc/10.95 tesse, momentum, accélé-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 122--122
+[]|\TU/LatinModernRoman(0)/m/sc/10.95 Python ou QuantConnect
+ []
+
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 142.
+
+[21]) (./sections/07_risque.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (L);
+(lettrine.sty)             reported on input line 7.
+
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 42.
+
+[22] [23]) (./sections/08_in_sample.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.74706pt (C);
+(lettrine.sty)             reported on input line 7.
+ (./tables/x10_grid27.tex)
+File: figures/x10_fig03_heatmaps.png Graphic file (type bmp)
+<figures/x10_fig03_heatmaps.png>
+
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 36.
+
+[24] [25]
+File: figures/x10_fig04_equite.png Graphic file (type bmp)
+<figures/x10_fig04_equite.png>
+File: figures/x10_fig05_immersion.png Graphic file (type bmp)
+<figures/x10_fig05_immersion.png>
+ (./tables/x10_walkforward.tex [26])
+File: figures/x10_fig06_esperance_annuelle.png Graphic file (type bmp)
+<figures/x10_fig06_esperance_annuelle.png>
+ (./tables/x10_sessions.tex)
+[27] (./tables/x10_regimes.tex) [28] (./tables/x10_exits.tex)
+File: figures/x10_fig09_raisons_sortie.png Graphic file (type bmp)
+<figures/x10_fig09_raisons_sortie.png>
+ [29]
+(./tables/x10_context_cuts.tex)
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 208.
+
+(./tables/x10_ablations.tex) [30] (./tables/x10_concentration.tex))
+(./sections/09_hors_echantillon.tex [31]
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.74706pt (C);
+(lettrine.sty)             reported on input line 18.
+
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 48.
+
+[32]) (./sections/10_bootstrap_mc_ruine.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (U);
+(lettrine.sty)             reported on input line 7.
+File: figures/x10_fig11_bootstrap.png Graphic file (type bmp)
+<figures/x10_fig11_bootstrap.png>
+ [33] [34] [35])
+(./sections/11_robustesse_avancee.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (L);
+(lettrine.sty)             reported on input line 7.
+ (./tables/x10_robustness.tex) [36]
+(./tables/x10_cpcv.tex)
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 92.
+
+[37]
+Overfull \hbox (2.43547pt too wide) in paragraph at lines 97--103
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Le module du dépôt transmet des \TU/LatinM
+odernRoman(0)/m/it/10.95 ren-
+ []
+
+) (./sections/12_sensibilite_couts.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.74706pt (S);
+(lettrine.sty)             reported on input line 7.
+ [38] (./tables/x10_costs.tex)
+File: figures/x10_fig10_sensibilite_couts.png Graphic file (type bmp)
+<figures/x10_fig10_sensibilite_couts.png>
+ [39]
+[40]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 125.
+
+) (./sections/13_limites.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.74706pt (C);
+(lettrine.sty)             reported on input line 7.
+ [41] [42]) (./sections/14b_non_deploiement.tex
+Package lettrine.sty Info: Targeted height = 19.40747pt
+(lettrine.sty)             (for loversize=0, accent excluded),
+(lettrine.sty)             Lettrine height = 19.40756pt (L);
+(lettrine.sty)             reported on input line 9.
+
+[43]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 69.
+
+[44] [45]) (./sections/annexe_a_glossaire.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 19.
@@ -1663,27 +1936,89 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 54.
 
+[46]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 71.
 
-[5]) (./sections/annexe_b_anatomie_trades.tex) (./sections/annexe_c_plateau.tex
-) (./sections/annexe_d_methodologie_robustesse.tex)
-(./sections/annexe_e_table_decision.tex) [6]
-(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
+) (./sections/annexe_b_anatomie_trades.tex [47]
+(./tables/x10_trade_examples.tex
+Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
+ [][] 
+ []
+
+)
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 93.
+
+[48]
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 114.
+
+) (./sections/annexe_c_plateau.tex [49]
+File: figures/x10_fig03_heatmaps.png Graphic file (type bmp)
+<figures/x10_fig03_heatmaps.png>
+ [50])
+(./sections/annexe_d_methodologie_robustesse.tex [51] [52])
+(./sections/annexe_e_table_decision.tex [53] (./tables/x10_decision.tex
+Underfull \hbox (badness 6725) in paragraph at lines 12--12
+[]|\TU/LatinModernRoman(0)/m/n/9 Trades in-sample 2019 $\OMS/cmsy/m/n/9 !$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
+ []
+
+
+Underfull \hbox (badness 2495) in paragraph at lines 17--17
+[]|$\OT1/cmr/m/n/9 0$\TU/LatinModernRoman(0)/m/n/9 % d’années positives;
+ []
+
+
+Underfull \hbox (badness 1152) in paragraph at lines 20--20
+[]|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
+)/m/n/9 30, sinon NON
+ []
+
+)
+
+Package enumitem Warning: Negative labelwidth. This does not make much
+(enumitem)                sense, on input line 22.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 37--37
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Déploiement à
+ []
+
+[54]
+Underfull \hbox (badness 2088) in paragraph at lines 110--110
+\TU/LatinModernRoman(0)/m/sc/10.95 touché des barres posté-
+ []
+
+[55]) [56] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
+
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
  ) 
 Here is how much of TeX's memory you used:
- 41561 strings out of 468173
- 949566 string characters out of 5435520
- 1528671 words of memory out of 5000000
- 69616 multiletter control sequences out of 15000+600000
- 633137 words of font info for 110 fonts, out of 8000000 for 9000
+ 42183 strings out of 468173
+ 965533 string characters out of 5435520
+ 1547287 words of memory out of 5000000
+ 70148 multiletter control sequences out of 15000+600000
+ 636501 words of font info for 139 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11261b,1300s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11261b,1411s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.pd
-f (10 pages).
+f (61 pages).

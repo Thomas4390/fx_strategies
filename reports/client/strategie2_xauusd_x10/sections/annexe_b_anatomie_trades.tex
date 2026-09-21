@@ -1,17 +1,124 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
-\section{Anatomie d'un trade, scénario par scénario}
+\section{Anatomie d'un trade, pas à pas}
 \label{app:x10_anatomie}
 
-% TODO L2 : dérouler un trade réel par scénario, barre par barre, du contexte H1 à la sortie.
+Cette annexe déroule la vie d'une transaction, de la barre où le niveau entre
+dans le champ jusqu'à la barre où la position se ferme. Elle sert de clé de
+lecture aux quatre exemples réels de la section~\ref{sec:x10_scenarios}.
 
-\subsection{Breakout Long}
+\subsection{Les neuf étapes}
 
-\subsection{Breakout Short}
+\begin{enumerate}
+  \item \textbf{Le niveau est déterminé.} À chaque clôture de barre de cinq
+  minutes, le moteur calcule les deux barreaux qui encadrent le prix. Seul
+  celui vers lequel le prix se dirige est candidat.
 
-\subsection{Reversal Short}
+  \item \textbf{La zone est testée.} Le prix doit être entré dans une bande
+  de largeur $z \cdot ATR$ devant le barreau, sans l'avoir encore franchi.
+  Trop loin, rien ne se passe~; déjà de l'autre côté, ce n'est plus une
+  approche.
 
-\subsection{Reversal Long}
+  \item \textbf{La cinématique est testée.} Vitesse vers le niveau au-dessus
+  de son seuil, accélération vers le niveau au-dessus du sien, et déplacement
+  de la dernière heure orienté vers le niveau. Si l'une des trois grandeurs
+  est indéfinie --- amorçage d'indicateur, trou de données --- la barre est
+  \emph{gelée}~: aucune transition n'a lieu, mais les compteurs continuent de
+  courir.
+
+  \item \textbf{L'automate arme.} Un seul niveau peut être armé à la fois~;
+  tout autre niveau armable est ignoré. L'armement expire au bout de
+  12~barres sans événement, ou dès que le prix ressort de la zone vers
+  l'arrière.
+
+  \item \textbf{Le niveau cède ou tient.} S'il cède --- clôture au-delà d'au
+  moins un quart d'\code{ATR}, dans la moitié directionnelle de la barre ---
+  on est sur un \emph{breakout}, et s'ouvre une période de maintien de trois
+  barres. S'il tient --- débordement d'au moins trois dixièmes d'\code{ATR}
+  puis retour en clôture dans les trois barres, avec décélération et
+  basculement de l'accélération --- on est sur un \emph{sweep}.
+
+  \item \textbf{La géométrie est posée.} Cible~: le barreau suivant dans le
+  sens de la position. Stop~: de l'autre côté du niveau pour un
+  \emph{breakout}, au-delà de l'extrême du débordement pour un
+  \emph{reversal}. L'\code{ATR} utilisé est celui de la \emph{barre de
+  décision}, jamais celui de la barre de cassure --- les deux diffèrent de
+  trois barres.
+
+  \item \textbf{Les quatre filtres passent, dans cet ordre.} Contexte, puis
+  garde-fou gain/risque, puis fenêtre horaire --- évaluée sur la barre
+  d'exécution, pas sur celle de décision --- puis taille. L'ordre n'est pas
+  cosmétique~: il définit les dénominateurs des statistiques de refus
+  publiées en section~\ref{sec:x10_grille}.
+
+  \item \textbf{L'ordre est passé.} À l'ouverture de la barre suivante, et
+  seulement si celle-ci commence exactement cinq minutes plus tard. Le prix
+  payé est le prix médian augmenté ou diminué d'une demi-fourchette, selon le
+  sens.
+
+  \item \textbf{La position se résout.} Sur les barres d'une minute internes.
+  Stop et cible sont testés minute par minute~; en cas de double contact dans
+  la même minute, le stop l'emporte. À défaut, la position se ferme à la
+  48\textsuperscript{e} barre de cinq minutes, ou à la clôture de séance.
+\end{enumerate}
+
+\subsection{Les quatre exemples, côte à côte}
+
+\input{tables/x10_trade_examples.tex}
+
+La règle de choix a été écrite dans le générateur avant d'être exécutée~: pour
+chaque scénario, la transaction dont le $R$ réalisé est \emph{médian} parmi
+celles clôturées en 2023, les égalités étant départagées par l'horodatage de
+décision. Aucun tri esthétique n'intervient.
+
+\begin{warningbox}
+\textbf{Les quatre se terminent au stop, et c'est l'information.} Puisque
+\XTenStopShare{} des transactions de la campagne sortent au stop --- pour une
+espérance de \XTenStopR{}~R --- le \emph{trade médian} de n'importe laquelle
+de ces populations est nécessairement un stop. Obtenir quatre exemples
+gagnants aurait demandé une règle de sélection écrite après coup.
+
+Cette remarque est aussi une leçon de lecture applicable ailleurs~: quand une
+annexe d'exemples montre quatre transactions réussies, la question à poser est
+« selon quelle règle ont-elles été choisies, et cette règle a-t-elle été
+écrite avant~? ».
+\end{warningbox}
+
+\subsection{Lire une figure d'exemple}
+
+Chaque figure de la section~\ref{sec:x10_scenarios} se lit de la même façon.
+
+\begin{description}
+  \item[Les barres.] Chandeliers de cinq minutes, du contexte qui précède la
+  décision jusqu'à quelques barres après la sortie. Vert quand la clôture
+  dépasse l'ouverture, rouge sinon.
+  \item[La ligne foncée horizontale.] Le niveau x10 concerné.
+  \item[La bande claire.] La zone d'approche, de largeur $z \cdot ATR$ devant
+  le niveau. Elle est tracée à l'\code{ATR} de la transaction, donc sa hauteur
+  varie d'un exemple à l'autre --- c'est la normalisation en action.
+  \item[Les deux pointillés.] Le stop et la cible, tels qu'ils ont été posés à
+  la barre de décision.
+  \item[Le triangle montant.] L'entrée, au prix de remplissage réel, à
+  l'ouverture de la barre qui suit la décision.
+  \item[Le triangle descendant.] La sortie, au prix réel, étiquetée de sa
+  raison.
+\end{description}
+
+\subsection{Deux cas de bord que les exemples ne montrent pas}
+
+Ils sont rares mais normatifs, et un lecteur qui reproduirait la stratégie
+doit les connaître.
+
+\begin{description}
+  \item[Le breakout raté qui devient reversal.] Si, pendant la période de
+  maintien, une clôture repasse du mauvais côté du niveau, le \emph{breakout}
+  est annulé et cette barre même devient candidate à un retournement --- sans
+  nouvel armement, et en héritant de l'attribut de retest du \emph{breakout}
+  avorté. Les deux familles de scénarios ne sont donc pas étanches.
+  \item[Le sweep d'une seule barre.] La fenêtre de retour est inclusive et
+  compte la barre du débordement elle-même. Un débordement en mèche suivi
+  d'une clôture déjà revenue, dans la \emph{même} barre de cinq minutes,
+  constitue un \emph{sweep} valide et donne lieu à une position. Conséquence
+  assumée de la spécification.
+\end{description}

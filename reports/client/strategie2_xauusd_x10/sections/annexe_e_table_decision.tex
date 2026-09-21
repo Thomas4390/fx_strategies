@@ -1,15 +1,140 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. La table est générée depuis
+%  results/xau_x10/is_summary.json ; le hash de gel est lu dans l'historique
+%  git du document de table de décision par le générateur.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Table de décision gelée}
 \label{app:x10_table_decision}
 
-% TODO L2 : reproduire la table de décision telle qu'elle a été gelée, avec le hash du commit qui la fige.
+Cette annexe reproduit \emph{in extenso} la table de décision telle qu'elle a
+été gelée avant la première mesure, confrontée aux résultats de la campagne.
+Elle donne aussi la preuve d'antériorité du gel et l'état du journal de
+consommation du hors échantillon.
 
 \subsection{Table reproduite}
 
-\subsection{Hash du commit de gel}
+\input{tables/x10_decision.tex}
 
-\subsection{Journal des lectures du holdout}
+Deux clauses de cette table, souvent oubliées dans ce genre de document,
+gouvernent la lecture des deux dernières lignes.
+
+\begin{description}
+  \item[Un critère non mesuré vaut échec.] Jamais « non applicable », jamais
+  « en attente ». Les critères 8 et 9 sont donc comptés comme des échecs,
+  exactement comme les six qui portent une mesure.
+  \item[Un seul verdict est prononcé, et il l'est une seule fois.] La table
+  prévoit trois issues~: déploiement à blanc, ne pas déployer, non concluant.
+  Elles sont mutuellement exclusives, et leurs conditions ont été écrites
+  avant la campagne.
+\end{description}
+
+\subsection{Les trois verdicts, tels qu'ils avaient été écrits}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{3.6cm} p{10.4cm}}
+\toprule
+\textbf{Déploiement à blanc} & Les neuf critères sont franchis, \emph{et} la
+réconciliation des trois moteurs tient dans ses tolérances, \emph{et} la
+lecture hors échantillon ne contredit pas les intervalles gelés. Ce verdict
+n'autorise pas le capital réel~: il autorise un compte de démonstration, une
+durée et une date de revue, que le rapport devrait nommer. \\
+\textbf{Ne pas déployer} & \textbf{Au moins un} critère est en échec avec une
+mesure interprétable. Ce verdict est un résultat complet, pas un abandon. \\
+\textbf{Non concluant} & La mesure existe mais n'est pas interprétable~: trop
+peu de transactions hors échantillon, régime hors de la distribution de
+sélection, réconciliation bloquée par une divergence non attribuée, ou
+impossibilité de produire un chiffre d'exécution. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\ifdefstring{\XTenVerdict}{NOGO}{%
+\begin{warningbox}
+\textbf{Le verdict prononcé est « ne pas déployer ».} Six critères sont en
+échec avec une mesure interprétable~: espérance et profit factor, Sharpe
+déflaté, probabilité de surajustement, plateau, walk-forward annuel,
+sensibilité au coût majoré. Un seul aurait suffi.
+\end{warningbox}
+}{}
+
+\subsection{Preuve d'antériorité du gel}
+
+Le seul pouvoir d'une table de seuils est d'être antérieure à la mesure. La
+preuve en est le commit qui l'a introduite dans le dépôt.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{p{6.4cm} l}
+\toprule
+Commit de gel de la table de décision & \code{\XTenFreezeCommit} \\
+Révision ayant produit les résultats publiés & \code{\XTenGitHead} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le premier commit précède le second dans l'historique du dépôt~: les seuils
+sont antérieurs aux chiffres qu'ils jugent. Un lecteur disposant du dépôt peut
+le vérifier directement sur le journal du fichier de table de décision.
+
+\subsection{Le budget d'essais, tel qu'il avait été fixé}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{7.4cm} r}
+\toprule
+\textbf{Poste} & \textbf{Essais} \\
+\midrule
+Grille des configurations (trois axes, trois valeurs) & vingt-sept \\
+Ablations des trois filtres de contexte & sept \\
+Réserve & \XTenTrialsReserve \\
+\midrule
+\textbf{Plafond gelé} & \XTenTrialsCeiling \\
+\textbf{Consommés par la campagne} & \XTenTrialsCount \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La réserve n'a pas été entamée. Elle n'autorisait d'ailleurs pas à chercher
+une configuration gagnante~: la table de décision l'interdit explicitement.
+
+\subsection{Journal des lectures du hors échantillon}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{p{4.6cm} p{9.2cm}}
+\toprule
+État du holdout & \textbf{verrouillé} \\
+Lectures de performance effectuées & \textbf{aucune} \\
+Lignes ajoutées au journal de consommation & \textbf{aucune} \\
+Mesures descriptives ayant touché des barres postérieures & volatilité de
+cinq minutes et fréquence de croisement des niveaux, déclarées dans les notes
+de recherche, sans aucun calcul de performance \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La section du protocole destinée à recevoir la configuration gelée avant
+lecture est restée \textbf{vide}, et elle ne pouvait pas être remplie~:
+\XTenPlateauPassing{} configuration ne passe le critère de plateau, donc il
+n'y avait rien à y inscrire. Le dispositif s'est bloqué de lui-même, comme il
+avait été conçu pour le faire.
+
+\subsection{Ce que la table interdisait explicitement}
+
+Reproduit tel quel, parce que c'est la partie du gel qui protège le lecteur.
+
+\begin{enumerate}
+  \item Ajouter un axe à la grille après avoir vu les vingt-sept résultats.
+  \item Remplacer la grille en dollars par une grille en multiples de
+  volatilité au vu de la dérive de régime~: ce serait une autre stratégie,
+  donc une autre spécification et un autre budget.
+  \item Relancer la grille sans clé de configuration~: le nouveau passage
+  compterait double au registre et dégraderait le Sharpe déflaté publié.
+  \item Lire le hors échantillon deux fois, sous quelque prétexte que ce
+  soit, y compris « correction d'un défaut ». Un défaut découvert après
+  lecture rend le résultat non concluant~; il ne rend pas la lecture
+  rejouable.
+  \item Mentionner le garde-fou gain/risque sans publier son taux de rejet
+  annuel --- obligation tenue en section~\ref{sec:x10_grille}.
+\end{enumerate}

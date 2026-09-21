@@ -1,17 +1,162 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Cette section pose le CADRE de la
+%  réconciliation ; les mesures QC et MT5 arrivent au lot suivant et ne
+%  sont représentées que par des macros « n.d. ».
 % ═══════════════════════════════════════════════════════════════════════
-\section{Recherche contre exécution : réconciliation des trois moteurs}
+\section{Recherche contre exécution : le cadre de réconciliation}
 \label{sec:x10_reconciliation}
 
-% TODO L2 : confronter événement par événement le moteur vectoriel, QuantConnect et MetaTrader~5, et chiffrer l'écart résiduel.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{U}{ne} stratégie mesurée par un
+seul moteur n'a été mesurée qu'une fois. Ce chapitre décrit le dispositif qui
+confronte trois implémentations indépendantes de la même spécification, ce
+qu'il peut établir, et ce qu'il ne peut pas.
+
+\ifdefstring{\XTenVerdictProvisoire}{1}{%
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Mesures QuantConnect et MetaTrader~5 : en cours d'intégration}}]
+Les deux portages d'exécution existent et leurs campagnes sont en cours. Leurs
+résultats ne sont pas publiés ici, et aucun chiffre d'exécution n'est avancé~:
+l'espérance QuantConnect vaut \code{\XTenQCExpectancyR}, l'espérance
+MetaTrader~5 \code{\XTenMTFiveExpectancyR}, et les taux d'appariement
+\code{\XTenQCMatchRate} et \code{\XTenMTFiveMatchRate}. Ces valeurs seront
+remplies par le même générateur que le reste du rapport, à partir des
+fichiers de résultats des deux moteurs, sans intervention manuelle.
+
+\textbf{Cette attente ne suspend pas le verdict.} La table de décision compte
+un critère non mesuré comme un échec~: le critère MetaTrader~5 est donc déjà
+compté en échec, et une mesure ultérieure ne peut que confirmer ou aggraver le
+constat, jamais l'annuler --- six critères mesurés échouent par ailleurs.
+\end{warningbox}
+}{}
 
 \subsection{Ce que chaque moteur simule}
 
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{3.0cm}p{11.0cm}}
+\toprule
+\textbf{Moteur vectoriel} & Évalue la stratégie sur des tableaux entiers,
+d'un bloc. Il permet d'explorer une grille de vingt-sept configurations en
+quelques secondes, ce qui est indispensable pour mesurer un plateau plutôt
+qu'un point. Il ne simule pas le passage du temps~: il le calcule. C'est le
+moteur de \emph{recherche}. \\
+\textbf{QuantConnect} & Rejoue la stratégie barre par barre, sur les
+\emph{mêmes} données que le moteur vectoriel, avec un livre d'ordres, un
+gestionnaire de portefeuille et des horaires de marché. Il sert à démontrer
+que la stratégie est \emph{implémentable en temps réel}, et que le moteur
+vectoriel n'a pas triché sur la causalité. \\
+\textbf{MetaTrader~5} & Rejoue la stratégie sur le flux du \emph{courtier},
+qui n'est pas celui des deux autres, avec son spread, ses arrondis de lots et
+ses règles de marge. C'est le moteur qui passerait les ordres~: ses chiffres
+sont ceux qui feraient foi pour le compte. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Les deux premiers partagent les mêmes barres~; le troisième non, et cette
+asymétrie n'est pas un défaut à corriger. L'historique de l'or chez le
+courtier commence fin 2022, ce qui limite structurellement la comparaison à
+un peu plus de trois des sept années d'échantillon --- et ce sont les années
+où le coût pèse le moins lourd, donc les plus favorables. Les régimes de
+2019 à 2022 ne sont \emph{pas} vérifiables sur le moteur d'exécution.
+
 \subsection{Protocole de réconciliation événement par événement}
 
-\subsection{Écarts constatés et leur cause}
+Les trois moteurs émettent le même fichier de trace~: une ligne par événement,
+vingt-et-une colonnes dans un ordre fixé, horodatage en temps universel,
+arrondis imposés. L'automate n'a le droit d'émettre que six types
+d'événements --- armement, cassure, débordement, entrée, sortie, annulation ---
+et de changer d'état sans émettre la ligne correspondante n'est pas permis.
 
-\subsection{Écart résiduel accepté}
+\begin{insightbox}
+\textbf{Comparer des P\&L ne sert à rien~; comparer des événements localise la
+cause.} Deux moteurs qui affichent le même résultat final peuvent être en
+désaccord sur la moitié de leurs transactions, les erreurs se compensant. Deux
+moteurs qui affichent des résultats différents peuvent n'avoir qu'un seul
+désaccord, dans le calcul d'un indicateur. Seule la trace événementielle
+distingue les deux cas.
+\end{insightbox}
+
+\subsection{L'échelle de lecture à cinq barreaux}
+
+La comparaison descend barreau par barreau et s'arrête au premier qui casse~:
+un écart au barreau \emph{n} rend tous les barreaux au-delà ininterprétables.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{c p{4.6cm} p{7.6cm}}
+\toprule
+\textbf{Barreau} & \textbf{Objet comparé} & \textbf{Si ça casse, la cause est} \\
+\midrule
+1 & Les barres de cinq minutes & Bornes de séance, fuseau horaire,
+calendrier \\
+2 & Les indicateurs~: \code{ATR}, vitesse, momentum, accélération,
+\code{VWAP}, moyenne horaire, dollar & Lissage, amorçage, causalité des
+séries horaires \\
+3 & Les événements d'automate & Seuils, largeur de zone, maintien,
+temporisation après sortie \\
+4 & Les entrées & Garde-fou gain/risque, fenêtre horaire, unicité de
+position \\
+5 & Les sorties et le P\&L & Côté acheteur/vendeur, double contact, écart de
+cotation, lots, coûts \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Écarts structurels attendus, et tolérances}
+
+Les tolérances ont été fixées dans la spécification, \emph{avant} la première
+comparaison, et elles ne sont pas les mêmes selon les moteurs confrontés.
+
+% <<< LITERAL-OK : tolérances de réconciliation et seuil de divergence non
+% attribuée. Ce sont des SEUILS gelés dans la spécification avant toute
+% comparaison, pas des mesures : aucun fichier de résultats ne les porte.
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{5.2cm} p{2.6cm} p{5.6cm}}
+\toprule
+\textbf{Comparaison} & \textbf{Données} & \textbf{Appariement attendu} \\
+\midrule
+Python contre QuantConnect & identiques & au moins 98~\% des entrées \\
+Python contre MetaTrader~5, sur données du courtier & identiques & au moins
+95~\% des entrées \\
+Python ou QuantConnect contre MetaTrader~5 & différentes & au moins 70~\%,
+l'écart devant être \emph{attribué} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+\textbf{Un écart n'est un échec que s'il reste inexpliqué.} Viser l'égalité
+avec le moteur du courtier serait le signe qu'on a idéalisé le backtest, pas
+qu'on a réconcilié quoi que ce soit~: les flux diffèrent, les niveaux frôlés
+d'un côté ne le sont pas de l'autre, et le prix médian n'est pas le prix
+acheteur. La règle opposable est différente~: une divergence \textbf{non
+attribuée} portant sur plus de 5~\% des transactions \emph{bloque} la lecture
+hors échantillon.
+\end{warningbox}
+% >>> LITERAL-OK
+
+Trois sources d'écart sont attendues et documentées d'avance.
+
+\begin{description}
+  \item[L'amorçage des indicateurs.] L'\code{ATR} natif de MetaTrader~5 ne
+  s'amorce pas comme celui de la spécification, et les deux moteurs
+  d'exécution doivent précharger au moins 51~barres horaires avant la première
+  barre évaluée. Sans cela, le barreau~2 casse d'entrée.
+  \item[Le modèle de remplissage du testeur.] Le testeur tourne en mode
+  « OHLC M1 », qui \emph{interpole} les remplissages à l'intérieur de la
+  minute. Les chiffres MetaTrader~5 sont donc structurellement un
+  \textbf{majorant}, et doivent être lus comme tels.
+  \item[Le panier dollar multi-symboles.] La récupération simultanée de
+  quatre symboles n'est pas garantie dans le testeur. La spécification prévoit
+  le cas~: une jambe absente depuis plus de cinq barres rend le contexte
+  dollar \emph{neutre}, et l'occurrence est comptée.
+\end{description}
+
+\subsection{Ce que la réconciliation ne pourra pas établir}
+
+Même achevée, elle ne dira pas si la stratégie gagne de l'argent~: cette
+question est tranchée par la recherche, et elle l'est négativement. Elle dira
+si les trois moteurs décrivent le même objet. C'est une condition nécessaire
+à un déploiement, jamais une condition suffisante --- et, dans ce dossier,
+c'est une condition dont la vérification ne changera pas la décision.

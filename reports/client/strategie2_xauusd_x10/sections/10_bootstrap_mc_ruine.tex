@@ -1,17 +1,148 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Bootstrap, Monte-Carlo et risque de ruine}
 \label{sec:x10_bootstrap}
 
-% TODO L2 : borner l'incertitude de l'espérance par bloc bootstrap et mesurer la probabilité de ruine sur rééchantillonnage de l'ordre des trades.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{U}{n} backtest produit une
+trajectoire~: celle que l'histoire a effectivement empruntée. La question de
+cette section est~: \emph{et si elle avait été un peu différente~?} Les trois
+techniques employées ici rééchantillonnent l'histoire de trois manières
+distinctes, pour borner ce que l'on peut affirmer.
 
 \subsection{Bootstrap stationnaire par blocs}
 
-\subsection{Intervalles de confiance des métriques de tête}
+Le bootstrap classique tire des observations au hasard, avec remise. Appliqué
+à des rendements financiers, il détruit la structure temporelle~: les
+enchaînements, la persistance de la volatilité, les séries de pertes. Le
+bootstrap \emph{stationnaire par blocs} tire des \emph{tronçons} de longueur
+aléatoire --- vingt séances en moyenne ici --- et les recolle. La dépendance
+locale survit~; seul l'ordre des tronçons change.
 
-\subsection{Rééchantillonnage de l'ordre des trades}
+\XTenBootReplicates{} réplicats ont été produits, à graine fixe. Chacun
+fournit une trajectoire alternative, et la distribution des métriques sur ces
+trajectoires donne les intervalles de confiance.
 
-\subsection{Probabilité de ruine et immersion maximale simulée}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig11_bootstrap.png}
+\caption{Intervalles de confiance à 95~\% de six métriques. Le losange est la
+valeur observée, le trait l'intervalle, la ligne verticale le zéro. Les
+échelles sont hétérogènes~: seul le \emph{signe} est comparable d'une ligne à
+l'autre.}
+\end{figure}
+
+\begin{insightbox}
+\textbf{L'intervalle de confiance du Sharpe ne contient pas zéro~:}
+\XTenSharpeCILow{} à \XTenSharpeCIHigh, pour une valeur observée de
+\XTenSharpeIS. Autrement dit, la perte n'est pas un accident
+d'échantillonnage. Même dans le cinquième centile le plus favorable des
+trajectoires rééchantillonnées, la stratégie perd de l'argent. Le même constat
+vaut pour le rendement total, dont l'intervalle va de
+\XTenTotalReturnCILow{} à \XTenTotalReturnCIHigh.
+\end{insightbox}
+
+Les intervalles complets figurent dans la table de robustesse de la
+section~\ref{sec:x10_robustesse}.
+
+\subsection{Rééchantillonnage de l'ordre des transactions}
+
+Le bootstrap par blocs répond à « et si le marché avait été un peu
+différent~? ». Cette seconde technique répond à une question plus étroite et
+plus précise~: \emph{et si les mêmes transactions étaient arrivées dans un
+autre ordre~?}
+
+On garde exactement les \XTenMCTrades{} résultats de transactions mesurés, on
+les remélange \XTenMCSims{} fois, et on observe la distribution des replis
+maximaux obtenus.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{7.6cm} r}
+\toprule
+\textbf{Repli maximal observé} & \XTenMCObservedMdd \\
+Médiane des permutations & \XTenMCMddMedian \\
+95\textsuperscript{e} centile des permutations & \XTenMCMddPNinetyFive \\
+\midrule
+\textbf{Score de chance de séquence} & \XTenSequenceZ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+\textbf{L'ordre réalisé n'a pas été malchanceux.} Le repli observé est à peine
+au-dessus de la médiane des permutations, et le score de chance de séquence
+est légèrement \emph{positif} --- c'est-à-dire que l'ordre réel a été
+marginalement plus favorable que le tirage moyen. La perte ne vient donc pas
+d'un enchaînement défavorable~: elle vient de l'espérance.
+\end{warningbox}
+
+C'est une distinction importante pour le mandant. Une stratégie d'espérance
+positive peut traverser une séquence désastreuse~; on la garde alors en la
+sachant malchanceuse. Ici, le rééchantillonnage exclut cette lecture~: dans
+presque toutes les permutations, le résultat est du même ordre, parce que
+chaque transaction perd en moyenne, indépendamment de sa place.
+
+Sous permutation, la durée médiane passée sous le plus haut historique est de
+\XTenUnderwaterMedian{} transactions sur \XTenMCTrades. La courbe n'a
+pratiquement jamais de plus haut à battre.
+
+\subsection{Probabilité de ruine et trajectoires simulées}
+
+La troisième technique simule \XTenBootReplicates{} chemins de capital de la
+longueur de l'échantillon, par rééchantillonnage des rendements, et compte ce
+qui arrive au capital.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{8.6cm} r}
+\toprule
+Rendement annualisé & \XTenAnnReturn \\
+Volatilité annualisée & \XTenAnnVol \\
+\midrule
+\textbf{Probabilité de ruine} & \XTenRuinProb \\
+\textbf{Probabilité de perdre plus de la moitié du capital} &
+\XTenLossFiftyProb \\
+Capital terminal médian, en fraction du capital initial &
+\XTenTerminalMedian \\
+Repli maximal au 95\textsuperscript{e} centile des chemins &
+\XTenBootDDPNinetyFive \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{insightbox}
+\textbf{La probabilité de ruine nulle n'est pas une bonne nouvelle.} Elle dit
+simplement que le dimensionnement à une fraction fixe du capital ne permet
+pas d'atteindre zéro~: en risquant un demi-pour-cent de ce qu'il reste, on
+divise indéfiniment sans jamais annuler. Le chiffre qui compte est le
+suivant~: \metric{\XTenLossFiftyProb} des trajectoires perdent plus de la
+moitié du capital, et le capital terminal médian vaut
+\metric{\XTenTerminalMedian} du capital de départ. La ruine littérale
+n'arrive pas~; la ruine pratique, si.
+\end{insightbox}
+
+\subsection{Ce que ces trois techniques établissent, et ce qu'elles ne font pas}
+
+Elles établissent que le résultat mesuré \textbf{résiste au
+rééchantillonnage}~: il ne dépend ni d'une période particulière, ni de l'ordre
+des transactions, ni d'un tirage favorable. C'est précisément ce qui rend le
+verdict solide.
+
+Elles n'établissent \emph{pas} que le résultat se reproduira à l'identique
+dans le futur~: aucune de ces techniques ne crée d'information nouvelle, elles
+ne font que redistribuer celle de l'échantillon. Et elles ne disent rien du
+surajustement --- il faut pour cela les tests déflatés de la
+section~\ref{sec:x10_robustesse}.
+
+\begin{warningbox}
+\textbf{Une précision de méthode qui limite la portée de ces chiffres.} Les
+rendements utilisés ici sont des rendements \emph{de séance}, pour une
+stratégie qui est plate la plupart du temps~: sur \XTenSampleSessions{}
+séances, une part importante ne porte aucune transaction et vaut
+structurellement zéro. Un Sharpe annualisé calculé sur cette base est une
+\emph{convention}, pas une propriété physique~: il se compare à lui-même d'une
+configuration à l'autre, pas au Sharpe d'une stratégie continuellement
+exposée. Les séances plates sont volontairement conservées dans l'index~; les
+retirer gonflerait le ratio sans changer la réalité économique.
+\end{warningbox}

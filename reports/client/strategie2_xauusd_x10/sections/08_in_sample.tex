@@ -1,23 +1,278 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Résultats in-sample}
 \label{sec:x10_in_sample}
 
-% TODO L2 : publier la campagne in-sample complète à partir des macros générées, sans reformuler un seul chiffre à la main.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{C}{ette} section publie la
+campagne complète sur 2019--2025. Elle est organisée pour répondre, dans
+l'ordre, à quatre questions~: y a-t-il un réglage qui tient~? Y a-t-il une
+période qui tient~? Y a-t-il une population de transactions qui tient~? Et le
+contexte demandé par le mandat sert-il à quelque chose~?
 
-\subsection{Walk-forward}
+La réponse est non aux quatre. Voici comment.
 
-\subsection{Carte mensuelle des rendements}
+\subsection{La grille des vingt-sept configurations}
 
-\subsection{Courbe d'immersion}
+La grille explore trois axes, trois valeurs chacun~: la largeur de la zone de
+surveillance, le seuil d'accélération et la distance du stop du
+\emph{breakout}. C'est l'espace de configurations gelé avant la mesure, et
+rien d'autre n'a été essayé.
 
-\subsection{Sharpe glissant}
+\input{tables/x10_grid27.tex}
 
-\subsection{Décomposition par scénario}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig03_heatmaps.png}
+\caption{Carte du Sharpe net sur les trois axes. Chaque panneau fixe la
+distance du stop et fait varier la largeur de zone (verticalement) et le seuil
+d'accélération (horizontalement). L'échelle de couleur est commune aux trois
+panneaux.}
+\end{figure}
+
+Trois lectures, qu'il faut faire sans les sur-interpréter.
+
+\begin{description}
+  \item[La grille est monotone selon le seuil d'accélération.] Les neuf
+  configurations au seuil le plus bas occupent le bas du classement, les neuf
+  au seuil le plus haut le haut. Un seuil plus exigeant arme moins souvent,
+  donc trade moins, donc perd moins. \textbf{Ce n'est pas un signal de
+  bord}~: c'est la signature d'un coût fixe par transaction qui domine tout le
+  reste.
+  \item[La largeur de zone agit dans le même sens, pour la même raison.] Une
+  zone plus large arme plus souvent.
+  \item[La distance du stop ne classe rien.] Elle n'agit que sur les
+  \emph{breakouts} --- le stop du \emph{reversal} est une constante gelée ---
+  ce qui rend ce tiers de la grille structurellement moins discriminant.
+\end{description}
+
+\subsection{Le plateau : aucune configuration retenue}
+
+La règle de sélection gelée ne retient pas le meilleur point de la carte, mais
+le \emph{centre d'un plateau}~: une configuration dont les voisins immédiats
+tiennent aussi. Concrètement, il faut qu'au moins 60~\% des voisins aient un
+Sharpe positif, et que la médiane des voisins atteigne la moitié du pic.
+
+\begin{warningbox}
+\textbf{\XTenPlateauPassing{} configuration sur vingt-sept passe ce test.} La
+part de voisins à Sharpe positif vaut \XTenPlateauShareNeighbours{} partout,
+puisque les vingt-sept Sharpes sont négatifs. La règle gelée prévoit
+explicitement ce cas~: il n'y a pas de configuration retenue, et le verdict
+est négatif. \textbf{On ne se rabat pas sur le pic}~--- un pic isolé dans une
+grille de vingt-sept points est la signature d'un surajustement, pas d'un
+réglage.
+\end{warningbox}
+
+Un détail arithmétique mérite d'être signalé, car il montre que la règle ne
+s'est pas dégradée en passoire sur un échantillon perdant. Quand le pic est
+négatif, « la moitié du pic » est un nombre \emph{plus élevé} que le pic
+lui-même~: le seuil de médiane vaut \XTenPlateauThreshold{} pour un pic à
+\XTenPeakSharpe. La seconde moitié du critère est donc devenue plus dure, et
+elle échoue aussi --- la médiane des voisins du centre géométrique vaut
+\XTenPlateauMedianNeighbour.
+
+\paragraph{Plateau contre pic.} La table de décision demande de publier les
+deux côte à côte. Le pic est \XTenPeakConfig, à \XTenPeakSharpe. La
+configuration analysée --- le centre géométrique --- est \XTenAnalysedConfig,
+à \XTenSharpeIS. L'écart vaut \XTenSharpeGapPeak{} de Sharpe. Il est réel, et
+il n'a aucune conséquence~: les deux perdent. L'annexe~\ref{app:x10_plateau}
+développe cette distinction.
+
+\begin{insightbox}
+\textbf{La configuration analysée dans tout ce qui suit n'est pas une
+sélection.} Pour que les décompositions aient un support, il en faut une~;
+le brief de campagne avait désigné \emph{avant la mesure} le centre
+géométrique de la grille. Ce choix n'a pas été fait au vu des résultats, et il
+ne doit jamais être présenté comme « la configuration de la stratégie ». Il
+n'y en a pas.
+\end{insightbox}
+
+\subsection{Courbe d'équité et immersion}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig04_equite.png}
+\caption{Courbe d'équité par séance de la configuration analysée, base~1. La
+perte est régulière~: pas de décrochage brutal, pas de période de
+récupération.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig05_immersion.png}
+\caption{Courbe d'immersion --- l'écart au plus haut historique de la courbe
+d'équité. Elle ne revient jamais durablement à zéro.}
+\end{figure}
+
+Le rendement total vaut \XTenTotalReturn{} sur les sept années, pour un repli
+maximal de \XTenMaxDDPct. Le plus long épisode passé sous un plus haut
+historique dure \XTenRecoveryDays{} séances sur \XTenSampleSessions~: la
+courbe passe l'essentiel de sa vie sous son plus haut.
+
+\subsection{Walk-forward annuel}
+
+\input{tables/x10_walkforward.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{x10_fig06_esperance_annuelle.png}
+\caption{Espérance nette par transaction, année par année. Le critère gelé
+demandait qu'au moins 60~\% des années soient positives.}
+\end{figure}
+
+\textbf{\XTenPositiveYears{} année sur \XTenYearsCount{} est positive.} Le
+critère en demandait 60~\%. En revanche, la seconde moitié du critère passe~:
+aucune année ne porte plus de la moitié du résultat net, le maximum étant
+\XTenMaxYearShare{}. La perte n'est donc pas l'accident d'un exercice.
+
+La perte s'atténue avec le temps --- \XTenWorstYearExpectancy{}~R pour la pire
+année contre \XTenLastYearExpectancy{}~R pour la dernière --- sans jamais
+changer de signe. Deux explications purement mécaniques suffisent à en rendre
+compte, et cette campagne ne les sépare pas~: le prix de l'or a plus que
+doublé, donc un spread \emph{constant} pèse de moins en moins en proportion~;
+et le garde-fou gain/risque rejette de plus en plus de candidats, écartant
+les transactions les plus défavorables. Aucune des deux n'est un signal.
+
+\subsection{Décomposition par scénario et par séance}
+
+\input{tables/x10_sessions.tex}
+
+Les quatre scénarios perdent (section~\ref{sec:x10_scenarios}) et les trois
+séances aussi. La coupe par séance est la plus contrastée de toute la
+campagne~: la séance asiatique porte \metric{\XTenAsiaLossShare} de la perte
+pour \XTenAsiaTradeShare{} des transactions, avec une espérance de
+\XTenAsiaExpectancyR{}~R contre \XTenNewYorkExpectancyR{}~R en séance
+new-yorkaise.
+
+\begin{warningbox}
+\textbf{Ce contraste ne suggère pas d'ajouter un filtre horaire.} Un
+paramètre choisi après avoir vu la décomposition n'est pas un paramètre, c'est
+une sélection --- et la table de décision l'interdit explicitement. Cette
+coupe est la première chose à regarder \emph{si} le mandat est un jour
+rouvert, sous une nouvelle spécification et un nouveau budget d'essais~; elle
+n'autorise rien dans le cadre actuel. La
+section~\ref{sec:x10_non_deploiement} y revient.
+\end{warningbox}
+
+\subsection{Décomposition par régime de volatilité}
+
+\input{tables/x10_regimes.tex}
+
+La tranche intermédiaire --- celle où dix dollars valent entre six et dix
+\code{ATR} --- est la moins mauvaise, à \XTenBestDollarBandR{}~R. Les deux
+extrêmes sont les pires. C'est exactement la lecture annoncée par la note de
+faisabilité~: quand le pas de grille vaut moins de trois \code{ATR}, le prix
+traverse plusieurs niveaux par barre et la cible est du bruit~; quand il en
+vaut plus de dix, la cible est hors de portée dans les 48~barres de durée de
+vie. \textbf{Aucune des quatre tranches n'est positive.}
+
+\subsection{Par raison de sortie : l'arithmétique complète de l'échec}
+
+\input{tables/x10_exits.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig09_raisons_sortie.png}
+\caption{À gauche, combien de transactions sortent par chaque porte~; à
+droite, ce que chaque porte rapporte en moyenne.}
+\end{figure}
+
+Cette table est le cœur du dossier, et elle est saine.
+
+\begin{enumerate}
+  \item Le stop rend \metric{\XTenStopR{}~R}, ce qui vérifie le
+  dimensionnement de bout en bout.
+  \item La cible rend \metric{\XTenTargetR{}~R} --- davantage que le rapport
+  minimal de~1, parce qu'une transaction prise après un maintien ou un
+  débordement a un stop plus serré que la géométrie nominale.
+  \item Avec ces deux seuls chiffres, le point mort serait atteint pour un
+  taux de cible de \metric{\XTenBreakevenTargetRate}. Le taux réalisé est de
+  \metric{\XTenTargetShare}.
+  \item Les sorties temporelles --- durée maximale et clôture de séance ---
+  sont positives en moyenne, mais elles ne comblent pas l'écart.
+\end{enumerate}
+
+\begin{insightbox}
+\textbf{Il faudrait plus que doubler le taux d'atteinte de la cible pour
+seulement rentrer dans ses frais.} Ce n'est pas un écart qu'un réglage
+rattrape. Un filtre qui produirait un tel gain sans réduire le nombre de
+transactions ni dégrader le rapport gain/risque n'existe pas dans l'espace
+exploré --- et les vingt-sept configurations de la grille le confirment.
+\end{insightbox}
+
+\subsection{Les coupes descriptives du mandat}
+
+\input{tables/x10_context_cuts.tex}
+
+\begin{description}
+  \item[Extension au VWAP.] Les \emph{reversals} pris loin du \code{VWAP} de
+  séance perdent près de deux fois moins que les autres~:
+  \XTenExtendedR{}~R contre \XTenNotExtendedR{}~R. C'est la seule variable
+  descriptive de la campagne qui sépare réellement quelque chose --- et elle
+  reste du mauvais côté de zéro. La spécification l'avait figée comme
+  \emph{tracée et non bloquante}, par décision du mandat.
+  \item[Contexte dollar.] Le contexte favorable perd plus \emph{en dollars} et
+  moins \emph{par unité de risque} que le contexte adverse. Il n'y a pas de
+  contradiction~: le risque est divisé par deux quand le dollar est adverse,
+  donc ces transactions pèsent moitié moins. Le garde-fou fonctionne comme
+  prévu~; il ne discrimine pas.
+  \item[Retest.] Le retest est \textbf{contre-prédictif}. Le mandat le citait
+  comme une confirmation~; la mesure ne le soutient pas. Il reste descriptif,
+  comme la spécification l'avait gelé.
+\end{description}
 
 \subsection{Ablations : retirer une composante à la fois}
 
+Les sept combinaisons de retrait des trois filtres de contexte ont été
+loguées comme essais \emph{avant} d'être mesurées.
+
+\input{tables/x10_ablations.tex}
+
+\textbf{Les trois filtres du mandat font ce qu'on leur demande, et cela ne
+suffit pas.} Chaque retrait dégrade le Sharpe, et le retrait des trois le fait
+passer de \XTenSharpeIS{} à \XTenAblationAllOffSharpe. Le classement est
+parfaitement monotone.
+
+Deux précisions comptent.
+
+\begin{itemize}
+  \item Retirer le filtre dollar ne change ni le nombre de transactions ni
+  l'espérance en R --- seulement le Sharpe et le montant. C'est la
+  vérification, annoncée en section~\ref{sec:x10_risque}, qu'il ne filtre
+  rien~: il ne touche que la taille.
+  \item Retirer la moyenne horaire ouvre plus de transactions que retirer le
+  \code{VWAP}. Les deux moitiés du filtre de contexte des \emph{breakouts} ne
+  mordent donc pas également.
+\end{itemize}
+
+\begin{insightbox}
+\textbf{On ne redresse pas une espérance franchement négative en ajoutant des
+filtres qui la rapprochent de zéro au millième près.} C'est exactement ce que
+montre la colonne des espérances de la table ci-dessus~: elle bouge à peine
+d'une ligne à l'autre, alors que le Sharpe et le montant perdu, eux, bougent
+beaucoup. Le contexte est utile --- il corrige un signal dont l'espérance
+brute est trop négative pour être rattrapée.
+\end{insightbox}
+
 \subsection{Concentration du résultat}
+
+\input{tables/x10_concentration.tex}
+
+Les parts du résultat \emph{net} ne sont pas publiables ici~: le net est
+négatif, et « tant pour cent d'un nombre négatif » n'a pas de sens. Les
+montants et les parts du profit \emph{brut} le sont.
+
+Le constat est qu'\textbf{il n'y a aucune concentration pathologique}. Les
+cinq meilleures séances représentent \XTenTopFiveDaysShare{} du profit brut,
+les dix meilleures transactions \XTenTopTenTradesShare. Le meilleur mois de
+sept années rapporte \XTenBestMonthPnl. Et le compte des séances donne
+\XTenProfitableSessions{} gagnantes contre \XTenLosingSessions{} perdantes.
+
+\begin{warningbox}
+\textbf{L'absence de concentration rend la perte d'autant plus crédible.} Sur
+une stratégie gagnante, une performance portée par cinq journées serait un
+signal d'alarme. Ici c'est l'inverse~: la perte est diffuse, étalée sur sept
+ans et sur des centaines de séances. Il n'y a pas d'événement singulier à
+invoquer, pas de période exceptionnelle à écarter, rien qui permette de dire
+« sans ceci, cela aurait marché ».
+\end{warningbox}

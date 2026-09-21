@@ -1,17 +1,126 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Gestion du risque}
 \label{sec:x10_risque}
 
-% TODO L2 : expliquer le dimensionnement, la réduction sous DXY adverse et les bornes d'exposition, avant tout chiffre de performance.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} gestion du risque de cette
+stratégie est volontairement simple, et elle est décrite ici \emph{avant}
+tout chiffre de performance --- parce que c'est elle qui donne son sens à
+l'unité dans laquelle la performance est mesurée.
 
-\subsection{Risque par trade et dimensionnement}
+\subsection{Le R, unité de compte de tout ce rapport}
 
-\subsection{Réduction du risque sous contexte DXY adverse}
+Une transaction ne se mesure pas en dollars gagnés mais en multiples du risque
+engagé, noté R. Risquer 50~\$ et en gagner 100 vaut $+2$~R~; risquer 200~\$ et
+en gagner 100 vaut $+0{,}5$~R. C'est la seule manière de comparer des
+transactions prises à sept années d'écart, sur un capital qui compose et dans
+des régimes de volatilité qui varient du simple au quadruple.
+
+\begin{insightbox}
+\textbf{Cette campagne fournit une vérification de bout en bout du
+dimensionnement, et elle est exacte.} Les transactions sorties au stop rendent
+en moyenne \metric{\XTenStopR{}~R} --- c'est-à-dire exactement l'unité de
+risque, au dix-millième près. Ce n'est pas une coïncidence~: c'est la preuve
+que la taille de position calculée à l'entrée correspond bien, à la sortie, à
+la perte prévue. Un chiffre différent de $-1$ aurait signalé une erreur de
+dimensionnement, d'arrondi de lots ou de modèle de coût.
+\end{insightbox}
+
+\subsection{Risque par position et dimensionnement}
+
+Chaque position risque 0,5~\% du capital courant. La taille en découle
+mécaniquement~: on divise le montant risqué par la distance au stop, puis par
+la taille du contrat, et on arrondit \emph{vers le bas} au centième de lot ---
+jamais au plus proche. L'arrondi inférieur est la convention du gestionnaire
+de risque de l'expert advisor, et les trois moteurs doivent la reproduire, y
+compris dans ce détail.
+
+Deux garde-fous encadrent ce calcul.
+
+\begin{description}
+  \item[Le refus de taille.] Un résultat sous le lot minimum annule la
+  transaction plutôt que de l'arrondir vers le haut. Le refus est décidé au
+  prix de remplissage réel, et non au prix de décision.
+  \item[Le plafond de levier.] La taille est ensuite bornée par le levier du
+  compte, 1:100. Ce plafond mord lorsque la distance au stop devient très
+  petite~: le calcul par le risque produirait alors une position que le
+  courtier refuserait d'ouvrir.
+\end{description}
+
+\subsection{La réduction sous contexte dollar adverse}
+
+Le mandat demande que le dollar « filtre sans bloquer ». La lecture retenue,
+gelée dans la spécification, est la suivante~: lorsque le panier dollar est
+adverse au sens de la position, la transaction \textbf{reste autorisée} mais
+son risque passe de 0,5~\% à 0,25~\% du capital. La règle s'applique aux
+quatre scénarios.
+
+La campagne permet de vérifier que cette règle est implémentée comme annoncée,
+et le résultat est instructif.
+
+\begin{itemize}
+  \item Retirer complètement le filtre dollar ne change \textbf{ni} le nombre
+  de transactions \textbf{ni} l'espérance en R. Il ne filtre donc rien~: il ne
+  touche que la taille, exactement comme la spécification le demande.
+  \item Son effet mesuré est d'épargner \metric{\XTenDxySavings} de perte sur
+  sept années.
+  \item Mais il ne \emph{discrimine} pas~: l'espérance vaut
+  \XTenDxyFavourableR{}~R quand le dollar est favorable et
+  \XTenDxyAdverseR{}~R quand il est adverse. Les deux sont négatives.
+\end{itemize}
+
+\begin{warningbox}
+\textbf{Un garde-fou qui fonctionne n'est pas un signal qui fonctionne.} Le
+filtre dollar réduit la perte parce qu'il réduit la taille quand il se trompe
+moins souvent --- pas parce qu'il sépare les bonnes transactions des
+mauvaises. Réduire de moitié le risque sur la moitié des transactions réduit
+la perte totale d'environ un quart, quelle que soit la qualité du signal
+sous-jacent.
+\end{warningbox}
 
 \subsection{Une position à la fois, aucune position de nuit}
 
-\subsection{Bornes d'exposition et arrêt d'urgence}
+Deux contraintes structurelles limitent l'exposition bien plus que le
+dimensionnement lui-même.
+
+\textbf{Une seule position à la fois}, tous scénarios confondus. Tant qu'une
+position est ouverte, l'automate est à l'arrêt~: un signal par ailleurs valide
+est ignoré, jamais mis en file. L'exposition brute du compte ne dépasse donc
+jamais une position.
+
+\textbf{Aucune position ne traverse la coupure quotidienne.} Toute position
+encore ouverte est fermée à la première barre tombant dans la fenêtre de
+clôture de séance. Il n'y a donc aucun coût de portage à modéliser, et aucun
+risque d'ouverture en écart de cotation sur une position héritée de la veille.
+
+Il faut noter, en revanche, qu'une position ouverte en soirée --- à partir de
+18:15 New York --- vit normalement, traverse minuit et n'est fermée qu'à la
+clôture de séance suivante, sauf stop, cible ou durée maximale avant. C'est
+précisément le comportement que le défaut corrigé avant la campagne
+(section~\ref{sec:x10_methodologie}) supprimait par erreur.
+
+\subsection{Durée de vie et bornes d'exposition}
+
+Une position vit au plus 48~barres de cinq minutes. Sur l'échantillon, la
+durée moyenne est de \XTenBarsHeldMean{} barres et la durée médiane de
+\XTenBarsHeldMedian{} --- la stratégie est donc majoritairement rapide, avec
+une queue de positions longues coupées par la durée maximale.
+
+\XTenTimeShare{} des transactions sortent par cette durée maximale, et
+elles rendent en moyenne \metric{\XTenTimeR{}~R}. La durée maximale gelée
+coupe donc des positions qui, en moyenne, gagnaient. Ce n'est pas un argument
+pour l'allonger --- ce serait un paramètre choisi après mesure, ce que la
+table de décision interdit --- mais c'est un point de conception noté en
+section~\ref{sec:x10_limites}.
+
+\subsection{Ce que le risque de cette stratégie aurait coûté}
+
+Puisque l'espérance est négative, la gestion du risque ne protège rien~: elle
+détermine seulement la vitesse à laquelle le capital se serait érodé. Les
+sections~\ref{sec:x10_bootstrap} et~\ref{sec:x10_robustesse} chiffrent cette
+érosion~: un repli maximal de \XTenMaxDDPct{} sur la période, une probabilité
+de \XTenLossFiftyProb{} de perdre plus de la moitié du capital sur un chemin
+rééchantillonné, et une courbe d'équité restée sous son plus haut historique
+pendant \XTenRecoveryDays{} des \XTenSampleSessions{} séances de
+l'échantillon.

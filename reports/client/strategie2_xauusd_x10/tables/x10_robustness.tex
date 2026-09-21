@@ -1,0 +1,32 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Batterie de robustesse de la configuration analysée. Les intervalles sont des bootstraps stationnaires par blocs~; le DSR et le haircut sont déflatés par le registre d'essais.}
+\label{tab:x10_robustness}
+\begin{tabular}{l r l r}
+\toprule
+\textbf{Mesure} & \textbf{Valeur} & \textbf{IC 95\,\% / repère} & \textbf{Seuil} \\
+\midrule
+Sharpe net (séance, 252) & $-1{,}661$ & [$-2{,}439$ ; $-0{,}918$] & --- \\
+PSR (contre $0$) & $0{,}000$ & --- & --- \\
+DSR (déflaté, $N = 34$) & $0{,}000$ & --- & $\geq 0{,}95$ \\
+Sharpe attendu du maximum de $N$ essais & $0{,}590$ & --- & --- \\
+Haircut Sharpe (BHY) & $-0{,}194$ & --- & $p$ ajustée $1{,}000$ \\
+MinBTL & \emph{non calculable} & --- & --- \\
+PBO (CSCV, $16$ bins) & $0{,}4155$ & --- & $\leq 0{,}35$ \\
+\midrule
+Rendement total & $-62{,}6$\,\% & [$-74{,}8$\,\% ; $-43{,}5$\,\%] & --- \\
+Repli maximal & $63{,}7$\,\% & [$47{,}1$\,\% ; $75{,}4$\,\%] & --- \\
+Profit factor & $0{,}707$ & [$0{,}604$ ; $0{,}824$] & --- \\
+Ratio de Sortino & $-2{,}589$ & [$-3{,}569$ ; $-1{,}538$] & --- \\
+\midrule
+Repli maximal observé (Monte-Carlo) & $33{,}6$\,\% & médiane $33{,}1$\,\% ; p95 $35{,}0$\,\% & --- \\
+$z$ de chance de séquence & $0{,}59$ & --- & --- \\
+P(ruine) & $0{,}0$\,\% & --- & --- \\
+P(perte $> 50$\,\%) & $92{,}1$\,\% & --- & --- \\
+Capital terminal médian (bootstrap) & $0{,}370$ & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

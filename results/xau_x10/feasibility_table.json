@@ -1,0 +1,83 @@
+{
+  "source": "data/XAU-USD_minute_qc.parquet",
+  "window": {
+    "start": "2019-01-01",
+    "end": "2025-12-31"
+  },
+  "method": "agrégation M5 (label=left, closed=left) ; ATR de Wilder 14 sur M5 ; jour = date UTC portant >= 100 barres M5 ; croisement = changement de floor(close/10) entre deux clôtures M5 consécutives ; médianes annuelles",
+  "scope": "descriptif — aucune performance, aucune barre >= 2026-01-01",
+  "spread_usd": 0.29,
+  "produced_by": "scripts/build_x10_report_assets.py",
+  "years": [
+    {
+      "year": 2019,
+      "n_days": 260,
+      "price_median": 1406.3497499999999,
+      "atr_m5_median": 0.5789007186352284,
+      "dollars_per_atr": 17.27411916774819,
+      "spread_per_atr": 0.5009494558646974,
+      "crossings_per_day_median": 7.0,
+      "crossings_per_day_mean": 8.7
+    },
+    {
+      "year": 2020,
+      "n_days": 261,
+      "price_median": 1775.00775,
+      "atr_m5_median": 1.4386164834144268,
+      "dollars_per_atr": 6.9511229123872535,
+      "spread_per_atr": 0.20158256445923034,
+      "crossings_per_day_median": 20.0,
+      "crossings_per_day_mean": 21.137931034482758
+    },
+    {
+      "year": 2021,
+      "n_days": 260,
+      "price_median": 1793.97,
+      "atr_m5_median": 1.0366361746274526,
+      "dollars_per_atr": 9.646585991072335,
+      "spread_per_atr": 0.27975099374109774,
+      "crossings_per_day_median": 13.0,
+      "crossings_per_day_mean": 14.461538461538462
+    },
+    {
+      "year": 2022,
+      "n_days": 259,
+      "price_median": 1805.36725,
+      "atr_m5_median": 1.1482865372604985,
+      "dollars_per_atr": 8.708627747092898,
+      "spread_per_atr": 0.25255020466569406,
+      "crossings_per_day_median": 15.0,
+      "crossings_per_day_mean": 16.513513513513512
+    },
+    {
+      "year": 2023,
+      "n_days": 259,
+      "price_median": 1945.65,
+      "atr_m5_median": 1.0006576672112453,
+      "dollars_per_atr": 9.993427650306442,
+      "spread_per_atr": 0.28980940185888676,
+      "crossings_per_day_median": 13.0,
+      "crossings_per_day_mean": 14.324324324324325
+    },
+    {
+      "year": 2024,
+      "n_days": 261,
+      "price_median": 2380.75,
+      "atr_m5_median": 1.4765550934671001,
+      "dollars_per_atr": 6.772520743888393,
+      "spread_per_atr": 0.19640310157276336,
+      "crossings_per_day_median": 21.0,
+      "crossings_per_day_mean": 20.980842911877396
+    },
+    {
+      "year": 2025,
+      "n_days": 260,
+      "price_median": 3345.075,
+      "atr_m5_median": 2.6373009733793404,
+      "dollars_per_atr": 3.791755321421039,
+      "spread_per_atr": 0.10996090432121013,
+      "crossings_per_day_median": 36.5,
+      "crossings_per_day_mean": 39.88846153846154
+    }
+  ]
+}

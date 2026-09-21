@@ -1,17 +1,137 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Robustesse avancée et table de verdict}
 \label{sec:x10_robustesse}
 
-% TODO L2 : agréger DSR, PBO, tests de plateau et sensibilités en une table de verdict dont la section~14 est la conséquence mécanique.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{es} tests de la section
+précédente répondaient à « le résultat est-il stable~? ». Ceux-ci répondent à
+une question différente et plus sévère~: \emph{ce résultat aurait-il pu être
+produit par le hasard, compte tenu du nombre de fois où l'on a cherché~?}
+L'annexe~\ref{app:x10_methodologie_robustesse} explique chaque test en
+détail~; cette section publie les mesures.
+
+\input{tables/x10_robustness.tex}
 
 \subsection{Deflated Sharpe Ratio}
 
+Chercher un bon réglage, c'est tirer plusieurs fois. Plus on tire, plus le
+meilleur tirage paraît bon --- même si tous les tirages sont du bruit. Le
+\emph{Deflated Sharpe Ratio} corrige cet effet~: il compare le Sharpe observé
+non pas à zéro, mais au Sharpe qu'on attendrait du \emph{meilleur} de $N$
+essais tirés au hasard.
+
+\begin{insightbox}
+\textbf{Avec \XTenTrialsCount{} essais, le meilleur d'entre eux aurait un
+Sharpe attendu de \metric{\XTenExpectedMaxSharpe} par pur hasard.} C'est le
+seuil que la stratégie devait franchir, et il est positif. Le Sharpe observé
+vaut \XTenSharpeIS~: le \code{DSR} vaut donc \metric{\XTenDSR}, contre le
+seuil gelé de $0{,}95$. Le \emph{Probabilistic Sharpe Ratio} --- la même
+mesure sans déflation, contre zéro --- vaut \XTenPSR. Les deux sont nuls à la
+précision publiée.
+\end{insightbox}
+
+Deux mesures voisines complètent le tableau. Le \emph{haircut Sharpe} avec
+correction pour tests multiples ramène le Sharpe à \XTenHaircutSharpe{} pour
+une $p$-valeur ajustée de \XTenHaircutPValue~: autrement dit, le résultat est
+strictement indistinguable de l'absence de signal. Et la \emph{longueur
+minimale de backtest} n'est pas calculable~: elle est définie pour un Sharpe
+observé positif, ce qui n'est pas le cas ici.
+
 \subsection{Probability of Backtest Overfitting}
 
-\subsection{Tests de décalage et de permutation}
+Le \code{PBO} pose une question empirique et intuitive~: si l'on choisit la
+meilleure configuration sur une moitié des données, quelle est la probabilité
+qu'elle se classe dans la moitié \emph{inférieure} sur l'autre~? Il se mesure
+en découpant l'échantillon en blocs et en examinant toutes les manières de
+les répartir --- ici \XTenPBOSplits{} combinaisons sur les vingt-sept
+configurations.
+
+Le \code{PBO} mesuré vaut \metric{\XTenPBO}, contre un seuil gelé de
+$0{,}35$. Le critère échoue.
+
+\begin{warningbox}
+\textbf{Attention à ce que ce chiffre dit, et à ce qu'il ne dit pas.} Un
+\code{PBO} élevé sur une grille qui \emph{perd partout} ne signifie pas « le
+surajustement explique la perte ». Il signifie que le classement des
+vingt-sept configurations entre les deux moitiés de l'échantillon n'a presque
+aucune persistance --- ce qui est exactement ce à quoi on s'attend quand il
+n'y a rien à classer. \textbf{Il n'y a pas de surajustement parce qu'il n'y a
+pas de signal à surajuster.} Le critère échoue, et la raison de son échec est
+cohérente avec tout le reste du dossier.
+\end{warningbox}
+
+\subsection{Validation croisée combinatoire purgée}
+
+La validation croisée combinatoire purgée découpe l'échantillon en six
+groupes, en teste deux à la fois, et purge les observations à cheval sur la
+frontière pour éviter qu'une information ne fuite d'un côté à l'autre. Elle
+produit \XTenCPCVSplits{} découpages et plusieurs chemins reconstruits, sur
+les vingt-sept configurations.
+
+\input{tables/x10_cpcv.tex}
+
+\textbf{Aucune des vingt-sept configurations n'a une médiane hors échantillon
+positive}, et aucune n'est positive sur un seul des découpages. La meilleure
+médiane vaut \XTenCPCVBestMedian, la moyenne sur toute la grille
+\XTenCPCVMean, et la part de configurations à médiane positive vaut
+\XTenCPCVPositiveShare.
+
+La métrique utilisée ici n'est pas celle de la grille de la
+section~\ref{sec:x10_in_sample}~: c'est un Sharpe calculé sur les rendements
+minute du portefeuille, convention du module de validation croisée. Les deux
+ne se comparent qu'en \emph{signe}, jamais en niveau, et ce rapport ne les met
+pas en regard.
+
+\subsection{Deux tests dont les résultats ne sont pas publiables}
+
+L'honnêteté impose de signaler ce qui n'a pas fonctionné, plutôt que de
+l'omettre.
+
+\begin{description}
+  \item[Le test de Romano--Wolf a échoué.] Sa procédure descendante se
+  retrouve avec un tableau vide lorsque aucune configuration de la grille ne
+  bat le portefeuille plat. C'est une limite préexistante du module de tests
+  statistiques du dépôt, constatée et \emph{non corrigée} par cette campagne.
+  \item[Le test de supériorité prédictive n'est pas interprétable en
+  l'état.] Le module du dépôt transmet des \emph{rendements} à une
+  implémentation qui documente attendre des \emph{pertes}. L'orientation est
+  donc inversée, et la $p$-valeur rendue signifie l'inverse de ce qu'elle
+  paraît dire sur une grille intégralement perdante. Le chiffre existe dans
+  les fichiers de résultats, assorti de son avertissement~; \textbf{il n'est
+  pas publié ici}, et aucun critère de la table de décision n'en dépend.
+\end{description}
+
+\begin{insightbox}
+\textbf{Un test cassé qui semble donner raison est plus dangereux qu'un test
+absent.} Publié tel quel, celui-ci aurait fait passer une grille entièrement
+perdante pour une grille statistiquement significative. Il a été identifié,
+documenté dans les résultats, et écarté du rapport. Sa correction relève du
+module de tests, pas de cette campagne.
+\end{insightbox}
 
 \subsection{Table de verdict}
+
+Les neuf critères gelés avant la mesure, confrontés aux résultats, donnent la
+table reproduite au résumé (section~\ref{sec:x10_resume_verdict}) et en
+annexe~\ref{app:x10_table_decision}. Son résultat tient en trois lignes~:
+
+\begin{itemize}
+  \item \XTenCriteriaPassing{} critère sur \XTenCriteriaCount{} est franchi~:
+  celui du nombre de transactions ;
+  \item \XTenCriteriaFailing{} sont en échec, dont six avec une mesure
+  interprétable ;
+  \item deux le sont par \emph{non-mesure} --- le portage MetaTrader~5 et la
+  lecture hors échantillon --- et la table de décision impose de les compter
+  comme des échecs, jamais comme « non applicables ».
+\end{itemize}
+
+\ifdefstring{\XTenVerdict}{NOGO}{%
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Conséquence mécanique}}]
+La table de décision énonce~: « au moins un critère en échec avec une mesure
+interprétable » $\Rightarrow$ \textbf{ne pas déployer}. Il y en a six. La
+section~\ref{sec:x10_non_deploiement} en tire les conséquences~; la section
+« conditions de déploiement », prévue sous verdict favorable, n'est pas
+livrée, parce qu'elle n'a pas lieu d'être.
+\end{warningbox}
+}{}

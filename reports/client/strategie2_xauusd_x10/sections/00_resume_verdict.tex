@@ -1,24 +1,10 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Aucun chiffre n'est écrit ici à la
+%  main : tout passe par les macros de tables/x10_headline.tex, produites
+%  par scripts/build_x10_report_assets.py depuis results/xau_x10/*.json.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Résumé et verdict}
 \label{sec:x10_resume_verdict}
-
-% TODO L2 : écrire le résumé en une page, chaque chiffre pris dans une macro
-% générée, et faire dire au verdict exactement ce que la table de la
-% section~11 établit --- ni plus, ni moins.
-
-\ifdefstring{\XTenVerdictProvisoire}{1}{%
-\begin{warningbox}[title=\textbf{\color{white}\textsf{Document provisoire}}]
-Aucune mesure n'est publiée à ce stade. Le présent document fixe la structure
-du rapport et la place de chaque résultat~; les campagnes in-sample, hors
-échantillon et de réconciliation n'ont pas encore été lues. Toute valeur
-affichée comme \code{\XTenSharpeIS} le reste tant que les fichiers de
-résultats ne sont pas produits.
-\end{warningbox}
-}{}
 
 \ifdefstring{\XTenVerdict}{GO}{%
 \begin{thesisbox}[title=\textbf{\color{white}\textsf{Verdict --- déploiement conditionnel}}]
@@ -28,9 +14,18 @@ section~\ref{sec:x10_deploiement}.
 \end{thesisbox}
 }{%
 \ifdefstring{\XTenVerdict}{NOGO}{%
-\begin{warningbox}[title=\textbf{\color{white}\textsf{Verdict --- non déploiement}}]
-Les mesures ne soutiennent pas la mise en production. Les motifs sont détaillés
-en section~\ref{sec:x10_non_deploiement}.
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Verdict --- ne pas déployer}}]
+\textbf{La stratégie XAUUSD sur les niveaux x10 ne doit pas être mise en
+production, ni en réel ni en démo.} Sur sept années de données et
+\XTenTradesIS{} transactions simulées, l'espérance nette par transaction vaut
+\metric{\XTenExpectancyR{} R} --- une perte d'un sixième du risque engagé à
+chaque passage --- pour un profit factor de \metric{\XTenProfitFactor} et un
+ratio de Sharpe annualisé de \metric{\XTenSharpeIS}. Sur les
+\XTenCriteriaCount{} critères de la table de décision gelée avant la mesure,
+\XTenCriteriaPassing{} est franchi, celui du nombre de transactions.
+Aucune des vingt-sept configurations de la grille n'échappe à ce constat~;
+aucune année sur sept n'est positive. Le verdict porte sur ce qui a été
+mesuré, c'est-à-dire la totalité de la recherche.
 \end{warningbox}
 }{%
 \begin{insightbox}[title=\textbf{\color{white}\textsf{Verdict --- inconclusif}}]
@@ -41,10 +36,103 @@ en section~\ref{sec:x10_non_deploiement}.
 }%
 }
 
-\subsection{Ce que la stratégie fait}
+\lettrine[lines=2, findent=2pt, nindent=0pt]{A}{pogée} Invest a commandé une
+seconde stratégie, indépendante de la première par son instrument comme par
+son horizon~: l'or au comptant traité en séance, sur des barres de cinq
+minutes, et fondé sur un seul objet --- les \sleeve{niveaux psychologiques de
+10~\$}. Ce document rend compte de la totalité du travail de recherche
+conduit sur ce mandat, et il rend un verdict négatif. Ce verdict était prévu
+comme un livrable possible avant la première ligne de code~; il est publié
+avec le même soin qu'un verdict favorable l'aurait été.
 
-\subsection{Ce que les mesures établissent}
+\subsection*{Ce qui a été demandé, et ce qui a été fait}
 
-\subsection{Ce qu'elles n'établissent pas}
+Le mandat fixait l'instrument, la famille de signaux, le graphique de travail
+et les quatre scénarios admis. Il ne garantissait aucun résultat, et ce point
+avait été explicité avant de commencer.
 
-\subsection{Verdict et suite}
+Le travail livré tient en quatre temps. Une \textbf{spécification} a été écrite
+avant tout code et gelée~: paramètres, machine à états, modèle de coût, grille
+de vingt-sept configurations, budget de \XTenTrialsCeiling{} essais. Une
+\textbf{table de décision} a fixé les seuils de réussite avant la première
+mesure, avec ses trois verdicts possibles. La \textbf{campagne in-sample} a
+alors été conduite sur 2019--2025, soit \XTenSampleSessions{} séances et
+\XTenSampleBarsMOne{} barres d'une minute, en consommant \XTenTrialsCount{}
+essais sur les \XTenTrialsCeiling{} autorisés. Enfin, la
+\textbf{tranche 2026 est restée verrouillée}~: elle n'a pas été lue, et la
+section~\ref{sec:x10_hors_echantillon} explique pourquoi c'est le bon choix.
+
+\subsection*{Les trois chiffres qui portent le verdict}
+
+\begin{enumerate}
+\item \textbf{L'espérance est négative à toutes les coupes.}
+\XTenExpectancyR{}~R par transaction sur l'ensemble~; négative pour les quatre
+scénarios, pour les trois séances, pour les trois terciles de volatilité,
+pour les quatre tranches de régime et pour chacune des sept années. La
+perte n'est pas un accident de période~: elle est diffuse.
+
+\item \textbf{Aucune configuration de la grille ne tient.} Les vingt-sept
+Sharpes nets sont négatifs, du meilleur (\XTenPeakSharpe) au pire
+(\XTenWorstGridSharpe). La règle de sélection gelée exige un \emph{plateau} ---
+un point entouré de voisins positifs --- et \XTenPlateauPassing{}
+configuration le fournit. Il n'y a donc pas de configuration retenue, et la
+règle gelée prévoit explicitement ce cas.
+
+\item \textbf{Le coût n'est pas la seule cause, et le réduire ne sauverait
+rien.} Au spread majoré de moitié --- la sensibilité qu'impose la table de
+décision --- l'espérance tombe à \XTenExpectancySpreadOneFive{}~R. En
+extrapolant la pente de coût jusqu'à un coût \emph{nul}, qui n'est pas un
+scénario de marché, l'espérance resterait autour de
+\XTenZeroCostExtrapolation{}~R. Le coût aggrave une perte~; il ne la crée pas.
+\end{enumerate}
+
+\input{tables/x10_decision.tex}
+
+\subsection*{Ce que cela signifie pour le mandant}
+
+\begin{insightbox}
+\textbf{Ce n'est pas un réglage à corriger, c'est une famille de signaux qui ne
+paie pas sur cet instrument à cette fréquence.} Les trois filtres de contexte
+demandés par le mandat --- EMA50 horaire, VWAP de séance, dollar --- font
+exactement ce qu'on attend d'eux~: les retirer tous ferait tomber le Sharpe de
+\XTenSharpeIS{} à \XTenAblationAllOffSharpe. Ils améliorent donc le résultat,
+et cela ne suffit pas. On ne redresse pas une espérance négative en filtrant
+ce qu'elle produit.
+\end{insightbox}
+
+Trois conséquences concrètes.
+
+\begin{description}
+  \item[Aucun capital n'est engagé.] Ni réel, ni démo. Un déploiement à blanc
+  n'a d'intérêt que pour éprouver l'exécution d'une stratégie dont la
+  recherche tient~; ici elle ne tient pas.
+  \item[Le budget hors échantillon n'est pas dépensé.] La tranche 2026 de l'or
+  reste intacte pour un travail futur. La lire sur un dossier déjà tranché
+  n'apprendrait rien et coûterait une ressource non renouvelable.
+  \item[Le dossier reste documenté, pas classé.] La
+  section~\ref{sec:x10_non_deploiement} énumère les pistes que les
+  décompositions rendent \emph{envisageables}. Ce sont des hypothèses à
+  tester sous une nouvelle spécification et un nouveau budget d'essais, pas des
+  promesses de rendement.
+\end{description}
+
+\subsection*{Ce que ce document n'établit pas encore}
+
+\ifdefstring{\XTenVerdictProvisoire}{1}{%
+\begin{warningbox}[title=\textbf{\color{white}\textsf{Sections d'exécution en cours d'intégration}}]
+Le verdict in-sample ci-dessus est \textbf{acquis}~: il repose sur des mesures
+complètes, et aucune mesure ultérieure ne peut transformer six échecs
+interprétables en succès. Restent à intégrer les deux portages d'exécution ---
+QuantConnect et MetaTrader~5 --- et la réconciliation événementielle des trois
+moteurs, dont les campagnes sont en cours. Les sections concernées portent
+leurs valeurs à \code{\XTenMTFiveExpectancyR} et le signalent~; aucun chiffre
+d'exécution n'est avancé tant qu'il n'a pas été mesuré.
+\end{warningbox}
+}{}
+
+Ce document ne prétend pas démontrer qu'aucune stratégie de niveaux ronds ne
+peut fonctionner sur l'or. Il démontre que \emph{celle-ci}, telle que le mandat
+la définit et telle que la spécification la fige, perd de l'argent sur sept
+années, dans les vingt-sept réglages autorisés, et dans toutes les
+sous-populations de transactions examinées. La section~\ref{sec:x10_limites}
+énumère sans atténuation ce qui reste hors de portée de cette démonstration.

@@ -1,6 +1,10 @@
-% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer
-% Provisoire : écrit à la main tant que la campagne n'a pas tourné.
-% \XTenVerdict ∈ {GO, NOGO, INCONCLUSIF}.
-\newcommand{\XTenVerdict}{INCONCLUSIF}
-% 1 tant qu'aucune mesure n'est publiée ; 0 une fois les résultats lus.
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+
+% \XTenVerdict ∈ {GO, NOGO, INCONCLUSIF}, dérivé de is_summary.json.
+% \XTenVerdictProvisoire vaut 1 tant que les sections d'exécution
+% (QuantConnect, MetaTrader 5) attendent leurs mesures ; le verdict
+% in-sample, lui, est acquis.
+
+\newcommand{\XTenVerdict}{NOGO}
 \newcommand{\XTenVerdictProvisoire}{1}

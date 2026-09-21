@@ -1,17 +1,131 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Plateau contre pic : la carte des paramètres}
 \label{app:x10_plateau}
 
-% TODO L2 : distinguer un optimum large d'un pic isolé sur la carte des paramètres, et dire lequel a été retenu.
+Cette annexe explique une règle de sélection qui surprend souvent~: la
+configuration retenue n'est \emph{jamais} la meilleure de la carte.
 
-\subsection{Protocole de balayage}
+\subsection{Pourquoi le meilleur point est le plus mauvais choix}
 
-\subsection{Carte des paramètres}
+Imaginons une grille de vingt-sept réglages dont aucun n'a de vertu
+particulière. Les vingt-sept résultats seront quand même différents, parce que
+le hasard de l'échantillon les départage. Le meilleur des vingt-sept sera
+donc, par construction, celui qui a eu le plus de chance --- et il n'y a
+aucune raison qu'il garde cet avantage sur des données qu'il n'a pas vues.
 
-\subsection{Critère de plateau}
+\begin{insightbox}
+\textbf{Un pic isolé est la signature d'un surajustement, pas d'un réglage.}
+Si un réglage fonctionne pour une raison réelle, ses \emph{voisins immédiats}
+--- qui ne diffèrent que d'un cran sur un seul axe --- doivent fonctionner
+aussi. Un point qui brille seul au milieu de voisins médiocres ne décrit pas
+un mécanisme~: il décrit une coïncidence.
+\end{insightbox}
 
-\subsection{Point retenu et son voisinage}
+\subsection{Le protocole de balayage}
+
+La grille est un cube de trois valeurs sur chacun de trois axes~: la largeur
+de la zone d'approche, le seuil d'accélération et la distance du stop du
+\emph{breakout}. Vingt-sept points, et rien d'autre --- la grille a été gelée
+avant la première mesure, et aucun axe ne pouvait lui être ajouté après.
+
+Un \emph{voisin} est défini de manière opératoire~: deux configurations sont
+voisines si leurs triplets d'indices diffèrent sur \textbf{exactement un axe},
+et de \textbf{exactement un cran}. Une configuration a donc trois voisins si
+elle est à un coin du cube, quatre ou cinq sur une arête ou une face, et six
+au centre géométrique. Une configuration n'est jamais sa propre voisine.
+
+\subsection{Le critère de plateau}
+
+Une configuration passe le critère si les deux conditions suivantes sont
+réunies~:
+
+\begin{enumerate}
+  \item au moins 60~\% de ses voisins ont un Sharpe net \emph{positif}~;
+  \item la médiane des Sharpes de ses voisins atteint la moitié du pic de la
+  grille.
+\end{enumerate}
+
+Parmi les seules configurations qui passent, la retenue est celle qui
+\textbf{maximise la médiane du Sharpe de ses voisins} --- et non son propre
+Sharpe. On choisit un point dont l'\emph{entourage} est bon, pas un point qui
+est bon. Trois règles de départage, appliquées dans l'ordre, rendent le choix
+déterministe~: la plus petite distance au centre du cube, puis le stop le plus
+large, puis l'ordre lexicographique des indices.
+
+\subsection{Ce que la carte montre ici}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig03_heatmaps.png}
+\caption{La carte des vingt-sept Sharpes nets. Un plateau se reconnaîtrait à
+une zone contiguë de cases claires~; il n'y en a pas, et l'échelle entière est
+du côté négatif.}
+\end{figure}
+
+\begin{warningbox}
+\textbf{\XTenPlateauPassing{} configuration sur vingt-sept passe le critère.}
+La première condition échoue partout, de la manière la plus simple qui soit~:
+les vingt-sept Sharpes étant négatifs, la part de voisins à Sharpe positif
+vaut \XTenPlateauShareNeighbours{} pour chacune des vingt-sept.
+\end{warningbox}
+
+La seconde condition mérite un développement, parce qu'elle contient un piège
+arithmétique que la campagne a évité.
+
+\begin{examplebox}
+\textbf{Quand le pic est négatif, « la moitié du pic » est plus haut que le
+pic.} Le pic vaut \XTenPeakSharpe. La moitié de ce nombre vaut
+\XTenPlateauThreshold{} --- soit une valeur \emph{supérieure}. Le seuil de
+médiane devient donc plus exigeant, et non plus laxiste, sur un échantillon
+perdant.
+
+C'était la bonne propriété à avoir, et elle n'était pas garantie~: une règle
+écrite sans y penser aurait pu se dégrader en passoire exactement au moment où
+elle devait mordre. Ici, la médiane des voisins du centre géométrique vaut
+\XTenPlateauMedianNeighbour{} contre un seuil de \XTenPlateauThreshold~: elle
+échoue aussi.
+\end{examplebox}
+
+\subsection{Le pic et le point analysé, côte à côte}
+
+La table de décision demande de publier les deux, avec leur écart.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{p{4.4cm} p{6.2cm} r}
+\toprule
+ & \textbf{Configuration} & \textbf{Sharpe net} \\
+\midrule
+Pic de la grille & \XTenPeakConfig & \XTenPeakSharpe \\
+Point analysé (centre géométrique) & \XTenAnalysedConfig & \XTenSharpeIS \\
+\midrule
+\textbf{Écart} & & \textbf{\XTenSharpeGapPeak} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+L'écart est réel et il est donné sans le minimiser. Il n'a aucune conséquence
+pratique~: les deux perdent, et la règle gelée est explicite --- si aucune
+configuration ne passe le plateau, il n'y a pas de configuration retenue, et
+l'on ne se rabat pas sur le pic.
+
+\subsection{Le point analysé n'est pas une sélection}
+
+\begin{warningbox}
+\textbf{Le centre géométrique de la grille n'est pas « la configuration de la
+stratégie », et il ne doit jamais être présenté comme telle.} Il sert
+uniquement de support aux décompositions, qui ont besoin d'un jeu de
+transactions pour exister. Ce choix de repli était écrit dans le brief de
+campagne \emph{avant} la mesure, et tous les fichiers de résultats portent un
+champ explicite indiquant que la configuration analysée n'est pas une
+sélection.
+\end{warningbox}
+
+Ce point compte pour la lecture de tout le rapport. Les espérances, les
+décompositions, les ablations et les tests de robustesse portent sur une
+configuration \emph{arbitraire mais pré-désignée}. Le tableau des vingt-sept
+de la section~\ref{sec:x10_in_sample} montre que le choix n'a pas d'incidence
+qualitative~: toutes les configurations perdent, dans une fourchette de Sharpe
+allant de \XTenPeakSharpe{} à \XTenWorstGridSharpe.

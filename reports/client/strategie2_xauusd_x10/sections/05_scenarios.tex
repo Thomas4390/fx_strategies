@@ -1,19 +1,165 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Les quatre scénarios}
 \label{sec:x10_scenarios}
 
-% TODO L2 : décrire chaque scénario par sa condition d'entrée, son invalidation et un trade annoté, une fois les figures produites.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{Q}{uatre} scénarios, et quatre
+seulement, sont admis par le mandat. Ils se répartissent en deux familles
+symétriques~: le niveau \emph{cède} --- on l'accompagne --- ou le niveau
+\emph{tient} --- on joue le retour. Cette section les décrit un à un, donne
+leur fréquence et leur résultat, puis les illustre sur des transactions
+réelles de l'échantillon.
 
-\subsection{Breakout Long}
+\input{tables/x10_scenarios.tex}
 
-\subsection{Breakout Short}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig07_scenario_session.png}
+\caption{Espérance nette par transaction, par scénario (à gauche) et par
+séance (à droite). Les barres bleues sont les \emph{breakouts}, les orange les
+\emph{reversals}. Aucune n'est du bon côté de l'axe.}
+\end{figure}
 
-\subsection{Reversal Short}
+\subsection{Breakout Long et Breakout Short}
 
-\subsection{Reversal Long}
+Le prix monte vers un barreau (\emph{Breakout Long}) ou descend vers lui
+(\emph{Breakout Short}) avec vitesse, accélération et momentum orientés dans
+ce sens. Il clôture au-delà d'au moins un quart d'\code{ATR}, cette clôture
+étant située dans la moitié directionnelle de sa barre. Pendant trois barres,
+aucune clôture ne repasse du mauvais côté~: c'est le \emph{maintien}, qui joue
+le rôle de la confirmation demandée par le mandat. L'entrée se fait à
+l'ouverture suivante, la cible est le barreau suivant, le stop est placé de
+l'autre côté du niveau à une distance proportionnelle à l'\code{ATR}.
+
+Les \emph{breakouts} sont les seuls à passer un filtre de contexte~: ils
+exigent d'être du bon côté de l'\code{EMA50} horaire \textbf{et} du
+\code{VWAP} de séance. C'est probablement ce qui explique qu'ils soient les
+moins mauvais des quatre~: le \emph{Breakout Long} rend
+\metric{\XTenBestScenarioR{}~R} contre \metric{\XTenWorstScenarioR{}~R} pour
+le pire des \emph{reversals}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\linewidth]{x10_fig12_trade_break_long.png}
+\caption{Breakout Long, exemple réel. Le niveau est la ligne foncée, la bande
+claire est la zone d'approche, les pointillés sont le stop et la cible. Le
+trade retenu est celui dont le $R$ réalisé est médian parmi les
+\emph{Breakout Long} clôturés en 2023.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\linewidth]{x10_fig12_trade_break_short.png}
+\caption{Breakout Short, même règle de choix. La cible est le barreau
+inférieur~; le stop est au-dessus du niveau franchi.}
+\end{figure}
+
+\subsection{Reversal Short et Reversal Long}
+
+Le prix aborde le barreau de la même manière, mais il ne le tient pas~: il
+déborde d'au moins trois dixièmes d'\code{ATR}, décélère, son accélération
+bascule de signe, puis une clôture revient du côté d'origine dans les trois
+barres suivantes. L'entrée se fait alors \emph{contre} la direction
+d'approche~: un débordement par le haut donne un \emph{Reversal Short}, un
+débordement par le bas un \emph{Reversal Long}. La cible est le barreau
+précédent~; le stop se place au-delà de l'extrême du débordement, augmenté
+d'un demi-\code{ATR}.
+
+Les \emph{reversals} n'ont \textbf{aucune} exigence de contexte. C'est une
+décision explicite du mandat~: un retournement est contre-tendance par
+construction, l'interdire contre la moyenne horaire le viderait de son sens.
+Le prix de cette liberté est visible dans la table~: ils sont les plus
+nombreux et les plus coûteux, le \emph{Reversal Short} portant à lui seul
+\metric{\XTenRevShortLossShare} de la perte totale.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\linewidth]{x10_fig12_trade_rev_long.png}
+\caption{Reversal Long, même règle de choix. Le débordement a lieu sous le
+niveau~; le stop se place sous l'extrême atteint.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\linewidth]{x10_fig12_trade_rev_short.png}
+\caption{Reversal Short, même règle de choix.}
+\end{figure}
+
+\input{tables/x10_trade_examples.tex}
+
+\begin{warningbox}
+\textbf{Les quatre exemples se terminent au stop, et ce n'est pas un choix de
+présentation.} La règle de sélection a été écrite avant de regarder~: le trade
+de $R$ médian de chaque scénario, sur une année fixée. Or
+\XTenStopShare{} des transactions de la campagne sortent au stop --- le trade
+médian de n'importe quelle population de ce type \emph{est} un stop. Montrer
+quatre gagnants aurait exigé une autre règle de choix, écrite après coup, et
+aurait donné du dossier une image que les chiffres ne soutiennent pas.
+\end{warningbox}
 
 \subsection{Ce qui sépare un breakout d'un sweep}
+
+La distinction est la même que celle que ferait un opérateur, formalisée.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{3.0cm}p{5.4cm}p{5.4cm}}
+\toprule
+ & \textbf{\textcolor{breakoutBlue}{Breakout}} &
+\textbf{\textcolor{reversalOrange}{Sweep}} \\
+\midrule
+\textbf{Franchissement} & Clôture au-delà du niveau, d'au moins un quart
+d'\code{ATR} & Extrême au-delà du niveau, d'au moins trois dixièmes
+d'\code{ATR} \\
+\textbf{Qualité de la barre} & La clôture est dans la moitié directionnelle de
+sa barre & Indifférent --- une mèche suffit \\
+\textbf{Suite exigée} & Le prix \emph{reste} au-delà pendant trois barres &
+Le prix \emph{revient} en deçà dans les trois barres \\
+\textbf{Cinématique} & Rien de plus & Décélération, et accélération qui
+bascule de signe \\
+\textbf{Sens de la position} & Celui de l'approche & L'opposé de l'approche \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Trois précisions comptent pour lire correctement les résultats.
+
+\begin{description}
+  \item[La fenêtre de retour est inclusive et courte.] La première barre dont
+  l'extrême dépasse le niveau est la première des trois. Conséquence assumée~:
+  un débordement et un retour contenus dans une \emph{même} barre de cinq
+  minutes constituent un \emph{sweep} valide et donnent lieu à une position.
+  \item[Un breakout raté devient candidat au retournement.] Il n'y a pas de
+  nouvel armement~: le \emph{reversal} se greffe sur l'armement qui avait
+  produit la cassure, et hérite même de son attribut de retest. Les deux
+  familles ne sont donc pas étanches.
+  \item[Le retest est descriptif, pas exigé.] Le mandat cite
+  « confirmation/retest ». La confirmation est le maintien~; le retest --- le
+  retour d'une mèche sur le niveau pendant le maintien --- est mesuré et
+  tracé, mais ne conditionne rien. La décomposition
+  (section~\ref{sec:x10_in_sample}) montre qu'il est \emph{contre-prédictif}~:
+  \XTenRetestR{}~R avec retest contre \XTenNoRetestR{}~R sans. Le mandat le
+  citait comme un signe de qualité~; la mesure ne le soutient pas.
+\end{description}
+
+\subsection{Combien l'automate refuse}
+
+Les quatre scénarios sont l'extrémité d'un entonnoir très étroit. Sur
+l'échantillon complet, l'automate a armé \XTenArmCount{} fois et pris
+\XTenTradesIS{} positions~: environ une opportunité sur sept survit à la
+chaîne complète. Les \XTenCancelCount{} annulations se répartissent, par
+ordre d'importance, entre le débordement sans retour, la sortie de la zone
+vers l'arrière, le maintien rompu, le garde-fou de rapport gain/risque, le
+contexte --- \XTenContextRefusals{} refus --- et, très marginalement, la
+fenêtre horaire interdite.
+
+\begin{insightbox}
+\textbf{Un entonnoir serré n'est pas une garantie de qualité.} Il est tentant
+de lire « une opportunité sur sept est retenue » comme le signe d'une
+sélection exigeante. La campagne montre l'inverse~: le filtrage réduit le
+nombre de transactions et améliore marginalement le résultat --- les ablations
+de la section~\ref{sec:x10_in_sample} le confirment --- mais il ne fait jamais
+changer de signe l'espérance. Trier plus finement dans une population dont la
+moyenne est négative ne produit pas une population positive.
+\end{insightbox}

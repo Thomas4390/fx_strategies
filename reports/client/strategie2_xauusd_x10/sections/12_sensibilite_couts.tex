@@ -1,17 +1,137 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Chiffres : macros et tables générées.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Sensibilité aux coûts}
 \label{sec:x10_couts}
 
-% TODO L2 : montrer ce que devient l'espérance quand le spread double, le seul test que la finesse du pas de grille rend obligatoire ici.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{S}{ur} une stratégie qui vise
+dix dollars et paie \XTenSpreadUsd{} par aller-retour, le coût n'est pas un
+détail d'implémentation~: c'est le premier terme de l'équation. Cette section
+mesure ce que devient le résultat quand ce terme bouge, et --- c'est le plus
+important --- ce qu'il deviendrait s'il disparaissait.
 
-\subsection{Modèle de coût retenu}
+\subsection{Le modèle de coût retenu, et pourquoi celui-là}
 
-\subsection{Spread mesuré contre spread catalogue}
+Le spread de sélection est \textbf{constant}, à \XTenSpreadUsd, relevé au
+catalogue du courtier. Ce n'est pas le modèle qu'on aurait voulu~: il aurait
+fallu un spread médian par heure de New York et par année, mesuré sur le flux
+réel. Ce relevé exige une passe du testeur, et le terminal ne joint plus le
+serveur de démonstration du courtier depuis l'été 2026.
 
-\subsection{Sensibilité au doublement du spread}
+Le repli a été décidé et gelé \emph{avant} la campagne, avec sa contrepartie~:
+la sensibilité au \textbf{doublement} du coût devient obligatoire, en plus de
+la sensibilité de référence à une fois et demie. Et si le spread mesuré
+devenait disponible plus tard, il servirait de sensibilité \emph{publiée
+supplémentaire}, jamais à re-sélectionner une configuration.
 
-\subsection{Glissement et exécution partielle}
+\begin{warningbox}
+\textbf{Un spread constant se trompe dans les deux sens, et la campagne ne
+peut pas dire lequel domine.} Il est trop cher en pleine séance new-yorkaise,
+où la fourchette réelle est plus serrée, et trop bon marché en heures creuses,
+où elle s'élargit. Il pèse aussi mécaniquement de moins en moins lourd à
+mesure que le prix de l'or monte, ce qui contribue à l'atténuation de la perte
+observée au fil des années (section~\ref{sec:x10_in_sample}). C'est une
+limite à publier, répertoriée en section~\ref{sec:x10_limites}.
+\end{warningbox}
+
+Deux autres postes complètent le modèle. Le \emph{coût de portage} n'est pas
+modélisé, et à juste titre~: aucune position ne traverse la coupure
+quotidienne. Les \emph{frais} sont nuls, conformément au compte visé. Le
+\emph{slippage} est traité en sensibilité, ajouté au spread à raison de deux
+fois le glissement par côté et par aller-retour --- il s'applique aux entrées
+comme aux sorties.
+
+\subsection{Ce que le coût pèse, en unités de risque}
+
+Le coût rapporté à la \emph{cible} est constant~: \XTenSpreadUsd{} sur un
+objectif de dix dollars, quelle que soit l'année. Rapporté au \emph{risque},
+il s'effondre avec le temps, puisque le stop est proportionnel à l'\code{ATR}
+et que l'\code{ATR} a plus que quadruplé sur la période. La colonne
+« spread / ATR » du tableau de la section~\ref{sec:x10_grille} donne
+l'amplitude~: la moitié d'un \code{ATR} de cinq minutes au début de
+l'échantillon, un dixième à la fin.
+
+\begin{insightbox}
+\textbf{Au début de l'échantillon, chaque aller-retour partait avec un
+demi-R de retard.} Pour une stratégie dont la géométrie nominale est un
+pour un, c'est un handicap que peu de taux de réussite compensent. Le paradoxe
+--- et c'est le cœur du dossier --- est que le régime où le coût est le plus
+léger est précisément celui où la cible est devenue du bruit. Les deux effets
+tirent en sens contraire et ne se compensent pas.
+\end{insightbox}
+
+\subsection{Les neuf sensibilités}
+
+\input{tables/x10_costs.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{x10_fig10_sensibilite_couts.png}
+\caption{Espérance nette par transaction en fonction du spread effectif, pour
+trois niveaux de glissement. La ligne horizontale est le seuil de rentabilité.}
+\end{figure}
+
+Les deux sensibilités obligatoires échouent nettement~: l'espérance vaut
+\metric{\XTenExpectancySpreadOneFive{}~R} au spread majoré de moitié --- le
+critère de la table de décision exigeait une espérance positive --- et
+\metric{\XTenExpectancySpreadTwo{}~R} au spread doublé, pour un Sharpe de
+\XTenSharpeSpreadTwo.
+
+La réponse est forte et remarquablement régulière~: chaque dixième de dollar
+de coût supplémentaire par aller-retour coûte environ
+\metric{\XTenCostSlopePerDime{}~R} d'espérance. Cette linéarité est elle-même
+une information~: elle indique que le coût agit comme un prélèvement fixe par
+transaction, et non en interaction avec le signal.
+
+\subsection{Le coût n'est pas LA cause}
+
+C'est la conclusion la plus importante de cette section, et la moins
+confortable.
+
+\begin{warningbox}
+\textbf{En extrapolant la droite de coût jusqu'à un spread nul, l'espérance
+resterait autour de \metric{\XTenZeroCostExtrapolation{}~R}.} Toujours du
+mauvais côté de zéro. Autrement dit, même en supposant une exécution
+\emph{gratuite} --- ce qui n'est pas un scénario de marché --- la stratégie
+perdrait encore.
+
+Cette extrapolation est \textbf{linéaire et indicative}. Elle n'a pas été
+mesurée, parce que mesurer une stratégie à coût nul ne renseigne sur rien de
+réel. Elle ne doit pas être citée comme un résultat de la campagne~; elle
+sert uniquement à écarter une conclusion trop commode.
+\end{warningbox}
+
+La conclusion trop commode serait~: « la stratégie a une idée juste, ce sont
+les frais qui la tuent~; avec un meilleur courtier, elle passerait ». Les
+chiffres ne la soutiennent pas. Le coût \emph{aggrave} une perte préexistante,
+il ne la crée pas.
+
+\subsection{La grille entière au spread doublé}
+
+La table de décision demande, à titre descriptif et sans aucune
+re-sélection, de rejouer les vingt-sept configurations au coût doublé. Le
+résultat~: le pic de la grille descend de \XTenPeakSharpe{} à
+\XTenPeakSharpeSpreadTwo, et le nombre de configurations passant le critère de
+plateau reste \XTenPlateauPassingSpreadTwo.
+
+Le plateau ne survit donc pas au doublement du coût --- mais il n'existait pas
+davantage au coût de base. Il n'y a rien à faire survivre.
+
+\subsection{Exécution partielle et glissement}
+
+Deux postes ne sont pas modélisés, et il faut le dire.
+
+\begin{description}
+  \item[L'exécution partielle.] Les tailles de position sont petites --- de
+  l'ordre du dixième au demi-lot --- sur un instrument liquide. Le risque
+  d'exécution partielle est faible, mais il n'est pas nul, et il n'est pas
+  simulé.
+  \item[Le glissement d'exécution.] Il est traité en sensibilité, à deux
+  niveaux, et son effet est visible dans la table ci-dessus~: il aggrave
+  toutes les lignes. Il n'est pas inclus dans le chiffre de référence, qui est
+  donc le plus favorable des neuf.
+\end{description}
+
+Le chiffre publié en tête de ce rapport est celui de la ligne la moins
+coûteuse du tableau. Ce n'est pas une facilité~: c'est le modèle de coût gelé
+avant la campagne, et les huit autres lignes sont toutes pires.

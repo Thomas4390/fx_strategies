@@ -1,19 +1,176 @@
 % ═══════════════════════════════════════════════════════════════════════
-%  Stratégie 2 --- XAUUSD niveaux x10. Squelette : aucun chiffre tant que
-%  la campagne n'a pas tourné. Les résultats arrivent par les macros de
-%  tables/x10_headline.tex.
+%  Stratégie 2 --- XAUUSD niveaux x10. Tous les chiffres viennent des
+%  macros de tables/x10_headline.tex.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Méthodologie}
 \label{sec:x10_methodologie}
 
-% TODO L2 : décrire la chaîne recherche → portage → réconciliation et le budget d'essais gelé avant toute lecture de résultat.
+\lettrine[lines=2, findent=2pt, nindent=0pt]{L}{a} question que pose ce
+chapitre n'est pas « comment la stratégie a-t-elle été mesurée~? » mais
+« qu'est-ce qui empêchait le mesureur de se tromper en sa faveur~? ». Un
+backtest se laisse toujours convaincre quand on le relance assez souvent. Le
+dispositif décrit ici est celui qui rend ce rapport publiable, y compris ---
+et surtout --- avec un verdict négatif.
+
+\subsection{La spécification avant le code}
+
+La totalité de la mécanique a été écrite avant la première ligne de code~:
+horloge et bornes de séance, définition des niveaux, formule de l'\code{ATR}
+et son amorçage, cinématique, construction du contexte, machine à états,
+règles d'exécution, dimensionnement, modèle de coût, contrat de trace. Douze
+points laissés ambigus par le brief ont été tranchés à ce moment-là, pas
+pendant la mesure.
+
+L'intérêt n'est pas documentaire. Quand la spécification précède le code, un
+comportement gênant découvert plus tard est un \emph{défaut du moteur}, et il
+se corrige. Quand elle le suit, le même comportement devient une
+« particularité de l'implémentation », et il se garde s'il arrange les
+chiffres.
 
 \subsection{Données, séances et fuseaux}
 
+Le graphique de décision est le \code{M5}~; la résolution des ordres se fait
+sur les barres d'une minute qui le composent. L'échantillon de sélection court
+du 1\textsuperscript{er} janvier 2019 au 31 décembre 2025, soit
+\XTenSampleBarsMOne{} barres d'une minute, \XTenSampleBarsMFive{} barres de cinq
+minutes et \XTenSampleSessions{} séances.
+
+La séance de l'or court du dimanche 18:00 au vendredi 17:00, heure de New
+York. C'est cette horloge --- et non l'heure UTC ni le fuseau du courtier ---
+qui découpe les séances, réinitialise le \code{VWAP} et déclenche la clôture
+de fin de journée. Les trois moteurs doivent en reproduire la convention, le
+moteur MetaTrader~5 par une conversion explicite de l'heure serveur, vérifiée
+sur les quatre bascules d'heure d'été.
+
 \subsection{Le décalage des séries H1 --- la règle anti-anticipation}
+
+\begin{warningbox}
+\textbf{C'est le point où une stratégie multi-échelles se trompe, et le dépôt
+l'a déjà payé une fois.} Agréger des barres d'une minute en barres horaires
+produit une barre étiquetée \code{08:00} qui contient la clôture de
+\code{08:59}. Reportée telle quelle sur le graphique de cinq minutes, elle
+rend visible à 08:00 une information qui n'existera qu'une heure plus tard. Un
+travail antérieur du dépôt affichait un Sharpe de recherche flatteur sur trois
+configurations~; après correction, les trois sont devenues négatives. L'alpha
+était entièrement un artefact.
+\end{warningbox}
+
+La spécification impose donc une chaîne non négociable pour toute série
+horaire --- moyenne mobile exponentielle à 50~périodes, \code{ATR} horaire,
+panier dollar~: agréger, \emph{décaler d'une barre}, puis seulement reporter
+sur la grille de cinq minutes. Un test dédié doit rougir sur une version sans
+décalage.
+
+Le \code{VWAP} de séance, lui, n'est pas une série horaire et n'obéit pas à
+cette règle~: il se calcule sur les barres de cinq minutes elles-mêmes et est
+entièrement connu à la clôture de la barre de décision. Confondre les deux
+familles est la première erreur possible sur cette stratégie~; la
+section~\ref{sec:x10_mecanique} les sépare explicitement.
 
 \subsection{Découpage in-sample / hors échantillon}
 
+Tout ce qui est postérieur au 31 décembre 2025 est \textbf{verrouillé}. Le
+verrou n'est pas une intention~: c'est un contrôle exécuté à chaque étape de
+la campagne, sur les trois index effectivement consommés --- minute, cinq
+minutes, séance. La campagne publie la date maximale de chacun comme preuve.
+
+Une conséquence mérite d'être dite. Les barres du soir du 31 décembre 2025
+appartiennent à une séance étiquetée 2026~: elles ont été retirées, plutôt que
+de laisser une étiquette de la tranche gelée entrer dans l'index de sélection.
+Le choix est conservateur et sans effet sur les conclusions.
+
 \subsection{Budget d'essais et registre de sélection}
 
+Chaque configuration évaluée consomme un \emph{essai}, et les essais se
+comptent. Le budget de la famille a été fixé à \XTenTrialsCeiling{} avant la
+première mesure~: vingt-sept pour la grille, sept pour les ablations, le reste
+en réserve. La campagne en a consommé \XTenTrialsCount, laissant
+\XTenTrialsReserve{} en réserve intacte.
+
+\begin{insightbox}
+\textbf{Le budget d'essais n'est pas une discipline morale, c'est un
+paramètre de calcul.} Le \emph{Deflated Sharpe Ratio} publié en
+section~\ref{sec:x10_robustesse} déflate le Sharpe observé par le nombre
+d'essais distincts. Avec \XTenTrialsCount{} essais, le Sharpe attendu du
+\emph{meilleur} d'entre eux vaut \metric{\XTenExpectedMaxSharpe} par pur
+hasard --- c'est le seuil que la stratégie devait battre, et non zéro.
+Dépasser le budget n'est pas une faute de procédure~: c'est une invalidation
+arithmétique du chiffre publié.
+\end{insightbox}
+
+\subsection{La table de décision, gelée avant la mesure}
+
+Neuf critères, neuf seuils, trois verdicts possibles, écrits et committés
+avant que le moindre résultat soit lu. Deux clauses de cette table comptent
+plus que les autres.
+
+\begin{description}
+  \item[Un critère non mesuré vaut échec.] Jamais « non applicable ». Cette
+  clause a un coût immédiat dans ce rapport~: deux des neuf critères sont en
+  échec par non-mesure, et ils sont comptés comme tels
+  (section~\ref{sec:x10_robustesse}).
+  \item[Le plateau, jamais le pic.] La configuration retenue doit
+  être entourée de voisins qui tiennent, pas être le meilleur point d'une
+  carte. Et si aucune configuration ne passe ce test, la table prévoit
+  explicitement qu'\emph{il n'y a pas de configuration retenue} et que le
+  verdict est négatif. C'est exactement ce qui s'est produit.
+\end{description}
+
+\subsection{Le modèle de coût}
+
+Le spread de référence retenu pour la sélection est constant, à
+\XTenSpreadUsd{} l'aller-retour, relevé au catalogue du courtier. Ce repli a
+été décidé et gelé avant la campagne, faute de pouvoir mesurer le spread
+historique heure par heure~: le terminal ne joint plus le serveur de
+démonstration du courtier. En contrepartie, la table de décision rend
+\textbf{obligatoire} une sensibilité au doublement du coût, qui s'ajoute à la
+sensibilité de référence à une fois et demie.
+
+Un spread constant est trop cher en séance liquide et trop bon marché en
+heures creuses~; il pèse aussi mécaniquement de moins en moins à mesure que le
+prix de l'or monte. C'est une limite à publier, pas un motif de rejouer la
+grille~: la section~\ref{sec:x10_couts} en tire toutes les conséquences, y
+compris celle qui dérange.
+
 \subsection{Les trois moteurs : vectoriel, QuantConnect, MetaTrader~5}
+
+La même spécification est portée sur trois moteurs qui ne servent pas à la
+même chose. Le moteur vectoriel explore --- il évalue une grille entière en
+quelques secondes. Le moteur QuantConnect rejoue la stratégie
+\emph{événement par événement}, comme le ferait une exécution réelle. Le
+moteur MetaTrader~5 est celui qui passerait les ordres, sur le flux du
+courtier, qui n'est pas celui des deux autres.
+
+Les trois ne peuvent pas donner le même chiffre, et viser l'égalité serait le
+signe qu'on a idéalisé l'exécution. La section~\ref{sec:x10_reconciliation}
+décrit l'échelle de lecture à cinq barreaux qui sert à localiser un écart
+plutôt qu'à le nier.
+
+\subsection{La revue à contexte vierge}
+
+\begin{examplebox}[title=\textbf{\color{white}\textsf{Ce qu'une relecture indépendante a trouvé}}]
+Avant toute mesure, le moteur de référence a été relu par un examinateur
+disposant de la spécification et du code, mais d'aucun élément de la
+discussion qui les avait produits. Cette relecture a trouvé un défaut réel~:
+la clôture de séance était testée comme un \emph{seuil} (« il est plus de
+16:55~») et non comme une \emph{fenêtre} (« l'heure tombe entre 16:55 et
+18:00~»). Conséquence~: toute position ouverte le soir, à partir de 18:15,
+aurait été liquidée à la barre suivante, puisque son heure locale est
+supérieure à 16:55.
+
+Le défaut a été corrigé \textbf{avant} que la moindre performance soit lue. Ce
+n'est pas une anecdote~: c'est la garantie que les chiffres de ce rapport
+portent sur la stratégie spécifiée, et non sur une version mutilée de
+celle-ci. Un défaut de cette nature découvert \emph{après} la lecture aurait
+rendu la campagne non concluante, pas corrigible.
+\end{examplebox}
+
+\subsection{Reproductibilité}
+
+Toutes les mesures publiées ici sortent d'une seule commande, à graine fixe,
+dont les sorties sont des fichiers de résultats versionnés. Le rapport ne
+recopie aucun chiffre à la main~: chaque nombre de la prose et chaque cellule
+de tableau est produite par un générateur unique qui lit ces fichiers, et un
+test de la suite du dépôt échoue si un chiffre publié cesse de correspondre à
+sa source. La révision du dépôt qui a produit les résultats est
+\code{\XTenGitHead}.
