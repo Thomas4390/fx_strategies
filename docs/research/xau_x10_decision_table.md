@@ -1,0 +1,160 @@
+# XAUUSD niveaux x10 : table de décision, gelée avant mesure
+
+> **Date** : 2026-09-21 · **Statut** : gelé — aucune mesure n'existe encore
+> **Holdout state** : LOCKED.
+> **Holdout touched by this phase** : descriptif uniquement (ATR M5, fréquence de croisement
+> des x10) ; **0 lecture de performance**.
+> **Essais consommés** : 0.
+
+Ce document fixe les seuils **avant** de mesurer quoi que ce soit. Son seul pouvoir est d'être
+antérieur : `git log --oneline -- docs/research/xau_x10_decision_table.md` doit montrer un
+commit de gel **antérieur** à la lecture hors échantillon. Un seuil modifié après une mesure
+n'est plus un seuil, c'est une sélection.
+
+Référence des définitions : `docs/specs/xau_x10_spec.md`. Budget d'essais : **40** pour la
+famille `xau_x10` (27 grille + 7 ablations + 6 réserve), annexe A.3 de la spec.
+
+## 1. Table des seuils GO
+
+Tous les chiffres sont **nets de coûts**, au spread ×1 de `costs_xau_intraday.yml` sauf
+mention contraire.
+
+| critère | seuil GO |
+|---|---|
+| Trades in-sample 2019 → 2025-12-31 | **≥ 300** ; **≥ 40 par scénario** pour qu'un scénario soit commenté |
+| Espérance nette / profit factor | **≥ +0,10 R** / **≥ 1,15** |
+| DSR (déflaté par `distinct_trials("xau_x10")`) | **≥ 0,95** |
+| PBO (CSCV, matrice 27 × jours) | **≤ 0,35** |
+| Plateau | **≥ 60 %** des voisins à Sharpe net > 0 ; **médiane des voisins ≥ 0,5 × pic** |
+| Walk-forward annuel | **≥ 60 %** d'années positives ; **aucune année > 50 %** du net total |
+| Spread ×1,5 | espérance **> 0** |
+| MT5 modèle 1, 2022-11-04 → 2025-12-31 | espérance **≥ 0**, **même signe** que Python |
+| OOS 2026, lecture unique | **n ≥ 30**, sinon NON CONCLUANT |
+
+Un critère non mesuré vaut **échec**, jamais « non applicable ».
+
+## 2. Les trois verdicts
+
+Un seul verdict est prononcé, et il est prononcé une seule fois.
+
+### DÉPLOIEMENT À BLANC (démo)
+
+Les **neuf** critères du §1 sont GO, **et** la réconciliation du §13 de la spec tient
+(≥ 95 % / ≥ 98 % / ≥ 70 % d'appariement, divergence non attribuée ≤ 5 % des trades), **et** la
+lecture OOS 2026 ne contredit pas l'intervalle de non-contradiction gelé au §4.
+
+Ce verdict n'autorise **pas** le capital réel. Il autorise un compte démo, une durée et une
+revue datées, que le rapport doit nommer.
+
+### NE PAS DÉPLOYER
+
+**Au moins un** critère du §1 est en échec avec une mesure interprétable. Cas typiques
+attendus au vu de la note de faisabilité : espérance nette négative après coûts, signe MT5
+opposé au signe Python, PBO > 0,35, année unique portant plus de la moitié du net.
+
+Ce verdict est un résultat complet, pas un abandon. Le rapport le documente en section 14b.
+
+### NON CONCLUANT
+
+La mesure existe mais n'est **pas interprétable**. Déclenché par l'un de :
+
+1. **n < 30** trades sur la fenêtre OOS (critère 9) ;
+2. régime OOS hors de la distribution in-sample : `10 $/ATR` médian de la fenêtre OOS
+   **inférieur au minimum annuel in-sample** (3,8 en 2025, `xau_x10_feasibility_2026H2.md` §1) ;
+3. réconciliation bloquée : divergence non attribuée sur > 5 % des trades (spec §13) ;
+4. impossibilité de produire un chiffre MT5 (spread nul dans le tester, export échoué) sur un
+   critère qui en dépend.
+
+**Ce verdict est pré-écrit comme plausible** : au 2026-07-23, `10 $/ATR` vaut 1,8 contre 3,8
+au minimum in-sample. Le déclencheur n°2 est donc attendu, et le constater ne sera pas une
+surprise à commenter mais une prédiction à confirmer.
+
+## 3. Config retenue : le centre du plateau, jamais le pic
+
+La grille est un cube 3 × 3 × 3 (spec, annexe A.2). On indexe chaque configuration par
+`(i_z, i_a, i_k) ∈ {0,1,2}³`, les indices suivant l'ordre croissant des valeurs :
+`z ∈ {0,5 ; 1 ; 1,5}`, `a_min ∈ {0,1 ; 0,2 ; 0,3}`, `k_s ∈ {0,75 ; 1 ; 1,5}`.
+
+**Voisin** — définition opératoire : `c'` est voisin de `c` si les deux triplets d'indices
+diffèrent sur **exactement un axe**, et de **exactement 1**. Une configuration a donc 3 voisins
+si elle est à un coin, 4 ou 5 sur une arête ou une face, et 6 au centre géométrique. La
+configuration elle-même n'est jamais son propre voisin.
+
+**Critère plateau** — une configuration `c` passe le plateau si :
+
+```
+part_positifs(c) := |{ c' voisin de c : sharpe_net(c') > 0 }| / |voisins(c)|  >=  0,60
+mediane( sharpe_net(c') pour c' voisin de c )                                >=  0,50 * pic
+avec pic := max sur les 27 configurations du sharpe net
+```
+
+**Centre du plateau** — parmi les seules configurations qui passent le critère plateau, la
+config retenue est celle qui **maximise la médiane du Sharpe net de ses voisins**. Le Sharpe
+propre de la configuration n'entre pas dans ce classement : on choisit un point dont
+l'*entourage* est bon, pas un point qui est bon.
+
+Départage, dans cet ordre, pour que la règle soit déterministe :
+
+1. la plus petite distance de Manhattan au centre géométrique `(1,1,1)` ;
+2. le plus grand `k_s` (stop le plus large = le moins dépendant de la microstructure) ;
+3. l'ordre lexicographique croissant de `(i_z, i_a, i_k)`.
+
+**Si aucune configuration ne passe le critère plateau, il n'y a pas de configuration retenue**,
+et le verdict est NE PAS DÉPLOYER. On ne se rabat pas sur le pic : un pic isolé dans une grille
+de 27 points est la signature d'un surajustement, pas d'un réglage.
+
+Le rapport publie côte à côte le pic et le centre retenu (annexe « plateau contre pic »), avec
+l'écart de Sharpe entre les deux. Un centre très en dessous du pic est une information à
+donner au client, pas une gêne à masquer.
+
+## 4. Gel de la lecture OOS (à remplir et committer AVANT la lecture)
+
+> Cette section est **vide par construction**. Elle doit être remplie, relue et **committée**
+> avant que la moindre métrique de performance postérieure au 2026-01-01 soit calculée, quel
+> que soit le moteur. Le hash de ce commit est reproduit dans l'annexe « table de décision »
+> du rapport client. Remplir cette section après la lecture invalide la lecture.
+
+**Configuration gelée**
+
+- `z` = _à remplir_
+- `a_min` = _à remplir_
+- `k_s` = _à remplir_
+- justification « centre du plateau » (indices, voisins, médiane) = _à remplir_
+- pic de la grille, pour mémoire = _à remplir_
+
+**Fenêtre de lecture**
+
+- fenêtre commune aux trois moteurs = _à remplir_ (par défaut 2026-01-01 → 2026-03-31, limite
+  des parquets FX du DXY)
+- extension éventuelle jusqu'au 2026-07-24 = _à remplir_ (uniquement sous la règle
+  « DXY indéfini = neutre » de la spec §6, décidée **ici**, avant lecture)
+- nombre de trades attendu = _à remplir_
+
+**Intervalles de non-contradiction** (l'OOS ne *valide* rien ; il peut seulement contredire)
+
+- espérance nette en R : intervalle = _à remplir_
+- profit factor : intervalle = _à remplir_
+- taux de réussite par scénario : intervalle = _à remplir_
+- part des sorties par `TIME` et `SESSION` : intervalle = _à remplir_
+
+**Protocole**
+
+- une lecture par moteur, **même session**, aucune reprise
+- Python : `frozen_oos_slice` (`src/framework/holdout.py:93`), résultat marqué `FROZEN_OOS_RESULT`
+- ligne ajoutée au journal de `docs/research/HOLDOUT_POLICY.md` **au moment de la lecture**
+- aucune re-sélection, aucune nouvelle configuration, aucun nouvel essai après lecture
+
+## 5. Ce que cette table interdit explicitement
+
+1. Ajouter un axe à la grille après avoir vu les 27 résultats.
+2. Remplacer la grille en dollars par une grille en ATR au vu du §1 de la note de faisabilité :
+   ce serait une autre stratégie, donc une autre spec et un autre budget.
+3. Relancer la grille sans `config_key` — le re-run compterait double au registre et
+   dégraderait le DSR publié (`tests/test_trials_matches_notes.py`).
+4. Lire l'OOS deux fois, sous quelque prétexte que ce soit, y compris « correction d'un bug ».
+   Un bug découvert après lecture rend le résultat NON CONCLUANT ; il ne rend pas la lecture
+   rejouable.
+5. Présenter `R ≥ 1` comme un filtre actif : la note de faisabilité §2 montre qu'il ne mord
+   quasiment jamais sur l'historique (minimum de R disponible sur 2019-2026 : **1,17**). Le
+   taux de rejet par la règle R, par année, doit accompagner toute mention de ce garde-fou
+   (spec §8).

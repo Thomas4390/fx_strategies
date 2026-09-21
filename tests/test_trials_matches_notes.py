@@ -41,12 +41,26 @@ DECLARED: dict[str, int] = {
     "mt5_phase4_checks": 5,
     "integration_weights": 11,  # baseline + 2 compositions x 5 poids
     "gold_stop_spec": 0,       # correction de spécification dérivée
+    "xau_x10": 40,             # 27 grille + 7 ablations + 6 réserve
 }
+
+# Familles dont le budget est **gelé avant mesure** : la note existe, le
+# registre est encore vide. Le budget est alors un plafond (``<=``), pas une
+# égalité, et il ne compte pas dans les totaux publiés jusqu'au premier sweep.
+# Source : docs/specs/xau_x10_spec.md annexe A.3.
+BUDGETED_NOT_YET_RUN: frozenset[str] = frozenset({"xau_x10"})
 
 
 @pytest.mark.parametrize("family,expected", sorted(DECLARED.items()))
 def test_distinct_trials_matches_the_declared_budget(family, expected):
     got = trials.distinct_trials(family)
+    if family in BUDGETED_NOT_YET_RUN:
+        assert got <= expected, (
+            f"famille {family!r} : {got} configurations distinctes au registre "
+            f"contre un plafond de {expected} gelé avant mesure. Le budget a "
+            f"été dépassé : le DSR publié ne vaut plus."
+        )
+        return
     assert got == expected, (
         f"famille {family!r} : {got} configurations distinctes au registre "
         f"contre {expected} déclarées dans la note de phase. Soit un sweep a "
@@ -71,7 +85,8 @@ def test_no_family_is_logged_without_being_declared():
 
 def test_the_published_totals_hold():
     """Les trois chiffres que les livrables citent."""
-    assert trials.distinct_trials() == sum(DECLARED.values()) == 382
+    consumed = sum(v for k, v in DECLARED.items() if k not in BUDGETED_NOT_YET_RUN)
+    assert trials.distinct_trials() == consumed == 382
     assert trials.distinct_trials() - trials.distinct_trials("fx_legacy") == 92
     assert trials.total_trials() >= trials.distinct_trials(), (
         "le total brut ne peut pas être inférieur au distinct"
