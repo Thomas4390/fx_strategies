@@ -20,6 +20,9 @@ Usage standard (5.4 ans broker, M1, model 1) :
 Walk-forward / fenêtre custom :
     python src/mt5/bridge/run_backtest_cli.py --from 2024.01.01 --to 2024.12.31
 
+Autre EA (symbole, période, inputs et dossier de sortie du profil) :
+    python src/mt5/bridge/run_backtest_cli.py --expert XauX10
+
 Voir docs/mt5/14_cli_backtest_linux.md pour le détail Wine/MT5.
 """
 from __future__ import annotations
@@ -27,7 +30,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -88,6 +90,86 @@ DEFAULT_TESTER_INPUTS: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
+# Profils d'Expert Advisor
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ExpertProfile:
+    """Tout ce qui, dans le pipeline, dépend de l'EA lancé.
+
+    Un input inconnu de l'EA fait rejeter le preset entier par MT5 : les inputs
+    par défaut ne sont donc *pas* mutualisés entre profils. Même logique pour le
+    marqueur de début de run — il porte le nom de l'EA — et pour le dossier de
+    dump, qu'on sépare pour ne pas mélanger les runs de deux stratégies.
+    """
+
+    ex5_relative: str
+    start_marker: str          # regex, première ligne écrite par OnInit()
+    default_inputs: dict[str, str]
+    needs_macro_history: bool
+    out_dir: Path
+    default_symbol: str
+    default_period: str
+
+    @property
+    def name(self) -> str:
+        """Nom de l'EA (= clé dans `EXPERTS`), dérivé du `.ex5`."""
+        return Path(self.ex5_relative.replace("\\", "/")).stem
+
+    @property
+    def ex5_abs(self) -> Path:
+        """Chemin du `.ex5` compilé — relu à chaque appel car `PORTABLE` est
+        redirigé par les tests."""
+        return PORTABLE / "MQL5/Experts" / self.ex5_relative.replace("\\", "/")
+
+
+EXPERTS: dict[str, ExpertProfile] = {
+    # Stratégie 1 — les valeurs historiques du CLI, à l'octet près.
+    "FxMultiSleeve": ExpertProfile(
+        ex5_relative=EX5_RELATIVE,
+        start_marker=r"\[INIT\]\[INFO\] FxMultiSleeve start build",
+        default_inputs=DEFAULT_TESTER_INPUTS,
+        needs_macro_history=True,
+        out_dir=REPORTS_OUT_DIR,
+        default_symbol=DEFAULT_SYMBOL,
+        default_period=DEFAULT_PERIOD,
+    ),
+    # Stratégie 2 — XAUUSD niveaux x10 (EA à compiler, cf. specs/).
+    "XauX10": ExpertProfile(
+        ex5_relative="fx_strategies\\XauX10.ex5",
+        start_marker=r"\[INIT\]\[INFO\] XauX10 start build",
+        default_inputs={
+            "Inp_SymbolSuffix": ".c",
+            "Inp_LogToFile": "true",
+            "Inp_ExportDeals": "true",
+        },
+        needs_macro_history=False,
+        out_dir=REPO_ROOT / "reports/mt5_x10",
+        default_symbol="XAUUSD.c",
+        default_period="M5",
+    ),
+}
+
+DEFAULT_EXPERT = "FxMultiSleeve"
+
+
+def _profile(profile: ExpertProfile | None) -> ExpertProfile:
+    """Profil effectif — `None` = le profil historique (stratégie 1)."""
+    return profile if profile is not None else EXPERTS[DEFAULT_EXPERT]
+
+
+def resolve_out_dir(profile: ExpertProfile) -> Path:
+    """Dossier de dump JSON du profil.
+
+    `REPORTS_OUT_DIR` reste la source de vérité pour FxMultiSleeve : c'est la
+    constante de module que les tests (et les scripts d'optimisation)
+    redirigent.
+    """
+    return REPORTS_OUT_DIR if profile.name == DEFAULT_EXPERT else profile.out_dir
+
+
+# ---------------------------------------------------------------------------
 # Helpers I/O — encoding UTF-16 LE BOM + CRLF (cf. reset_tester_preset.py:104)
 # ---------------------------------------------------------------------------
 
@@ -122,35 +204,20 @@ def read_utf16_safe(path: Path) -> str:
 # ---------------------------------------------------------------------------
 
 
-def sanity_checks(from_date: str, to_date: str) -> list[str]:
+def sanity_checks(from_date: str, to_date: str,
+                  profile: ExpertProfile | None = None) -> list[str]:
     """Renvoie la liste des problèmes détectés (vide = OK)."""
+    prof = _profile(profile)
     issues: list[str] = []
 
     if not TERMINAL.exists():
         issues.append(f"terminal64.exe absent: {TERMINAL}")
-    if not EX5_ABS.exists():
-        issues.append(f"FxMultiSleeve.ex5 absent: {EX5_ABS}")
+    if not prof.ex5_abs.exists():
+        issues.append(f"{prof.name}.ex5 absent: {prof.ex5_abs}")
 
-    # MT5 portable lit `FILE_COMMON` depuis le Common Roaming (pas le portable).
-    # On vérifie cet emplacement effectif et on resync depuis le portable si
-    # nécessaire (le portable sert de copie source, ie. ce que `fx_macro_history.py`
-    # écrit).
-    if not MACRO_HISTORY_CSV_ACTIVE.exists():
-        issues.append(f"macro_history.csv absent: {MACRO_HISTORY_CSV_ACTIVE}")
-    else:
-        first, last = _csv_date_range(MACRO_HISTORY_CSV_ACTIVE)
-        if first and last:
-            if first > from_date.replace(".", "-"):
-                issues.append(
-                    f"macro_history.csv (active) commence à {first}, "
-                    f"avant {from_date} requis"
-                )
-            if last < to_date.replace(".", "-"):
-                issues.append(
-                    f"macro_history.csv (active) s'arrête à {last}, "
-                    f"après {to_date} requis — resync depuis "
-                    f"{MACRO_HISTORY_CSV_PORTABLE}"
-                )
+    # Un EA sans filtre macro (XauX10) n'a pas ce fichier à sa charge.
+    if prof.needs_macro_history:
+        issues.extend(_macro_history_issues(from_date, to_date))
 
     # Pas de terminal64.exe actif (sinon le run plantera ou se collera à
     # l'instance existante).
@@ -163,6 +230,34 @@ def sanity_checks(from_date: str, to_date: str) -> list[str]:
     except subprocess.CalledProcessError:
         pass  # rien ne tourne — bon
 
+    return issues
+
+
+def _macro_history_issues(from_date: str, to_date: str) -> list[str]:
+    """Problèmes de couverture de `macro_history.csv` (vide = OK).
+
+    MT5 portable lit `FILE_COMMON` depuis le Common Roaming (pas le portable).
+    On vérifie cet emplacement effectif et on resync depuis le portable si
+    nécessaire (le portable sert de copie source, ie. ce que
+    `fx_macro_history.py` écrit).
+    """
+    if not MACRO_HISTORY_CSV_ACTIVE.exists():
+        return [f"macro_history.csv absent: {MACRO_HISTORY_CSV_ACTIVE}"]
+
+    issues: list[str] = []
+    first, last = _csv_date_range(MACRO_HISTORY_CSV_ACTIVE)
+    if first and last:
+        if first > from_date.replace(".", "-"):
+            issues.append(
+                f"macro_history.csv (active) commence à {first}, "
+                f"avant {from_date} requis"
+            )
+        if last < to_date.replace(".", "-"):
+            issues.append(
+                f"macro_history.csv (active) s'arrête à {last}, "
+                f"après {to_date} requis — resync depuis "
+                f"{MACRO_HISTORY_CSV_PORTABLE}"
+            )
     return issues
 
 
@@ -198,11 +293,12 @@ def build_tester_ini(
     currency: str,
     report_name: str,
     inputs: dict[str, str],
+    profile: ExpertProfile | None = None,
 ) -> str:
     """Construit le contenu textuel d'un tester.ini."""
     tester_lines = [
         "[Tester]",
-        f"Expert={EX5_RELATIVE}",
+        f"Expert={_profile(profile).ex5_relative}",
         f"Symbol={symbol}",
         f"Period={period}",
         f"Model={model}",
@@ -288,11 +384,12 @@ class TesterLogSummary:
 
 
 # Première ligne écrite par OnInit() : elle borne le début du run courant dans un
-# `YYYYMMDD.log` qui en accumule des dizaines.
-_RUN_START_MARKER = r"\[INIT\]\[INFO\] FxMultiSleeve start build"
+# `YYYYMMDD.log` qui en accumule des dizaines. Chaque EA a la sienne (cf.
+# `ExpertProfile.start_marker`) ; l'alias conserve celle de la stratégie 1.
+_RUN_START_MARKER = EXPERTS[DEFAULT_EXPERT].start_marker
 
 
-def _slice_last_run(text: str) -> str:
+def _slice_last_run(text: str, profile: ExpertProfile | None = None) -> str:
     """Ne garder que la portion du log postérieure au dernier démarrage d'EA.
 
     Filtrer les *fichiers* par mtime ne suffit pas : le log du jour accumule tous
@@ -301,11 +398,12 @@ def _slice_last_run(text: str) -> str:
     a fait passer le run de référence du 2026-07-26 pour douteux alors qu'il
     était propre.
     """
-    starts = list(re.finditer(_RUN_START_MARKER, text))
+    starts = list(re.finditer(_profile(profile).start_marker, text))
     return text[starts[-1].start():] if starts else text
 
 
-def parse_tester_log(log_dir: Path, since_epoch: float) -> TesterLogSummary:
+def parse_tester_log(log_dir: Path, since_epoch: float,
+                     profile: ExpertProfile | None = None) -> TesterLogSummary:
     """Parse le log Tester du jour. `since_epoch` = on ignore les logs antérieurs
     au lancement courant pour éviter de remonter un run précédent."""
     summary = TesterLogSummary()
@@ -322,7 +420,7 @@ def parse_tester_log(log_dir: Path, since_epoch: float) -> TesterLogSummary:
 
     log_path = candidates[0]
     summary.log_path = str(log_path)
-    text = _slice_last_run(read_utf16_safe(log_path))
+    text = _slice_last_run(read_utf16_safe(log_path), profile)
 
     if "[INIT][INFO] EA ready" in text:
         summary.init_ok = True
@@ -477,10 +575,12 @@ def parse_html_report(report_path: Path) -> HtmlReportMetrics:
 
 
 def render_summary(metrics: HtmlReportMetrics, log_summary: TesterLogSummary,
-                   exit_code: int, duration_sec: float) -> str:
+                   exit_code: int, duration_sec: float,
+                   profile: ExpertProfile | None = None) -> str:
+    prof = _profile(profile)
     lines = [
         "",
-        "## Backtest MT5 FxMultiSleeve — résumé",
+        f"## Backtest MT5 {prof.name} — résumé",
         "",
         f"- Symbol     : {metrics.symbol or 'n/a'}",
         f"- Period     : {metrics.period or 'n/a'}",
@@ -489,7 +589,10 @@ def render_summary(metrics: HtmlReportMetrics, log_summary: TesterLogSummary,
         f"- Init EA    : {'OK' if log_summary.init_ok else 'FAIL'}"
         + (f" ({len(log_summary.init_errors)} errors)"
            if log_summary.init_errors else ""),
-        f"- Macro src  : {log_summary.macro_source_resolved or 'n/a'}",
+    ]
+    if prof.needs_macro_history:
+        lines.append(f"- Macro src  : {log_summary.macro_source_resolved or 'n/a'}")
+    lines += [
         "",
         "| Métrique | Valeur |",
         "|---|---|",
@@ -511,12 +614,14 @@ def render_summary(metrics: HtmlReportMetrics, log_summary: TesterLogSummary,
 
 def dump_json(out_dir: Path, metrics: HtmlReportMetrics,
               log_summary: TesterLogSummary, exit_code: int,
-              duration_sec: float, ini_path: Path) -> Path:
+              duration_sec: float, ini_path: Path,
+              profile: ExpertProfile | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_path = out_dir / f"run_{timestamp}.json"
     payload = {
         "run_id": timestamp,
+        "expert": _profile(profile).name,
         "exit_code": exit_code,
         "duration_sec": duration_sec,
         "ini_path": str(ini_path),
@@ -552,8 +657,16 @@ def parse_args() -> argparse.Namespace:
                    help=f"Date début (YYYY.MM.DD, défaut {DEFAULT_FROM})")
     p.add_argument("--to", dest="to_date", default=DEFAULT_TO,
                    help=f"Date fin (YYYY.MM.DD, défaut {DEFAULT_TO})")
-    p.add_argument("--symbol", default=DEFAULT_SYMBOL)
-    p.add_argument("--period", default=DEFAULT_PERIOD)
+    p.add_argument("--expert", choices=sorted(EXPERTS), default=DEFAULT_EXPERT,
+                   help=f"EA à lancer (défaut {DEFAULT_EXPERT}) — fixe aussi le "
+                        "symbole, la période, les inputs par défaut et le "
+                        "dossier de dump")
+    p.add_argument("--symbol", default=None,
+                   help="Symbole (défaut : celui du profil --expert, "
+                        f"{DEFAULT_SYMBOL} pour {DEFAULT_EXPERT})")
+    p.add_argument("--period", default=None,
+                   help="Période (défaut : celle du profil --expert, "
+                        f"{DEFAULT_PERIOD} pour {DEFAULT_EXPERT})")
     p.add_argument("--model", type=int, default=DEFAULT_MODEL,
                    help="0=Every tick (simulated), 1=1-min OHLC (interpolation, "
                         "surestime), 2=Open prices only, 3=Math calc, "
@@ -576,16 +689,24 @@ def parse_args() -> argparse.Namespace:
                    help="Ignorer les sanity checks pré-run")
     p.add_argument("--dry-run", action="store_true",
                    help="Génère l'INI sans lancer le tester")
-    return p.parse_args()
+    args = p.parse_args()
+    # Symbole et période non fournis : ceux du profil, pas ceux d'un autre EA.
+    profile = EXPERTS[args.expert]
+    if args.symbol is None:
+        args.symbol = profile.default_symbol
+    if args.period is None:
+        args.period = profile.default_period
+    return args
 
 
 def main() -> int:
     args = parse_args()
-    print(f"[start] FxMultiSleeve backtest {args.from_date} → {args.to_date} "
+    profile = EXPERTS[args.expert]
+    print(f"[start] {profile.name} backtest {args.from_date} → {args.to_date} "
           f"on {args.symbol} {args.period}", flush=True)
 
     if not args.skip_checks:
-        issues = sanity_checks(args.from_date, args.to_date)
+        issues = sanity_checks(args.from_date, args.to_date, profile)
         if issues:
             print("[abort] Sanity checks failed:", file=sys.stderr)
             for msg in issues:
@@ -597,7 +718,7 @@ def main() -> int:
     runtime_ini = DRIVE_C / args.runtime_ini
 
     # Merge inputs default + overrides
-    inputs = dict(DEFAULT_TESTER_INPUTS)
+    inputs = dict(profile.default_inputs)
     for override in args.input_overrides:
         if "=" not in override:
             print(f"[abort] --input invalide (format KEY=VAL): {override!r}",
@@ -622,6 +743,7 @@ def main() -> int:
         currency=args.currency,
         report_name=args.report_name,
         inputs=inputs,
+        profile=profile,
     )
     print(f"[ok] tester.ini écrit (persistent={persistent_ini.name}, "
           f"runtime={runtime_ini})", flush=True)
@@ -633,16 +755,17 @@ def main() -> int:
     started_epoch = time.time()
     exit_code, duration_sec = run_terminal(runtime_ini, args.timeout)
 
-    log_summary = parse_tester_log(TESTER_LOGS_DIR, started_epoch)
+    log_summary = parse_tester_log(TESTER_LOGS_DIR, started_epoch, profile)
 
     report_htm = PORTABLE / f"{args.report_name}.htm"
     metrics = parse_html_report(report_htm)
 
-    summary_md = render_summary(metrics, log_summary, exit_code, duration_sec)
+    summary_md = render_summary(metrics, log_summary, exit_code, duration_sec,
+                                profile)
     print(summary_md, flush=True)
 
-    json_path = dump_json(REPORTS_OUT_DIR, metrics, log_summary,
-                          exit_code, duration_sec, persistent_ini)
+    json_path = dump_json(resolve_out_dir(profile), metrics, log_summary,
+                          exit_code, duration_sec, persistent_ini, profile)
     print(f"[ok] JSON dump → {json_path}", flush=True)
 
     problems = validate_run(metrics)

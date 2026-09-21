@@ -203,6 +203,28 @@ ls "$PORTABLE/fx_cli_smoke_report"*
 # fx_cli_smoke_report-mfemae.png
 ```
 
+### 5) Lancer un autre EA (`--expert`)
+
+`run_backtest_cli.py` porte un registre de profils (`EXPERTS`, un `ExpertProfile` gelé par EA). Le profil fixe le `.ex5`, le marqueur de début de run cherché dans le log, les inputs par défaut, l'exigence de `macro_history.csv`, le symbole, la période et le dossier de dump JSON.
+
+| Profil | `.ex5` | Symbol / Period | Dump JSON | `macro_history.csv` |
+|---|---|---|---|---|
+| `FxMultiSleeve` (défaut) | `fx_strategies\FxMultiSleeve.ex5` | `EURUSD.c` / `M1` | `reports/mt5/` | requis |
+| `XauX10` | `fx_strategies\XauX10.ex5` | `XAUUSD.c` / `M5` | `reports/mt5_x10/` | non |
+
+```bash
+# Profil XauX10 : symbole, période et inputs viennent du profil
+uv run python src/mt5/bridge/run_backtest_cli.py --expert XauX10 --dry-run
+
+# Surcharge ponctuelle (les flags l'emportent sur le profil)
+uv run python src/mt5/bridge/run_backtest_cli.py --expert XauX10 \
+  --symbol XAUUSD --period M15 --input Inp_ExportDeals=false
+```
+
+Sans `--expert`, rien ne change : l'INI produit est identique à l'octet près (figé par `tests/snapshots/mt5_ini_fxmultisleeve.txt`).
+
+⚠️ Un EA ajouté au registre doit écrire dans son `OnInit()` la ligne `[INIT][INFO] <NomEA> start build …` (borne du run dans le log du jour) puis `[INIT][INFO] EA ready` — sinon `parse_tester_log` rapporte `Init EA : FAIL`.
+
 ## Pré-requis données : pré-téléchargement de l'historique
 
 Le smoke test du 2026-05-02 a échoué à produire des trades parce que `EURUSD.c: history check timeout` : le broker n'avait pas encore poussé l'historique M1 dans `Bases/`. Solutions :
