@@ -1134,6 +1134,23 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="ne pas rejouer la référence sur le bid brut (poste « signaux bid » non mesuré)",
     )
+    # Variante « index redaté » : la référence rejouée avec l'index du parquet
+    # décalé, pour tester si la convention de datation des minutes explique
+    # l'écart d'appariement avec QC.
+    parser.add_argument("--py-stamp-shift-min", type=int, default=None)
+    parser.add_argument(
+        "--py-parquet", type=Path, default=_REPO / "data/XAU-USD_minute_qc.parquet"
+    )
+    parser.add_argument("--py-replay-start", default="2024-01-01")
+    parser.add_argument("--py-replay-end", default="2024-12-31")
+    parser.add_argument("--py-replay-spread", type=float, default=0.29)
+    parser.add_argument(
+        "--py-replay-out",
+        type=Path,
+        default=_REPO / "reports/qc_x10/py_trades_2024_stamp_shift.csv",
+    )
+    parser.add_argument("--campaign-start", default=None)
+    parser.add_argument("--campaign-end", default=None)
     parser.add_argument("--tol-bars", type=int, default=1)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -1577,15 +1594,82 @@ def build_summary(
     }
 
 
+STAMP_SHIFT_VARIANT = "stamp_shift_minus_1min"
+
+
+def stamp_shift_sections(
+    args: argparse.Namespace, qc: QcContext
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """La variante « index redaté » et son bloc racine, ou `None` si non demandée.
+
+    Elle s'ajoute aux variantes existantes sans rien leur prendre : les blocs
+    `summary` et `variants` déjà publiés restent mot pour mot ce qu'ils étaient,
+    et le nouveau chiffre vit sous `summary_stamp_shift`. Une réconciliation qui
+    réécrirait ses propres chiffres antérieurs ne serait plus une mesure.
+    """
+    if args.py_stamp_shift_min is None:
+        return None
+
+    registry = replay_reference_on_parquet(
+        args.py_parquet,
+        args.py_replay_start,
+        args.py_replay_end,
+        stamp_shift_min=args.py_stamp_shift_min,
+        spread=args.py_replay_spread,
+    )
+    args.py_replay_out.parent.mkdir(parents=True, exist_ok=True)
+    registry.to_csv(args.py_replay_out, index=False)
+    variant = build_variant(args.py_replay_out, qc, args.tol_bars)
+
+    campaign: dict[str, Any] = {"measured": False, "why": "--campaign-start/-end absents"}
+    if args.campaign_start and args.campaign_end:
+        campaign = campaign_counts(
+            replay_reference_on_parquet(
+                args.py_parquet,
+                args.campaign_start,
+                args.campaign_end,
+                stamp_shift_min=args.py_stamp_shift_min,
+                spread=args.py_replay_spread,
+            )
+        )
+        campaign["measured"] = True
+        campaign["window"] = [args.campaign_start, args.campaign_end]
+
+    match = variant["rung3_4_entry_matching"]
+    rung2 = variant["rung2_bars"]
+    summary = {
+        "stamp_shift_min": args.py_stamp_shift_min,
+        "py_replay": str(args.py_replay_out),
+        "match_rate_py_to_qc": match["match_rate_py"],
+        "match_rate_qc_to_py": match["match_rate_qc"],
+        "decision_close_abs_diff_median_usd": (
+            rung2.get("close", {}).get("abs", {}).get("median")
+        ),
+        "atr_ratio_median": rung2.get("atr", {}).get("ratio_qc_over_py", {}).get("median"),
+        "campaign_trades_shifted": campaign.get("trades"),
+        "campaign_expectancy_r_shifted": campaign.get("expectancy_r"),
+        "campaign_profit_factor_shifted": campaign.get("profit_factor"),
+    }
+    variant["campaign_shifted"] = campaign
+    return variant, summary
+
+
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     qc = load_qc(args.qc_orders, args.qc_stats)
     variants = {p.stem: build_variant(p, qc, args.tol_bars) for p in args.py_trades}
     health = health_check(qc)
     primary = variants[args.py_trades[0].stem]
 
+    shifted = stamp_shift_sections(args, qc)
+    stamp_summary: dict[str, Any] | None = None
+    if shifted is not None:
+        variants[STAMP_SHIFT_VARIANT], stamp_summary = shifted
+
     matched_pnl = sum(t.pnl for t in qc.ledger.trades if t.closed)
+    report_extra = {"summary_stamp_shift": stamp_summary} if stamp_summary else {}
     return {
         "summary": build_summary(qc, primary, health["healthy"]),
+        **report_extra,
         "by_year": primary["by_year"],
         "health": health,
         "meta": {
@@ -2055,6 +2139,122 @@ def replay_reference_on_dump(
         registry["equity_after"] - registry["equity_before"]
     ) / registry["risk_amount"]
     return trace, registry
+
+
+def replay_reference_on_parquet(
+    parquet: Path,
+    start: str,
+    end: str,
+    *,
+    stamp_shift_min: int = 0,
+    spread: float = 0.29,
+    init_cash: float = 10_000.0,
+    z: float = 1.0,
+    a_min: float = 0.2,
+    k_s: float = 1.0,
+) -> pd.DataFrame:
+    """Rejouer la référence sur un parquet M1, éventuellement **redaté**.
+
+    `stamp_shift_min` déplace l'index du parquet avant toute agrégation. Il
+    existe pour une raison précise et une seule : LEAN date une barre M1 de sa
+    **clôture** (`end_time`), le portage QC et MT5 la rangent par son **début**,
+    et la référence traite l'index du parquet comme un début. Avec
+    `stamp_shift_min = -1`, l'index redevient un début de barre et la grille M5
+    de la référence couvre `[t, t+5 min)` comme celle des deux autres moteurs,
+    au lieu de `[t−1 min, t+4 min)`.
+
+    Le DXY subit **le même décalage** : `data/DXY4_h1.parquet` est agrégé depuis
+    les parquets FX, qui portent la même convention de datation que l'or (vérifié
+    par corrélation contre l'export MT5 d'EURUSD, § « convention de datation »
+    de la note de réconciliation).
+
+    Rendu : un registre de trades au format exact de `load_py_trades`, prêt à
+    être écrit sur disque et relu par `build_variant`.
+    """
+    sys.path.insert(0, str(_REPO / "src"))
+    from framework.x10_engine import TRADE_COLUMNS, run_engine  # noqa: PLC0415
+    from framework.x10_context import to_session_clock  # noqa: PLC0415
+    from strategies.xau_x10 import (  # noqa: PLC0415
+        DXY4_H1_PATH,
+        X10Indicator,
+        _events_frame,
+        _trades_frame,
+        prepare_inputs,
+    )
+    from utils import load_gold_data  # noqa: PLC0415
+
+    raw, _ = load_gold_data(str(parquet))
+    shift = pd.Timedelta(minutes=stamp_shift_min)
+    raw = raw.copy()
+    raw.index = raw.index + shift
+    raw = raw.loc[start:end]
+
+    dxy = None
+    if Path(DXY4_H1_PATH).exists():
+        frame = pd.read_parquet(DXY4_H1_PATH)
+        if "date" in frame.columns:
+            frame = frame.set_index("date")
+        series = frame["close"] if "close" in frame.columns else frame.iloc[:, 0]
+        series.index = to_session_clock(pd.DatetimeIndex(series.index)) + shift
+        dxy = series.sort_index().rename("dxy4")
+
+    inputs = prepare_inputs(raw, dxy=dxy)
+    events, trades = run_engine(
+        **inputs.kernel_kwargs(spread),
+        z=z,
+        a_min=a_min,
+        k_s=k_s,
+        init_cash=init_cash,
+        risk_frac=RISK_FRAC,
+    )
+    indicator = X10Indicator(
+        events=_events_frame(events, inputs.m5.index),
+        trades=_trades_frame(trades, inputs.m5.index, inputs.m1.index),
+        m5=inputs.m5,
+        m1=inputs.m1,
+        params={"z": z, "a_min": a_min, "k_s": k_s, "spread": spread},
+    )
+
+    registry = pd.DataFrame(np.asarray(trades), columns=list(TRADE_COLUMNS))
+    registry["scenario_name"] = indicator.trades["scenario_name"].to_numpy()
+    registry["exit_reason_name"] = indicator.trades["exit_reason_name"].to_numpy()
+    # `rung2_bars` lit la clôture de la barre de décision : c'est elle que le
+    # tag QC publie sous `c=`, et c'est la quantité qui tranche.
+    registry["m5_close"] = (
+        inputs.m5["close"].to_numpy()[registry["i_decision"].to_numpy(dtype=np.int64)]
+        if len(registry)
+        else []
+    )
+    for column, source in (
+        ("ts_decision_utc", "ts_decision"),
+        ("ts_fill_utc", "ts_fill"),
+        ("ts_exit_utc", "ts_exit"),
+    ):
+        stamps = pd.DatetimeIndex(indicator.trades[source])
+        registry[column] = stamps.tz_localize(
+            "America/New_York", ambiguous=True, nonexistent="shift_forward"
+        ).tz_convert("UTC").tz_localize(None)
+    return registry
+
+
+def campaign_counts(registry: pd.DataFrame) -> dict[str, Any]:
+    """Trades, espérance en R et profit factor d'un registre. Rien de plus.
+
+    Trois nombres : c'est une **sensibilité** à la convention de datation, pas
+    une sélection. Aucune grille n'est parcourue, aucun essai n'est consommé.
+    """
+    r = ((registry["equity_after"] - registry["equity_before"]) / registry["risk_amount"])
+    r = r.to_numpy(dtype=float)
+    r = r[np.isfinite(r)]
+    gains, losses = r[r > 0].sum(), -r[r <= 0].sum()
+    return {
+        "trades": int(len(registry)),
+        "expectancy_r": float(r.mean()) if len(r) else float("nan"),
+        "profit_factor": float(gains / losses) if losses > 0 else None,
+        "final_equity": (
+            float(registry["equity_after"].iloc[-1]) if len(registry) else None
+        ),
+    }
 
 
 # ── contrôle d'horloge du dump ────────────────────────────────────────

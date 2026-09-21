@@ -7,6 +7,10 @@
 > **La branche MT5 est mesurée depuis le 2026-09-21** (§9) : appariement **98,1 %** dès que les
 > deux moteurs lisent le même prix, divergence non attribuée **1,1 %**, et **critère 8 en
 > ÉCHEC** — espérance MT5 **−0,1034 R**, du même signe que Python.
+> ⚠️ **§11.6 bis réfute le §11.6** : l'écart QC ne venait pas des données mais d'une **convention
+> de datation des minutes**. Index du parquet redaté de −1 minute → appariement **98,7 %**,
+> clôture M5 identique sur **313/313**, divergence non attribuée **0,6 %**. Le paragraphe
+> « le parquet doit être ré-exporté » du §11.6 est caduc.
 > **Holdout state** : LOCKED.
 > **Holdout touched by this phase** : **NO** — aucune barre ≥ 2026-01-01 n'est entrée dans un
 > calcul. Date maximale de tout index consommé : M1 `2025-12-31 16:58` (variante P1), et
@@ -743,6 +747,133 @@ défaut de portage — c'est un écart entre `data/XAU-USD_minute_qc.parquet` et
 sert aujourd'hui pour `XAUUSD` OANDA. La prémisse de §13 (« QC et la référence partagent les
 mêmes barres, donc ≥ 98 % ») est **fausse en l'état**, et la cible de 98 % est hors d'atteinte
 tant que le parquet n'est pas ré-exporté.
+
+> ⛔ **Ce paragraphe est FAUX et reste ici comme trace de l'erreur. Voir §11.6 bis.** Les deux
+> moteurs lisaient bien la même donnée minute. Le test ci-dessus cherchait la clôture M5 de QC
+> *à l'intérieur* du bin de référence ; elle était au rang **+5**, une minute après sa dernière
+> minute, parce que les deux grilles M5 sont décalées d'une minute. Le parquet n'a pas besoin
+> d'être ré-exporté et la cible de 98 % est atteinte (98,7 %).
+
+### 11.6 bis Convention de datation des minutes : cause de l'écart QC ?
+
+> **Oui, et elle explique tout.** L'appariement des entrées passe de **33,1 %** à **98,7 %**,
+> l'écart de clôture de la barre de décision de **0,265 $** à **0,000 $ sur 313 entrées sur
+> 313**, et le ratio d'ATR de 0,9943 à **1,0000**. La conclusion du §11.6 — « les deux moteurs
+> ne lisent pas la même donnée minute, le parquet doit être ré-exporté » — est **réfutée** :
+> les deux moteurs lisaient la même donnée, sur deux grilles M5 décalées d'**une minute**.
+
+**Ce que le §11.6 n'a pas pu voir.** Son test cherchait la clôture M5 de QC **parmi les cinq
+minutes du bin** de référence, et trouvait au mieux la minute de rang +4 (144/316, résidu médian
+0,172 $, 3 exacts). La bonne réponse était **juste en dehors du bin**, au rang **+5** :
+
+| minute du parquet testée | +0 | +1 | +2 | +3 | +4 | **+5** | +6 |
+|---|---|---|---|---|---|---|---|
+| écart absolu médian vs `c=` | 0,9625 | 0,8750 | 0,6850 | 0,4900 | 0,3250 | **0,0000** | 0,3950 |
+| clôtures exactes (< 5·10⁻⁴) | 0 | 0 | 0 | 1 | 2 | **316 / 316** | 2 |
+
+**316 tags sur 316**, au centime près. Il n'y a pas de marge d'interprétation.
+
+**Le mécanisme, en trois lignes.** LEAN date une barre M1 de sa **clôture** (`end_time`), et
+c'est cette datation que porte `data/XAU-USD_minute_qc.parquet`. Le portage QC range les minutes
+par leur **début** (`minute_index(self.utc_time) − 1`, correctif v4 du §11.3), et MT5 fait de
+même (`iTime` est une heure d'ouverture, §9.1). La référence Python, elle, traite l'index du
+parquet **comme un début de barre** :
+
+| moteur | bin M5 étiqueté `b` couvre, en temps réel | sa clôture est le prix à |
+|---|---|---|
+| QC et MT5 | `[b, b+5 min)` | `b + 5 min` |
+| **référence Python** | **`[b−1 min, b+4 min)`** | **`b + 4 min`** |
+
+Une minute d'écart, sur **toutes** les barres. Le test « décalage de `k` **barres M5** » du
+§11.6 ne pouvait pas l'attraper : le décalage n'est pas un multiple de cinq minutes.
+
+**Le test.** La référence est rejouée sur 2024 (centre de la grille, spread 0,29 $, capital
+10 000) avec l'index du parquet **décalé de −1 minute**, puis réconciliée contre le **même**
+journal d'ordres v4 :
+
+```bash
+uv run python scripts/reconcile_x10_events.py \
+    --py-trades reports/qc_x10/py_trades_2024_P2.csv reports/qc_x10/py_trades_2024_P1.csv \
+    --qc-orders reports/qc_x10/x10_calage_2024_centre_v4_orders.json \
+    --qc-stats  reports/qc_x10/x10_calage_2024_centre_v4.json \
+    --py-stamp-shift-min -1 \
+    --campaign-start 2019-01-01 --campaign-end 2025-12-31 \
+    --out results/xau_x10/reconciliation_qc_2024.json
+```
+
+| barreau | quantité | référence actuelle | **index redaté (−1 min)** |
+|---|---|---|---|
+| 3/4 | entrées Python / QC | 305 / 316 | 317 / 316 |
+| 3/4 | **appariement Python → QC** | **33,1 %** | **98,7 %** (cible 98 % : **OK**) |
+| 3/4 | **appariement QC → Python** | **32,0 %** | **99,1 %** |
+| 3/4 | divergence **non attribuée** | **59,6 %** | **0,6 %** (blocage à 5 %) |
+| 2 | `bm` identique | 83 / 101 | **313 / 313** |
+| 2 | **clôture M5, écart médian** | **0,265 $** | **0,000 $** (max **0,000 $**) |
+| 2 | clôtures identiques à 10⁻⁶ | **1 / 101** | **313 / 313** |
+| 2 | **ATR, ratio QC/Python médian** | **0,9943** | **1,0000000** |
+| 2 | ATR identiques à 10⁻⁶ | 0 / 101 | 238 / 313 |
+| 2 | spread, ratio QC/Python | 1,53 × | 1,38 × (**inchangé**, écart 5/D7) |
+| 5 | R/trade Python / QC | −0,2379 / −0,2071 | −0,2076 / −0,2222 |
+| 5 | **écart de R par trade** | +0,1798 | **+0,0146** |
+| 5 | accord de raison de sortie | 99,0 % | **99,4 %** |
+
+Les 4 entrées Python orphelines restantes et les 3 orphelines QC sont du bord d'échantillon et
+du désaccord d'automate résiduel ; le spread reste à 1,38 × parce que c'est un autre écart,
+nommé et déjà mesuré au §11.7.
+
+**Le DXY subit le même décalage, et c'est vérifié.** `data/DXY4_h1.parquet` est agrégé depuis
+les parquets FX minute, dont il fallait établir la convention. `data/EUR-USD_minute.parquet` et
+`data/EUR-USD_minute_mt5.parquet` se recouvrent sur **61 175 minutes** en 2026, et l'export MT5
+est daté à l'ouverture (§9.1) :
+
+| décalage appliqué à l'export MT5 | −2 | −1 | 0 | **+1** | +2 |
+|---|---|---|---|---|---|
+| corrélation des rendements minute | 0,029 | 0,045 | 0,071 | **0,991** | 0,073 |
+
+**Les parquets FX sont datés à la clôture, comme celui de l'or** — certitude élevée : 0,991
+contre 0,07 partout ailleurs, sur 61 000 observations. Le test heuristique de la reprise
+hebdomadaire est cohérent mais moins net (première minute à **17:04** New York sur 431 dimanches
+sur 438, ce qui n'exclut pas des minutes creuses manquantes après un 17:00) ; c'est la
+corrélation qui porte la conclusion. Le rejeu applique donc `−1 min` **aussi** au DXY. Son effet
+reste de second ordre : il n'entre que par un signe, en H1, après `shift(1)`.
+
+**Sensibilité de la campagne à la convention** (centre de la grille, 2019 → 2025-12-31, spread
+0,29 $ — mesure de sensibilité, **aucune grille, aucun `log_trials`, aucune re-sélection**) :
+
+| | trades | espérance R | profit factor | équité finale |
+|---|---|---|---|---|
+| campagne officielle | 1 723 | **−0,1602** | 0,751 | 3 741,86 |
+| **index redaté (−1 min)** | **1 762** | **−0,1679** | 0,743 | 3 278,56 |
+
+**Le verdict ne bouge pas** : 39 trades de plus, 0,008 R de moins, et « NE PAS DÉPLOYER » reste
+« NE PAS DÉPLOYER ». La convention de datation a coûté une réconciliation, pas une conclusion.
+
+**Ce que cela implique pour la référence Python.**
+
+1. **Ses barres M5 sont bien décalées d'une minute** par rapport à l'horloge murale et par
+   rapport aux deux autres moteurs. La barre étiquetée `16:55` couvre en réalité
+   `[16:54, 16:59)`. §2 définit la grille sur l'horloge murale : c'est la référence qui a tort,
+   pas QC ni MT5.
+2. **Il n'y a AUCUN look-ahead.** Le bin étiqueté `b` se referme sur l'instant réel `b+4 min` ;
+   le fill a lieu à l'ouverture du bin suivant, dont la première minute du parquet est étiquetée
+   `b+5` et couvre `[b+4, b+5)` — son ouverture est le prix à l'instant `b+4 min`. **L'instant
+   de décision et l'instant de fill coïncident**, ce qui est exactement la sémantique voulue de
+   « fill à l'open de la barre suivante » (§9) : l'ouverture de la barre suivante *est* le prix
+   de l'instant où la précédente se ferme. Aucune information future n'entre dans la décision.
+   La même démonstration vaut, à l'identique, pour l'index redaté (`b+5` des deux côtés).
+   **C'est un décalage de grille, pas un défaut de causalité.**
+3. **Les fenêtres horaires sont décalées d'une minute, elles aussi.** `minute_of_day` est lu sur
+   l'étiquette du bin : la clôture de séance `[16:55, 18:00)` se déclenche sur une barre qui
+   couvre `16:54-16:59`, et la fenêtre interdite `[16:30, 18:15)` mord de `16:29` à `18:14`.
+   L'effet est d'une minute sur des bornes qui en font 85 et 105 : réel, mesurable, et sans
+   commune mesure avec le verdict.
+4. **Le parquet n'a pas besoin d'être ré-exporté.** C'est la principale conséquence pratique :
+   le chantier que le §11.6 ouvrait n'existe pas.
+
+Chiffres sous `summary_stamp_shift` et `variants.stamp_shift_minus_1min` de
+`results/xau_x10/reconciliation_qc_2024.json` ; registre rejoué dans
+`reports/qc_x10/py_trades_2024_stamp_shift.csv`. Les blocs `summary` et les deux variantes
+publiées auparavant sont **inchangés, mot pour mot**.
 
 ### 11.7 Le spread n'explique pas la divergence
 
