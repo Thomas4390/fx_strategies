@@ -1,7 +1,7 @@
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main.tex
+(./ApogeeInvest_Strategie1_GuidePedagogique.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -290,8 +290,8 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/colortbl/colortbl.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def)) (./main.aux
-)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_GuidePedagogique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -306,7 +306,7 @@ Package polyglossia Warning: Failed to patch part for French
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
 Overfull \hbox (6.0pt too wide) in paragraph at lines 103--116
 [][][][][][] 
-[1] (./main.toc
+[1] (./ApogeeInvest_Strategie1_GuidePedagogique.toc
 
 Package polyglossia Warning: Failed to patch part for French
 
@@ -469,18 +469,35 @@ ro_history.csv
 Overfull \hbox (6.31741pt too wide) in paragraph at lines 1413--1414
    [] \TU/LatinModernRoman(0)/m/sc/10.95 Ratio rendement excédentaire / volatil
 ité, indicateur d’efficacité d’uti-
-[32] [33] [34] (./main.aux)
+[32] [33]
+Overfull \hbox (89.18298pt too wide) in paragraph at lines 1471--1472
+[]\TU/LatinModernRoman(0)/b/n/10.95 Guide d’installation client \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 guide_installation/Apogee
+Invest_Strategie1_GuideInstallation.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) :
+
+Overfull \hbox (122.31404pt too wide) in paragraph at lines 1472--1473
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport exécutif \TU/LatinModernRoman(0)/m/
+sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeInvest_Strat
+egie1_FXMultiMoteurs_SyntheseExecutive.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) 
+:
+
+Overfull \hbox (176.99101pt too wide) in paragraph at lines 1473--1474
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport quantitatif complet \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeI
+nvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf\TU/LatinModernRoman(0)/m/s
+c/10.95 ) :
+[34] (./ApogeeInvest_Strategie1_GuidePedagogique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (34 pages).
-Transcript written on main.log.
+Output written on ApogeeInvest_Strategie1_GuidePedagogique.pdf (34 pages).
+Transcript written on ApogeeInvest_Strategie1_GuidePedagogique.log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main.tex
+(./ApogeeInvest_Strategie1_GuidePedagogique.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -769,8 +786,8 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/colortbl/colortbl.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def)) (./main.aux
-)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_GuidePedagogique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -785,7 +802,7 @@ Package polyglossia Warning: Failed to patch part for French
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
 Overfull \hbox (6.0pt too wide) in paragraph at lines 103--116
 [][][][][][] 
-[1] (./main.toc
+[1] (./ApogeeInvest_Strategie1_GuidePedagogique.toc
 
 Package polyglossia Warning: Failed to patch part for French
 
@@ -948,11 +965,28 @@ ro_history.csv
 Overfull \hbox (6.31741pt too wide) in paragraph at lines 1413--1414
    [] \TU/LatinModernRoman(0)/m/sc/10.95 Ratio rendement excédentaire / volatil
 ité, indicateur d’efficacité d’uti-
-[32] [33] [34] (./main.aux)
+[32] [33]
+Overfull \hbox (89.18298pt too wide) in paragraph at lines 1471--1472
+[]\TU/LatinModernRoman(0)/b/n/10.95 Guide d’installation client \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 guide_installation/Apogee
+Invest_Strategie1_GuideInstallation.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) :
+
+Overfull \hbox (122.31404pt too wide) in paragraph at lines 1472--1473
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport exécutif \TU/LatinModernRoman(0)/m/
+sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeInvest_Strat
+egie1_FXMultiMoteurs_SyntheseExecutive.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) 
+:
+
+Overfull \hbox (176.99101pt too wide) in paragraph at lines 1473--1474
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport quantitatif complet \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeI
+nvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf\TU/LatinModernRoman(0)/m/s
+c/10.95 ) :
+[34] (./ApogeeInvest_Strategie1_GuidePedagogique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (34 pages).
-Transcript written on main.log.
+Output written on ApogeeInvest_Strategie1_GuidePedagogique.pdf (34 pages).
+Transcript written on ApogeeInvest_Strategie1_GuidePedagogique.log.

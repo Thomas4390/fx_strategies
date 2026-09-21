@@ -21,7 +21,13 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _ROOT / "scripts" / "build_setup_guide_tables.py"
-_GUIDE = _ROOT / "reports" / "client" / "guide_installation" / "main.tex"
+_GUIDE = (
+    _ROOT
+    / "reports"
+    / "client"
+    / "guide_installation"
+    / "ApogeeInvest_Strategie1_GuideInstallation.tex"
+)
 
 
 def _load_generator():
@@ -109,7 +115,7 @@ def test_the_guide_includes_every_generated_table(gen):
     text = _GUIDE.read_text(encoding="utf-8")
     for stem, *_ in gen.TABLES:
         assert f"\\input{{tables/{stem}.tex}}" in text, (
-            f"{stem}.tex généré mais absent de main.tex"
+            f"{stem}.tex généré mais absent de {_GUIDE.name}"
         )
 
 
@@ -121,7 +127,7 @@ def test_the_guide_no_longer_hardcodes_parameter_values():
     text = _GUIDE.read_text(encoding="utf-8")
     hardcoded = re.findall(r"\\code\{(Inp(?:\\_\w+)+)\}\s*&\s*\\metric\{", text)
     assert not hardcoded, (
-        f"{len(hardcoded)} paramètre(s) encore codé(s) en dur dans main.tex : "
+        f"{len(hardcoded)} paramètre(s) encore codé(s) en dur dans {_GUIDE.name} : "
         f"{sorted(set(hardcoded))}. Ils doivent venir de tables/."
     )
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Figer les trades de la sleeve or d'un run MT5 dans le dépôt.
 
-Le rapport d'analyse des trades or (``main_gold_trades.tex``) descend au trade
+Le rapport d'analyse des trades or
+(``ApogeeInvest_Strategie1_AnalyseTrades_Or.tex``) descend au trade
 individuel. Ses deux sources vivent **hors du dépôt**, dans l'arborescence MT5,
 et sont écrasées au run suivant :
 

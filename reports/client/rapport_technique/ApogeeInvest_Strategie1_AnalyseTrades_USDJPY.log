@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  5 AUG 2026 15:27
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 10:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main_usdjpy_trades.tex
-(./main_usdjpy_trades.tex
+**ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex
+(./ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -1400,8 +1400,8 @@ Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count416
 ))
-(./main_usdjpy_trades.aux)
-\openout1 = `main_usdjpy_trades.aux'.
+(./ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.aux)
+\openout1 = `ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 24.
 LaTeX Font Info:    ... okay on input line 24.
@@ -1598,19 +1598,25 @@ LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 (Font)              scaled to size 7.8952pt on input line 95.
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
 (Font)              scaled to size 10.0pt on input line 98.
- [1
+
+Overfull \hbox (98.48766pt too wide) in paragraph at lines 94--99
+\TU/Inter(0)/m/n/10 isolé, sans rapport d’échelle avec le portefeuille client d
+u rapport \TU/LatinModernMono(0)/m/n/10 ApogeeInvest_Strategie1_FXMultiMoteurs_
+RapportTechnique.pdf\TU/Inter(0)/m/n/10 .[] 
+ []
+
+[1
 
 ]
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 (Font)              scaled to size 11.36908pt on input line 103.
-
-(./main_usdjpy_trades.toc
+ (./ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.toc
 
 Package polyglossia Warning: Failed to patch part for French
 
 )
 \tf@toc=\write4
-\openout4 = `main_usdjpy_trades.toc'.
+\openout4 = `ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.toc'.
 
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
 (Font)              scaled to size 7.10568pt on input line 104.
@@ -1708,7 +1714,7 @@ Overfull \hbox (37.83809pt too wide) in alignment at lines 11--49
 
 ) [22
 
-]) [23] (./main_usdjpy_trades.aux)
+]) [23] (./ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1720,11 +1726,11 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
  ) 
 Here is how much of TeX's memory you used:
  41725 strings out of 468173
- 957060 string characters out of 5435520
- 1548917 words of memory out of 5000000
+ 957502 string characters out of 5435520
+ 1548995 words of memory out of 5000000
  69797 multiletter control sequences out of 15000+600000
  636413 words of font info for 128 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11221b,1393s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11247b,1393s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main_usdjpy_trades.pdf (23 pages).
+Output written on ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.pdf (23 pages).

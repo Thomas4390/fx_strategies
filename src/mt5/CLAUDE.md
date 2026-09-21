@@ -32,10 +32,10 @@ Les six documents livrés au client vivent tous sous **`reports/client/`** (dép
 2026-08-05 ; `latex_report/`, `client_setup_guide/` et `client_pedagogical_guide/`
 n'existent plus à la racine de `reports/`) :
 
-- [`reports/client/guide_installation/main.pdf`](../../reports/client/guide_installation/main.pdf) — guide d'installation client, 16 pages. Sa table de paramètres est **générée** par `scripts/build_setup_guide_tables.py` depuis `bridge/write_default_preset.PRESET_LINES` — ne jamais l'éditer à la main.
-- [`reports/client/rapport_technique/main_executive.pdf`](../../reports/client/rapport_technique/main_executive.pdf) — synthèse exécutive, 11 pages (rapport investissement).
-- [`reports/client/rapport_technique/main.pdf`](../../reports/client/rapport_technique/main.pdf) — rapport technique complet, 73 pages, plus les deux analyses trade par trade (`main_gold_trades.pdf`, `main_usdjpy_trades.pdf`).
-- [`reports/client/guide_pedagogique/main.pdf`](../../reports/client/guide_pedagogique/main.pdf) — guide pédagogique, 34 pages.
+- [`reports/client/guide_installation/ApogeeInvest_Strategie1_GuideInstallation.pdf`](../../reports/client/guide_installation/ApogeeInvest_Strategie1_GuideInstallation.pdf) — guide d'installation client, 16 pages. Sa table de paramètres est **générée** par `scripts/build_setup_guide_tables.py` depuis `bridge/write_default_preset.PRESET_LINES` — ne jamais l'éditer à la main.
+- [`reports/client/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.pdf`](../../reports/client/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.pdf) — synthèse exécutive, 11 pages (rapport investissement).
+- [`reports/client/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf`](../../reports/client/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf) — rapport technique complet, 73 pages, plus les deux analyses trade par trade (`ApogeeInvest_Strategie1_AnalyseTrades_Or.pdf`, `ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.pdf`).
+- [`reports/client/guide_pedagogique/ApogeeInvest_Strategie1_GuidePedagogique.pdf`](../../reports/client/guide_pedagogique/ApogeeInvest_Strategie1_GuidePedagogique.pdf) — guide pédagogique, 34 pages.
 
 Tout chiffre publié dans ces six documents est contrôlé par
 `tests/test_livrables_coherence.py`, qui le confronte à `PRESET_LINES` et à

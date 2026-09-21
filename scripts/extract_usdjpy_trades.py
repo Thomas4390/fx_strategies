@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Figer les trades du candidat USD/JPY d'un run MT5 de recherche.
 
-Le rapport ``main_usdjpy_trades.tex`` descend au trade individuel sur la sleeve
-TSMOM (moteur or) portée sur ``USDJPY.c`` — le meilleur candidat du cycle
-d'expansion momentum 2026-H2 (``docs/research/momentum_expansion_2026H2.md``).
+Le rapport ``ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex`` descend au trade
+individuel sur la sleeve TSMOM (moteur or) portée sur ``USDJPY.c`` — le meilleur
+candidat du cycle d'expansion momentum 2026-H2
+(``docs/research/momentum_expansion_2026H2.md``).
 Ses deux sources vivent **hors du dépôt** :
 
 * le CSV par deal écrit par l'EA quand ``Inp_ExportDeals=true`` — il porte le

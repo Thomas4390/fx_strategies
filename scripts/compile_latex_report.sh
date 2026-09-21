@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Compile un des documents LaTeX livrés au client (xelatex, deux passes).
 #
-# Ce script était codé en dur sur reports/client/rapport_technique/main.tex. Les trois
+# Ce script était codé en dur sur le seul rapport technique. Les trois
 # autres livrables — la synthèse exécutive et les deux guides client — n'avaient
 # aucun script de compilation et ont été produits à la main, ce qui explique
 # qu'ils aient dérivé chacun de leur côté.
@@ -47,19 +47,19 @@ compile_one() {
 
 target="${1:-report}"
 case "$target" in
-    report)      compile_one "reports/client/rapport_technique" "main" ;;
-    executive)   compile_one "reports/client/rapport_technique" "main_executive" ;;
-    pedagogical) compile_one "reports/client/guide_pedagogique" "main" ;;
-    setup)       compile_one "reports/client/guide_installation" "main" ;;
-    goldtrades)  compile_one "reports/client/rapport_technique" "main_gold_trades" ;;
-    usdjpytrades) compile_one "reports/client/rapport_technique" "main_usdjpy_trades" ;;
+    report)      compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique" ;;
+    executive)   compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive" ;;
+    pedagogical) compile_one "reports/client/guide_pedagogique" "ApogeeInvest_Strategie1_GuidePedagogique" ;;
+    setup)       compile_one "reports/client/guide_installation" "ApogeeInvest_Strategie1_GuideInstallation" ;;
+    goldtrades)  compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_Or" ;;
+    usdjpytrades) compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_USDJPY" ;;
     all)
-        compile_one "reports/client/rapport_technique" "main"
-        compile_one "reports/client/rapport_technique" "main_executive"
-        compile_one "reports/client/guide_pedagogique" "main"
-        compile_one "reports/client/guide_installation" "main"
-        compile_one "reports/client/rapport_technique" "main_gold_trades"
-        compile_one "reports/client/rapport_technique" "main_usdjpy_trades"
+        compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique"
+        compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive"
+        compile_one "reports/client/guide_pedagogique" "ApogeeInvest_Strategie1_GuidePedagogique"
+        compile_one "reports/client/guide_installation" "ApogeeInvest_Strategie1_GuideInstallation"
+        compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_Or"
+        compile_one "reports/client/rapport_technique" "ApogeeInvest_Strategie1_AnalyseTrades_USDJPY"
         ;;
     *)
         echo "Cible inconnue : $target" >&2

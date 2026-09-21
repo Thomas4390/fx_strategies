@@ -1,7 +1,7 @@
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main_executive.tex
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -289,7 +289,7 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
-(./main_executive.aux)
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -388,9 +388,21 @@ Overfull \hbox (10.95pt too wide) in paragraph at lines 421--422
 Underfull \hbox (badness 10000) in paragraph at lines 421--422
 
 
-Underfull \hbox (badness 1189) in paragraph at lines 456--460
-\TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
-s, de la matrice de responsabilité
+Underfull \hbox (badness 1708) in paragraph at lines 456--460
+[]\TU/LatinModernRoman(0)/b/n/10.95 Ce document est une synthèse. \TU/LatinMode
+rnRoman(0)/m/sc/10.95 Pour la discussion approfondie de chaque
+
+Underfull \hbox (badness 3612) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 gate de déploiement, des dépendances entre m
+oteurs, de la matrice de res-
+
+Underfull \hbox (badness 10000) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 ponsabilité risk/ops/compliance et de la méc
+anique de reprise après inci-
+
+Underfull \hbox (badness 3068) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 dent, se référer aux sections 11 à 13 et à l
+’annexe B du rapport complet
 
 Overfull \hbox (10.95pt too wide) in paragraph at lines 468--469
 [][][] 
@@ -400,21 +412,23 @@ Underfull \hbox (badness 10000) in paragraph at lines 468--469
 
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 485--499
 [][][][][][] 
-
+[10]
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 502--517
 [][][][][][] 
-[10] [11] (./main_executive.aux)
+[11] (./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main_executive.pdf (11 pages).
-Transcript written on main_executive.log.
+Output written on ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.pdf 
+(11 pages).
+Transcript written on ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.
+log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main_executive.tex
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -702,7 +716,7 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
-(./main_executive.aux)
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -801,9 +815,21 @@ Overfull \hbox (10.95pt too wide) in paragraph at lines 421--422
 Underfull \hbox (badness 10000) in paragraph at lines 421--422
 
 
-Underfull \hbox (badness 1189) in paragraph at lines 456--460
-\TU/LatinModernRoman(0)/m/sc/10.95 de déploiement, des dépendances entre moteur
-s, de la matrice de responsabilité
+Underfull \hbox (badness 1708) in paragraph at lines 456--460
+[]\TU/LatinModernRoman(0)/b/n/10.95 Ce document est une synthèse. \TU/LatinMode
+rnRoman(0)/m/sc/10.95 Pour la discussion approfondie de chaque
+
+Underfull \hbox (badness 3612) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 gate de déploiement, des dépendances entre m
+oteurs, de la matrice de res-
+
+Underfull \hbox (badness 10000) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 ponsabilité risk/ops/compliance et de la méc
+anique de reprise après inci-
+
+Underfull \hbox (badness 3068) in paragraph at lines 456--460
+\TU/LatinModernRoman(0)/m/sc/10.95 dent, se référer aux sections 11 à 13 et à l
+’annexe B du rapport complet
 
 Overfull \hbox (10.95pt too wide) in paragraph at lines 468--469
 [][][] 
@@ -813,14 +839,16 @@ Underfull \hbox (badness 10000) in paragraph at lines 468--469
 
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 485--499
 [][][][][][] 
-
+[10]
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 502--517
 [][][][][][] 
-[10] [11] (./main_executive.aux)
+[11] (./ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main_executive.pdf (11 pages).
-Transcript written on main_executive.log.
+Output written on ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.pdf 
+(11 pages).
+Transcript written on ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.
+log.

@@ -44,12 +44,12 @@ from mt5.bridge.write_default_preset import PRESET_LINES  # noqa: E402
 # de reports/ est du matériau de travail.
 _CLIENT_ROOT = "reports/client"
 MAIN_DOCUMENTS: tuple[str, ...] = (
-    f"{_CLIENT_ROOT}/rapport_technique/main.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/main_executive.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/main_gold_trades.tex",
-    f"{_CLIENT_ROOT}/rapport_technique/main_usdjpy_trades.tex",
-    f"{_CLIENT_ROOT}/guide_installation/main.tex",
-    f"{_CLIENT_ROOT}/guide_pedagogique/main.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_FXMultiMoteurs_SyntheseExecutive.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_Or.tex",
+    f"{_CLIENT_ROOT}/rapport_technique/ApogeeInvest_Strategie1_AnalyseTrades_USDJPY.tex",
+    f"{_CLIENT_ROOT}/guide_installation/ApogeeInvest_Strategie1_GuideInstallation.tex",
+    f"{_CLIENT_ROOT}/guide_pedagogique/ApogeeInvest_Strategie1_GuidePedagogique.tex",
 )
 
 _MT5_REFERENCE = _ROOT / "results" / "production_report" / "mt5_reference.json"

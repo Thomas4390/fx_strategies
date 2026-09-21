@@ -1,11 +1,11 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex)
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main_executive.tex
-LaTeX2e <2023-11-01> patch level 1
-L3 programming layer <2024-01-22>
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
-Document Class: scrartcl 2023/07/07 v3.41 KOMA-Script document class (article)
+Document Class: scrartcl 2025/12/01 v3.49 KOMA-Script document class (article)
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrkbase.sty
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrbase.sty
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrlfile.sty
@@ -24,11 +24,8 @@ Document Class: scrartcl 2023/07/07 v3.41 KOMA-Script document class (article)
 (/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/polyglossia.sty
 (/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkvutils.tex)))
 (/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-latex.lde))
+(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-latex.ldf))
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-french.ldf)
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-english.ldf)
 (/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
@@ -57,8 +54,7 @@ For additional information on amsmath, use the `?' option.
 (/usr/share/texlive/texmf-dist/tex/latex/tools/multicol.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/multirow/multirow.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption-koma.sto))
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty))
 (/usr/share/texlive/texmf-dist/tex/latex/caption/subcaption.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/csquotes/csquotes.sty
@@ -79,7 +75,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 109.
+(scrartcl)              package `titlesec' on input line 127.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 
@@ -115,10 +111,11 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 130.
+(scrartcl)              package `fancyhdr' on input line 148.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex)
@@ -203,15 +200,7 @@ tex)
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65
 .sty)
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18
-.sty)) (/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
-(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty))
-(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
-Library (tcolorbox): 'tcbraster.code.tex' version '6.2.0'
-) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
-Library (tcolorbox): 'tcbskins.code.tex' version '6.2.0'
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
+.sty)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex))
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/math/pgfmath.sty
@@ -225,45 +214,58 @@ Library (tcolorbox): 'tcbskins.code.tex' version '6.2.0'
 )
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibrarytopaths.code.tex)))
+(/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty)
+(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
+(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty))
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '6.9.0'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzfill.image.sty
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzfill-common.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzlibraryfill.image.code.te
 x)) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskinsjigsaw.code.tex
-Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.9.0'
 )) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbbreakable.code.tex
-Library (tcolorbox): 'tcbbreakable.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbbreakable.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/pdfcol/pdfcol.sty))
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbhooks.code.tex
-Library (tcolorbox): 'tcbhooks.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbhooks.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbtheorems.code.tex
-Library (tcolorbox): 'tcbtheorems.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbtheorems.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbfitting.code.tex
-Library (tcolorbox): 'tcbfitting.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbfitting.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingsutf8.code.tex
-Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistings.code.tex
-Library (tcolorbox): 'tcblistings.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistings.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstpatch.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg))
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingscore.code.tex
-Library (tcolorbox): 'tcblistingscore.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistingscore.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbprocessing.code.tex
-Library (tcolorbox): 'tcbprocessing.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbprocessing.code.tex' version '6.9.0'
 )))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbexternal.code.tex
-Library (tcolorbox): 'tcbexternal.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbexternal.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbmagazine.code.tex
-Library (tcolorbox): 'tcbmagazine.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbmagazine.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbvignette.code.tex
-Library (tcolorbox): 'tcbvignette.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbvignette.code.tex' version '6.9.0'
 
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibraryfadings.code.tex
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryfadings.code
 .tex))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbposter.code.tex
-Library (tcolorbox): 'tcbposter.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbposter.code.tex' version '6.9.0'
 )) (/usr/share/texlive/texmf-dist/tex/latex/lettrine/lettrine.sty
-(/usr/share/texlive/texmf-dist/tex/latex/l3packages/xfp/xfp.sty)
 Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/latex/lettrine/lettrine.cfg))
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty
@@ -271,155 +273,279 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/pdfescape/pdfescape.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hycolor/hycolor.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/auxhook/auxhook.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 (/usr/share/texlive/texmf-dist/tex/latex/kvoptions/kvoptions.sty)))
+(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def)
 (/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/puenc.def)
 (/usr/share/texlive/texmf-dist/tex/latex/url/url.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/bitset/bitset.sty
-(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty))
-(/usr/share/texlive/texmf-dist/tex/latex/base/atbegshi-ltx.sty))
+(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty)))
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/hxetex.def
-(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
-(/usr/share/texlive/texmf-dist/tex/latex/base/atveryend-ltx.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
-(./main_executive.aux) (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
 (/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
-nary-english.trsl) (./main_executive.out) (./main_executive.out)
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+nary-french.trsl)
+(/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
+nary-english.trsl)
 
-Package polyglossia Warning: Failed to patch part for French on input line 10.
+Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 92--104
-[][][][][][] 
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 82--96
+ [][][][][][] 
 [1]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 116--117
-[][][] 
+Underfull \hbox (badness 10000) in paragraph at lines 110--112
 
-Underfull \hbox (badness 10000) in paragraph at lines 116--117
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.toc
 
+Package polyglossia Warning: Failed to patch part for French
+
+[1] [2]
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 11
-8.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 10
+4.
 
-(./tables/metrics_summary.tex
+) [3] (./sections/00_executive_summary.tex (./tables/mt5_reference.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 3.
 
 
+) [1] (./tables/mt5_by_sleeve.tex) [2] (./tables/mt5_yearly.tex))
+(./sections/01_introduction.tex
+Underfull \hbox (badness 3612) in paragraph at lines 10--10
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Univers d’investisse-
 
-Overfull \hbox (14.34846pt too wide) in paragraph at lines 5--16
+Underfull \hbox (badness 10000) in paragraph at lines 11--11
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Objectif de rende-
+[3] [4] [5]) (./sections/02_methodology.tex
+Overfull \hbox (44.62758pt too wide) in paragraph at lines 14--25
+ [] 
+[6]) (./sections/03_sleeve_mr_macro.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap L doesn't fit on page 7.
+(lettrine)                Missing vertical space: 31.65785pt. 
+(lettrine)                Reported on input line 4.
+
+[7]
+Overfull \hbox (0.13771pt too wide) in paragraph at lines 28--29
+[]\TU/LatinModernRoman(0)/b/n/10.95 Filtre session \TU/LatinModernRoman(0)/m/sc
+/10.95 : uniquement entre 8h et 16h UTC, correspondant au chevauchement Londres
+
+[8] [9] (./tables/trade_examples_mr_macro.tex))
+(./sections/04_sleeve_ts_momentum.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+[10] (./tables/trade_examples_ts_momentum.tex) [11])
+(./sections/05_sleeve_rsi_daily.tex [12]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+[13] (./tables/trade_examples_rsi_daily.tex))
+(./sections/06_sleeve_gold_momentum.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap L doesn't fit on page 14.
+(lettrine)                Missing vertical space: 60.77391pt. 
+(lettrine)                Reported on input line 4.
+
+[14] [15]
+Overfull \hbox (1.85715pt too wide) in paragraph at lines 23--32
+ [] 
+[16] [17] [18] [19] [20]
+Overfull \hbox (3.60478pt too wide) in paragraph at lines 160--172
+ [] 
+
+Overfull \hbox (1.55493pt too wide) in paragraph at lines 181--193
+ [] 
+[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24] [25])
+(./sections/06b_research_vs_execution.tex
+Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Plutôt que de réconcilier deux définitions
+ incompatibles, un facteur d’échelle unique (\TU/LatinModernMono(0)/m/n/10.95 I
+np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
+[26]) (./sections/06_overlay_layer.tex [27] [28] (./tables/sensitivity.tex)
+(./tables/leverage_impact.tex
+Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
-) [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 157--158
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 157--158
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 175--176
-[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion intraday
-
-Underfull \hbox (badness 7256) in paragraph at lines 177--178
-\TU/LatinModernRoman(0)/m/n/10 trois paires (EUR, GBP,
-
-Underfull \hbox (badness 5563) in paragraph at lines 177--178
-\TU/LatinModernRoman(0)/m/n/10 10%. USD-CAD explicite-
-
-Underfull \hbox (badness 10000) in paragraph at lines 179--180
-\TU/LatinModernRoman(0)/m/n/10 sur quatre paires equal-
-
-Underfull \hbox (badness 6188) in paragraph at lines 179--180
-\TU/LatinModernRoman(0)/m/n/10 weight. Sharpe standalone
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 209--210
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 209--210
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 234--235
-
-
-Overfull \hbox (13.38089pt too wide) in paragraph at lines 217--242
-[]$[]$ $[]$ 
-(./tables/walkforward_yearly.tex) [4] [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 252--253
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 252--253
-
-(./tables/bootstrap_percentiles.tex) [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 285--286
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 285--286
-
+[29]) [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
+ [][] 
+) (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
+[32]) (./sections/08_out_of_sample.tex [33]
+Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
+ [] 
+[34] [35]) (./sections/09_stress_test.tex [36] [37]
+(./tables/bootstrap_percentiles.tex) [38])
+(./sections/10_advanced_robustness.tex [39]
+(./tables/robustness_bootstrap_ci.tex
+Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
+ [][] 
+) [40] [41] (./tables/robustness_overfitting.tex) [42] [43] [44] [45]
+(./tables/robustness_arch_tests.tex) [46]
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (64.41673pt too wide) in paragraph at lines 5--18
+Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
-) [7] [8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 320--321
-[][][] 
+) [47] [48]) (./sections/11_scenarios.tex (./tables/scenarios.tex) [49])
+(./sections/12_limitations.tex [50] [51] [52]
+Underfull \hbox (badness 1314) in paragraph at lines 94--95
+[]|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
 
-Underfull \hbox (badness 10000) in paragraph at lines 320--321
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
+[]|\TU/LatinModernRoman(0)/m/n/10 Paramètre unique, abais-
 
-[9]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 344--345
-[][][] 
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
+\TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
+[53]) (./sections/13_production_checklist.tex
+Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
+[]\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
+dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
+[54]) (./sections/appendix_a_inventory.tex [55] [56])
+(./sections/appendix_b_trade_walkthrough.tex [57])
+(./sections/appendix_c_weight_sensitivity.tex
+Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
+risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
+10.95 37$\TU/LatinModernRoman(0)/m/sc/10.95 , $[] \OT1/cmr/m/n/10.95 =
+[58]
+Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
+[]\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
+(0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
+95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
+ $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
+1/cmr/m/n/10.95 ) :
+(./tables/weight_sensitivity_named.tex) [59]
 
-Underfull \hbox (badness 10000) in paragraph at lines 344--345
-
-[10]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 386--387
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 386--387
-
-[11]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 434--435
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 434--435
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 450--463
-[][][][][][] 
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 466--481
-[][][][][][] 
-[12] (./main_executive.aux)
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+(./tables/weight_sensitivity_extremes.tex) [60] [61]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\times' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+[62]) (./sections/appendix_d_robustness_methodology.tex [63]
+
+LaTeX Font Warning: Font shape `TU/Inter(0)/b/sc' undefined
+(Font)              using `TU/Inter(0)/b/n' instead on input line 34.
+
+
+Overfull \hbox (39.55191pt too wide) in paragraph at lines 41--42
+[] []\TU/LatinModernRoman(0)/b/sc/10.95 Principe.[] \TU/LatinModernRoman(0)/m/s
+c/10.95 Pour estimer la distribution d’échantillonnage d’une statistique sur un
+e série $\OMS/cmsy/m/n/10.95 f\OML/cmm/m/it/10.95 r[]; r[]; [] ; r[]\OMS/cmsy/m
+/n/10.95 g$\TU/LatinModernRoman(0)/m/sc/10.95 ,
+
+Overfull \hbox (13.167pt too wide) in paragraph at lines 41--42
+\TU/LatinModernRoman(0)/m/sc/10.95 de chaque bloc est tirée selon une loi géomé
+trique de moyenne $\OML/cmm/m/it/10.95 L$ \TU/LatinModernRoman(0)/m/sc/10.95 (p
+aramètre \TU/LatinModernMono(0)/m/n/10.95 block_len_mean = 20
+[64] [65] [66] [67]
+Overfull \hbox (89.63689pt too wide) in paragraph at lines 222--223
+\TU/LatinModernRoman(0)/m/sc/10.95 quet \TU/LatinModernMono(0)/m/n/10.95 arch \
+TU/LatinModernRoman(0)/m/sc/10.95 de Kevin Sheppard, licence NCSA). Voir \TU/La
+tinModernMono(0)/m/n/10.95 framework.statistical_testing.reality_check_via_arch
+
+) [68] [69] (./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
  )
 (see the transcript file for additional information)
-Output written on main_executive.pdf (12 pages).
-Transcript written on main_executive.log.
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex)
+Output written on ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf (
+73 pages).
+Transcript written on ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.l
+og.
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main_executive.tex
-LaTeX2e <2023-11-01> patch level 1
-L3 programming layer <2024-01-22>
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
-Document Class: scrartcl 2023/07/07 v3.41 KOMA-Script document class (article)
+Document Class: scrartcl 2025/12/01 v3.49 KOMA-Script document class (article)
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrkbase.sty
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrbase.sty
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrlfile.sty
@@ -438,11 +564,8 @@ Document Class: scrartcl 2023/07/07 v3.41 KOMA-Script document class (article)
 (/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/polyglossia.sty
 (/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkvutils.tex)))
 (/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-latex.lde))
+(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-latex.ldf))
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-french.ldf)
 (/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-english.ldf)
 (/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
@@ -471,8 +594,7 @@ For additional information on amsmath, use the `?' option.
 (/usr/share/texlive/texmf-dist/tex/latex/tools/multicol.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/multirow/multirow.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption-koma.sto))
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty))
 (/usr/share/texlive/texmf-dist/tex/latex/caption/subcaption.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/csquotes/csquotes.sty
@@ -493,7 +615,7 @@ nesformat
 (scrartcl)              and several others to re-configure section
 (scrartcl)              headings.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `titlesec' on input line 109.
+(scrartcl)              package `titlesec' on input line 127.
 
 (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
 
@@ -529,10 +651,11 @@ Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              `\addtokomafont' for the page style elements need
 (scrartcl)              explicite user intervention to work.
 (scrartcl)              Nevertheless, using requested
-(scrartcl)              package `fancyhdr' on input line 130.
+(scrartcl)              package `fancyhdr' on input line 148.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex)
@@ -617,15 +740,7 @@ tex)
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65
 .sty)
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18
-.sty)) (/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
-(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty))
-(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
-Library (tcolorbox): 'tcbraster.code.tex' version '6.2.0'
-) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
-Library (tcolorbox): 'tcbskins.code.tex' version '6.2.0'
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
+.sty)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex))
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/math/pgfmath.sty
@@ -639,45 +754,58 @@ Library (tcolorbox): 'tcbskins.code.tex' version '6.2.0'
 )
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibrarytopaths.code.tex)))
+(/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty)
+(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
+(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty))
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '6.9.0'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzfill.image.sty
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzfill-common.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/tikzfill/tikzlibraryfill.image.code.te
 x)) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskinsjigsaw.code.tex
-Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.9.0'
 )) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbbreakable.code.tex
-Library (tcolorbox): 'tcbbreakable.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbbreakable.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/pdfcol/pdfcol.sty))
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbhooks.code.tex
-Library (tcolorbox): 'tcbhooks.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbhooks.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbtheorems.code.tex
-Library (tcolorbox): 'tcbtheorems.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbtheorems.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbfitting.code.tex
-Library (tcolorbox): 'tcbfitting.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbfitting.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingsutf8.code.tex
-Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistings.code.tex
-Library (tcolorbox): 'tcblistings.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistings.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstpatch.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg))
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingscore.code.tex
-Library (tcolorbox): 'tcblistingscore.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcblistingscore.code.tex' version '6.9.0'
 (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbprocessing.code.tex
-Library (tcolorbox): 'tcbprocessing.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbprocessing.code.tex' version '6.9.0'
 )))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbexternal.code.tex
-Library (tcolorbox): 'tcbexternal.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbexternal.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbmagazine.code.tex
-Library (tcolorbox): 'tcbmagazine.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbmagazine.code.tex' version '6.9.0'
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbvignette.code.tex
-Library (tcolorbox): 'tcbvignette.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbvignette.code.tex' version '6.9.0'
 
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibraryfadings.code.tex
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryfadings.code
 .tex))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbposter.code.tex
-Library (tcolorbox): 'tcbposter.code.tex' version '6.2.0'
+Library (tcolorbox): 'tcbposter.code.tex' version '6.9.0'
 )) (/usr/share/texlive/texmf-dist/tex/latex/lettrine/lettrine.sty
-(/usr/share/texlive/texmf-dist/tex/latex/l3packages/xfp/xfp.sty)
 Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/latex/lettrine/lettrine.cfg))
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty
@@ -685,141 +813,268 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/pdfescape/pdfescape.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hycolor/hycolor.sty)
-(/usr/share/texlive/texmf-dist/tex/latex/auxhook/auxhook.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 (/usr/share/texlive/texmf-dist/tex/latex/kvoptions/kvoptions.sty)))
+(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def)
 (/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/puenc.def)
 (/usr/share/texlive/texmf-dist/tex/latex/url/url.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/bitset/bitset.sty
-(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty))
-(/usr/share/texlive/texmf-dist/tex/latex/base/atbegshi-ltx.sty))
+(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty)))
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/hxetex.def
-(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty)
 (/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
-(/usr/share/texlive/texmf-dist/tex/latex/base/atveryend-ltx.sty)
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
-(./main_executive.aux) (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
 (/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
-nary-english.trsl) (./main_executive.out) (./main_executive.out)
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+nary-french.trsl)
+(/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
+nary-english.trsl)
 
-Package polyglossia Warning: Failed to patch part for French on input line 10.
+Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 92--104
-[][][][][][] 
+Overfull \hbox (9.64635pt too wide) in paragraph at lines 82--96
+ [][][][][][] 
 [1]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 116--117
-[][][] 
+Underfull \hbox (badness 10000) in paragraph at lines 110--112
 
-Underfull \hbox (badness 10000) in paragraph at lines 116--117
+(./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.toc
 
+Package polyglossia Warning: Failed to patch part for French
+
+[1] [2]
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 11
-8.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 10
+4.
 
-(./tables/metrics_summary.tex
+) [3] (./sections/00_executive_summary.tex (./tables/mt5_reference.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 3.
 
 
+) [1] (./tables/mt5_by_sleeve.tex) [2] (./tables/mt5_yearly.tex))
+(./sections/01_introduction.tex
+Underfull \hbox (badness 3612) in paragraph at lines 10--10
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Univers d’investisse-
 
-Overfull \hbox (14.34846pt too wide) in paragraph at lines 5--16
+Underfull \hbox (badness 10000) in paragraph at lines 11--11
+[]|\TU/LatinModernRoman(0)/b/n/10.95 Objectif de rende-
+[3] [4] [5]) (./sections/02_methodology.tex
+Overfull \hbox (44.62758pt too wide) in paragraph at lines 14--25
+ [] 
+[6]) (./sections/03_sleeve_mr_macro.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap L doesn't fit on page 7.
+(lettrine)                Missing vertical space: 31.65785pt. 
+(lettrine)                Reported on input line 4.
+
+[7]
+Overfull \hbox (0.13771pt too wide) in paragraph at lines 28--29
+[]\TU/LatinModernRoman(0)/b/n/10.95 Filtre session \TU/LatinModernRoman(0)/m/sc
+/10.95 : uniquement entre 8h et 16h UTC, correspondant au chevauchement Londres
+
+[8] [9] (./tables/trade_examples_mr_macro.tex))
+(./sections/04_sleeve_ts_momentum.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+[10] (./tables/trade_examples_ts_momentum.tex) [11])
+(./sections/05_sleeve_rsi_daily.tex [12]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+[13] (./tables/trade_examples_rsi_daily.tex))
+(./sections/06_sleeve_gold_momentum.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 1.
+
+
+Package lettrine Warning: *** ATTENTION REQUIRED ***
+(lettrine)                The dropped cap L doesn't fit on page 14.
+(lettrine)                Missing vertical space: 60.77391pt. 
+(lettrine)                Reported on input line 4.
+
+[14] [15]
+Overfull \hbox (1.85715pt too wide) in paragraph at lines 23--32
+ [] 
+[16] [17] [18] [19] [20]
+Overfull \hbox (3.60478pt too wide) in paragraph at lines 160--172
+ [] 
+
+Overfull \hbox (1.55493pt too wide) in paragraph at lines 181--193
+ [] 
+[21] [22] [23] (./tables/trade_examples_gold_momentum.tex) [24] [25])
+(./sections/06b_research_vs_execution.tex
+Overfull \hbox (37.13168pt too wide) in paragraph at lines 26--27
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Plutôt que de réconcilier deux définitions
+ incompatibles, un facteur d’échelle unique (\TU/LatinModernMono(0)/m/n/10.95 I
+np_RiskScale\TU/LatinModernRoman(0)/m/sc/10.95 )
+[26]) (./sections/06_overlay_layer.tex [27] [28] (./tables/sensitivity.tex)
+(./tables/leverage_impact.tex
+Overfull \hbox (63.84981pt too wide) in paragraph at lines 5--14
  [][] 
-) [2]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 157--158
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 157--158
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 175--176
-[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion intraday
-
-Underfull \hbox (badness 7256) in paragraph at lines 177--178
-\TU/LatinModernRoman(0)/m/n/10 trois paires (EUR, GBP,
-
-Underfull \hbox (badness 5563) in paragraph at lines 177--178
-\TU/LatinModernRoman(0)/m/n/10 10%. USD-CAD explicite-
-
-Underfull \hbox (badness 10000) in paragraph at lines 179--180
-\TU/LatinModernRoman(0)/m/n/10 sur quatre paires equal-
-
-Underfull \hbox (badness 6188) in paragraph at lines 179--180
-\TU/LatinModernRoman(0)/m/n/10 weight. Sharpe standalone
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 209--210
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 209--210
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 234--235
-
-
-Overfull \hbox (13.38089pt too wide) in paragraph at lines 217--242
-[]$[]$ $[]$ 
-(./tables/walkforward_yearly.tex) [4] [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 252--253
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 252--253
-
-(./tables/bootstrap_percentiles.tex) [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 285--286
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 285--286
-
+[29]) [30]) (./sections/07_in_sample_results.tex (./tables/metrics_summary.tex
+Overfull \hbox (20.92941pt too wide) in paragraph at lines 5--16
+ [][] 
+) (./tables/sleeve_standalone.tex) [31] (./tables/walkforward_yearly.tex)
+[32]) (./sections/08_out_of_sample.tex [33]
+Overfull \hbox (60.88712pt too wide) in paragraph at lines 10--22
+ [] 
+[34] [35]) (./sections/09_stress_test.tex [36] [37]
+(./tables/bootstrap_percentiles.tex) [38])
+(./sections/10_advanced_robustness.tex [39]
+(./tables/robustness_bootstrap_ci.tex
+Overfull \hbox (31.92317pt too wide) in paragraph at lines 5--24
+ [][] 
+) [40] [41] (./tables/robustness_overfitting.tex) [42] [43] [44] [45]
+(./tables/robustness_arch_tests.tex) [46]
 (./tables/robustness_verdict_summary.tex
-Overfull \hbox (64.41673pt too wide) in paragraph at lines 5--18
+Overfull \hbox (39.0894pt too wide) in paragraph at lines 5--18
  [][] 
-) [7] [8]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 320--321
-[][][] 
+) [47] [48]) (./sections/11_scenarios.tex (./tables/scenarios.tex) [49])
+(./sections/12_limitations.tex [50] [51] [52]
+Underfull \hbox (badness 1314) in paragraph at lines 94--95
+[]|\TU/LatinModernRoman(0)/m/n/10 Tranche de données gelée,
 
-Underfull \hbox (badness 10000) in paragraph at lines 320--321
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
+[]|\TU/LatinModernRoman(0)/m/n/10 Paramètre unique, abais-
 
-[9]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 344--345
-[][][] 
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
+\TU/LatinModernRoman(0)/m/n/10 sable sans toucher aux
+[53]) (./sections/13_production_checklist.tex
+Overfull \hbox (4.70178pt too wide) in paragraph at lines 9--10
+[]\TU/LatinModernRoman(0)/b/n/10.95 Réserve de marge d’au moins 30% \TU/LatinMo
+dernRoman(0)/m/sc/10.95 en cash hors-broker, accessible en moins de 24 heures.
+[54]) (./sections/appendix_a_inventory.tex [55] [56])
+(./sections/appendix_b_trade_walkthrough.tex [57])
+(./sections/appendix_c_weight_sensitivity.tex
+Overfull \hbox (13.5965pt too wide) in paragraph at lines 12--13
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Le balayage est conduit sous la couche de 
+risque production ($[] \OT1/cmr/m/n/10.95 = 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
+10.95 37$\TU/LatinModernRoman(0)/m/sc/10.95 , $[] \OT1/cmr/m/n/10.95 =
+[58]
+Overfull \hbox (5.37994pt too wide) in paragraph at lines 21--22
+[]\TU/LatinModernRoman(0)/b/n/10.95 Maillage 2D du simplex \TU/LatinModernRoman
+(0)/m/sc/10.95 — grille régulière de pas $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.
+95 :\OT1/cmr/m/n/10.95 05$ \TU/LatinModernRoman(0)/m/sc/10.95 sur le 2-simplexe
+ $\OMS/cmsy/m/n/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 w[]; w[]; w[]\OT
+1/cmr/m/n/10.95 ) :
+(./tables/weight_sensitivity_named.tex) [59]
 
-Underfull \hbox (badness 10000) in paragraph at lines 344--345
-
-[10]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 386--387
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 386--387
-
-[11]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 434--435
-[][][] 
-
-Underfull \hbox (badness 10000) in paragraph at lines 434--435
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 450--463
-[][][][][][] 
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 466--481
-[][][][][][] 
-[12] (./main_executive.aux)
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\leavevmode@ifvmode' on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                \kern 1.82538pt
+(hyperref)                removed on input line 43.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 43.
+
+(./tables/weight_sensitivity_extremes.tex) [60] [61]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\times' on input line 65.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 65.
+
+[62]) (./sections/appendix_d_robustness_methodology.tex [63]
+
+LaTeX Font Warning: Font shape `TU/Inter(0)/b/sc' undefined
+(Font)              using `TU/Inter(0)/b/n' instead on input line 34.
+
+
+Overfull \hbox (39.55191pt too wide) in paragraph at lines 41--42
+[] []\TU/LatinModernRoman(0)/b/sc/10.95 Principe.[] \TU/LatinModernRoman(0)/m/s
+c/10.95 Pour estimer la distribution d’échantillonnage d’une statistique sur un
+e série $\OMS/cmsy/m/n/10.95 f\OML/cmm/m/it/10.95 r[]; r[]; [] ; r[]\OMS/cmsy/m
+/n/10.95 g$\TU/LatinModernRoman(0)/m/sc/10.95 ,
+
+Overfull \hbox (13.167pt too wide) in paragraph at lines 41--42
+\TU/LatinModernRoman(0)/m/sc/10.95 de chaque bloc est tirée selon une loi géomé
+trique de moyenne $\OML/cmm/m/it/10.95 L$ \TU/LatinModernRoman(0)/m/sc/10.95 (p
+aramètre \TU/LatinModernMono(0)/m/n/10.95 block_len_mean = 20
+[64] [65] [66] [67]
+Overfull \hbox (89.63689pt too wide) in paragraph at lines 222--223
+\TU/LatinModernRoman(0)/m/sc/10.95 quet \TU/LatinModernMono(0)/m/n/10.95 arch \
+TU/LatinModernRoman(0)/m/sc/10.95 de Kevin Sheppard, licence NCSA). Voir \TU/La
+tinModernMono(0)/m/n/10.95 framework.statistical_testing.reality_check_via_arch
+
+) [68] [69] (./ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main_executive.pdf (12 pages).
-Transcript written on main_executive.log.
+Output written on ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf (
+73 pages).
+Transcript written on ApogeeInvest_Strategie1_FXMultiMoteurs_RapportTechnique.l
+og.

@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  5 AUG 2026 15:26
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 10:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main.tex
-(./main.tex
+**ApogeeInvest_Strategie1_GuidePedagogique.tex
+(./ApogeeInvest_Strategie1_GuidePedagogique.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -1381,6 +1381,12 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip95
 ))
+(/usr/share/texlive/texmf-dist/tex/latex/colortbl/colortbl.sty
+Package: colortbl 2024/10/29 v1.0k Color table columns (DPC)
+\everycr=\toks50
+\minrowclearance=\skip96
+\rownum=\count416
+)
 Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'polyglossia' package.
 Package csquotes Info: Adjusting default style.
@@ -1392,46 +1398,47 @@ Class scrartcl Info: loading recommended package `bookmark'.
 (scrartcl)           `bookmarkpackage=false' before \begin{document} and
 (scrartcl)           you can avoid this message adding:
 (scrartcl)             \usepackage{bookmark}
-(scrartcl)           before \begin{document} on input line 20.
+(scrartcl)           before \begin{document} on input line 25.
 
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
 
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
-\BKM@id=\count416
-)) (./main.aux)
-\openout1 = `main.aux'.
+\BKM@id=\count417
+))
+(./ApogeeInvest_Strategie1_GuidePedagogique.aux)
+\openout1 = `ApogeeInvest_Strategie1_GuidePedagogique.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-Package scrbase Info: activating french \abstractname on input line 20.
-Package scrbase Info: activating french \partname on input line 20.
-Package scrbase Info: activating french \figurename on input line 20.
-Package scrbase Info: activating french \tablename on input line 20.
-Package scrbase Info: activating french \contentsname on input line 20.
-Package scrbase Info: activating french \listfigurename on input line 20.
-Package scrbase Info: activating french \listtablename on input line 20.
-Package scrbase Info: activating french \refname on input line 20.
-Package scrbase Info: activating french \indexname on input line 20.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+Package scrbase Info: activating french \abstractname on input line 25.
+Package scrbase Info: activating french \partname on input line 25.
+Package scrbase Info: activating french \figurename on input line 25.
+Package scrbase Info: activating french \tablename on input line 25.
+Package scrbase Info: activating french \contentsname on input line 25.
+Package scrbase Info: activating french \listfigurename on input line 25.
+Package scrbase Info: activating french \listtablename on input line 25.
+Package scrbase Info: activating french \refname on input line 25.
+Package scrbase Info: activating french \indexname on input line 25.
 
 Package fontspec Info: 
 (fontspec)             Adjusting the maths setup (use [no-math] to avoid
@@ -1439,65 +1446,65 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup6
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 20.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 20.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 20.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 20.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 20.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 20.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 20.
-LaTeX Font Info:    Redeclaring math accent \check on input line 20.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 20.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 20.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 20.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 20.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 20.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 25.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 25.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 25.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 25.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 25.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 25.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 25.
+LaTeX Font Info:    Redeclaring math accent \check on input line 25.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 25.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 25.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 25.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 25.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 25.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 20.
+(Font)              `operators' in the math version `normal' on input line 25.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> TU/LatinModernRoman(0)/m/n on input lin
-e 20.
+e 25.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 20.
+(Font)              `operators' in the math version `bold' on input line 25.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  OT1/cmr/bx/n --> TU/LatinModernRoman(0)/m/n on input li
-ne 20.
+ne 25.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  TU/LatinModernRoman(0)/m/n --> TU/LatinModernRoman(0)/m
-/n on input line 20.
+/n on input line 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 (Font)                  OT1/cmr/m/it --> TU/LatinModernRoman(0)/m/it on input l
-ine 20.
+ine 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
 (Font)                  OT1/cmr/bx/n --> TU/LatinModernRoman(0)/b/n on input li
-ne 20.
+ne 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/Inter(0)/m/n on input line 20.
+(Font)                  OT1/cmss/m/n --> TU/Inter(0)/m/n on input line 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
 (Font)                  OT1/cmtt/m/n --> TU/LatinModernMono(0)/m/n on input lin
-e 20.
+e 25.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  TU/LatinModernRoman(0)/m/n --> TU/LatinModernRoman(0)/b
-/n on input line 20.
+/n on input line 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> TU/LatinModernRoman(0)/b/it on input 
-line 20.
+line 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/Inter(0)/b/n on input line 20.
+(Font)                  OT1/cmss/bx/n --> TU/Inter(0)/b/n on input line 25.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> TU/LatinModernMono(0)/b/n on input lin
-e 20.
+e 25.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -1544,7 +1551,7 @@ File: translations-basic-dictionary-french.trsl (french translation file `trans
 lations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `french'. on input line 20.
+or `french'. on input line 25.
 
 (/usr/share/texlive/texmf-dist/tex/latex/translations/translations-basic-dictio
 nary-english.trsl
@@ -1552,11 +1559,11 @@ File: translations-basic-dictionary-english.trsl (english translation file `tra
 nslations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 20.
-\c@lstlisting=\count417
-Package tocbasic Info: setting babel extension for `lol' on input line 20.
-\scr@dte@lstlisting@maxnumwidth=\skip96
-Package hyperref Info: Link coloring ON on input line 20.
+or `english'. on input line 25.
+\c@lstlisting=\count418
+Package tocbasic Info: setting babel extension for `lol' on input line 25.
+\scr@dte@lstlisting@maxnumwidth=\skip97
+Package hyperref Info: Link coloring ON on input line 25.
 
 
 Package polyglossia Warning: Failed to patch part for French
@@ -1564,46 +1571,46 @@ Package polyglossia Warning: Failed to patch part for French
 File: ../../../docs/logo/apogee_invest_logo.jpeg Graphic file (type bmp)
 <../../../docs/logo/apogee_invest_logo.jpeg>
 LaTeX Font Info:    Font shape `TU/Inter(1)/m/n' will be
-(Font)              scaled to size 8.64523pt on input line 37.
+(Font)              scaled to size 8.64523pt on input line 42.
 LaTeX Font Info:    Font shape `TU/Inter(1)/b/n' will be
-(Font)              scaled to size 8.64523pt on input line 37.
+(Font)              scaled to size 8.64523pt on input line 42.
 LaTeX Font Info:    Font shape `TU/Inter(1)/m/n' will be
-(Font)              scaled to size 7.10568pt on input line 45.
+(Font)              scaled to size 7.10568pt on input line 50.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 8.64523pt on input line 49.
+(Font)              scaled to size 8.64523pt on input line 54.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 16.37465pt on input line 49.
+(Font)              scaled to size 16.37465pt on input line 54.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 16.37465pt on input line 49.
+(Font)              scaled to size 16.37465pt on input line 54.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 11.36908pt on input line 54.
+(Font)              scaled to size 11.36908pt on input line 59.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 11.36908pt on input line 54.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 64.
+(Font)              scaled to size 11.36908pt on input line 59.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 69.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 64.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 69.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 8.64523pt on input line 77.
+(Font)              scaled to size 8.64523pt on input line 82.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 7.8952pt on input line 86.
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.8952pt on input line 90.
-LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 7.10568pt on input line 106.
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.10568pt on input line 106.
+(Font)              scaled to size 7.8952pt on input line 93.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 7.10568pt on input line 106.
+(Font)              scaled to size 7.8952pt on input line 94.
+LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
+(Font)              scaled to size 7.10568pt on input line 115.
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
+(Font)              scaled to size 7.10568pt on input line 115.
+LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
+(Font)              scaled to size 7.10568pt on input line 115.
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 94--107
+Overfull \hbox (6.0pt too wide) in paragraph at lines 103--116
 [][][][][][] 
  []
 
@@ -1611,434 +1618,321 @@ Overfull \hbox (9.64635pt too wide) in paragraph at lines 94--107
 
 ]
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 11.36908pt on input line 117.
+(Font)              scaled to size 11.36908pt on input line 124.
+ (./ApogeeInvest_Strategie1_GuidePedagogique.toc
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 119--120
-[][][] 
- []
+Package polyglossia Warning: Failed to patch part for French
 
+[2])
+\tf@toc=\write4
+\openout4 = `ApogeeInvest_Strategie1_GuidePedagogique.toc'.
 
-Underfull \hbox (badness 10000) in paragraph at lines 119--120
-
- []
 
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 12
-1.
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 13
+3.
 
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.26611pt (F);
-(lettrine.sty)             reported on input line 121.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 128.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 128.
-
-Underfull \hbox (badness 4582) in paragraph at lines 144--146
-\TU/LatinModernRoman(0)/m/n/10 la déviation VWAP,
+(lettrine.sty)             reported on input line 133.
+LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
+(Font)              scaled to size 9.47424pt on input line 135.
+LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
+(Font)              scaled to size 9.47424pt on input line 135.
+[3] [4]
+Underfull \hbox (badness 1142) in paragraph at lines 224--224
+[]|\TU/LatinModernRoman(0)/m/n/9 VWAP + Bollinger
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-[]|\TU/LatinModernRoman(0)/m/n/10 Suivi de tendance
+Underfull \hbox (badness 10000) in paragraph at lines 224--224
+[]|\TU/LatinModernRoman(0)/m/n/9 EMA 20/50 +
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-\TU/LatinModernRoman(0)/m/n/10 daily sur 3 paires
+Underfull \hbox (badness 1571) in paragraph at lines 224--225
+[]|\TU/LatinModernRoman(0)/m/n/9 Ensemble de signes
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-\TU/LatinModernRoman(0)/m/n/10 (EUR, GBP, JPY),
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+[]|\TU/LatinModernRoman(0)/m/n/9 EUR/USD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-\TU/LatinModernRoman(0)/m/n/10 RSI(7), vol-targeting
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+\TU/LatinModernRoman(0)/m/n/9 GBP/USD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-\TU/LatinModernRoman(0)/m/n/10 par paire à $\OT1/cmr/m/n/10 10 []$\TU/LatinMode
-rnRoman(0)/m/n/10 .
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+\TU/LatinModernRoman(0)/m/n/9 USD/JPY,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--149
-\TU/LatinModernRoman(0)/m/n/10 USD/CAD explicite-
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+[]|\TU/LatinModernRoman(0)/m/n/9 EUR/USD,
  []
 
 
-Underfull \hbox (badness 1577) in paragraph at lines 150--152
-[]|\TU/LatinModernRoman(0)/m/n/10 Mean reversion daily
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+\TU/LatinModernRoman(0)/m/n/9 GBP/USD,
  []
 
 
-Underfull \hbox (badness 1178) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 RSI(14) sur 3 paires
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+[]|\TU/LatinModernRoman(0)/m/n/9 EUR/USD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 equal-weight (EUR,
+Underfull \hbox (badness 10000) in paragraph at lines 225--225
+\TU/LatinModernRoman(0)/m/n/9 GBP/USD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 GBP, CAD), over-
+Underfull \hbox (badness 10000) in paragraph at lines 225--226
+[]|\TU/LatinModernRoman(0)/m/n/9 XAU/USD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 sold/overbought
+Underfull \hbox (badness 10000) in paragraph at lines 225--226
+\TU/LatinModernRoman(0)/m/n/9 USD/JPY,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 25/75, exit à 50.
+Underfull \hbox (badness 3590) in paragraph at lines 226--226
+[]|\TU/LatinModernRoman(0)/m/n/9 Session 8-16 UTC,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 150--152
-\TU/LatinModernRoman(0)/m/n/10 Sleeve diversificateur
+Underfull \hbox (badness 10000) in paragraph at lines 226--227
+[]|\TU/LatinModernRoman(0)/m/n/9 Long-only, séance
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 ly sur XAU/USD,
+Underfull \hbox (badness 10000) in paragraph at lines 227--227
+[]|\TU/LatinModernRoman(0)/m/n/9 Stop, take-profit,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 USD/JPY et
+Underfull \hbox (badness 1502) in paragraph at lines 227--227
+\TU/LatinModernRoman(0)/m/n/9 time-stop 6h, EOD
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 XAG/USD (bud-
+Underfull \hbox (badness 10000) in paragraph at lines 227--228
+[]|\TU/LatinModernRoman(0)/m/n/9 Ensemble redevenu
  []
 
 
-Underfull \hbox (badness 5893) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 get réparti à parts
+Underfull \hbox (badness 10000) in paragraph at lines 227--228
+\TU/LatinModernRoman(0)/m/n/9 négatif; stop de
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 égales), vote de
+Underfull \hbox (badness 10000) in paragraph at lines 230--230
+[]|\TU/LatinModernRoman(0)/m/n/9 Part du P&L
  []
 
 
-Underfull \hbox (badness 1796) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 signe sur 4 horizons
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 (40/60/120/250
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 153--156
-\TU/LatinModernRoman(0)/m/n/10 séances), long-only,
- []
-
-
-Overfull \hbox (53.44687pt too wide) in paragraph at lines 134--157
+Overfull \hbox (0.16626pt too wide) in paragraph at lines 216--233
  [] 
  []
 
-[2
-
-]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 207--208
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 207--208
-
- []
-
-
-LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
-(Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 222
-.
-
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
-(Font)              scaled to size 10.0pt on input line 222.
-[3]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 271--272
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 271--272
-
- []
-
-LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 9.47424pt on input line 273.
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 9.47424pt on input line 273.
-
-Overfull \hbox (24.89749pt too wide) in paragraph at lines 284--286
-[]\TU/LatinModernRoman(0)/m/sc/10.95 Confirmer dans \TU/LatinModernMono(0)/b/n/
-10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Options $\OMS/cmsy
-/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Server \TU/LatinModernRoman(0)/m/sc/10
-.95 que le serveur indique bien \TU/LatinModernMono(0)/b/n/10 SquaredFinancialS
-C-MT5
- []
-
-LaTeX Font Info:    Font shape `TU/Inter(0)/b/it' will be
-(Font)              scaled to size 9.47424pt on input line 294.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
-(Font)              scaled to size 10.95pt on input line 335.
-[4]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 348--349
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 348--349
-
- []
-
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
-(Font)              scaled to size 12.0pt on input line 382.
-
-Overfull \hbox (15.42374pt too wide) in paragraph at lines 390--392
-[]\TU/LatinModernRoman(0)/m/sc/10.95 Installer Python 3.10$\OT1/cmr/m/n/10.95 +
-$ \TU/LatinModernRoman(0)/m/sc/10.95 et la dépendance requise : \TU/LatinModern
-Mono(0)/b/n/10 pip install pandas requests python-dotenv\TU/LatinModernRoman(0)
-/m/sc/10.95 . 
- []
-
 [5]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 420--421
-[][][] 
- []
+File: figures/equity_combined_logscale.png Graphic file (type bmp)
+<figures/equity_combined_logscale.png>
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 420--421
-
- []
+LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
+(Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 26
+6.
 
 [6]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 490--491
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 490--491
-
- []
-
-(./tables/params_alloc.tex
-Underfull \hbox (badness 10000) in paragraph at lines 18--19
-[]|\TU/LatinModernRoman(0)/m/n/10 Seuil de repli relatif, utilisé seulement si
- []
-
-[7]) (./tables/params_voltarget.tex) (./tables/params_sleeve_mr.tex [8])
-[9] (./tables/params_sleeve_ts.tex) (./tables/params_sleeve_rsi.tex)
-(./tables/params_sleeve_gold.tex
-Underfull \hbox (badness 10000) in paragraph at lines 9--9
-[]|[]\TU/LatinModernRoman(0)/b/n/10 XAUUSD,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 9--9
-\TU/LatinModernRoman(0)/b/n/10 USDJPY,
- []
-
-[10
-
-]) (./tables/params_ops.tex
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 9.0pt on input line 7.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
-(Font)              scaled to size 9.0pt on input line 7.
+(Font)              scaled to size 10.95pt on input line 309.
+ [7]
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 348.
 
-Underfull \hbox (badness 2828) in paragraph at lines 18--19
-[]|\TU/LatinModernRoman(0)/m/n/10 Heure UTC du recalcul journalier (vol-
+Overfull \hbox (3.01082pt too wide) in paragraph at lines 352--352
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_SessionStart| 
  []
 
 
-Underfull \hbox (badness 5302) in paragraph at lines 22--23
-[]|\TU/LatinModernRoman(0)/m/n/10 Lecture dans \TU/LatinModernMono(0)/b/n/10 Co
-mmon\Files \TU/LatinModernRoman(0)/m/n/10 plutôt que
- []
-
-[11])
-Overfull \hbox (10.95pt too wide) in paragraph at lines 576--577
-[][][] 
+Underfull \hbox (badness 1735) in paragraph at lines 353--354
+[]|\TU/LatinModernRoman(0)/m/n/10 Heure UTC de fin. Couvre l’overlap Londres /
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 576--577
-
- []
-
-[12]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 648--649
-[][][] 
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 354--354
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_TimeStopHours| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 648--649
-
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 355--355
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_ForcedCloseHr| 
  []
 
 
-Overfull \hbox (11.23999pt too wide) in paragraph at lines 653--655
-[]\TU/LatinModernRoman(0)/m/sc/10.95 Activer le trading algo global : \TU/Latin
-ModernMono(0)/b/n/10 Outils $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 
-Options $\OMS/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Expert Advisors $\OM
-S/cmsy/m/n/10 !$ \TU/LatinModernMono(0)/b/n/10 Allow Algo Trading
- []
-
-[13]
-Overfull \hbox (1.0441pt too wide) in paragraph at lines 686--686
-[]|\TU/LatinModernRoman(0)/b/n/10 #| 
+Overfull \hbox (3.01082pt too wide) in paragraph at lines 356--356
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_SpreadThresh| 
  []
 
 
-Overfull \hbox (10.95pt too wide) in paragraph at lines 707--708
-[][][] 
+Underfull \hbox (badness 10000) in paragraph at lines 357--357
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_NewsFilter-
+ []
+
+[8]
+File: figures/sleeve_mr_macro_equity.png Graphic file (type bmp)
+<figures/sleeve_mr_macro_equity.png>
+ [9] [10]
+Overfull \hbox (3.96658pt too wide) in paragraph at lines 416--417
+[]\TU/LatinModernRoman(0)/b/n/10.95 Sizing par paire à volatilité ciblée \TU/La
+tinModernRoman(0)/m/sc/10.95 : le levier appliqué à chaque paire est $[]\OT1/cm
+r/m/n/10.95 (0[]10 / \OML/cmm/m/it/10.95 ^^[[];  \OT1/cmr/m/n/10.95 3)$\TU/Lati
+nModernRoman(0)/m/sc/10.95 ,
+ []
+
+[11]
+File: figures/sleeve_ts_momentum_3p_equity.png Graphic file (type bmp)
+<figures/sleeve_ts_momentum_3p_equity.png>
+ [12] [13] [14]
+Overfull \hbox (8.26082pt too wide) in paragraph at lines 566--566
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_RSI_TimeStopDays| 
+ []
+
+File: figures/sleeve_rsi_daily_3p_equity.png Graphic file (type bmp)
+<figures/sleeve_rsi_daily_3p_equity.png>
+[15] [16]
+Underfull \hbox (badness 10000) in paragraph at lines 672--672
+[]|\TU/LatinModernMono(0)/m/n/10 XAUUSD,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 707--708
-
+Underfull \hbox (badness 10000) in paragraph at lines 672--672
+\TU/LatinModernMono(0)/m/n/10 USDJPY,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 715--715
-[]|\TU/LatinModernMono(0)/b/n/10 cannot add EURUSD
+Overfull \hbox (13.78516pt too wide) in paragraph at lines 673--673
+[]|$\OT1/cmr/m/n/10 40/60/120/250$| 
+ []
+
+File: figures/sleeve_gold_momentum_equity.png Graphic file (type bmp)
+<figures/sleeve_gold_momentum_equity.png>
+[17] [18] [19]
+File: figures/gold_sizing_martingale.png Graphic file (type bmp)
+<figures/gold_sizing_martingale.png>
+File: figures/gold_sizing_grid.png Graphic file (type bmp)
+<figures/gold_sizing_grid.png>
+ [20] [21]
+File: figures/gold_sizing_outcome.png Graphic file (type bmp)
+<figures/gold_sizing_outcome.png>
+ [22] [23]
+Overfull \hbox (51.05196pt too wide) in paragraph at lines 1012--1013
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Contrairement au disjoncteur de \TU/LatinM
+odernRoman(0)/m/it/10.95 drawdown\TU/LatinModernRoman(0)/m/sc/10.95 , ce mécani
+sme-ci est \TU/LatinModernRoman(0)/b/n/10.95 actif par défaut \TU/LatinModernRo
+man(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10 Inp_EnableMarginCap
+ []
+
+[24] [25]
+Overfull \hbox (10.04738pt too wide) in paragraph at lines 1095--1096
+[]\TU/LatinModernRoman(0)/m/sc/10.95 La stratégie modélise par défaut $\OT1/cmr
+/m/n/10.95 5$ \TU/LatinModernRoman(0)/m/sc/10.95 bps de commission par côté (\T
+U/LatinModernMono(0)/m/n/10 Inp_CommissionBpsPerSide=5,0\TU/LatinModernRoman(0)
+/m/sc/10.95 ),
+ []
+
+[26]
+Overfull \hbox (7.81992pt too wide) in paragraph at lines 1169--1169
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_AllocGoldMomentum| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 716--717
-[]|\TU/LatinModernRoman(0)/m/n/10 Modifier \TU/LatinModernMono(0)/b/n/10 Inp_Sy
-mbolSuffix
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 718--718
-[]|\TU/LatinModernMono(0)/b/n/10 WebRequest err=4014
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 718--718
-\TU/LatinModernRoman(0)/m/n/10 en boucle / \TU/LatinModernMono(0)/b/n/10 FRED f
-etch
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 719--720
-[]|\TU/LatinModernRoman(0)/m/n/10 URL
- []
-
-
-Overfull \hbox (8.4626pt too wide) in paragraph at lines 719--720
-\TU/LatinModernMono(0)/b/n/10 https://api.stlouisfed.org
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 721--723
-\TU/LatinModernRoman(0)/m/n/10 ré-attacher l’EA. Si ensuite
- []
-
-
-Underfull \hbox (badness 3525) in paragraph at lines 721--723
-\TU/LatinModernMono(0)/b/n/10 HTTP 400/403 \TU/LatinModernRoman(0)/m/n/10 : \TU
-/LatinModernRoman(0)/m/it/10 là \TU/LatinModernRoman(0)/m/n/10 c’est la clé
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 724--724
-[]|\TU/LatinModernMono(0)/b/n/10 cannot open
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 724--724
-\TU/LatinModernMono(0)/b/n/10 macro_history.csv
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 724--725
-[]|\TU/LatinModernRoman(0)/m/n/10 Fichier absent du
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 728--728
-[]|\TU/LatinModernMono(0)/b/n/10 loaded 70 rows \TU/LatinModernRoman(0)/m/n/10 
-dans le
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 729--732
-[]|\TU/LatinModernRoman(0)/m/n/10 Régénérer avec
- []
-
-
-Underfull \hbox (badness 2285) in paragraph at lines 739--739
-[]|\TU/LatinModernRoman(0)/m/it/10 Algo Trading \TU/LatinModernRoman(0)/m/n/10 
-désactivé ou
- []
-
-
-Underfull \hbox (badness 4156) in paragraph at lines 743--743
-[]|\TU/LatinModernRoman(0)/m/n/10 Configuration broker diffé-
- []
-
-
-Underfull \hbox (badness 1077) in paragraph at lines 744--746
-[]|\TU/LatinModernRoman(0)/m/n/10 Vérifier suffixe symbole, leverage,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 744--746
-\TU/LatinModernRoman(0)/m/n/10 modèle de simulation, \TU/LatinModernRoman(0)/m/
-it/10 Forward
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 750--751
-[]|\TU/LatinModernRoman(0)/m/n/10 Filtre fraîcheur macro
- []
-
-[14]
-Overfull \hbox (10.95pt too wide) in paragraph at lines 781--782
-[][][] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 781--782
+Underfull \hbox (badness 10000) in paragraph at lines 1173--1174
+[]|\TU/LatinModernRoman(0)/m/n/10 Seuil du coupe-circuit, utilisé uniquement si
 
  []
 
-[15]
-Overfull \hbox (41.5665pt too wide) in paragraph at lines 783--788
-[] []\TU/LatinModernRoman(0)/b/n/10.95 Reproductibilité.[] \TU/LatinModernRoman
-(0)/m/sc/10.95 Cette stratégie a été validée sur le broker SquaredFinancial Dem
-o, MT5 build 5836,
+[27]
+Overfull \hbox (7.81992pt too wide) in paragraph at lines 1190--1190
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_GlobalMaxLeverage| 
  []
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 806--820
-[][][][][][] 
+Overfull \hbox (17.87946pt too wide) in paragraph at lines 1209--1209
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_CommissionBpsPerSide| 
+ []
+
+[28]
+Overfull \hbox (12.18898pt too wide) in paragraph at lines 1226--1226
+[]|\TU/LatinModernMono(0)/m/n/10 Inp_MR_NewsFilterEnabled| 
  []
 
 
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 823--842
-[][][][][][] 
+Overfull \hbox (38.47542pt too wide) in paragraph at lines 1227--1227
+[]|\TU/LatinModernMono(0)/m/n/10 fred_api_key.txt| 
  []
 
-[16] (./main.aux)
+
+Overfull \hbox (43.72542pt too wide) in paragraph at lines 1228--1228
+[]|\TU/LatinModernMono(0)/m/n/10 macro_history.csv| 
+ []
+
+
+Underfull \hbox (badness 1762) in paragraph at lines 1272--1272
+[]|$\OML/cmm/m/it/10 > \OT1/cmr/m/n/10 1[]0$ \TU/LatinModernRoman(0)/m/n/10 acc
+ep-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1277--1277
+[]|$\OMS/cmsy/m/n/10 ^^X \OT1/cmr/m/n/10 900$ \TU/LatinModernRoman(0)/m/n/10 su
+r
+ []
+
+[29] [30]
+Overfull \hbox (59.78482pt too wide) in paragraph at lines 1355--1356
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Si l’API FRED est indisponible plus d’une 
+journée, régénérer manuellement le fichier \TU/LatinModernMono(0)/m/n/10.95 mac
+ro_history.csv
+ []
+
+[31]
+Overfull \hbox (6.31741pt too wide) in paragraph at lines 1413--1414
+   [] \TU/LatinModernRoman(0)/m/sc/10.95 Ratio rendement excédentaire / volatil
+ité, indicateur d’efficacité d’uti-
+ []
+
+[32] [33]
+Overfull \hbox (89.18298pt too wide) in paragraph at lines 1471--1472
+[]\TU/LatinModernRoman(0)/b/n/10.95 Guide d’installation client \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 guide_installation/Apogee
+Invest_Strategie1_GuideInstallation.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) :
+ []
+
+
+Overfull \hbox (122.31404pt too wide) in paragraph at lines 1472--1473
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport exécutif \TU/LatinModernRoman(0)/m/
+sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeInvest_Strat
+egie1_FXMultiMoteurs_SyntheseExecutive.pdf\TU/LatinModernRoman(0)/m/sc/10.95 ) 
+:
+ []
+
+
+Overfull \hbox (176.99101pt too wide) in paragraph at lines 1473--1474
+[]\TU/LatinModernRoman(0)/b/n/10.95 Rapport quantitatif complet \TU/LatinModern
+Roman(0)/m/sc/10.95 (\TU/LatinModernMono(0)/m/n/10.95 rapport_technique/ApogeeI
+nvest_Strategie1_FXMultiMoteurs_RapportTechnique.pdf\TU/LatinModernRoman(0)/m/s
+c/10.95 ) :
+ []
+
+[34] (./ApogeeInvest_Strategie1_GuidePedagogique.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -2049,12 +1943,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 41375 strings out of 468173
- 946200 string characters out of 5435520
- 1530049 words of memory out of 5000000
- 69464 multiletter control sequences out of 15000+600000
- 634940 words of font info for 131 fonts, out of 8000000 for 9000
+ 41685 strings out of 468173
+ 952826 string characters out of 5435520
+ 1537374 words of memory out of 5000000
+ 69774 multiletter control sequences out of 15000+600000
+ 636493 words of font info for 138 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11207b,1302s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11243b,1395s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (16 pages).
+Output written on ApogeeInvest_Strategie1_GuidePedagogique.pdf (34 pages).

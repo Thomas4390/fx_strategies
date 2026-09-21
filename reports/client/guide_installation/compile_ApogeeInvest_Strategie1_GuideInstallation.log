@@ -1,7 +1,7 @@
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main.tex
+(./ApogeeInvest_Strategie1_GuideInstallation.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -289,8 +289,8 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def)) (./main.aux
-)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_GuideInstallation.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -556,18 +556,18 @@ Overfull \hbox (9.64635pt too wide) in paragraph at lines 806--820
 
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 823--842
 [][][][][][] 
-[16] (./main.aux)
+[16] (./ApogeeInvest_Strategie1_GuideInstallation.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (16 pages).
-Transcript written on main.log.
+Output written on ApogeeInvest_Strategie1_GuideInstallation.pdf (16 pages).
+Transcript written on ApogeeInvest_Strategie1_GuideInstallation.log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
  restricted \write18 enabled.
 entering extended mode
-(./main.tex
+(./ApogeeInvest_Strategie1_GuideInstallation.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrartcl.cls
@@ -855,8 +855,8 @@ Loading lettrine.cfg
 (/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty))))
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
-(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def)) (./main.aux
-)
+(/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(./ApogeeInvest_Strategie1_GuideInstallation.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -1122,11 +1122,11 @@ Overfull \hbox (9.64635pt too wide) in paragraph at lines 806--820
 
 Overfull \hbox (9.64635pt too wide) in paragraph at lines 823--842
 [][][][][][] 
-[16] (./main.aux)
+[16] (./ApogeeInvest_Strategie1_GuideInstallation.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
 (see the transcript file for additional information)
-Output written on main.pdf (16 pages).
-Transcript written on main.log.
+Output written on ApogeeInvest_Strategie1_GuideInstallation.pdf (16 pages).
+Transcript written on ApogeeInvest_Strategie1_GuideInstallation.log.
