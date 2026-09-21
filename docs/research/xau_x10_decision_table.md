@@ -33,6 +33,27 @@ mention contraire.
 
 Un critère non mesuré vaut **échec**, jamais « non applicable ».
 
+### 1.1 Modèle de coût de la sélection — gelé le 2026-09-21, avant la campagne
+
+`costs_xau_intraday.yml` n'existe pas : le spread historique se mesure par un run du tester
+MT5 (`Inp_DumpBars`), et le terminal ne joint plus le serveur de démo du broker depuis au moins
+le 2026-08-05. La campagne ne l'attend pas. Règle écrite **avant** toute mesure :
+
+- **La sélection (grille, plateau, config retenue) se fait au spread constant de 0,29 $**,
+  relevé au catalogue broker du 2026-07-28 (`source: catalog_snapshot`). C'est le « spread ×1 »
+  de la table ci-dessus.
+- La sensibilité **×2** devient **obligatoire** et s'ajoute au ×1,5 (repli prévu au plan).
+- Si le spread mesuré devient disponible plus tard, il sert de **sensibilité supplémentaire
+  publiée**, jamais à re-sélectionner : la config retenue ne change pas.
+- Un spread constant est trop cher pour 2024-2026 (0,05 à 0,20 ATR) et trop bon marché en
+  heures creuses ; ce biais est une limite à publier, pas un motif de rejouer la grille.
+
+**Lecture déclarée.** Les runs de calage du 2026-09-21 au centre de la grille ont rendu des
+comptages d'événements, dont le nombre de sorties par raison (STOP / TARGET / TIME / SESSION).
+Ce n'est pas un P&L, mais ce n'est pas neutre. Aucun paramètre gelé n'a été modifié à la suite
+de cette lecture ; le centre de la grille est l'une des 27 configurations et sera logué avec
+elles.
+
 ## 2. Les trois verdicts
 
 Un seul verdict est prononcé, et il est prononcé une seule fois.
