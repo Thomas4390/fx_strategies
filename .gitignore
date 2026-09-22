@@ -30,6 +30,10 @@ results/production_report/*
 results/xau_x10/*
 !results/xau_x10/*.json
 !results/xau_x10/grid27.csv
+!results/xau_x10/v1_close_stamped/
+results/xau_x10/v1_close_stamped/*
+!results/xau_x10/v1_close_stamped/*.json
+!results/xau_x10/v1_close_stamped/*.csv
 
 # Sorties de recherche nichees (src/strategies/results/...). L'ancien motif
 # `results/` les couvrait par effet de bord ; le motif ancre ci-dessus ne le

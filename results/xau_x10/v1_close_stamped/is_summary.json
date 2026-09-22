@@ -1,0 +1,211 @@
+{
+  "strategy": "XAUUSD niveaux x10 (Apogée Invest, stratégie 2)",
+  "phase": "campagne in-sample officielle",
+  "date": "2026-09-21",
+  "git_head": "b0096acd428c5c7ee9c8b4d906b298a97e6e08da",
+  "spec": "docs/specs/xau_x10_spec.md",
+  "decision_table_doc": "docs/research/xau_x10_decision_table.md",
+  "holdout": {
+    "state": "LOCKED",
+    "touched_by_this_phase": false,
+    "m1_max": "2025-12-31 16:58:00",
+    "m5_max": "2025-12-31 16:55:00",
+    "session_max": "2025-12-31 00:00:00",
+    "holdout_start": "2026-01-01"
+  },
+  "sample": {
+    "start": "2019-01-01",
+    "end": "2025-12-31",
+    "n_m1_bars": 2503156,
+    "n_m5_bars": 502455,
+    "n_sessions": 1824
+  },
+  "cost_model": {
+    "spread_usd": 0.29,
+    "source": "catalog_snapshot 2026-07-28 (table §1.1)",
+    "constant": true,
+    "slippage_sensitivities_usd_per_side": [
+      0.0,
+      0.05,
+      0.1
+    ],
+    "spread_multipliers": [
+      1.0,
+      1.5,
+      2.0
+    ]
+  },
+  "frozen_parameters": {
+    "atr_period": 14,
+    "ema_h1_period": 50,
+    "v_horizon_bars": 3,
+    "m_horizon_bars": 12,
+    "v_min": 0.2,
+    "k_b": 0.25,
+    "n_arm": 12,
+    "n_hold": 3,
+    "n_sweep": 3,
+    "s_min": 0.3,
+    "rev_stop_atr": 0.5,
+    "r_min": 1.0,
+    "max_hold_bars": 48,
+    "cooldown_bars": 6,
+    "risk_frac": 0.005,
+    "risk_frac_dxy_adverse": 0.0025,
+    "leverage_cap": 100,
+    "init_cash": 10000.0
+  },
+  "grid": {
+    "z": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "a_min": [
+      0.1,
+      0.2,
+      0.3
+    ],
+    "k_s": [
+      0.75,
+      1.0,
+      1.5
+    ],
+    "n_configs": 27,
+    "returns_matrix_shape": [
+      1824,
+      27
+    ]
+  },
+  "n_trials_logged": 34,
+  "n_trials_used_for_deflation": 34,
+  "trial_budget_ceiling": 40,
+  "selection": {
+    "rule": "centre du plateau (table §3)",
+    "retained_config": null,
+    "n_passing_plateau": 0,
+    "peak_config": "z0.5_a0.3_k1.5",
+    "peak_sharpe_net": -1.1775539409150295,
+    "analysed_config": "z1_a0.2_k1",
+    "analysed_is_a_selection": false,
+    "analysed_sharpe_net": -1.6606853901686005,
+    "plateau_versus_peak": {
+      "peak_config": "z0.5_a0.3_k1.5",
+      "peak_sharpe": -1.1775539409150295,
+      "analysed_config": "z1_a0.2_k1",
+      "analysed_sharpe": -1.6606853901686005,
+      "sharpe_gap": -0.483131449253571
+    }
+  },
+  "headline_metrics": {
+    "sharpe_net_annualised_252": -1.6606853901686005,
+    "n_trades": 1723,
+    "expectancy_r": -0.16018528928042608,
+    "profit_factor": 0.7369067965330649,
+    "net_pnl_usd": -6258.136990833048,
+    "win_rate": 0.3116656993615786,
+    "max_drawdown": -0.6365918898510511
+  },
+  "decision_table": {
+    "criteria": {
+      "trades_in_sample": {
+        "label": "Trades in-sample 2019 → 2025-12-31",
+        "measured": 1723,
+        "threshold": ">= 300",
+        "pass": true,
+        "scenarios_with_enough_trades": [
+          "BREAK_LONG",
+          "BREAK_SHORT",
+          "REV_LONG",
+          "REV_SHORT"
+        ],
+        "note": "un scénario n'est commenté qu'à >= 40 trades"
+      },
+      "expectancy_and_profit_factor": {
+        "label": "Espérance nette / profit factor",
+        "measured": {
+          "expectancy_r": -0.16018528928042608,
+          "profit_factor": 0.7369067965330649
+        },
+        "threshold": ">= +0.1 R / >= 1.15",
+        "pass": false
+      },
+      "dsr": {
+        "label": "DSR (déflaté par distinct_trials(\"xau_x10\"))",
+        "measured": 0.0,
+        "threshold": ">= 0.95",
+        "pass": false,
+        "n_trials": 34
+      },
+      "pbo": {
+        "label": "PBO (CSCV, matrice 27 x jours)",
+        "measured": 0.41546231546231543,
+        "threshold": "<= 0.35",
+        "pass": false
+      },
+      "plateau": {
+        "label": "Plateau",
+        "measured": {
+          "share_neighbours_positive": 0.0,
+          "median_neighbour_sharpe": -1.6026125675422231,
+          "peak_sharpe": -1.1775539409150295,
+          "n_passing_plateau": 0
+        },
+        "threshold": ">= 60% voisins à Sharpe > 0 ; médiane des voisins >= 0.5 x pic",
+        "pass": false
+      },
+      "walk_forward": {
+        "label": "Walk-forward annuel",
+        "measured": {
+          "share_positive_years": 0.0,
+          "max_year_share_of_net": 0.34817177855071213
+        },
+        "threshold": ">= 60% d'années positives ; aucune année > 50% du net total",
+        "pass": false
+      },
+      "spread_x1_5": {
+        "label": "Spread x1,5",
+        "measured": -0.20116548160059064,
+        "threshold": "espérance > 0",
+        "pass": false
+      },
+      "mt5_model_1": {
+        "label": "MT5 modèle 1, 2022-11-04 → 2025-12-31",
+        "measured": "non mesuré",
+        "threshold": "espérance >= 0, même signe que Python",
+        "pass": false,
+        "note": "critère non mesuré = échec (table §1), jamais « non applicable »"
+      },
+      "oos_2026": {
+        "label": "OOS 2026, lecture unique",
+        "measured": "non mesuré",
+        "threshold": "n >= 30, sinon NON CONCLUANT",
+        "pass": false,
+        "note": "holdout LOCKED : aucune lecture n'a eu lieu dans cette phase"
+      }
+    },
+    "n_criteria": 9,
+    "n_passing": 1,
+    "failed": [
+      "dsr",
+      "expectancy_and_profit_factor",
+      "mt5_model_1",
+      "oos_2026",
+      "pbo",
+      "plateau",
+      "spread_x1_5",
+      "walk_forward"
+    ],
+    "failed_with_an_interpretable_measure": [
+      "dsr",
+      "expectancy_and_profit_factor",
+      "pbo",
+      "plateau",
+      "spread_x1_5",
+      "walk_forward"
+    ],
+    "provisional_in_sample_verdict": "NE PAS DÉPLOYER",
+    "verdict_scope": "PROVISOIRE, in-sample seul. La table §2 n'autorise qu'un seul verdict définitif, prononcé une seule fois, après MT5 et OOS."
+  },
+  "produced_by": "scripts/run_xau_x10_research.py"
+}

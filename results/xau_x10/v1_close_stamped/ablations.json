@@ -1,0 +1,233 @@
+{
+  "config": "z1_a0.2_k1",
+  "is_a_selection": false,
+  "spread": 0.29,
+  "n_trials_logged": 7,
+  "note": "la ligne (True, True, True) est la spec elle-même : elle n'est pas un essai d'ablation et compte déjà dans la grille des 27",
+  "runs": [
+    {
+      "use_ema": true,
+      "use_vwap": true,
+      "use_dxy": true,
+      "is_spec_baseline": true,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1723,
+      "expectancy_r": -0.16018528928042608,
+      "profit_factor": 0.7369067965330649,
+      "pnl": -6258.136990833048,
+      "win_rate": 0.3116656993615786,
+      "sharpe_net": -1.6606853901686005,
+      "max_drawdown": -0.6365918898510511,
+      "trades_per_scenario": {
+        "REV_SHORT": 553,
+        "REV_LONG": 513,
+        "BREAK_LONG": 377,
+        "BREAK_SHORT": 280
+      }
+    },
+    {
+      "use_ema": true,
+      "use_vwap": true,
+      "use_dxy": false,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1723,
+      "expectancy_r": -0.1601852892804256,
+      "profit_factor": 0.7271929788266467,
+      "pnl": -7256.593707550907,
+      "win_rate": 0.3116656993615786,
+      "sharpe_net": -1.7860979706931648,
+      "max_drawdown": -0.7305229914722629,
+      "trades_per_scenario": {
+        "REV_SHORT": 553,
+        "REV_LONG": 513,
+        "BREAK_LONG": 377,
+        "BREAK_SHORT": 280
+      }
+    },
+    {
+      "use_ema": true,
+      "use_vwap": false,
+      "use_dxy": true,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1803,
+      "expectancy_r": -0.1652742554999946,
+      "profit_factor": 0.7247431277027888,
+      "pnl": -6574.478451737017,
+      "win_rate": 0.3105934553521908,
+      "sharpe_net": -1.7812015332246651,
+      "max_drawdown": -0.6689262009495486,
+      "trades_per_scenario": {
+        "REV_SHORT": 553,
+        "REV_LONG": 510,
+        "BREAK_LONG": 433,
+        "BREAK_SHORT": 307
+      }
+    },
+    {
+      "use_ema": true,
+      "use_vwap": false,
+      "use_dxy": false,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1804,
+      "expectancy_r": -0.16462830970839404,
+      "profit_factor": 0.7136967106960553,
+      "pnl": -7613.433659830032,
+      "win_rate": 0.31097560975609756,
+      "sharpe_net": -1.9492512895805452,
+      "max_drawdown": -0.7651088237314871,
+      "trades_per_scenario": {
+        "REV_SHORT": 553,
+        "REV_LONG": 511,
+        "BREAK_LONG": 433,
+        "BREAK_SHORT": 307
+      }
+    },
+    {
+      "use_ema": false,
+      "use_vwap": true,
+      "use_dxy": true,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1909,
+      "expectancy_r": -0.16650468921578807,
+      "profit_factor": 0.7229533184830481,
+      "pnl": -6744.575177388291,
+      "win_rate": 0.3127291775798848,
+      "sharpe_net": -1.858623622513975,
+      "max_drawdown": -0.6821204962447129,
+      "trades_per_scenario": {
+        "REV_SHORT": 549,
+        "REV_LONG": 509,
+        "BREAK_LONG": 468,
+        "BREAK_SHORT": 383
+      }
+    },
+    {
+      "use_ema": false,
+      "use_vwap": true,
+      "use_dxy": false,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 1911,
+      "expectancy_r": -0.16633042373646947,
+      "profit_factor": 0.7085239440158022,
+      "pnl": -7780.226938134321,
+      "win_rate": 0.3129251700680272,
+      "sharpe_net": -2.0282608218373155,
+      "max_drawdown": -0.7809377377714957,
+      "trades_per_scenario": {
+        "REV_SHORT": 549,
+        "REV_LONG": 511,
+        "BREAK_LONG": 468,
+        "BREAK_SHORT": 383
+      }
+    },
+    {
+      "use_ema": false,
+      "use_vwap": false,
+      "use_dxy": true,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 2102,
+      "expectancy_r": -0.17223560495203888,
+      "profit_factor": 0.7085420569513563,
+      "pnl": -7122.264277019587,
+      "win_rate": 0.3106565176022835,
+      "sharpe_net": -2.0290824701379866,
+      "max_drawdown": -0.7165924873539046,
+      "trades_per_scenario": {
+        "BREAK_LONG": 581,
+        "REV_SHORT": 541,
+        "REV_LONG": 501,
+        "BREAK_SHORT": 479
+      }
+    },
+    {
+      "use_ema": false,
+      "use_vwap": false,
+      "use_dxy": false,
+      "is_spec_baseline": false,
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "config": "z1_a0.2_k1",
+      "z": 1.0,
+      "a_min": 0.2,
+      "k_s": 1.0,
+      "n": 2117,
+      "expectancy_r": -0.17221626924948233,
+      "profit_factor": 0.6846532166563244,
+      "pnl": -8212.061693775424,
+      "win_rate": 0.3112895606991025,
+      "sharpe_net": -2.285328671492102,
+      "max_drawdown": -0.8219964900367964,
+      "trades_per_scenario": {
+        "BREAK_LONG": 582,
+        "REV_SHORT": 544,
+        "REV_LONG": 510,
+        "BREAK_SHORT": 481
+      }
+    }
+  ]
+}
