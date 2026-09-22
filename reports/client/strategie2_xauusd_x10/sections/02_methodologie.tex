@@ -67,6 +67,25 @@ entièrement connu à la clôture de la barre de décision. Confondre les deux
 familles est la première erreur possible sur cette stratégie~; la
 section~\ref{sec:x10_mecanique} les sépare explicitement.
 
+\subsection{Correction de la convention de datation}
+
+La première campagne traitait l'horodatage du parquet comme le début de la
+minute. La réconciliation a montré qu'il s'agissait de sa clôture, selon la
+convention d'export de LEAN~: la grille de cinq minutes de la référence était
+donc décalée d'une minute par rapport à la spécification et aux moteurs
+d'exécution. La correction redéfinit d'abord chaque ligne comme le début de sa
+minute, puis agrège en M5.
+
+La campagne a été rejouée sans changer un seuil, une règle, une configuration
+ou une clé du registre d'essais. Ce rejeu corrige la mesure~; il ne constitue
+ni une nouvelle optimisation ni une re-sélection. La version antérieure est
+archivée et la comparaison complète des neuf critères est publiée ci-dessous.
+
+\input{tables/x10_v1_v2.tex}
+
+Un seul critère change de camp, le \code{PBO}, dans un sens favorable à la
+stratégie. La décision de ne pas déployer demeure inchangée.
+
 \subsection{Découpage in-sample / hors échantillon}
 
 Tout ce qui est postérieur au 31 décembre 2025 est \textbf{verrouillé}. Le
@@ -106,8 +125,8 @@ plus que les autres.
 
 \begin{description}
   \item[Un critère non mesuré vaut échec.] Jamais « non applicable ». Cette
-  clause a un coût immédiat dans ce rapport~: deux des neuf critères sont en
-  échec par non-mesure, et ils sont comptés comme tels
+  clause a un coût immédiat dans ce rapport~: le critère OOS 2026 est en
+  échec par non-mesure, et il est compté comme tel
   (section~\ref{sec:x10_robustesse}).
   \item[Le plateau, jamais le pic.] La configuration retenue doit
   être entourée de voisins qui tiennent, pas être le meilleur point d'une
@@ -119,12 +138,11 @@ plus que les autres.
 \subsection{Le modèle de coût}
 
 Le spread de référence retenu pour la sélection est constant, à
-\XTenSpreadUsd{} l'aller-retour, relevé au catalogue du courtier. Ce repli a
-été décidé et gelé avant la campagne, faute de pouvoir mesurer le spread
-historique heure par heure~: le terminal ne joint plus le serveur de
-démonstration du courtier. En contrepartie, la table de décision rend
-\textbf{obligatoire} une sensibilité au doublement du coût, qui s'ajoute à la
-sensibilité de référence à une fois et demie.
+\XTenSpreadUsd{} l'aller-retour, relevé au catalogue du courtier. Ce choix a
+été gelé avant la campagne, avec une sensibilité obligatoire au doublement
+du coût, en plus de celle à une fois et demie. Le dump du courtier obtenu
+ensuite permet une sensibilité supplémentaire au spread mesuré~; elle est
+publiée sans rouvrir la grille et sans remplacer le modèle de sélection.
 
 Un spread constant est trop cher en séance liquide et trop bon marché en
 heures creuses~; il pèse aussi mécaniquement de moins en moins à mesure que le

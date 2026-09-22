@@ -1,0 +1,23 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\small
+\caption{MetaTrader~5, par scénario puis par raison de sortie. Quatre scénarios sur quatre sont négatifs~; le stop perd près d'une unité de risque, comme sur la référence.}
+\label{tab:x10_mt5_by_scenario}
+\begin{tabular}{l r r r r r}
+\toprule
+\textbf{Coupe} & \textbf{Trades} & \textbf{E[R]} & \textbf{PF} & \textbf{Réussite} & \textbf{Net} \\
+\midrule
+Breakout Long & $206$ & $-0{,}1405$ & $0{,}779$ & $33{,}5$\,\% & $-778{,}2$~\$ \\
+Breakout Short & $130$ & $-0{,}0636$ & $0{,}895$ & $36{,}9$\,\% & $-462{,}6$~\$ \\
+Reversal Long & $281$ & $-0{,}1160$ & $0{,}817$ & $34{,}5$\,\% & $-1\,051{,}3$~\$ \\
+Reversal Short & $263$ & $-0{,}0806$ & $0{,}881$ & $30{,}0$\,\% & $-727{,}2$~\$ \\
+\midrule
+\emph{sortie STOP} & $554$ & $-1{,}0010$ & $0{,}000$ & $0{,}0$\,\% & $-17\,329{,}3$~\$ \\
+\emph{sortie TARGET} & $181$ & $1{,}9596$ & $\infty$ & $100{,}0$\,\% & $10\,875{,}2$~\$ \\
+\emph{sortie TIME} & $108$ & $0{,}7383$ & $8{,}843$ & $76{,}9$\,\% & $2\,411{,}5$~\$ \\
+\emph{sortie SESSION} & $37$ & $0{,}7868$ & $18{,}294$ & $78{,}4$\,\% & $1\,023{,}2$~\$ \\
+\bottomrule
+\end{tabular}
+\end{table}

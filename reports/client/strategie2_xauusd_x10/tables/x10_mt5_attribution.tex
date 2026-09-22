@@ -1,0 +1,23 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Attribution des écarts entre la référence et l'expert advisor MetaTrader~5. La part non attribuée concerne le rejeu sur le même dump en mid ; le diagnostic de position unique concerne les flux distincts. Une cause identifiée ne transforme pas une cible d'appariement manquée en cible atteinte.}
+\label{tab:x10_mt5_attribution}
+\begin{tabular}{p{5.4cm} p{6.4cm} p{2.2cm}}
+\toprule
+\textbf{Poste d'écart} & \textbf{Mesure} & \textbf{Statut} \\
+\midrule
+Signaux sur le bid (EA) contre le mid (référence) & appariement $70{,}8$\,\% $\rightarrow$ $98{,}1$\,\% en rejouant sur le bid & mesuré \\
+Séance du courtier qui rouvre plus tard & $13$ ordres refusés, $34$ minutes en médiane après la reprise des cotations & mesuré \\
+Convention de datation des barres M5 & $98{,}7$\,\% des barres avaient une clôture différente & mesuré, puis corrigé \\
+Spread courant contre spread constant & médiane mesurée $0{,}250$~\$ contre $0{,}29$~\$ & mesuré \\
+Double contact tranché par le testeur & $2$ inversions stop/cible, soit $0{,}31$\,\% des paires & mesuré \\
+Panier dollar du courtier contre parquet local & accord de score sur $98{,}06$\,\% des lignes & mesuré \\
+Règle de position unique & $4{,}4$\,\% des orphelins Python sur flux distincts & mesuré \\
+\midrule
+\textbf{Part non attribuée} & \textbf{$13$ orphelins sur $1\,146$, soit $1{,}1$\,\%} & seuil de blocage $5$\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}

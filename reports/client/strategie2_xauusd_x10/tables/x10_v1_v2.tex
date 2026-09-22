@@ -1,0 +1,23 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Les neuf critères avant et après la correction de la convention de datation des minutes. Un seul change de camp, et il change en faveur de la stratégie~; le verdict, lui, ne bouge pas. Ces deux archives portent sur la campagne Python : la mesure MT5 ajoutée ensuite figure dans la table de décision consolidée.}
+\label{tab:x10_v1_v2}
+\begin{tabular}{c p{4.6cm} r c r c}
+\toprule
+\textbf{\#} & \textbf{Critère} & \multicolumn{2}{c}{\textbf{Avant}} & \multicolumn{2}{c}{\textbf{Après}} \\
+\midrule
+1 & Trades in-sample 2019 $\rightarrow$ 2025-12-31 & $1\,723$ & \textcolor{rsiGreen}{\textbf{GO}} & $1\,762$ & \textcolor{rsiGreen}{\textbf{GO}} \\
+2 & Espérance nette / profit factor & $-0{,}1602$ R & \textcolor{combinedBurgundy}{\textbf{échec}} & $-0{,}1679$ R & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+3 & DSR (déflaté par distinct\_trials("xau\_x10")) & $0{,}000$ & \textcolor{combinedBurgundy}{\textbf{échec}} & $0{,}000$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+4 & PBO (CSCV, matrice 27 $\times$ jours) & $0{,}4155$ & \textcolor{combinedBurgundy}{\textbf{échec}} & $0{,}2460$ & \textcolor{rsiGreen}{\textbf{GO}} \\
+5 & Plateau & $0$ sur 27 & \textcolor{combinedBurgundy}{\textbf{échec}} & $0$ sur 27 & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+6 & Walk-forward annuel & $0$\,\% & \textcolor{combinedBurgundy}{\textbf{échec}} & $0$\,\% & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+7 & Spread $\times 1{,}5$ & $-0{,}2012$ R & \textcolor{combinedBurgundy}{\textbf{échec}} & $-0{,}2078$ R & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+8 & MT5 modèle 1, 2022-11-04 $\rightarrow$ 2025-12-31 & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+9 & OOS 2026, lecture unique & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+\bottomrule
+\end{tabular}
+\end{table}

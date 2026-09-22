@@ -277,15 +277,15 @@ def test_every_published_macro_matches_its_json_source(assets):
         assert name in published, f"macro {name} absente de x10_headline.tex"
         if name in builder.NON_RESULT_MACROS:
             continue
-        # Même repli que le générateur : source absente — ou présente mais dont
-        # le schéma ne porte pas le chemin attendu — donne « n.d. ».
+        # Le hors échantillon volontairement fermé porte « non lu » ; les
+        # mesures d'exécution absentes gardent leur repli « n.d. ».
         if spec.source not in bundle or bundle.get(spec.source) is None:
-            expected = builder.UNDETERMINED
+            expected = spec.fallback
         else:
             try:
                 expected = spec.fmt(spec.value(bundle))
             except (KeyError, IndexError, TypeError):
-                expected = builder.UNDETERMINED
+                expected = spec.fallback
         if published[name] != expected:
             mismatched.append(
                 f"\\{name} publie « {published[name]} », sa source "

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  21 SEP 2026 13:41
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex 2026.4.23)  22 SEP 2026 07:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -13,7 +13,7 @@ Package: scrkbase 2025/12/01 v3.49 KOMA-Script package (KOMA-Script-dependent b
 asics and keyval usage)
 
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrbase.sty
-Package: scrbase 2025/12/01 v3.49 KOMA-Script package (KOMA-Script-independent 
+Package: scrbase 2025/12/01 v3.49 KOMA-Script package (KOMA-Script-independent
 basics and keyval usage)
 
 (/usr/share/texlive/texmf-dist/tex/latex/koma-script/scrlfile.sty
@@ -141,7 +141,7 @@ Class scrartcl Info: Redefining `\numberline' on input line 6461.
 (/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty
 (/usr/share/texlive/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
 (/usr/share/texlive/texmf-dist/tex/latex/l3kernel/expl3.sty
-Package: expl3 2026-01-19 L3 programming layer (loader) 
+Package: expl3 2026-01-19 L3 programming layer (loader)
 
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
 File: l3backend-xetex.def 2025-10-09 L3 backend support: XeTeX
@@ -209,15 +209,15 @@ Package polyglossia Info: Default language is french
 File: gloss-english.ldf polyglossia: module for English
 )
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Font family 'LatinModernRoman(0)' created for font
 (fontspec)             'Latin Modern Roman' with options
 (fontspec)             [Ligatures=TeX,Ligatures=TeX,Numbers={Proportional,OldSt
 yle}].
-(fontspec)              
+(fontspec)
 (fontspec)              This font family consists of the following NFSS
 (fontspec)             series/shapes:
-(fontspec)              
+(fontspec)
 (fontspec)             - 'normal' (m/n) with NFSS spec.: <->"Latin Modern
 (fontspec)             Roman/OT:script=latn;language=dflt;+pnum;+onum;mapping=t
 ex-text;"
@@ -233,36 +233,36 @@ ex-text;"
 g=tex-text;"
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Regular scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Regular scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Bold scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Italic scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-BoldItalic scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Font family 'Inter(0)' created for font 'Inter' with
 (fontspec)             options
 (fontspec)             [Ligatures=TeX,Scale=MatchLowercase,Extension=.otf,Path=
 /usr/share/fonts/opentype/inter/,UprightFont=Inter-Regular,BoldFont=Inter-Bold,
 ItalicFont=Inter-Italic,BoldItalicFont=Inter-BoldItalic].
-(fontspec)              
+(fontspec)
 (fontspec)              This font family consists of the following NFSS
 (fontspec)             series/shapes:
-(fontspec)              
+(fontspec)
 (fontspec)             - 'normal' (m/n) with NFSS spec.:
 (fontspec)             <->s*[0.7895228565302184]"[/usr/share/fonts/opentype/int
 er/Inter-Regular.otf]/OT:script=latn;language=dflt;mapping=tex-text;"
@@ -277,36 +277,36 @@ er/Inter-Italic.otf]/OT:script=latn;language=dflt;mapping=tex-text;"
 er/Inter-BoldItalic.otf]/OT:script=latn;language=dflt;mapping=tex-text;"
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Latin Modern Mono scale = 0.9999967668407183.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Could not resolve font "Latin Modern Mono/B" (it
 (fontspec)             probably doesn't exist).
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Latin Modern Mono scale = 0.9999967668407183.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Latin Modern Mono/I scale = 0.9999967668407183.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Latin Modern Mono/BI scale = 0.9999967668407183.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Font family 'LatinModernMono(0)' created for font
 (fontspec)             'Latin Modern Mono' with options
 (fontspec)             [WordSpace={1,0,0},HyphenChar=None,PunctuationSpace=Word
 Space,Scale=MatchLowercase].
-(fontspec)              
+(fontspec)
 (fontspec)              This font family consists of the following NFSS
 (fontspec)             series/shapes:
-(fontspec)              
+(fontspec)
 (fontspec)             - 'normal' (m/n) with NFSS spec.:
 (fontspec)             <->s*[0.9999967668407183]"Latin Modern
 (fontspec)             Mono/OT:script=latn;language=dflt;"
@@ -318,28 +318,28 @@ Space,Scale=MatchLowercase].
 (fontspec)             Mono/BI/OT:script=latn;language=dflt;"
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Regular scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Regular scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Inter-Bold scale = 0.7895228565302184.
 
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Font family 'Inter(1)' created for font 'Inter' with
 (fontspec)             options
 (fontspec)             [Scale=MatchLowercase,Extension=.otf,Path=/usr/share/fon
 ts/opentype/inter/,UprightFont=Inter-Regular,BoldFont=Inter-Bold,LetterSpace=18
 .0].
-(fontspec)              
+(fontspec)
 (fontspec)              This font family consists of the following NFSS
 (fontspec)             series/shapes:
-(fontspec)              
+(fontspec)
 (fontspec)             - 'normal' (m/n) with NFSS spec.:
 (fontspec)             <->s*[0.7895228565302184]"[/usr/share/fonts/opentype/int
 er/Inter-Regular.otf]/OT:script=latn;language=dflt;letterspace=18.0;"
@@ -681,7 +681,7 @@ Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
 Package csquotes Info: ... configuration file loaded successfully.
 
 (/usr/share/texlive/texmf-dist/tex/latex/csquotes/csquotes.cfg
-File: csquotes.cfg 
+File: csquotes.cfg
 ))
 (/usr/share/texlive/texmf-dist/tex/latex/enumitem/enumitem.sty
 Package: enumitem 2025/02/06 v3.11 Customized lists
@@ -744,14 +744,14 @@ Package pdftexcmds Info: \pdfdraftmode not found.
 
 Package siunitx Info: Option "detect-weight" has been deprecated in this
 (siunitx)             release.
-(siunitx)             
+(siunitx)
 (siunitx)             Use "reset-text-series = false, text-series-to-math =
 (siunitx)             true" as a replacement.
 
 
 Package siunitx Info: Option "detect-family" has been deprecated in this
 (siunitx)             release.
-(siunitx)             
+(siunitx)
 (siunitx)             Use "reset-text-family = false, text-family-to-math =
 (siunitx)             true" as a replacement.
 
@@ -803,7 +803,7 @@ Package titlesec Warning: Non standard sectioning command \subparagraph
 
 Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              with a KOMA-Script class is not recommended.
-(scrartcl)              I'd suggest to use 
+(scrartcl)              I'd suggest to use
 (scrartcl)              package `scrlayer' or `scrlayer-scrpage', because
 (scrartcl)              they support KOMA-Script classes.
 (scrartcl)              With `fancyhdr' several features of class `scrartcl'
@@ -1219,7 +1219,7 @@ Library (tcolorbox): 'tcbprocessing.code.tex' version '6.9.0'
 )
 \c@tcblisting=\count398
 ))
-Package tcolorbox Info: Library `listingsutf8' is compatible with pdftex only. 
+Package tcolorbox Info: Library `listingsutf8' is compatible with pdftex only.
 Library `listings` is loaded instead. on input line 29.
 ) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbexternal.code.tex
 Library (tcolorbox): 'tcbexternal.code.tex' version '6.9.0'
@@ -1402,14 +1402,7 @@ Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
 File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 \BKM@id=\count416
 ))
-(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux
-
-LaTeX Warning: Label `tab:x10_trade_examples' multiply defined.
-
-
-LaTeX Warning: Label `tab:x10_decision' multiply defined.
-
-)
+(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
 \openout1 = `ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 33.
@@ -1442,7 +1435,7 @@ Package scrbase Info: activating french \listtablename on input line 33.
 Package scrbase Info: activating french \refname on input line 33.
 Package scrbase Info: activating french \indexname on input line 33.
 
-Package fontspec Info: 
+Package fontspec Info:
 (fontspec)             Adjusting the maths setup (use [no-math] to avoid
 (fontspec)             this).
 
@@ -1500,7 +1493,7 @@ LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  TU/LatinModernRoman(0)/m/n --> TU/LatinModernRoman(0)/b
 /n on input line 33.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> TU/LatinModernRoman(0)/b/it on input 
+(Font)                  OT1/cmr/bx/it --> TU/LatinModernRoman(0)/b/it on input
 line 33.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
 (Font)                  OT1/cmss/bx/n --> TU/Inter(0)/b/n on input line 33.
@@ -1515,7 +1508,7 @@ e 33.
 * paper: a4paper
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
-* modes: 
+* modes:
 * h-part:(L,W,R)=(73.97733pt, 449.55322pt, 73.97733pt)
 * v-part:(T,H,B)=(71.13188pt, 694.24716pt, 79.6678pt)
 * \paperwidth=597.50787pt
@@ -1604,23 +1597,18 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 88.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 7.10568pt on input line 128.
+(Font)              scaled to size 7.10568pt on input line 127.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/it' will be
-(Font)              scaled to size 7.10568pt on input line 128.
-
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 115--129
- [][][][][][] 
- []
-
-[1
+(Font)              scaled to size 7.10568pt on input line 127.
+ [1
 
 ]
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 11.36908pt on input line 143.
+(Font)              scaled to size 11.36908pt on input line 142.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 11.36908pt on input line 143.
+(Font)              scaled to size 11.36908pt on input line 142.
 
-Underfull \hbox (badness 10000) in paragraph at lines 143--145
+Underfull \hbox (badness 10000) in paragraph at lines 142--144
 
  []
 
@@ -1635,20 +1623,27 @@ LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
 \openout4 = `ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.toc'.
 
  [4] (./sections/00_resume_verdict.tex
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
+(Font)              scaled to size 10.95pt on input line 41.
+LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 41.
+
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 39
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 43
 .
 
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.80363pt (A);
-(lettrine.sty)             reported on input line 39.
+(lettrine.sty)             reported on input line 43.
 LaTeX Font Info:    Font shape `TU/Inter(0)/m/n' will be
-(Font)              scaled to size 9.47424pt on input line 48.
+(Font)              scaled to size 9.47424pt on input line 52.
 LaTeX Font Info:    Font shape `TU/Inter(0)/b/n' will be
-(Font)              scaled to size 9.47424pt on input line 48.
-(./tables/x10_decision.tex
+(Font)              scaled to size 9.47424pt on input line 52.
+[1
+
+] (./tables/x10_decision.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 6.
@@ -1675,17 +1670,11 @@ Underfull \hbox (badness 1152) in paragraph at lines 20--20
 )/m/n/9 30, sinon NON
  []
 
-) [1
-
-]
+)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 106.
+(enumitem)                sense, on input line 110.
 
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 131.
-LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 131.
 [2]) (./sections/01_mandat.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
@@ -1694,31 +1683,41 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 [3]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 68.
+(enumitem)                sense, on input line 69.
 
 ) (./sections/02_methodologie.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 8.
- [4] [5]
+ [4] [5] (./tables/x10_v1_v2.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
+ []
+
+
+Underfull \hbox (badness 3179) in paragraph at lines 15--15
+[]|\TU/LatinModernRoman(0)/m/n/9 PBO (CSCV, matrice 27 $\OMS/cmsy/m/n/9 ^^B$
+ []
+
+) [6]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 108.
+(enumitem)                sense, on input line 127.
 
-[6]) (./sections/03_grille_x10.tex
+[7]) (./sections/03_grille_x10.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 7.
 File: figures/x10_fig01_grille.png Graphic file (type bmp)
 <figures/x10_fig01_grille.png>
- (./tables/x10_feasibility.tex [7])
+ (./tables/x10_feasibility.tex)
 File: figures/x10_fig02_dollars_par_atr.png Graphic file (type bmp)
 <figures/x10_fig02_dollars_par_atr.png>
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/m/it' will be
 (Font)              scaled to size 10.0pt on input line 49.
- [8]
+ [8] [9]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 73.
@@ -1726,7 +1725,7 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 (./tables/x10_r_rule.tex)
 File: figures/x10_fig08_regle_r.png Graphic file (type bmp)
 <figures/x10_fig08_regle_r.png>
- [9]
+
 
 LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
 (Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 123
@@ -1734,24 +1733,17 @@ LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
 
 LaTeX Font Info:    Font shape `TU/LatinModernMono(0)/b/n' will be
 (Font)              scaled to size 10.0pt on input line 123.
-) (./sections/04_mecanique.tex
+[10]) (./sections/04_mecanique.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.15294pt (T);
 (lettrine.sty)             reported on input line 9.
-
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap T doesn't fit on page 10.
-(lettrine)                Missing vertical space: 6.37364pt. 
-(lettrine)                Reported on input line 9.
-
-[10]
+ [11]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 50.
 
-[11] [12] [13] [14]) (./sections/05_scenarios.tex
+[12] [13] [14] [15]) (./sections/05_scenarios.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (Q);
@@ -1760,63 +1752,64 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 File: figures/x10_fig07_scenario_session.png Graphic file (type bmp)
 <figures/x10_fig07_scenario_session.png>
 
-[15]
+[16]
 File: figures/x10_fig12_trade_break_long.png Graphic file (type bmp)
 <figures/x10_fig12_trade_break_long.png>
 File: figures/x10_fig12_trade_break_short.png Graphic file (type bmp)
 <figures/x10_fig12_trade_break_short.png>
- [16]
+ [17]
 File: figures/x10_fig12_trade_rev_long.png Graphic file (type bmp)
 <figures/x10_fig12_trade_rev_long.png>
 File: figures/x10_fig12_trade_rev_short.png Graphic file (type bmp)
 <figures/x10_fig12_trade_rev_short.png>
- (./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
- []
 
-) [17]
-Underfull \hbox (badness 4001) in paragraph at lines 115--115
+Underfull \hbox (badness 4001) in paragraph at lines 117--117
 []|\TU/LatinModernRoman(0)/b/n/10.95 Qualité de la
  []
 
 [18]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 129.
+(enumitem)                sense, on input line 131.
 
-) (./sections/06_recherche_vs_execution.tex
+[19]) (./sections/06_recherche_vs_execution.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (U);
-(lettrine.sty)             reported on input line 9.
+(lettrine.sty)             reported on input line 7.
 
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 19.
-(lettrine)                Missing vertical space: 37.35548pt. 
-(lettrine)                Reported on input line 9.
-
-[19]
-Underfull \hbox (badness 3735) in paragraph at lines 37--37
+Underfull \hbox (badness 3735) in paragraph at lines 20--20
 []|\TU/LatinModernRoman(0)/b/n/10.95 Moteur vecto-
  []
 
-[20]
-Underfull \hbox (badness 1728) in paragraph at lines 92--93
-\TU/LatinModernRoman(0)/m/sc/10.95 tesse, momentum, accélé-
+(./tables/x10_engines.tex) [20] (./tables/x10_qc_by_year.tex) [21]
+(./tables/x10_mt5_by_year.tex) (./tables/x10_mt5_by_scenario.tex)
+(./tables/x10_mt5_attribution.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--15
+[]|\TU/LatinModernRoman(0)/m/n/9 mesuré, puis
+ []
+
+) [22] (./tables/x10_rungs.tex
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
+[]|\TU/LatinModernRoman(0)/m/n/9 diagnostic
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 122--122
-[]|\TU/LatinModernRoman(0)/m/sc/10.95 Python ou QuantConnect
+Underfull \hbox (badness 1939) in paragraph at lines 17--17
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
  []
 
 
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 142.
+Underfull \hbox (badness 1939) in paragraph at lines 18--18
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
+ []
 
-[21]) (./sections/07_risque.tex
+
+Underfull \hbox (badness 10000) in paragraph at lines 22--22
+[]|\TU/LatinModernRoman(0)/m/n/9 entrées non attribuées,
+ []
+
+) [23]) (./sections/07_risque.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
@@ -1826,7 +1819,7 @@ Package lettrine.sty Info: Targeted height = 19.40747pt
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 42.
 
-[22] [23]) (./sections/08_in_sample.tex
+[24]) (./sections/08_in_sample.tex [25]
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (C);
@@ -1839,95 +1832,109 @@ File: figures/x10_fig03_heatmaps.png Graphic file (type bmp)
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 36.
 
-[24] [25]
+[26] [27]
 File: figures/x10_fig04_equite.png Graphic file (type bmp)
 <figures/x10_fig04_equite.png>
 File: figures/x10_fig05_immersion.png Graphic file (type bmp)
 <figures/x10_fig05_immersion.png>
- (./tables/x10_walkforward.tex [26])
+ (./tables/x10_walkforward.tex)
 File: figures/x10_fig06_esperance_annuelle.png Graphic file (type bmp)
 <figures/x10_fig06_esperance_annuelle.png>
- (./tables/x10_sessions.tex)
-[27] (./tables/x10_regimes.tex) [28] (./tables/x10_exits.tex)
+ [28] [29] (./tables/x10_sessions.tex)
+(./tables/x10_regimes.tex) (./tables/x10_exits.tex)
 File: figures/x10_fig09_raisons_sortie.png Graphic file (type bmp)
 <figures/x10_fig09_raisons_sortie.png>
- [29]
+ [30]
 (./tables/x10_context_cuts.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 208.
+(enumitem)                sense, on input line 205.
 
-(./tables/x10_ablations.tex) [30] (./tables/x10_concentration.tex))
-(./sections/09_hors_echantillon.tex [31]
+
+Overfull \hbox (0.3545pt too wide) in paragraph at lines 205--210
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Les \TU/LatinModernRoman(0)/m/it/10.95 rev
+ersals \TU/LatinModernRoman(0)/m/sc/10.95 pris loin du \TU/LatinModernMono(0)/b
+/n/10 VWAP \TU/LatinModernRoman(0)/m/sc/10.95 de séance rendent $\OMS/cmsy/m/n/
+10.95 ^^@\OT1/cmr/m/n/10.95 0[]1991$ \TU/LatinModernRoman(0)/m/sc/10.95 R contr
+e $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1509$ \TU/LatinModernRoman(0)/m
+/sc/10.95 R
+ []
+
+[31] (./tables/x10_ablations.tex) (./tables/x10_concentration.tex) [32])
+(./sections/09_hors_echantillon.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (C);
 (lettrine.sty)             reported on input line 18.
-
+ [33]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 48.
 
-[32]) (./sections/10_bootstrap_mc_ruine.tex
+[34]) (./sections/10_bootstrap_mc_ruine.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (U);
 (lettrine.sty)             reported on input line 7.
 File: figures/x10_fig11_bootstrap.png Graphic file (type bmp)
 <figures/x10_fig11_bootstrap.png>
- [33] [34] [35])
+ [35] [36])
 (./sections/11_robustesse_avancee.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 7.
- (./tables/x10_robustness.tex) [36]
-(./tables/x10_cpcv.tex)
+ (./tables/x10_robustness.tex) [37]
+[38] (./tables/x10_cpcv.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 92.
+(enumitem)                sense, on input line 90.
 
-[37]
-Overfull \hbox (2.43547pt too wide) in paragraph at lines 97--103
+
+Overfull \hbox (2.43547pt too wide) in paragraph at lines 95--101
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le module du dépôt transmet des \TU/LatinM
 odernRoman(0)/m/it/10.95 ren-
  []
 
-) (./sections/12_sensibilite_couts.tex
+[39]) (./sections/12_sensibilite_couts.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (S);
 (lettrine.sty)             reported on input line 7.
- [38] (./tables/x10_costs.tex)
+ (./tables/x10_spread_measured.tex)
+[40] (./tables/x10_costs.tex)
 File: figures/x10_fig10_sensibilite_couts.png Graphic file (type bmp)
 <figures/x10_fig10_sensibilite_couts.png>
- [39]
-[40]
+ [41] [42]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 125.
+(enumitem)                sense, on input line 138.
 
 ) (./sections/13_limites.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.74706pt (C);
 (lettrine.sty)             reported on input line 7.
- [41] [42]) (./sections/14b_non_deploiement.tex
+ [43] [44] [45])
+(./sections/14b_non_deploiement.tex
 Package lettrine.sty Info: Targeted height = 19.40747pt
 (lettrine.sty)             (for loversize=0, accent excluded),
 (lettrine.sty)             Lettrine height = 19.40756pt (L);
 (lettrine.sty)             reported on input line 9.
+ [46]
+Overfull \hbox (1.4251pt too wide) in paragraph at lines 112--115
+[] []\TU/LatinModernRoman(0)/b/n/10.95 Hypothèse 2 — un scénario unique.[] \TU/
+LatinModernRoman(0)/m/sc/10.95 Le meilleur des quatre est Reversal Short à $\OM
+S/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1549$ \TU/LatinModernRoman(0)/m/sc/10
+.95 R.
+ []
 
-[43]
-
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 69.
-
-[44] [45]) (./sections/annexe_a_glossaire.tex
+[47]) (./sections/annexe_a_glossaire.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 19.
 
+[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 33.
@@ -1936,69 +1943,41 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 54.
 
-[46]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 71.
 
-) (./sections/annexe_b_anatomie_trades.tex [47]
-(./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
- []
-
-)
+) (./sections/annexe_b_anatomie_trades.tex [49]
+(./tables/x10_trade_examples.tex) [50]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 93.
 
-[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 114.
 
-) (./sections/annexe_c_plateau.tex [49]
+) (./sections/annexe_c_plateau.tex [51]
 File: figures/x10_fig03_heatmaps.png Graphic file (type bmp)
 <figures/x10_fig03_heatmaps.png>
- [50])
-(./sections/annexe_d_methodologie_robustesse.tex [51] [52])
-(./sections/annexe_e_table_decision.tex [53] (./tables/x10_decision.tex
-Underfull \hbox (badness 6725) in paragraph at lines 12--12
-[]|\TU/LatinModernRoman(0)/m/n/9 Trades in-sample 2019 $\OMS/cmsy/m/n/9 !$
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 14--14
-[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
- []
-
-
-Underfull \hbox (badness 2495) in paragraph at lines 17--17
-[]|$\OT1/cmr/m/n/9 0$\TU/LatinModernRoman(0)/m/n/9 % d’années positives;
- []
-
-
-Underfull \hbox (badness 1152) in paragraph at lines 20--20
-[]|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
-)/m/n/9 30, sinon NON
- []
-
-)
+ [52] [53])
+(./sections/annexe_d_methodologie_robustesse.tex [54] [55])
+(./sections/annexe_e_table_decision.tex [56]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 22.
+(enumitem)                sense, on input line 25.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 37--37
+Underfull \hbox (badness 10000) in paragraph at lines 44--44
 []|\TU/LatinModernRoman(0)/b/n/10.95 Déploiement à
  []
 
-[54]
-Underfull \hbox (badness 2088) in paragraph at lines 110--110
+[57]
+Underfull \hbox (badness 2088) in paragraph at lines 118--118
 \TU/LatinModernRoman(0)/m/sc/10.95 touché des barres posté-
  []
 
-[55]) [56] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
+[58]) [59] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -2007,18 +1986,15 @@ L3 programming layer <2026-01-19>
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-LaTeX Warning: There were multiply-defined labels.
-
- ) 
+ )
 Here is how much of TeX's memory you used:
- 42183 strings out of 468173
- 965533 string characters out of 5435520
- 1547287 words of memory out of 5000000
- 70148 multiletter control sequences out of 15000+600000
- 636501 words of font info for 139 fonts, out of 8000000 for 9000
+ 42309 strings out of 468173
+ 968579 string characters out of 5435520
+ 1550313 words of memory out of 5000000
+ 70252 multiletter control sequences out of 15000+600000
+ 636517 words of font info for 141 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 108i,13n,118p,11261b,1411s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,13n,118p,11261b,1407s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.pd
-f (61 pages).
+f (64 pages).

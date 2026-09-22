@@ -1,0 +1,23 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Le spread réellement mesuré sur le flux du courtier, par année et par heure. L'heure la plus chère est la reprise de séance --- celle-là même à partir de laquelle la stratégie a le droit d'entrer.}
+\label{tab:x10_spread_measured}
+\begin{tabular}{l l r l}
+\toprule
+\textbf{Année} & \textbf{Source} & \textbf{Médiane des heures} & \textbf{Heure la plus chère (New York)} \\
+\midrule
+2019 & extrapolée & $0{,}188$~\$ & 18~h $\rightarrow$ $0{,}268$~\$ \\
+2020 & extrapolée & $0{,}237$~\$ & 18~h $\rightarrow$ $0{,}338$~\$ \\
+2021 & extrapolée & $0{,}240$~\$ & 18~h $\rightarrow$ $0{,}341$~\$ \\
+2022 & mesurée (partielle) & $0{,}260$~\$ & 18~h $\rightarrow$ $0{,}370$~\$ \\
+2023 & mesurée & $0{,}260$~\$ & 18~h $\rightarrow$ $0{,}370$~\$ \\
+2024 & mesurée & $0{,}250$~\$ & 18~h $\rightarrow$ $0{,}350$~\$ \\
+2025 & mesurée & $0{,}160$~\$ & 18~h $\rightarrow$ $0{,}190$~\$ \\
+\midrule
+\textbf{Ensemble} & $1\,111\,881$ barres M1 & \textbf{$0{,}250$~\$} & p95 $0{,}380$~\$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -13,26 +13,39 @@ important --- ce qu'il deviendrait s'il disparaissait.
 \subsection{Le modèle de coût retenu, et pourquoi celui-là}
 
 Le spread de sélection est \textbf{constant}, à \XTenSpreadUsd, relevé au
-catalogue du courtier. Ce n'est pas le modèle qu'on aurait voulu~: il aurait
-fallu un spread médian par heure de New York et par année, mesuré sur le flux
-réel. Ce relevé exige une passe du testeur, et le terminal ne joint plus le
-serveur de démonstration du courtier depuis l'été 2026.
-
-Le repli a été décidé et gelé \emph{avant} la campagne, avec sa contrepartie~:
+catalogue du courtier. Ce choix a été décidé et gelé \emph{avant} la campagne,
+avec sa contrepartie~:
 la sensibilité au \textbf{doublement} du coût devient obligatoire, en plus de
-la sensibilité de référence à une fois et demie. Et si le spread mesuré
-devenait disponible plus tard, il servirait de sensibilité \emph{publiée
-supplémentaire}, jamais à re-sélectionner une configuration.
+la sensibilité de référence à une fois et demie. Le dump du courtier obtenu
+ensuite a rendu disponible un spread mesuré. Conformément au gel, il sert de
+sensibilité \emph{publiée supplémentaire}, jamais à re-sélectionner une
+configuration ni à remplacer rétroactivement le coût de sélection.
 
 \begin{warningbox}
-\textbf{Un spread constant se trompe dans les deux sens, et la campagne ne
-peut pas dire lequel domine.} Il est trop cher en pleine séance new-yorkaise,
-où la fourchette réelle est plus serrée, et trop bon marché en heures creuses,
-où elle s'élargit. Il pèse aussi mécaniquement de moins en moins lourd à
-mesure que le prix de l'or monte, ce qui contribue à l'atténuation de la perte
-observée au fil des années (section~\ref{sec:x10_in_sample}). C'est une
-limite à publier, répertoriée en section~\ref{sec:x10_limites}.
+\textbf{Un spread constant se trompe dans les deux sens.} Il est généralement
+trop cher pendant les heures liquides et trop bon marché autour de la reprise
+de séance. Il pèse aussi mécaniquement moins en proportion quand le prix de
+l'or monte. Le relevé mesuré permet maintenant de quantifier ce biais, sans
+effacer la limite de couverture antérieure à l'historique du courtier.
 \end{warningbox}
+
+\subsection{Le spread mesuré sur le flux du courtier}
+
+La fourchette complète médiane vaut \XTenSpreadMeasuredMedian{} sur
+\XTenSpreadMeasuredBars{} barres d'une minute~; son troisième quartile vaut
+\XTenSpreadMeasuredPSevenFive{} et son percentile extrême publié
+\XTenSpreadMeasuredPNinetyFive. L'heure la plus chère est
+\XTenSpreadCostliestHour{}~h, heure de New York, à
+\XTenSpreadCostliestValue~: c'est la reprise de séance.
+
+\input{tables/x10_spread_measured.tex}
+
+Rejouer uniquement la configuration descriptive avec la médiane mesurée
+porte son coût moyen à \XTenSpreadMeasuredMean{} et son espérance à
+\XTenExpectancyMeasuredSpread{}~R, soit un déplacement de
+\XTenDeltaMeasuredSpread{}~R par rapport au coût constant. Le signe reste
+négatif. Cette passe n'est ni une grille ni une optimisation~: aucun paramètre
+n'est comparé ou retenu à partir de ce nouveau coût.
 
 Deux autres postes complètent le modèle. Le \emph{coût de portage} n'est pas
 modélisé, et à juste titre~: aucune position ne traverse la coupure

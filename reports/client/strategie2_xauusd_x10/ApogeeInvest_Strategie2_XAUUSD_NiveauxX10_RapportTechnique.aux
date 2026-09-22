@@ -24,228 +24,243 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}La spécification avant le code}{5}{subsection.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Données, séances et fuseaux}{5}{subsection.3.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Le décalage des séries H1 --- la règle anti-anticipation}{5}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Découpage in-sample / hors échantillon}{5}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Budget d'essais et registre de sélection}{6}{subsection.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}La table de décision, gelée avant la mesure}{6}{subsection.3.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Le modèle de coût}{6}{subsection.3.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Les trois moteurs : vectoriel, QuantConnect, MetaTrader~5}{6}{subsection.3.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}La revue à contexte vierge}{7}{subsection.3.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.10}Reproductibilité}{7}{subsection.3.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}La grille x10 et sa non-stationnarité}{7}{section.4}\protected@file@percent }
-\newlabel{sec:x10_grille}{{4}{7}{La grille x10 et sa non-stationnarité}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Définition de la grille}{7}{subsection.4.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \xpg@aux {}{french}\ignorespaces La grille des niveaux x10 et la zone d'approche. Le prix est surveillé dès qu'il entre dans une bande de largeur $z \cdot ATR$ devant le barreau~; selon que le niveau cède ou tient, la position vise le barreau suivant (\emph  {breakout}) ou le barreau précédent (\emph  {reversal}).}}{8}{figure.caption.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Correction de la convention de datation}{5}{subsection.3.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les neuf critères avant et après la correction de la convention de datation des minutes. Un seul change de camp, et il change en faveur de la stratégie~; le verdict, lui, ne bouge pas. Ces deux archives portent sur la campagne Python : la mesure MT5 ajoutée ensuite figure dans la table de décision consolidée.}}{6}{table.caption.2}\protected@file@percent }
+\newlabel{tab:x10_v1_v2}{{2}{6}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les neuf critères avant et après la correction de la convention de datation des minutes. Un seul change de camp, et il change en faveur de la stratégie~; le verdict, lui, ne bouge pas. Ces deux archives portent sur la campagne Python : la mesure MT5 ajoutée ensuite figure dans la table de décision consolidée}{table.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Découpage in-sample / hors échantillon}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Budget d'essais et registre de sélection}{6}{subsection.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}La table de décision, gelée avant la mesure}{7}{subsection.3.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Le modèle de coût}{7}{subsection.3.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}Les trois moteurs : vectoriel, QuantConnect, MetaTrader~5}{7}{subsection.3.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.10}La revue à contexte vierge}{7}{subsection.3.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.11}Reproductibilité}{8}{subsection.3.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}La grille x10 et sa non-stationnarité}{8}{section.4}\protected@file@percent }
+\newlabel{sec:x10_grille}{{4}{8}{La grille x10 et sa non-stationnarité}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Définition de la grille}{8}{subsection.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Le pas de grille mesuré en ATR, année par année}{8}{subsection.4.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces \xpg@aux {}{french}\ignorespaces Le pas de la grille mesuré en ATR M5, année par année. La « même » stratégie vise une cible de dix-sept écarts-types de barre en début d'échantillon et de moins de quatre en fin.}}{8}{table.caption.3}\protected@file@percent }
-\newlabel{tab:x10_feasibility}{{2}{8}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Le pas de la grille mesuré en ATR M5, année par année. La « même » stratégie vise une cible de dix-sept écarts-types de barre en début d'échantillon et de moins de quatre en fin}{table.caption.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \xpg@aux {}{french}\ignorespaces À gauche, le pas de la grille exprimé en \texttt  {\small  \add@extra@listi {sml}ATR} de cinq minutes~; à droite, le nombre médian de croisements de niveau par jour. Les deux courbes sont le même fait, vu de deux côtés.}}{9}{figure.caption.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Ce que la dérive du régime change pour le signal}{9}{subsection.4.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Taux de rejet du garde-fou $R \geq 1$, par année. Le dénominateur ne compte que les candidats ayant atteint le test~: un refus au contexte n'a pas de $R$ estimé.}}{9}{table.caption.5}\protected@file@percent }
-\newlabel{tab:x10_r_rule}{{3}{9}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Taux de rejet du garde-fou $R \geq 1$, par année. Le dénominateur ne compte que les candidats ayant atteint le test~: un refus au contexte n'a pas de $R$ estimé}{table.caption.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Taux de rejet annuel du garde-fou de rapport gain/risque. Le dénominateur ne compte que les candidats ayant atteint ce test~: un candidat refusé plus tôt, au contexte, n'a pas de rapport estimé et n'y figure pas.}}{10}{figure.caption.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \xpg@aux {}{french}\ignorespaces La grille des niveaux x10 et la zone d'approche. Le prix est surveillé dès qu'il entre dans une bande de largeur $z \cdot ATR$ devant le barreau~; selon que le niveau cède ou tient, la position vise le barreau suivant (\emph  {breakout}) ou le barreau précédent (\emph  {reversal}).}}{9}{figure.caption.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Le pas de la grille mesuré en ATR M5, année par année. La « même » stratégie vise une cible de dix-sept écarts-types de barre en début d'échantillon et de moins de quatre en fin.}}{9}{table.caption.4}\protected@file@percent }
+\newlabel{tab:x10_feasibility}{{3}{9}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Le pas de la grille mesuré en ATR M5, année par année. La « même » stratégie vise une cible de dix-sept écarts-types de barre en début d'échantillon et de moins de quatre en fin}{table.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \xpg@aux {}{french}\ignorespaces À gauche, le pas de la grille exprimé en \texttt  {\small  \add@extra@listi {sml}ATR} de cinq minutes~; à droite, le nombre médian de croisements de niveau par jour. Les deux courbes sont le même fait, vu de deux côtés.}}{9}{figure.caption.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Ce que la dérive du régime change pour le signal}{10}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \xpg@aux {}{french}\ignorespaces Taux de rejet du garde-fou $R \geq 1$, par année. Le dénominateur ne compte que les candidats ayant atteint le test~: un refus au contexte n'a pas de $R$ estimé.}}{10}{table.caption.6}\protected@file@percent }
+\newlabel{tab:x10_r_rule}{{4}{10}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Taux de rejet du garde-fou $R \geq 1$, par année. Le dénominateur ne compte que les candidats ayant atteint le test~: un refus au contexte n'a pas de $R$ estimé}{table.caption.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Ce que cette dérive interdit de conclure}{10}{subsection.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \xpg@aux {}{french}\ignorespaces Taux de rejet annuel du garde-fou de rapport gain/risque. Le dénominateur ne compte que les candidats ayant atteint ce test~: un candidat refusé plus tôt, au contexte, n'a pas de rapport estimé et n'y figure pas.}}{11}{figure.caption.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {5}Mécanique de la stratégie}{11}{section.5}\protected@file@percent }
 \newlabel{sec:x10_mecanique}{{5}{11}{Mécanique de la stratégie}{section.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.1}L'unité de mesure : tout se compte en ATR}{11}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}L'approche du niveau : vitesse, momentum, accélération}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}L'approche du niveau : vitesse, momentum, accélération}{12}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Le contexte : EMA50 horaire, VWAP de séance, dollar}{12}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La moyenne mobile exponentielle à 50 périodes horaires.}{12}{paragraph*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le VWAP de séance.}{12}{paragraph*.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le panier dollar.}{12}{paragraph*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Comment le contexte est utilisé --- et comment il ne l'est pas}{12}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La moyenne mobile exponentielle à 50 périodes horaires.}{12}{paragraph*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le VWAP de séance.}{12}{paragraph*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le panier dollar.}{13}{paragraph*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Comment le contexte est utilisé --- et comment il ne l'est pas}{13}{subsection.5.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.5}La machine à états}{13}{subsection.5.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Cible, stop et le garde-fou du rapport gain/risque}{13}{subsection.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Exécution : le moteur joue contre lui-même}{14}{subsection.5.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Sorties temporelles et fenêtre interdite}{14}{subsection.5.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Dimensionnement}{15}{subsection.5.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Les quatre scénarios}{15}{section.6}\protected@file@percent }
-\newlabel{sec:x10_scenarios}{{6}{15}{Les quatre scénarios}{section.6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par scénario. Les quatre dépassent le seuil de commentabilité de la table de décision, et les quatre perdent.}}{15}{table.caption.10}\protected@file@percent }
-\newlabel{tab:x10_scenarios}{{4}{15}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par scénario. Les quatre dépassent le seuil de commentabilité de la table de décision, et les quatre perdent}{table.caption.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Breakout Long et Breakout Short}{15}{subsection.6.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction, par scénario (à gauche) et par séance (à droite). Les barres bleues sont les \emph  {breakouts}, les orange les \emph  {reversals}. Aucune n'est du bon côté de l'axe.}}{16}{figure.caption.11}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \xpg@aux {}{french}\ignorespaces Breakout Long, exemple réel. Le niveau est la ligne foncée, la bande claire est la zone d'approche, les pointillés sont le stop et la cible. Le trade retenu est celui dont le $R$ réalisé est médian parmi les \emph  {Breakout Long} clôturés en 2023.}}{16}{figure.caption.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Reversal Short et Reversal Long}{16}{subsection.6.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \xpg@aux {}{french}\ignorespaces Breakout Short, même règle de choix. La cible est le barreau inférieur~; le stop est au-dessus du niveau franchi.}}{17}{figure.caption.13}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \xpg@aux {}{french}\ignorespaces Reversal Long, même règle de choix. Le débordement a lieu sous le niveau~; le stop se place sous l'extrême atteint.}}{17}{figure.caption.14}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \xpg@aux {}{french}\ignorespaces Reversal Short, même règle de choix.}}{18}{figure.caption.15}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023.}}{18}{table.caption.16}\protected@file@percent }
-\newlabel{tab:x10_trade_examples}{{5}{18}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Cible, stop et le garde-fou du rapport gain/risque}{14}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Exécution : le moteur joue contre lui-même}{15}{subsection.5.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Sorties temporelles et fenêtre interdite}{15}{subsection.5.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Dimensionnement}{16}{subsection.5.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Les quatre scénarios}{16}{section.6}\protected@file@percent }
+\newlabel{sec:x10_scenarios}{{6}{16}{Les quatre scénarios}{section.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par scénario. Les quatre dépassent le seuil de commentabilité de la table de décision, et les quatre perdent.}}{16}{table.caption.11}\protected@file@percent }
+\newlabel{tab:x10_scenarios}{{5}{16}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par scénario. Les quatre dépassent le seuil de commentabilité de la table de décision, et les quatre perdent}{table.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction, par scénario (à gauche) et par séance (à droite). Les barres bleues sont les \emph  {breakouts}, les orange les \emph  {reversals}. Aucune n'est du bon côté de l'axe.}}{16}{figure.caption.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Breakout Long et Breakout Short}{16}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \xpg@aux {}{french}\ignorespaces Breakout Long, exemple réel. Le niveau est la ligne foncée, la bande claire est la zone d'approche, les pointillés sont le stop et la cible. Le trade retenu est celui dont le $R$ réalisé est médian parmi les \emph  {Breakout Long} clôturés en 2023.}}{17}{figure.caption.13}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \xpg@aux {}{french}\ignorespaces Breakout Short, même règle de choix. La cible est le barreau inférieur~; le stop est au-dessus du niveau franchi.}}{17}{figure.caption.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Reversal Short et Reversal Long}{18}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \xpg@aux {}{french}\ignorespaces Reversal Long, même règle de choix. Le débordement a lieu sous le niveau~; le stop se place sous l'extrême atteint.}}{18}{figure.caption.15}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Ce qui sépare un breakout d'un sweep}{18}{subsection.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Combien l'automate refuse}{19}{subsection.6.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Recherche contre exécution : le cadre de réconciliation}{20}{section.7}\protected@file@percent }
-\newlabel{sec:x10_reconciliation}{{7}{20}{Recherche contre exécution : le cadre de réconciliation}{section.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \xpg@aux {}{french}\ignorespaces Reversal Short, même règle de choix.}}{19}{figure.caption.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Combien l'automate refuse}{20}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Recherche contre exécution : résultats de la réconciliation}{20}{section.7}\protected@file@percent }
+\newlabel{sec:x10_reconciliation}{{7}{20}{Recherche contre exécution : résultats de la réconciliation}{section.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Ce que chaque moteur simule}{20}{subsection.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Protocole de réconciliation événement par événement}{20}{subsection.7.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}L'échelle de lecture à cinq barreaux}{21}{subsection.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Écarts structurels attendus, et tolérances}{21}{subsection.7.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Ce que la réconciliation ne pourra pas établir}{22}{subsection.7.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Gestion du risque}{22}{section.8}\protected@file@percent }
-\newlabel{sec:x10_risque}{{8}{22}{Gestion du risque}{section.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Le R, unité de compte de tout ce rapport}{22}{subsection.8.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Risque par position et dimensionnement}{22}{subsection.8.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}La réduction sous contexte dollar adverse}{23}{subsection.8.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Une position à la fois, aucune position de nuit}{23}{subsection.8.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}Durée de vie et bornes d'exposition}{23}{subsection.8.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.6}Ce que le risque de cette stratégie aurait coûté}{24}{subsection.8.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Résultats in-sample}{24}{section.9}\protected@file@percent }
-\newlabel{sec:x10_in_sample}{{9}{24}{Résultats in-sample}{section.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}La grille des vingt-sept configurations}{24}{subsection.9.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \xpg@aux {}{french}\ignorespaces Carte du Sharpe net sur les trois axes. Chaque panneau fixe la distance du stop et fait varier la largeur de zone (verticalement) et le seuil d'accélération (horizontalement). L'échelle de couleur est commune aux trois panneaux.}}{24}{figure.caption.18}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les vingt-sept configurations de la grille, classées par Sharpe net décroissant, au spread constant de sélection. L'étoile marque le centre géométrique, support des décompositions~: ce n'est pas une configuration retenue.}}{25}{table.caption.17}\protected@file@percent }
-\newlabel{tab:x10_grid27}{{6}{25}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les vingt-sept configurations de la grille, classées par Sharpe net décroissant, au spread constant de sélection. L'étoile marque le centre géométrique, support des décompositions~: ce n'est pas une configuration retenue}{table.caption.17}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Le plateau : aucune configuration retenue}{25}{subsection.9.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Plateau contre pic.}{26}{paragraph*.19}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Courbe d'équité et immersion}{26}{subsection.9.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces \xpg@aux {}{french}\ignorespaces Courbe d'équité par séance de la configuration analysée, base~1. La perte est régulière~: pas de décrochage brutal, pas de période de récupération.}}{26}{figure.caption.20}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces \xpg@aux {}{french}\ignorespaces Courbe d'immersion --- l'écart au plus haut historique de la courbe d'équité. Elle ne revient jamais durablement à zéro.}}{27}{figure.caption.21}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Walk-forward annuel}{27}{subsection.9.4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces \xpg@aux {}{french}\ignorespaces Walk-forward annuel de la configuration analysée. Aucune année n'est positive~; la perte s'atténue avec le temps sans jamais changer de signe.}}{27}{table.caption.22}\protected@file@percent }
-\newlabel{tab:x10_walkforward}{{7}{27}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Walk-forward annuel de la configuration analysée. Aucune année n'est positive~; la perte s'atténue avec le temps sans jamais changer de signe}{table.caption.22}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.5}Décomposition par scénario et par séance}{27}{subsection.9.5}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction, année par année. Le critère gelé demandait qu'au moins 60~\% des années soient positives.}}{28}{figure.caption.23}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par séance, à l'heure de New York de la barre de décision. C'est la coupe la plus contrastée de la campagne.}}{28}{table.caption.24}\protected@file@percent }
-\newlabel{tab:x10_sessions}{{8}{28}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par séance, à l'heure de New York de la barre de décision. C'est la coupe la plus contrastée de la campagne}{table.caption.24}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.6}Décomposition par régime de volatilité}{28}{subsection.9.6}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par régime de volatilité~: terciles d'ATR M5 en haut, tranches de pas de grille rapporté à l'ATR en bas. Aucune des quatre tranches n'est positive.}}{28}{table.caption.25}\protected@file@percent }
-\newlabel{tab:x10_regimes}{{9}{28}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par régime de volatilité~: terciles d'ATR M5 en haut, tranches de pas de grille rapporté à l'ATR en bas. Aucune des quatre tranches n'est positive}{table.caption.25}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.7}Par raison de sortie : l'arithmétique complète de l'échec}{29}{subsection.9.7}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces \xpg@aux {}{french}\ignorespaces Répartition des sorties. Le stop rend exactement $-1$~R, ce qui vérifie le dimensionnement de bout en bout~; la cible rend un peu plus de deux R, et elle n'arrive pas assez souvent.}}{29}{table.caption.26}\protected@file@percent }
-\newlabel{tab:x10_exits}{{10}{29}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Répartition des sorties. Le stop rend exactement $-1$~R, ce qui vérifie le dimensionnement de bout en bout~; la cible rend un peu plus de deux R, et elle n'arrive pas assez souvent}{table.caption.26}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \xpg@aux {}{french}\ignorespaces À gauche, combien de transactions sortent par chaque porte~; à droite, ce que chaque porte rapporte en moyenne.}}{29}{figure.caption.27}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.8}Les coupes descriptives du mandat}{30}{subsection.9.8}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les trois coupes descriptives du mandat~: extension VWAP, contexte dollar, retest. Aucune ne fait passer l'espérance du bon côté de zéro.}}{30}{table.caption.28}\protected@file@percent }
-\newlabel{tab:x10_context_cuts}{{11}{30}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les trois coupes descriptives du mandat~: extension VWAP, contexte dollar, retest. Aucune ne fait passer l'espérance du bon côté de zéro}{table.caption.28}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.9}Ablations : retirer une composante à la fois}{30}{subsection.9.9}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces \xpg@aux {}{french}\ignorespaces Ablations des trois filtres de contexte, à la configuration analysée. Le classement est monotone~: plus on retire de contexte, plus on perd.}}{30}{table.caption.29}\protected@file@percent }
-\newlabel{tab:x10_ablations}{{12}{30}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Ablations des trois filtres de contexte, à la configuration analysée. Le classement est monotone~: plus on retire de contexte, plus on perd}{table.caption.29}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.10}Concentration du résultat}{31}{subsection.9.10}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces \xpg@aux {}{french}\ignorespaces Concentration du résultat. Les parts sont rapportées au profit \emph  {brut}~: une part d'un net négatif n'aurait pas de sens.}}{31}{table.caption.30}\protected@file@percent }
-\newlabel{tab:x10_concentration}{{13}{31}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Concentration du résultat. Les parts sont rapportées au profit \emph {brut}~: une part d'un net négatif n'aurait pas de sens}{table.caption.30}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {10}Hors échantillon}{31}{section.10}\protected@file@percent }
-\newlabel{sec:x10_hors_echantillon}{{10}{31}{Hors échantillon}{section.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Le dispositif de gel, tel qu'il avait été prévu}{32}{subsection.10.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Trois raisons de ne pas dépenser le holdout}{32}{subsection.10.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Pourquoi un chiffre de 2026 serait trompeur dans les deux sens}{32}{subsection.10.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Ce que la limite de données impose de toute façon}{33}{subsection.10.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.5}Ce qui a tout de même touché des barres de 2026}{33}{subsection.10.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {11}Bootstrap, Monte-Carlo et risque de ruine}{33}{section.11}\protected@file@percent }
-\newlabel{sec:x10_bootstrap}{{11}{33}{Bootstrap, Monte-Carlo et risque de ruine}{section.11}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Bootstrap stationnaire par blocs}{33}{subsection.11.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces \xpg@aux {}{french}\ignorespaces Intervalles de confiance à 95~\% de six métriques. Le losange est la valeur observée, le trait l'intervalle, la ligne verticale le zéro. Les échelles sont hétérogènes~: seul le \emph  {signe} est comparable d'une ligne à l'autre.}}{34}{figure.caption.31}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Rééchantillonnage de l'ordre des transactions}{34}{subsection.11.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}Probabilité de ruine et trajectoires simulées}{35}{subsection.11.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.4}Ce que ces trois techniques établissent, et ce qu'elles ne font pas}{35}{subsection.11.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {12}Robustesse avancée et table de verdict}{36}{section.12}\protected@file@percent }
-\newlabel{sec:x10_robustesse}{{12}{36}{Robustesse avancée et table de verdict}{section.12}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces \xpg@aux {}{french}\ignorespaces Batterie de robustesse de la configuration analysée. Les intervalles sont des bootstraps stationnaires par blocs~; le DSR et le haircut sont déflatés par le registre d'essais.}}{36}{table.caption.32}\protected@file@percent }
-\newlabel{tab:x10_robustness}{{14}{36}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Batterie de robustesse de la configuration analysée. Les intervalles sont des bootstraps stationnaires par blocs~; le DSR et le haircut sont déflatés par le registre d'essais}{table.caption.32}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Deflated Sharpe Ratio}{36}{subsection.12.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Probability of Backtest Overfitting}{37}{subsection.12.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Validation croisée combinatoire purgée}{37}{subsection.12.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces \xpg@aux {}{french}\ignorespaces Validation croisée combinatoire purgée~: les cinq meilleures configurations sur la médiane hors échantillon. Aucune des vingt-sept n'est positive sur un seul des splits. La métrique est le Sharpe des rendements minute du portefeuille et ne se compare au reste du rapport qu'en signe.}}{37}{table.caption.33}\protected@file@percent }
-\newlabel{tab:x10_cpcv}{{15}{37}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Validation croisée combinatoire purgée~: les cinq meilleures configurations sur la médiane hors échantillon. Aucune des vingt-sept n'est positive sur un seul des splits. La métrique est le Sharpe des rendements minute du portefeuille et ne se compare au reste du rapport qu'en signe}{table.caption.33}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Deux tests dont les résultats ne sont pas publiables}{37}{subsection.12.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Table de verdict}{38}{subsection.12.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {13}Sensibilité aux coûts}{38}{section.13}\protected@file@percent }
-\newlabel{sec:x10_couts}{{13}{38}{Sensibilité aux coûts}{section.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Le modèle de coût retenu, et pourquoi celui-là}{38}{subsection.13.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.2}Ce que le coût pèse, en unités de risque}{39}{subsection.13.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.3}Les neuf sensibilités}{39}{subsection.13.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces \xpg@aux {}{french}\ignorespaces Sensibilité aux coûts. Les deux lignes marquées d'une dague sont les sensibilités que la table de décision rend obligatoires.}}{39}{table.caption.34}\protected@file@percent }
-\newlabel{tab:x10_costs}{{16}{39}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Sensibilité aux coûts. Les deux lignes marquées d'une dague sont les sensibilités que la table de décision rend obligatoires}{table.caption.34}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction en fonction du spread effectif, pour trois niveaux de glissement. La ligne horizontale est le seuil de rentabilité.}}{40}{figure.caption.35}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.4}Le coût n'est pas LA cause}{40}{subsection.13.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.5}La grille entière au spread doublé}{41}{subsection.13.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {13.6}Exécution partielle et glissement}{41}{subsection.13.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {14}Limites}{41}{section.14}\protected@file@percent }
-\newlabel{sec:x10_limites}{{14}{41}{Limites}{section.14}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Le spread est constant}{41}{subsection.14.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.2}Le seuil d'accélération a un double rôle}{41}{subsection.14.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.3}La distance du stop n'agit que sur la moitié des scénarios}{42}{subsection.14.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.4}L'amorçage de la moyenne horaire}{42}{subsection.14.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.5}La durée maximale coupe des positions gagnantes}{42}{subsection.14.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.6}Le Sharpe porte sur les rendements d'une stratégie souvent plate}{42}{subsection.14.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.7}Deux tests statistiques ne sont pas publiés}{42}{subsection.14.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.8}Le portage d'exécution repose sur un modèle interpolé}{42}{subsection.14.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.9}Une fenêtre horaire interdite, écart au mandat}{43}{subsection.14.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.10}Aucun filtre d'annonces}{43}{subsection.14.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.11}Ce que ce rapport ne prétend pas établir}{43}{subsection.14.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {15}Motifs de non-déploiement}{43}{section.15}\protected@file@percent }
-\newlabel{sec:x10_non_deploiement}{{15}{43}{Motifs de non-déploiement}{section.15}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {15.1}Ce que les mesures établissent}{43}{subsection.15.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {15.2}Ce qui manque encore, et pourquoi cela ne change rien}{44}{subsection.15.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {15.3}Ce qui pourrait rouvrir le dossier}{44}{subsection.15.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hypothèse 1 --- une grille adaptative en volatilité.}{44}{paragraph*.36}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hypothèse 2 --- un scénario unique.}{45}{paragraph*.37}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hypothèse 3 --- une restriction de séance.}{45}{paragraph*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hypothèse 4 --- l'extension au VWAP comme filtre.}{45}{paragraph*.39}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {15.4}Ce qui a été appris, indépendamment du verdict}{45}{subsection.15.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Glossaire}{46}{appendix.A}\protected@file@percent }
-\newlabel{app:x10_glossaire}{{A}{46}{Glossaire}{appendix.A}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Instrument et unités de temps}{46}{subsection.A.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Contexte}{46}{subsection.A.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Approche du niveau}{46}{subsection.A.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Mesure et validation}{47}{subsection.A.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {B}Anatomie d'un trade, pas à pas}{47}{appendix.B}\protected@file@percent }
-\newlabel{app:x10_anatomie}{{B}{47}{Anatomie d'un trade, pas à pas}{appendix.B}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Les neuf étapes}{47}{subsection.B.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Les quatre exemples, côte à côte}{48}{subsection.B.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023.}}{48}{table.caption.40}\protected@file@percent }
-\newlabel{tab:x10_trade_examples}{{17}{48}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023}{table.caption.40}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Lire une figure d'exemple}{48}{subsection.B.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Deux cas de bord que les exemples ne montrent pas}{49}{subsection.B.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {C}Plateau contre pic : la carte des paramètres}{49}{appendix.C}\protected@file@percent }
-\newlabel{app:x10_plateau}{{C}{49}{Plateau contre pic : la carte des paramètres}{appendix.C}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Pourquoi le meilleur point est le plus mauvais choix}{49}{subsection.C.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Le protocole de balayage}{49}{subsection.C.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Le critère de plateau}{50}{subsection.C.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}Ce que la carte montre ici}{50}{subsection.C.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces \xpg@aux {}{french}\ignorespaces La carte des vingt-sept Sharpes nets. Un plateau se reconnaîtrait à une zone contiguë de cases claires~; il n'y en a pas, et l'échelle entière est du côté négatif.}}{50}{figure.caption.41}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Le pic et le point analysé, côte à côte}{51}{subsection.C.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.6}Le point analysé n'est pas une sélection}{51}{subsection.C.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {D}Méthodologie des tests de robustesse}{51}{appendix.D}\protected@file@percent }
-\newlabel{app:x10_methodologie_robustesse}{{D}{51}{Méthodologie des tests de robustesse}{appendix.D}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Bootstrap stationnaire par blocs}{51}{subsection.D.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question.}{51}{paragraph*.42}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le principe.}{51}{paragraph*.43}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Pourquoi par blocs.}{51}{paragraph*.44}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Ce qu'il ne dit pas.}{52}{paragraph*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Probabilistic Sharpe Ratio et Deflated Sharpe Ratio}{52}{subsection.D.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question du PSR.}{52}{paragraph*.46}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question du DSR.}{52}{paragraph*.47}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le comptage des essais.}{52}{paragraph*.48}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le haircut Sharpe.}{52}{paragraph*.49}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La longueur minimale de backtest.}{52}{paragraph*.50}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Probability of Backtest Overfitting}{52}{subsection.D.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question.}{52}{paragraph*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le principe.}{52}{paragraph*.52}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La lecture.}{52}{paragraph*.53}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le piège, dans ce dossier précis.}{52}{paragraph*.54}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.4}Validation croisée combinatoire purgée}{53}{subsection.D.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question.}{53}{paragraph*.55}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Les deux précautions.}{53}{paragraph*.56}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Ce qu'on en tire.}{53}{paragraph*.57}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.5}Rééchantillonnage de l'ordre des transactions}{53}{subsection.D.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question.}{53}{paragraph*.58}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le principe.}{53}{paragraph*.59}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Le score de chance de séquence.}{53}{paragraph*.60}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.6}Risque de ruine}{53}{subsection.D.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{La question.}{53}{paragraph*.61}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Ce qu'il faut savoir lire.}{53}{paragraph*.62}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.7}Les seuils retenus, et leur justification}{53}{subsection.D.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {D.8}Reproduire ces mesures}{54}{subsection.D.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {E}Table de décision gelée}{54}{appendix.E}\protected@file@percent }
-\newlabel{app:x10_table_decision}{{E}{54}{Table de décision gelée}{appendix.E}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.1}Table reproduite}{54}{subsection.E.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces \xpg@aux {}{french}\ignorespaces Table de décision gelée avant mesure, confrontée aux résultats de la campagne in-sample. Un critère non mesuré vaut échec, jamais « non applicable ».}}{54}{table.caption.63}\protected@file@percent }
-\newlabel{tab:x10_decision}{{18}{54}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Table de décision gelée avant mesure, confrontée aux résultats de la campagne in-sample. Un critère non mesuré vaut échec, jamais « non applicable »}{table.caption.63}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.2}Les trois verdicts, tels qu'ils avaient été écrits}{55}{subsection.E.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.3}Preuve d'antériorité du gel}{55}{subsection.E.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.4}Le budget d'essais, tel qu'il avait été fixé}{55}{subsection.E.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.5}Journal des lectures du hors échantillon}{56}{subsection.E.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {E.6}Ce que la table interdisait explicitement}{56}{subsection.E.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les trois moteurs, chacun sur la fenêtre où il a tourné, avec la référence restreinte à la même fenêtre juste en dessous. Chaque espérance porte sur tous les trades du moteur, en unités de son propre risque initial. Le run QC complet porte des anomalies d'exécution détaillées dans le texte ; son niveau ne valide pas le portage.}}{21}{table.caption.17}\protected@file@percent }
+\newlabel{tab:x10_engines}{{6}{21}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les trois moteurs, chacun sur la fenêtre où il a tourné, avec la référence restreinte à la même fenêtre juste en dessous. Chaque espérance porte sur tous les trades du moteur, en unités de son propre risque initial. Le run QC complet porte des anomalies d'exécution détaillées dans le texte ; son niveau ne valide pas le portage}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}QuantConnect : calage contrôlé, portage complet dégradé}{21}{subsection.7.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces \xpg@aux {}{french}\ignorespaces QuantConnect année par année. Les deux moteurs sont négatifs les sept années. La dernière colonne compte les entrées déjà collées au lot minimum~: c'est la trace de l'équité qui fond, et la raison pour laquelle le niveau du compte QuantConnect ne se lit pas.}}{21}{table.caption.18}\protected@file@percent }
+\newlabel{tab:x10_qc_by_year}{{7}{21}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces QuantConnect année par année. Les deux moteurs sont négatifs les sept années. La dernière colonne compte les entrées déjà collées au lot minimum~: c'est la trace de l'équité qui fond, et la raison pour laquelle le niveau du compte QuantConnect ne se lit pas}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}MetaTrader~5 : même flux, puis flux distinct}{21}{subsection.7.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces \xpg@aux {}{french}\ignorespaces MetaTrader~5, année par année. Le run commence en novembre 2022~: la première ligne porte deux mois, pas un exercice.}}{22}{table.caption.19}\protected@file@percent }
+\newlabel{tab:x10_mt5_by_year}{{8}{22}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces MetaTrader~5, année par année. Le run commence en novembre 2022~: la première ligne porte deux mois, pas un exercice}{table.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces \xpg@aux {}{french}\ignorespaces MetaTrader~5, par scénario puis par raison de sortie. Quatre scénarios sur quatre sont négatifs~; le stop perd près d'une unité de risque, comme sur la référence.}}{22}{table.caption.20}\protected@file@percent }
+\newlabel{tab:x10_mt5_by_scenario}{{9}{22}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces MetaTrader~5, par scénario puis par raison de sortie. Quatre scénarios sur quatre sont négatifs~; le stop perd près d'une unité de risque, comme sur la référence}{table.caption.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}L'échelle à cinq barreaux, après mesure}{22}{subsection.7.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces \xpg@aux {}{french}\ignorespaces Attribution des écarts entre la référence et l'expert advisor MetaTrader~5. La part non attribuée concerne le rejeu sur le même dump en mid ; le diagnostic de position unique concerne les flux distincts. Une cause identifiée ne transforme pas une cible d'appariement manquée en cible atteinte.}}{23}{table.caption.21}\protected@file@percent }
+\newlabel{tab:x10_mt5_attribution}{{10}{23}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Attribution des écarts entre la référence et l'expert advisor MetaTrader~5. La part non attribuée concerne le rejeu sur le même dump en mid ; le diagnostic de position unique concerne les flux distincts. Une cause identifiée ne transforme pas une cible d'appariement manquée en cible atteinte}{table.caption.21}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces \xpg@aux {}{french}\ignorespaces Diagnostics et cibles de réconciliation. Les premières lignes ne prouvent pas une égalité intégrale des barres ou des indicateurs. Le résidu mesure une part d'entrées, pas une part du P\&L. Chaque rapprochement garde son propre échantillon.}}{23}{table.caption.22}\protected@file@percent }
+\newlabel{tab:x10_rungs}{{11}{23}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Diagnostics et cibles de réconciliation. Les premières lignes ne prouvent pas une égalité intégrale des barres ou des indicateurs. Le résidu mesure une part d'entrées, pas une part du P\&L. Chaque rapprochement garde son propre échantillon}{table.caption.22}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Gestion du risque}{24}{section.8}\protected@file@percent }
+\newlabel{sec:x10_risque}{{8}{24}{Gestion du risque}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Le R, unité de compte de tout ce rapport}{24}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Risque par position et dimensionnement}{24}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}La réduction sous contexte dollar adverse}{25}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Une position à la fois, aucune position de nuit}{25}{subsection.8.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}Durée de vie et bornes d'exposition}{25}{subsection.8.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.6}Ce que le risque de cette stratégie aurait coûté}{26}{subsection.8.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Résultats in-sample}{26}{section.9}\protected@file@percent }
+\newlabel{sec:x10_in_sample}{{9}{26}{Résultats in-sample}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}La grille des vingt-sept configurations}{26}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \xpg@aux {}{french}\ignorespaces Carte du Sharpe net sur les trois axes. Chaque panneau fixe la distance du stop et fait varier la largeur de zone (verticalement) et le seuil d'accélération (horizontalement). L'échelle de couleur est commune aux trois panneaux.}}{26}{figure.caption.24}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les vingt-sept configurations de la grille, classées par Sharpe net décroissant, au spread constant de sélection. L'étoile marque le centre géométrique, support des décompositions~: ce n'est pas une configuration retenue.}}{27}{table.caption.23}\protected@file@percent }
+\newlabel{tab:x10_grid27}{{12}{27}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les vingt-sept configurations de la grille, classées par Sharpe net décroissant, au spread constant de sélection. L'étoile marque le centre géométrique, support des décompositions~: ce n'est pas une configuration retenue}{table.caption.23}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Le plateau : aucune configuration retenue}{27}{subsection.9.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Plateau contre pic.}{28}{paragraph*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Courbe d'équité et immersion}{28}{subsection.9.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces \xpg@aux {}{french}\ignorespaces Courbe d'équité par séance de la configuration analysée, base~1. La perte est régulière~: pas de décrochage brutal, pas de période de récupération.}}{28}{figure.caption.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Walk-forward annuel}{28}{subsection.9.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces \xpg@aux {}{french}\ignorespaces Courbe d'immersion --- l'écart au plus haut historique de la courbe d'équité. Elle ne revient jamais durablement à zéro.}}{29}{figure.caption.27}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces \xpg@aux {}{french}\ignorespaces Walk-forward annuel de la configuration analysée. Aucune année n'est positive~; la perte s'atténue avec le temps sans jamais changer de signe.}}{29}{table.caption.28}\protected@file@percent }
+\newlabel{tab:x10_walkforward}{{13}{29}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Walk-forward annuel de la configuration analysée. Aucune année n'est positive~; la perte s'atténue avec le temps sans jamais changer de signe}{table.caption.28}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction, année par année. Le critère gelé demandait qu'au moins 60~\% des années soient positives.}}{29}{figure.caption.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.5}Décomposition par scénario et par séance}{30}{subsection.9.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par séance, à l'heure de New York de la barre de décision. C'est la coupe la plus contrastée de la campagne.}}{30}{table.caption.30}\protected@file@percent }
+\newlabel{tab:x10_sessions}{{14}{30}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par séance, à l'heure de New York de la barre de décision. C'est la coupe la plus contrastée de la campagne}{table.caption.30}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.6}Décomposition par régime de volatilité}{30}{subsection.9.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces \xpg@aux {}{french}\ignorespaces Décomposition par régime de volatilité~: terciles d'ATR M5 en haut, tranches de pas de grille rapporté à l'ATR en bas. Aucune des quatre tranches n'est positive.}}{30}{table.caption.31}\protected@file@percent }
+\newlabel{tab:x10_regimes}{{15}{30}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Décomposition par régime de volatilité~: terciles d'ATR M5 en haut, tranches de pas de grille rapporté à l'ATR en bas. Aucune des quatre tranches n'est positive}{table.caption.31}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.7}Par raison de sortie : l'arithmétique complète de l'échec}{30}{subsection.9.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces \xpg@aux {}{french}\ignorespaces Répartition des sorties. Le stop rend exactement $-1$~R, ce qui vérifie le dimensionnement de bout en bout~; la cible rend un peu plus de deux R, et elle n'arrive pas assez souvent.}}{31}{table.caption.32}\protected@file@percent }
+\newlabel{tab:x10_exits}{{16}{31}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Répartition des sorties. Le stop rend exactement $-1$~R, ce qui vérifie le dimensionnement de bout en bout~; la cible rend un peu plus de deux R, et elle n'arrive pas assez souvent}{table.caption.32}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \xpg@aux {}{french}\ignorespaces À gauche, combien de transactions sortent par chaque porte~; à droite, ce que chaque porte rapporte en moyenne.}}{31}{figure.caption.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.8}Les coupes descriptives du mandat}{31}{subsection.9.8}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les trois coupes descriptives du mandat~: extension VWAP, contexte dollar, retest. Aucune ne fait passer l'espérance du bon côté de zéro.}}{32}{table.caption.34}\protected@file@percent }
+\newlabel{tab:x10_context_cuts}{{17}{32}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les trois coupes descriptives du mandat~: extension VWAP, contexte dollar, retest. Aucune ne fait passer l'espérance du bon côté de zéro}{table.caption.34}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.9}Ablations : retirer une composante à la fois}{32}{subsection.9.9}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces \xpg@aux {}{french}\ignorespaces Ablations des trois filtres de contexte, à la configuration analysée. Le classement est monotone~: plus on retire de contexte, plus on perd.}}{32}{table.caption.35}\protected@file@percent }
+\newlabel{tab:x10_ablations}{{18}{32}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Ablations des trois filtres de contexte, à la configuration analysée. Le classement est monotone~: plus on retire de contexte, plus on perd}{table.caption.35}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces \xpg@aux {}{french}\ignorespaces Concentration du résultat. Les parts sont rapportées au profit \emph  {brut}~: une part d'un net négatif n'aurait pas de sens.}}{33}{table.caption.36}\protected@file@percent }
+\newlabel{tab:x10_concentration}{{19}{33}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Concentration du résultat. Les parts sont rapportées au profit \emph {brut}~: une part d'un net négatif n'aurait pas de sens}{table.caption.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.10}Concentration du résultat}{33}{subsection.9.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Hors échantillon}{33}{section.10}\protected@file@percent }
+\newlabel{sec:x10_hors_echantillon}{{10}{33}{Hors échantillon}{section.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Le dispositif de gel, tel qu'il avait été prévu}{33}{subsection.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Deux raisons de ne pas dépenser le holdout}{34}{subsection.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Pourquoi un chiffre de 2026 serait trompeur dans les deux sens}{34}{subsection.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Ce que la limite de données impose de toute façon}{34}{subsection.10.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.5}Ce qui a tout de même touché des barres de 2026}{35}{subsection.10.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {11}Bootstrap, Monte-Carlo et risque de ruine}{35}{section.11}\protected@file@percent }
+\newlabel{sec:x10_bootstrap}{{11}{35}{Bootstrap, Monte-Carlo et risque de ruine}{section.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Bootstrap stationnaire par blocs}{35}{subsection.11.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces \xpg@aux {}{french}\ignorespaces Intervalles de confiance à 95~\% de six métriques. Le losange est la valeur observée, le trait l'intervalle, la ligne verticale le zéro. Les échelles sont hétérogènes~: seul le \emph  {signe} est comparable d'une ligne à l'autre.}}{35}{figure.caption.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Rééchantillonnage de l'ordre des transactions}{36}{subsection.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}Probabilité de ruine et trajectoires simulées}{36}{subsection.11.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.4}Ce que ces trois techniques établissent, et ce qu'elles ne font pas}{37}{subsection.11.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {12}Robustesse avancée et table de verdict}{37}{section.12}\protected@file@percent }
+\newlabel{sec:x10_robustesse}{{12}{37}{Robustesse avancée et table de verdict}{section.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces \xpg@aux {}{french}\ignorespaces Batterie de robustesse de la configuration analysée. Les intervalles sont des bootstraps stationnaires par blocs~; le DSR et le haircut sont déflatés par le registre d'essais.}}{38}{table.caption.38}\protected@file@percent }
+\newlabel{tab:x10_robustness}{{20}{38}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Batterie de robustesse de la configuration analysée. Les intervalles sont des bootstraps stationnaires par blocs~; le DSR et le haircut sont déflatés par le registre d'essais}{table.caption.38}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Deflated Sharpe Ratio}{38}{subsection.12.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Probability of Backtest Overfitting}{38}{subsection.12.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Validation croisée combinatoire purgée}{39}{subsection.12.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {21}{\ignorespaces \xpg@aux {}{french}\ignorespaces Validation croisée combinatoire purgée~: les cinq meilleures configurations sur la médiane hors échantillon. Aucune des vingt-sept n'est positive sur un seul des splits. La métrique est le Sharpe des rendements minute du portefeuille et ne se compare au reste du rapport qu'en signe.}}{39}{table.caption.39}\protected@file@percent }
+\newlabel{tab:x10_cpcv}{{21}{39}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Validation croisée combinatoire purgée~: les cinq meilleures configurations sur la médiane hors échantillon. Aucune des vingt-sept n'est positive sur un seul des splits. La métrique est le Sharpe des rendements minute du portefeuille et ne se compare au reste du rapport qu'en signe}{table.caption.39}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Deux tests dont les résultats ne sont pas publiables}{39}{subsection.12.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Table de verdict}{40}{subsection.12.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {13}Sensibilité aux coûts}{40}{section.13}\protected@file@percent }
+\newlabel{sec:x10_couts}{{13}{40}{Sensibilité aux coûts}{section.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Le modèle de coût retenu, et pourquoi celui-là}{40}{subsection.13.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.2}Le spread mesuré sur le flux du courtier}{40}{subsection.13.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {22}{\ignorespaces \xpg@aux {}{french}\ignorespaces Le spread réellement mesuré sur le flux du courtier, par année et par heure. L'heure la plus chère est la reprise de séance --- celle-là même à partir de laquelle la stratégie a le droit d'entrer.}}{41}{table.caption.40}\protected@file@percent }
+\newlabel{tab:x10_spread_measured}{{22}{41}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Le spread réellement mesuré sur le flux du courtier, par année et par heure. L'heure la plus chère est la reprise de séance --- celle-là même à partir de laquelle la stratégie a le droit d'entrer}{table.caption.40}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.3}Ce que le coût pèse, en unités de risque}{41}{subsection.13.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.4}Les neuf sensibilités}{41}{subsection.13.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {23}{\ignorespaces \xpg@aux {}{french}\ignorespaces Sensibilité aux coûts. Les deux lignes marquées d'une dague sont les sensibilités que la table de décision rend obligatoires.}}{42}{table.caption.41}\protected@file@percent }
+\newlabel{tab:x10_costs}{{23}{42}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Sensibilité aux coûts. Les deux lignes marquées d'une dague sont les sensibilités que la table de décision rend obligatoires}{table.caption.41}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces \xpg@aux {}{french}\ignorespaces Espérance nette par transaction en fonction du spread effectif, pour trois niveaux de glissement. La ligne horizontale est le seuil de rentabilité.}}{42}{figure.caption.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.5}Le coût n'est pas LA cause}{42}{subsection.13.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.6}La grille entière au spread doublé}{43}{subsection.13.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.7}Exécution partielle et glissement}{43}{subsection.13.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {14}Limites}{43}{section.14}\protected@file@percent }
+\newlabel{sec:x10_limites}{{14}{43}{Limites}{section.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Le spread de sélection est constant}{43}{subsection.14.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.2}La provenance amont du parquet n'est pas documentée}{43}{subsection.14.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.3}Le seuil d'accélération a un double rôle}{44}{subsection.14.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.4}La distance du stop n'agit que sur la moitié des scénarios}{44}{subsection.14.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.5}L'amorçage de la moyenne horaire}{44}{subsection.14.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.6}La durée maximale coupe des positions gagnantes}{44}{subsection.14.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.7}Le Sharpe porte sur les rendements d'une stratégie souvent plate}{44}{subsection.14.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.8}Deux tests statistiques ne sont pas publiés}{45}{subsection.14.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.9}Le portage d'exécution repose sur un modèle interpolé}{45}{subsection.14.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.10}La dernière minute de séance diffère dans le portage QuantConnect}{45}{subsection.14.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.11}Une fenêtre horaire interdite, écart au mandat}{45}{subsection.14.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.12}Aucun filtre d'annonces}{45}{subsection.14.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.13}Ce que ce rapport ne prétend pas établir}{46}{subsection.14.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {15}Motifs de non-déploiement}{46}{section.15}\protected@file@percent }
+\newlabel{sec:x10_non_deploiement}{{15}{46}{Motifs de non-déploiement}{section.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.1}Ce que les mesures établissent}{46}{subsection.15.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.2}Ce qui reste non validé}{47}{subsection.15.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.3}Ce qui pourrait rouvrir le dossier}{47}{subsection.15.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothèse 1 --- une grille adaptative en volatilité.}{47}{paragraph*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothèse 2 --- un scénario unique.}{47}{paragraph*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothèse 3 --- une restriction de séance.}{47}{paragraph*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hypothèse 4 --- l'extension au VWAP comme filtre.}{48}{paragraph*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.4}Ce qui a été appris, indépendamment du verdict}{48}{subsection.15.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Glossaire}{48}{appendix.A}\protected@file@percent }
+\newlabel{app:x10_glossaire}{{A}{48}{Glossaire}{appendix.A}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Instrument et unités de temps}{48}{subsection.A.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Contexte}{49}{subsection.A.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Approche du niveau}{49}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Mesure et validation}{49}{subsection.A.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Anatomie d'un trade, pas à pas}{50}{appendix.B}\protected@file@percent }
+\newlabel{app:x10_anatomie}{{B}{50}{Anatomie d'un trade, pas à pas}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Les neuf étapes}{50}{subsection.B.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Les quatre exemples, côte à côte}{50}{subsection.B.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {24}{\ignorespaces \xpg@aux {}{french}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023.}}{51}{table.caption.47}\protected@file@percent }
+\newlabel{tab:x10_trade_examples}{{24}{51}{\texorpdfstring {\xpg@aux {\xpg@current@opts }{\languagename }}{}\ignorespaces Les quatre trades détaillés en annexe. Règle de choix, écrite avant de regarder~: le trade de $R$ réalisé médian de chaque scénario parmi ceux clôturés en 2023}{table.caption.47}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Lire une figure d'exemple}{51}{subsection.B.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Deux cas de bord que les exemples ne montrent pas}{51}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Plateau contre pic : la carte des paramètres}{52}{appendix.C}\protected@file@percent }
+\newlabel{app:x10_plateau}{{C}{52}{Plateau contre pic : la carte des paramètres}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Pourquoi le meilleur point est le plus mauvais choix}{52}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Le protocole de balayage}{52}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Le critère de plateau}{52}{subsection.C.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}Ce que la carte montre ici}{52}{subsection.C.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces \xpg@aux {}{french}\ignorespaces La carte des vingt-sept Sharpes nets. Un plateau se reconnaîtrait à une zone contiguë de cases claires~; il n'y en a pas, et l'échelle entière est du côté négatif.}}{53}{figure.caption.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Le pic et le point analysé, côte à côte}{53}{subsection.C.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.6}Le point analysé n'est pas une sélection}{54}{subsection.C.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Méthodologie des tests de robustesse}{54}{appendix.D}\protected@file@percent }
+\newlabel{app:x10_methodologie_robustesse}{{D}{54}{Méthodologie des tests de robustesse}{appendix.D}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Bootstrap stationnaire par blocs}{54}{subsection.D.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question.}{54}{paragraph*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le principe.}{54}{paragraph*.50}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Pourquoi par blocs.}{54}{paragraph*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ce qu'il ne dit pas.}{54}{paragraph*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Probabilistic Sharpe Ratio et Deflated Sharpe Ratio}{54}{subsection.D.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question du PSR.}{54}{paragraph*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question du DSR.}{54}{paragraph*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le comptage des essais.}{55}{paragraph*.55}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le haircut Sharpe.}{55}{paragraph*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La longueur minimale de backtest.}{55}{paragraph*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Probability of Backtest Overfitting}{55}{subsection.D.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question.}{55}{paragraph*.58}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le principe.}{55}{paragraph*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La lecture.}{55}{paragraph*.60}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le piège, dans ce dossier précis.}{55}{paragraph*.61}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.4}Validation croisée combinatoire purgée}{55}{subsection.D.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question.}{55}{paragraph*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Les deux précautions.}{55}{paragraph*.63}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ce qu'on en tire.}{55}{paragraph*.64}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.5}Rééchantillonnage de l'ordre des transactions}{56}{subsection.D.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question.}{56}{paragraph*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le principe.}{56}{paragraph*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Le score de chance de séquence.}{56}{paragraph*.67}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.6}Risque de ruine}{56}{subsection.D.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{La question.}{56}{paragraph*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ce qu'il faut savoir lire.}{56}{paragraph*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.7}Les seuils retenus, et leur justification}{56}{subsection.D.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.8}Reproduire ces mesures}{56}{subsection.D.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {E}Table de décision gelée}{57}{appendix.E}\protected@file@percent }
+\newlabel{app:x10_table_decision}{{E}{57}{Table de décision gelée}{appendix.E}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.1}Table reproduite}{57}{subsection.E.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.2}Les trois verdicts, tels qu'ils avaient été écrits}{57}{subsection.E.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.3}Preuve d'antériorité du gel}{57}{subsection.E.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.4}Le budget d'essais, tel qu'il avait été fixé}{58}{subsection.E.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.5}Journal des lectures du hors échantillon}{58}{subsection.E.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.6}Ce que la table interdisait explicitement}{58}{subsection.E.6}\protected@file@percent }
 \global\@namedef{scr@dte@section@lastmaxnumwidth}{13.03195pt}
 \global\@namedef{scr@dte@subsection@lastmaxnumwidth}{28.17427pt}
 \@writefile{toc}{\providecommand\tocbasic@end@toc@file{}\tocbasic@end@toc@file}
-\gdef \@abspage@last{61}
+\gdef \@abspage@last{64}

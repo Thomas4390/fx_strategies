@@ -35,6 +35,7 @@ import json
 import subprocess
 import sys
 import warnings
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -48,6 +49,7 @@ import matplotlib.patches as mpatches  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+import yaml  # noqa: E402
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -64,6 +66,10 @@ TBL_DIR = OUTPUT_ROOT / "tables"
 
 GOLD_PARQUET = _PROJECT_ROOT / "data" / "XAU-USD_minute_qc.parquet"
 FEASIBILITY_JSON = RESULTS_DIR / "feasibility_table.json"
+COSTS_YAML = _PROJECT_ROOT / "costs_xau_intraday.yml"
+# La campagne v1 datait les minutes à leur clôture ; elle est archivée telle
+# quelle et sert à publier la table « avant / après » de la section 2.
+V1_DIR = RESULTS_DIR / "v1_close_stamped"
 
 # Le document racine définit ces quatre couleurs ; les figures les reprennent
 # pour que rien ne jure entre une capture et le corps du texte.
@@ -241,9 +247,16 @@ REQUIRED_SOURCES = (
     "ablations",
     "cost_sensitivity",
 )
-# Les JSON qui n'existent pas encore. Toute macro qui en dépend vaut « n.d. »
-# tant que la mesure n'a pas été produite — jamais une valeur « en attendant ».
-OPTIONAL_SOURCES = ("reconciliation_qc_2024", "mt5_reference")
+# Les JSON des moteurs d'exécution et de la campagne archivée. Ils sont lus
+# s'ils existent : une macro dont la source manque reste « n.d. », jamais une
+# valeur « en attendant ». Tous sont présents depuis le lot de réconciliation.
+OPTIONAL_SOURCES = (
+    "reconciliation_qc_2024",
+    "reconciliation_qc_full",
+    "reconciliation_mt5",
+    "mt5_reference",
+    "cost_sensitivity_measured",
+)
 
 
 def load_bundle() -> dict[str, Any]:
@@ -264,6 +277,15 @@ def load_bundle() -> dict[str, Any]:
         json.loads(FEASIBILITY_JSON.read_text(encoding="utf-8"))
         if FEASIBILITY_JSON.is_file()
         else None
+    )
+    # La campagne archivée : elle ne sert qu'à la table « avant / après » de la
+    # convention de datation. Aucun de ses chiffres n'est publié seul.
+    v1_summary = V1_DIR / "is_summary.json"
+    bundle["is_summary_v1"] = (
+        json.loads(v1_summary.read_text(encoding="utf-8")) if v1_summary.is_file() else None
+    )
+    bundle["costs_yaml"] = (
+        yaml.safe_load(COSTS_YAML.read_text(encoding="utf-8")) if COSTS_YAML.is_file() else None
     )
     return bundle
 
@@ -303,6 +325,11 @@ class MacroSource:
     fmt: Callable[[Any], str]
     path: str | None = None
     derive: Callable[[dict[str, Any]], Any] | None = None
+    # Ce que la macro vaut quand sa source n'existe pas. « n.d. » par défaut ;
+    # une autre valeur ne se justifie que lorsque l'absence est une **décision**
+    # documentée et non une mesure en attente — c'est le cas du hors
+    # échantillon, délibérément non lu.
+    fallback: str = UNDETERMINED
 
     def value(self, bundle: dict[str, Any]) -> Any:
         if self.derive is not None:
@@ -320,6 +347,14 @@ def _pct2(value: Any) -> str:
 
 def _dec1(value: Any) -> str:
     return fmt_dec(value, 1)
+
+
+def _pct0(value: Any) -> str:
+    return fmt_pct(value, 0)
+
+
+def _usd3(value: Any) -> str:
+    return fmt_usd(value, 3)
 
 
 def _dec2(value: Any) -> str:
@@ -362,29 +397,6 @@ def _worst_grid_sharpe(bundle: dict[str, Any]) -> float:
     return float(bundle["grid27"]["sharpe_net"].min())
 
 
-def _asia_loss_share(bundle: dict[str, Any]) -> float:
-    decomp = bundle["decompositions"]
-    return decomp["by_ny_session"]["Asie 18:00-03:00"]["pnl"] / decomp["overall"]["pnl"]
-
-
-def _asia_trade_share(bundle: dict[str, Any]) -> float:
-    decomp = bundle["decompositions"]
-    return decomp["by_ny_session"]["Asie 18:00-03:00"]["n"] / decomp["overall"]["n"]
-
-
-def _rev_short_loss_share(bundle: dict[str, Any]) -> float:
-    decomp = bundle["decompositions"]
-    return decomp["by_scenario"]["REV_SHORT"]["pnl"] / decomp["overall"]["pnl"]
-
-
-def _dxy_savings(bundle: dict[str, Any]) -> float:
-    """Ce que le garde-fou DXY épargne : spec moins ablation ``use_dxy=False``."""
-    runs = {
-        (r["use_ema"], r["use_vwap"], r["use_dxy"]): r for r in bundle["ablations"]["runs"]
-    }
-    return runs[(True, True, True)]["pnl"] - runs[(True, True, False)]["pnl"]
-
-
 def _ablation_all_off_sharpe(bundle: dict[str, Any]) -> float:
     runs = {
         (r["use_ema"], r["use_vwap"], r["use_dxy"]): r for r in bundle["ablations"]["runs"]
@@ -418,8 +430,37 @@ def _trial_reserve(bundle: dict[str, Any]) -> int:
 
 
 def _n_failing(bundle: dict[str, Any]) -> int:
-    table = bundle["is_summary"]["decision_table"]
-    return int(table["n_criteria"]) - int(table["n_passing"])
+    return sum(not criterion["pass"] for criterion in decision_criteria(bundle).values())
+
+
+def decision_criteria(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Join MT5 evidence for publication, preserving the archived IS campaign."""
+    criteria = deepcopy(bundle["is_summary"]["decision_table"]["criteria"])
+    if bundle.get("mt5_reference") is None:
+        return criteria
+    summary = bundle["mt5_reference"]["summary"]
+    expectancy = float(summary["mt5_expectancy_r"])
+    py_expectancy = float(summary["py_same_window_expectancy_r"])
+    if not np.isfinite([expectancy, py_expectancy]).all():
+        raise ValueError("MT5 criterion requires finite measured expectancies")
+    same_sign = bool(np.sign(expectancy) == np.sign(py_expectancy))
+    passed = expectancy >= 0 and same_sign
+    if (summary["same_sign"] != same_sign or summary["criterion_8_pass"] != passed):
+        raise ValueError("MT5 criterion contradicts its archived attestation")
+    criteria["mt5_model_1"].update(
+        measured={"expectancy_r": expectancy, "same_sign": same_sign},
+        **{"pass": passed},
+    )
+    return criteria
+
+
+def n_interpretable_failures(bundle: dict[str, Any]) -> int:
+    """A measured MT5 loss is interpretable; the unread holdout is not."""
+    return sum(
+        not crit["pass"] and crit["measured"] is not None
+        and not isinstance(crit["measured"], str)
+        for crit in decision_criteria(bundle).values()
+    )
 
 
 def _cpcv_positive_share(bundle: dict[str, Any]) -> float:
@@ -438,6 +479,139 @@ def _feasibility_year(year: int, field: str) -> Callable[[dict[str, Any]], float
     def _inner(bundle: dict[str, Any]) -> float:
         rows = bundle["feasibility"]["years"]
         return next(r for r in rows if r["year"] == year)[field]
+
+    return _inner
+
+
+def _best_scenario(bundle: dict[str, Any]) -> tuple[str, float]:
+    """Le scénario le moins mauvais, et son espérance. Jamais codé en dur.
+
+    En v1 la hiérarchie était « breakouts devant reversals » ; en v2 les quatre
+    scénarios tiennent dans une bande de trois centièmes de R et l'ordre a
+    changé. Une macro qui nomme le scénario évite que la prose ne fige un
+    classement que la mesure suivante contredit.
+    """
+    cells = bundle["decompositions"]["by_scenario"]
+    key = max(cells, key=lambda k: cells[k]["expectancy_r"])
+    return key, cells[key]["expectancy_r"]
+
+
+def _worst_scenario(bundle: dict[str, Any]) -> tuple[str, float]:
+    cells = bundle["decompositions"]["by_scenario"]
+    key = min(cells, key=lambda k: cells[k]["expectancy_r"])
+    return key, cells[key]["expectancy_r"]
+
+
+def _scenario_spread_r(bundle: dict[str, Any]) -> float:
+    """L'écart entre le meilleur et le pire scénario, en R."""
+    return _best_scenario(bundle)[1] - _worst_scenario(bundle)[1]
+
+
+def _worst_scenario_loss_share(bundle: dict[str, Any]) -> float:
+    key, _ = _worst_scenario(bundle)
+    decomp = bundle["decompositions"]
+    return decomp["by_scenario"][key]["pnl"] / decomp["overall"]["pnl"]
+
+
+def _session_spread_r(bundle: dict[str, Any]) -> float:
+    cells = bundle["decompositions"]["by_ny_session"]
+    values = [c["expectancy_r"] for c in cells.values()]
+    return max(values) - min(values)
+
+
+def _worst_session_name(bundle: dict[str, Any]) -> str:
+    cells = bundle["decompositions"]["by_ny_session"]
+    return min(cells, key=lambda k: cells[k]["expectancy_r"])
+
+
+def _worst_session_r(bundle: dict[str, Any]) -> float:
+    cells = bundle["decompositions"]["by_ny_session"]
+    return min(c["expectancy_r"] for c in cells.values())
+
+
+def _best_session_r(bundle: dict[str, Any]) -> float:
+    cells = bundle["decompositions"]["by_ny_session"]
+    return max(c["expectancy_r"] for c in cells.values())
+
+
+def _atr_low_loss_share(bundle: dict[str, Any]) -> float:
+    decomp = bundle["decompositions"]
+    return decomp["by_atr_tercile"]["ATR bas"]["pnl"] / decomp["overall"]["pnl"]
+
+
+def _dxy_savings(bundle: dict[str, Any]) -> float:
+    """Ce que le garde-fou DXY épargne : spec moins ablation ``use_dxy=False``."""
+    runs = {
+        (r["use_ema"], r["use_vwap"], r["use_dxy"]): r for r in bundle["ablations"]["runs"]
+    }
+    return runs[(True, True, True)]["pnl"] - runs[(True, True, False)]["pnl"]
+
+
+def _dxy_trade_delta(bundle: dict[str, Any]) -> int:
+    """De combien de trades le retrait du filtre dollar change la population."""
+    runs = {
+        (r["use_ema"], r["use_vwap"], r["use_dxy"]): r for r in bundle["ablations"]["runs"]
+    }
+    return runs[(True, True, False)]["n"] - runs[(True, True, True)]["n"]
+
+
+def _mt5_rejected_share(bundle: dict[str, Any]) -> float:
+    """13 refus sur les tentatives d'ouverture : refus plus entrées remplies."""
+    summary = bundle["mt5_reference"]["summary"]
+    failures = int(summary["mt5_order_failures"])
+    return failures / (failures + int(summary["mt5_trades"]))
+
+
+def _qc_duplicate_share(bundle: dict[str, Any]) -> float:
+    book = bundle["reconciliation_qc_full"]["qc"]["order_book"]
+    return int(book["n_orphan_exits"]) / int(book["n_orders"])
+
+
+def _qc_last_year(field: str) -> Callable[[dict[str, Any]], Any]:
+    def _inner(bundle: dict[str, Any]) -> Any:
+        rows = bundle["reconciliation_qc_full"]["by_year"]
+        return max(rows, key=lambda r: r["year"])[field]
+
+    return _inner
+
+
+def engine_expectancy(bundle: dict[str, Any], source: str, engine: str) -> float:
+    """All trades in native risk units, not the matched-pair attribution summary."""
+    rows = bundle[source]["by_year"]
+    for row in rows:
+        count = row[f"{engine}_trades"]
+        if not np.isfinite(count) or count < 0 or int(count) != count:
+            raise ValueError("Engine trade counts must be finite nonnegative integers")
+        if count and not np.isfinite(row[f"{engine}_expectancy_r"]):
+            raise ValueError("Engine expectancies must be finite for measured trades")
+    total = sum(row[f"{engine}_trades"] for row in rows)
+    if total <= 0:
+        raise ValueError("Engine expectancy requires measured trades")
+    return sum(
+        row[f"{engine}_expectancy_r"] * row[f"{engine}_trades"]
+        for row in rows if row[f"{engine}_trades"]
+    ) / total
+
+
+def _costs_hour_extreme(field: str) -> Callable[[dict[str, Any]], Any]:
+    """L'heure de New York la plus chère, toutes années mesurées confondues."""
+
+    def _inner(bundle: dict[str, Any]) -> Any:
+        best_hour, best_value = None, -1.0
+        for year in bundle["costs_yaml"]["by_year"].values():
+            for hour, cell in (year.get("hours") or {}).items():
+                if cell["median"] > best_value:
+                    best_hour, best_value = int(hour), cell["median"]
+        return best_hour if field == "hour" else best_value
+
+    return _inner
+
+
+def _v1(path: str) -> Callable[[dict[str, Any]], Any]:
+    """Une valeur de la campagne archivée, pour la table « avant / après »."""
+
+    def _inner(bundle: dict[str, Any]) -> Any:
+        return read_path(bundle["is_summary_v1"], path)
 
     return _inner
 
@@ -476,18 +650,204 @@ MACRO_SOURCES: dict[str, MacroSource] = {
     "XTenTrialsCount": MacroSource("is_summary", fmt_int, "n_trials_logged"),
     "XTenWinRate": MacroSource("is_summary", _pct1, "headline_metrics.win_rate"),
     "XTenNetPnl": MacroSource("is_summary", _usd2, "headline_metrics.net_pnl_usd"),
-    # ── Exécution : rien tant que les moteurs n'ont pas rendu ──────────
-    # Ces cinq chemins sont des emplacements réservés, PAS un contrat arrêté :
-    # les fichiers de réconciliation et de référence MT5 appartiennent à une
-    # autre chaîne de production, dont le schéma n'est pas figé. Tant qu'un
-    # chemin ne résout pas, la macro vaut « n.d. » et le document porte son
-    # bandeau « sections d'exécution en cours d'intégration ». Publier une
-    # valeur devinée serait pire que ne rien publier.
-    "XTenTradesOOS": MacroSource("oos_2026", fmt_int, "n_trades"),
-    "XTenMTFiveExpectancyR": MacroSource("mt5_reference", fmt_r, "headline.expectancy_r"),
-    "XTenQCExpectancyR": MacroSource("reconciliation_qc_2024", fmt_r, "headline.expectancy_r"),
-    "XTenQCMatchRate": MacroSource("reconciliation_qc_2024", _pct1, "entries.match_rate"),
-    "XTenMTFiveMatchRate": MacroSource("mt5_reference", _pct1, "entries.match_rate"),
+    # ── Exécution : les blocs racine `summary` sont un contrat gelé ────
+    # Le hors échantillon n'est pas une mesure en attente : c'est une décision
+    # documentée (section 10 du rapport). Sa macro porte donc un texte, pas
+    # « n.d. », et elle ne retient pas le bandeau du document.
+    "XTenTradesOOS": MacroSource("oos_2026", fmt_int, "n_trades", fallback="non lu"),
+    "XTenMTFiveTrades": MacroSource("mt5_reference", fmt_int, "summary.mt5_trades"),
+    "XTenMTFiveExpectancyR": MacroSource(
+        "mt5_reference", fmt_r, "summary.mt5_expectancy_r"
+    ),
+    "XTenMTFiveProfitFactor": MacroSource(
+        "mt5_reference", _dec3, "summary.mt5_profit_factor"
+    ),
+    "XTenMTFiveNetReturnPct": MacroSource(
+        "mt5_reference", _dec1, "summary.mt5_net_return_pct"
+    ),
+    "XTenMTFiveMaxDDPct": MacroSource(
+        "mt5_reference", _dec1, "summary.mt5_max_equity_dd_pct"
+    ),
+    "XTenMTFiveSpreadMedian": MacroSource(
+        "mt5_reference", _usd2, "summary.mt5_spread_median_usd"
+    ),
+    "XTenMTFiveOrderFailures": MacroSource(
+        "mt5_reference", fmt_int, "summary.mt5_order_failures"
+    ),
+    "XTenMTFiveRejectedShare": MacroSource(
+        "mt5_reference", _pct1, derive=_mt5_rejected_share
+    ),
+    "XTenPySameWindowTrades": MacroSource(
+        "mt5_reference", fmt_int, "summary.py_same_window_trades"
+    ),
+    "XTenPySameWindowExpectancyR": MacroSource(
+        "mt5_reference", fmt_r, "summary.py_same_window_expectancy_r"
+    ),
+    "XTenMTFiveStopR": MacroSource(
+        "mt5_reference", fmt_r, "x10.by_exit_reason.STOP.expectancy_r"
+    ),
+    "XTenMTFiveTargetR": MacroSource(
+        "mt5_reference", fmt_r, "x10.by_exit_reason.TARGET.expectancy_r"
+    ),
+    "XTenMTFiveTargetShare": MacroSource(
+        "mt5_reference",
+        _pct1,
+        derive=lambda b: b["mt5_reference"]["x10"]["by_exit_reason"]["TARGET"]["trades"]
+        / b["mt5_reference"]["summary"]["mt5_trades"],
+    ),
+    "XTenMTFiveStopShare": MacroSource(
+        "mt5_reference",
+        _pct1,
+        derive=lambda b: b["mt5_reference"]["x10"]["by_exit_reason"]["STOP"]["trades"]
+        / b["mt5_reference"]["summary"]["mt5_trades"],
+    ),
+    # ── Réconciliation : appariements, cibles, part non attribuée ──────
+    "XTenQCTrades": MacroSource("reconciliation_qc_2024", fmt_int, "summary.qc_trades"),
+    "XTenQCExpectancyR": MacroSource(
+        "reconciliation_qc_2024", fmt_r,
+        derive=lambda b: engine_expectancy(b, "reconciliation_qc_2024", "qc")
+    ),
+    "XTenPyExpectancyRQC": MacroSource(
+        "reconciliation_qc_2024", fmt_r,
+        derive=lambda b: engine_expectancy(b, "reconciliation_qc_2024", "py")
+    ),
+    "XTenQCMatchRate": MacroSource(
+        "reconciliation_qc_2024", _pct1, "summary.match_rate_py_to_qc"
+    ),
+    "XTenQCMatchRateReverse": MacroSource(
+        "reconciliation_qc_2024", _pct1, "summary.match_rate_qc_to_py"
+    ),
+    "XTenQCUnattributed": MacroSource(
+        "reconciliation_qc_2024", _pct1, "summary.unattributed_share"
+    ),
+    "XTenQCExitSlippageR": MacroSource(
+        "reconciliation_qc_2024", _dec4, "summary.exit_slippage_r_per_trade"
+    ),
+    "XTenQCStopRealisedR": MacroSource(
+        "reconciliation_qc_2024", fmt_r, "summary.qc_stop_realised_r"
+    ),
+    "XTenQCHalfSpread": MacroSource(
+        "reconciliation_qc_2024", _usd3, "summary.qc_half_spread_usd"
+    ),
+    "XTenQCNetReturnPct": MacroSource(
+        "reconciliation_qc_2024", _dec1, "summary.qc_net_return_pct"
+    ),
+    "XTenQCMatchRateBefore": MacroSource(
+        "reconciliation_qc_2024", _pct1, "summary_v1_close_stamped.match_rate_py_to_qc"
+    ),
+    "XTenQCUnattributedBefore": MacroSource(
+        "reconciliation_qc_2024", _pct1, "summary_v1_close_stamped.unattributed_share"
+    ),
+    "XTenQCTradesFull": MacroSource("reconciliation_qc_full", fmt_int, "summary.qc_trades"),
+    "XTenQCExpectancyRFull": MacroSource(
+        "reconciliation_qc_full", fmt_r,
+        derive=lambda b: engine_expectancy(b, "reconciliation_qc_full", "qc")
+    ),
+    "XTenPyExpectancyRFull": MacroSource(
+        "reconciliation_qc_full", fmt_r,
+        derive=lambda b: engine_expectancy(b, "reconciliation_qc_full", "py")
+    ),
+    "XTenQCMatchRateFull": MacroSource(
+        "reconciliation_qc_full", _pct1, "summary.match_rate_py_to_qc"
+    ),
+    "XTenQCMatchRateFullReverse": MacroSource(
+        "reconciliation_qc_full", _pct1, "summary.match_rate_qc_to_py"
+    ),
+    "XTenQCUnattributedFull": MacroSource(
+        "reconciliation_qc_full", _pct1, "summary.unattributed_share"
+    ),
+    "XTenQCNetReturnPctFull": MacroSource(
+        "reconciliation_qc_full", _dec1, "summary.qc_net_return_pct"
+    ),
+    "XTenQCOrders": MacroSource("reconciliation_qc_full", fmt_int, "health.n_orders"),
+    "XTenQCDuplicateOrders": MacroSource(
+        "reconciliation_qc_full", fmt_int, "qc.order_book.n_orphan_exits"
+    ),
+    "XTenQCDuplicateShare": MacroSource(
+        "reconciliation_qc_full", _pct1, derive=_qc_duplicate_share
+    ),
+    "XTenQCDuplicateUsd": MacroSource(
+        "reconciliation_qc_full", _usd2, "qc.composition.pnl_of_residual_inventory"
+    ),
+    "XTenQCDuplicateLossShare": MacroSource(
+        "reconciliation_qc_full", _pct1, "qc.composition.residual_share_of_loss"
+    ),
+    "XTenQCLotFloorLastYear": MacroSource(
+        "reconciliation_qc_full", fmt_int, derive=_qc_last_year("qc_entries_at_lot_floor")
+    ),
+    "XTenQCTradesLastYear": MacroSource(
+        "reconciliation_qc_full", fmt_int, derive=_qc_last_year("qc_trades")
+    ),
+    "XTenQCMatchRateLastYear": MacroSource(
+        "reconciliation_qc_full", _pct1, derive=_qc_last_year("match_rate_py_to_qc")
+    ),
+    "XTenMTFiveMatchRate": MacroSource(
+        "reconciliation_mt5", _pct1, "summary.match_rate_py_to_mt5_same_data"
+    ),
+    "XTenMTFiveMatchRateReverse": MacroSource(
+        "reconciliation_mt5", _pct1, "summary.match_rate_mt5_to_py_same_data"
+    ),
+    "XTenMTFiveMatchRateBid": MacroSource(
+        "reconciliation_mt5", _pct1, "c1_bid_variant.match_rate_py_to_mt5"
+    ),
+    "XTenMTFiveMatchRateBidReverse": MacroSource(
+        "reconciliation_mt5", _pct1, "c1_bid_variant.match_rate_mt5_to_py"
+    ),
+    "XTenMTFiveMatchRateDiffData": MacroSource(
+        "reconciliation_mt5", _pct1, "summary.match_rate_py_to_mt5_diff_data"
+    ),
+    "XTenMTFiveUnattributed": MacroSource(
+        "reconciliation_mt5", _pct1, "summary.unattributed_share"
+    ),
+    "XTenVwapBidMax": MacroSource(
+        "reconciliation_mt5", _usd3, "rung2_indicators_bid_variant.abs_diff.vwap.max"
+    ),
+    "XTenEmaBidMax": MacroSource(
+        "reconciliation_mt5", _usd3, "rung2_indicators_bid_variant.abs_diff.ema50_h1.max"
+    ),
+    "XTenServerClockOffset": MacroSource(
+        "reconciliation_mt5", fmt_int, "summary.server_clock_offset_min"
+    ),
+    "XTenBidHalfSpread": MacroSource(
+        "reconciliation_mt5", _usd3, "attribution.posts.signals_on_bid_vs_mid.half_spread_usd_median"
+    ),
+    "XTenVwapDiffMid": MacroSource(
+        "reconciliation_mt5",
+        _usd3,
+        "attribution.posts.signals_on_bid_vs_mid.vwap_abs_diff_median_mid",
+    ),
+    "XTenVwapDiffBid": MacroSource(
+        "reconciliation_mt5",
+        _usd3,
+        "attribution.posts.signals_on_bid_vs_mid.vwap_abs_diff_median_bid",
+    ),
+    "XTenTargetSameData": MacroSource("reconciliation_mt5", _pct0, "targets.same_data"),
+    "XTenTargetDiffData": MacroSource("reconciliation_mt5", _pct0, "targets.diff_data"),
+    "XTenUnattributedBlocker": MacroSource(
+        "reconciliation_mt5", _pct0, "targets.unattributed_blocker"
+    ),
+    # ── Spread mesuré ──────────────────────────────────────────────────
+    "XTenSpreadMeasuredMedian": MacroSource("costs_yaml", _usd3, "overall.median"),
+    "XTenSpreadMeasuredPSevenFive": MacroSource("costs_yaml", _usd3, "overall.p75"),
+    "XTenSpreadMeasuredPNinetyFive": MacroSource("costs_yaml", _usd3, "overall.p95"),
+    "XTenSpreadMeasuredBars": MacroSource("costs_yaml", fmt_int, "overall.n_bars"),
+    "XTenSpreadCostliestHour": MacroSource(
+        "costs_yaml", fmt_int, derive=_costs_hour_extreme("hour")
+    ),
+    "XTenSpreadCostliestValue": MacroSource(
+        "costs_yaml", _usd3, derive=_costs_hour_extreme("value")
+    ),
+    "XTenExpectancyMeasuredSpread": MacroSource(
+        "cost_sensitivity_measured", fmt_r, "variants.measured_median.expectancy_r"
+    ),
+    "XTenSpreadMeasuredMean": MacroSource(
+        "cost_sensitivity_measured", _usd3, "variants.measured_median.spread_usd_mean"
+    ),
+    "XTenDeltaMeasuredSpread": MacroSource(
+        "cost_sensitivity_measured",
+        fmt_r,
+        "variants.measured_median.delta_expectancy_r_vs_constant",
+    ),
     # ── Échantillon et budget d'essais ─────────────────────────────────
     "XTenSampleSessions": MacroSource("is_summary", fmt_int, "sample.n_sessions"),
     "XTenSampleBarsMFive": MacroSource("is_summary", fmt_int, "sample.n_m5_bars"),
@@ -499,8 +859,14 @@ MACRO_SOURCES: dict[str, MacroSource] = {
     "XTenFreezeCommit": MacroSource("git", fmt_text, derive=_git_freeze_commit),
     # ── Table de décision ──────────────────────────────────────────────
     "XTenCriteriaCount": MacroSource("is_summary", fmt_int, "decision_table.n_criteria"),
-    "XTenCriteriaPassing": MacroSource("is_summary", fmt_int, "decision_table.n_passing"),
+    "XTenCriteriaPassing": MacroSource(
+        "is_summary", fmt_int,
+        derive=lambda b: sum(c["pass"] for c in decision_criteria(b).values()),
+    ),
     "XTenCriteriaFailing": MacroSource("is_summary", fmt_int, derive=_n_failing),
+    "XTenCriteriaFailingInterpretable": MacroSource(
+        "is_summary", fmt_int, derive=n_interpretable_failures
+    ),
     # ── Grille, plateau, sélection ─────────────────────────────────────
     "XTenPeakConfig": MacroSource("selection", fmt_config, "peak.config"),
     "XTenPeakSharpe": MacroSource("selection", _dec3, "peak.sharpe_net"),
@@ -523,24 +889,51 @@ MACRO_SOURCES: dict[str, MacroSource] = {
     "XTenMaxYearShare": MacroSource("walkforward", _pct1, "max_year_share_of_net"),
     "XTenFirstYearExpectancy": MacroSource("walkforward", fmt_r, "years.0.expectancy_r"),
     "XTenLastYearExpectancy": MacroSource("walkforward", fmt_r, "years.6.expectancy_r"),
-    "XTenWorstYearExpectancy": MacroSource("walkforward", fmt_r, "years.1.expectancy_r"),
+    "XTenWorstYearExpectancy": MacroSource(
+        "walkforward", fmt_r,
+        derive=lambda b: min(row["expectancy_r"] for row in b["walkforward"]["years"]),
+    ),
+    "XTenWorstYear": MacroSource(
+        "walkforward", str,
+        derive=lambda b: min(b["walkforward"]["years"], key=lambda row: row["expectancy_r"])["year"],
+    ),
     # ── Décompositions ─────────────────────────────────────────────────
-    "XTenBestScenarioR": MacroSource("decompositions", fmt_r, "by_scenario.BREAK_LONG.expectancy_r"),
-    "XTenWorstScenarioR": MacroSource("decompositions", fmt_r, "by_scenario.REV_SHORT.expectancy_r"),
-    "XTenRevShortLossShare": MacroSource("decompositions", _pct1, derive=_rev_short_loss_share),
-    "XTenAsiaExpectancyR": MacroSource(
-        "decompositions", fmt_r, "by_ny_session.Asie 18:00-03:00.expectancy_r"
+    # Le classement des scénarios et des séances a changé entre les deux
+    # campagnes : ces macros le NOMMENT au lieu de le figer dans la prose.
+    "XTenBestScenarioName": MacroSource(
+        "decompositions", lambda v: SCENARIO_LABELS[v], derive=lambda b: _best_scenario(b)[0]
     ),
-    "XTenNewYorkExpectancyR": MacroSource(
-        "decompositions", fmt_r, "by_ny_session.New York 08:00-17:00.expectancy_r"
+    "XTenBestScenarioR": MacroSource(
+        "decompositions", fmt_r, derive=lambda b: _best_scenario(b)[1]
     ),
-    "XTenAsiaLossShare": MacroSource("decompositions", _pct1, derive=_asia_loss_share),
-    "XTenAsiaTradeShare": MacroSource("decompositions", _pct1, derive=_asia_trade_share),
+    "XTenWorstScenarioName": MacroSource(
+        "decompositions", lambda v: SCENARIO_LABELS[v], derive=lambda b: _worst_scenario(b)[0]
+    ),
+    "XTenWorstScenarioR": MacroSource(
+        "decompositions", fmt_r, derive=lambda b: _worst_scenario(b)[1]
+    ),
+    "XTenScenarioSpreadR": MacroSource("decompositions", _dec4, derive=_scenario_spread_r),
+    "XTenWorstScenarioLossShare": MacroSource(
+        "decompositions", _pct1, derive=_worst_scenario_loss_share
+    ),
+    "XTenWorstSessionName": MacroSource("decompositions", fmt_text, derive=_worst_session_name),
+    "XTenWorstSessionR": MacroSource("decompositions", fmt_r, derive=_worst_session_r),
+    "XTenBestSessionR": MacroSource("decompositions", fmt_r, derive=_best_session_r),
+    "XTenSessionSpreadR": MacroSource("decompositions", _dec4, derive=_session_spread_r),
+    "XTenAtrLowR": MacroSource("decompositions", fmt_r, "by_atr_tercile.ATR bas.expectancy_r"),
+    "XTenAtrHighR": MacroSource("decompositions", fmt_r, "by_atr_tercile.ATR haut.expectancy_r"),
+    "XTenAtrLowLossShare": MacroSource("decompositions", _pct1, derive=_atr_low_loss_share),
     "XTenBestDollarBandR": MacroSource(
         "decompositions", fmt_r, "by_dollars_per_atr.6-10.expectancy_r"
     ),
     "XTenWorstDollarBandR": MacroSource(
         "decompositions", fmt_r, "by_dollars_per_atr.>10.expectancy_r"
+    ),
+    "XTenWorstDollarBandLossShare": MacroSource(
+        "decompositions",
+        _pct1,
+        derive=lambda b: b["decompositions"]["by_dollars_per_atr"][">10"]["pnl"]
+        / b["decompositions"]["overall"]["pnl"],
     ),
     "XTenStopR": MacroSource("decompositions", fmt_r, "by_exit_reason.STOP.expectancy_r"),
     "XTenTargetR": MacroSource("decompositions", fmt_r, "by_exit_reason.TARGET.expectancy_r"),
@@ -593,6 +986,7 @@ MACRO_SOURCES: dict[str, MacroSource] = {
         "ablations", _dec3, derive=_ablation_all_off_sharpe
     ),
     "XTenDxySavings": MacroSource("ablations", _usd2, derive=_dxy_savings),
+    "XTenDxyTradeDelta": MacroSource("ablations", fmt_int, derive=_dxy_trade_delta),
     # ── Coûts ──────────────────────────────────────────────────────────
     "XTenExpectancySpreadOneFive": MacroSource(
         "cost_sensitivity", fmt_r, "sensitivities.3.expectancy_r"
@@ -672,14 +1066,20 @@ MACRO_SOURCES: dict[str, MacroSource] = {
 NON_RESULT_MACROS = frozenset({"XTenFreezeCommit"})
 
 # Les macros que seuls les moteurs d'exécution peuvent remplir. Tant que l'une
-# d'elles vaut « n.d. », le document garde son bandeau : le verdict in-sample
-# est acquis, mais les sections d'exécution ne sont pas intégrées.
+# d'elles vaut « n.d. », le document garde son bandeau « sections d'exécution en
+# cours d'intégration ». Le hors échantillon n'y figure PAS : il n'est pas en
+# attente d'une mesure, il est délibérément non lu, et la section 10 le dit.
 EXECUTION_MACROS: tuple[str, ...] = (
-    "XTenTradesOOS",
     "XTenMTFiveExpectancyR",
+    "XTenMTFiveTrades",
     "XTenQCExpectancyR",
+    "XTenQCExpectancyRFull",
     "XTenQCMatchRate",
     "XTenMTFiveMatchRate",
+    "XTenMTFiveMatchRateBid",
+    "XTenMTFiveMatchRateDiffData",
+    "XTenSpreadMeasuredMedian",
+    "XTenExpectancyMeasuredSpread",
 )
 
 
@@ -697,12 +1097,12 @@ def build_macros(bundle: dict[str, Any]) -> dict[str, str]:
             out[name] = spec.fmt(spec.value(bundle))
             continue
         if spec.source not in bundle or bundle.get(spec.source) is None:
-            out[name] = UNDETERMINED
+            out[name] = spec.fallback
             continue
         try:
             out[name] = spec.fmt(spec.value(bundle))
         except (KeyError, IndexError, TypeError):
-            out[name] = UNDETERMINED
+            out[name] = spec.fallback
     return out
 
 
@@ -722,10 +1122,15 @@ def build_feasibility_table() -> dict[str, Any]:
     que le rapport n'en recopie aucun.
     """
     from framework.x10_context import atr_wilder, resample_ohlc
+    from strategies.xau_x10 import SOURCE_STAMP, _to_bar_open
 
     raw = pd.read_parquet(GOLD_PARQUET)
     raw = raw.rename(columns=str.lower)[["open", "high", "low", "close"]]
     raw = raw.loc[: pd.Timestamp(IS_END, tz=raw.index.tz) + pd.Timedelta(days=1)]
+    # Le parquet date chaque minute de sa CLÔTURE ; la campagne redate à
+    # l'ouverture avant d'agréger. Sans ce décalage, ce tableau décrirait une
+    # grille M5 différente de celle que la stratégie a réellement vue.
+    raw.index = _to_bar_open(pd.DatetimeIndex(raw.index), SOURCE_STAMP)
     m5 = resample_ohlc(raw, "5min")
     frame = pd.DataFrame({"close": m5["close"], "atr": atr_wilder(m5)})
     frame["date"] = pd.DatetimeIndex(frame.index).date
@@ -766,6 +1171,7 @@ def build_feasibility_table() -> dict[str, Any]:
             "de floor(close/10) entre deux clôtures M5 consécutives ; médianes annuelles"
         ),
         "scope": "descriptif — aucune performance, aucune barre >= 2026-01-01",
+        "data_convention": "bar_open (parquet close-stamped, re-dated −1 min)",
         "spread_usd": SELECTION_SPREAD,
         "produced_by": "scripts/build_x10_report_assets.py",
         "years": years,
@@ -837,16 +1243,21 @@ def _decision_measure(key: str, crit: dict[str, Any]) -> str:
         )
     if key == "spread_x1_5":
         return f"{fmt_r(measured)} R"
+    if key == "mt5_model_1" and isinstance(measured, dict):
+        sign = "même signe" if measured["same_sign"] else "signe opposé"
+        return f"{fmt_r(measured['expectancy_r'])} R ; {sign}"
     return "\\emph{non mesuré}"
 
 
 def table_decision(bundle: dict[str, Any]) -> str:
-    table = bundle["is_summary"]["decision_table"]
     rows = []
-    for i, (key, crit) in enumerate(table["criteria"].items(), start=1):
+    for i, (key, crit) in enumerate(decision_criteria(bundle).items(), start=1):
+        measure = _decision_measure(key, crit)
+        if key == "oos_2026":
+            measure = "\\emph{non lu, par décision}"
         rows.append(
             f"{i} & {tex_sentence(crit['label'])} & {tex_sentence(crit['threshold'])} & "
-            f"{_decision_measure(key, crit)} & {_verdict_cell(bool(crit['pass']))} \\\\"
+            f"{measure} & {_verdict_cell(bool(crit['pass']))} \\\\"
         )
     return tex_table(
         header="\\textbf{\\#} & \\textbf{Critère} & \\textbf{Seuil GO} & "
@@ -1219,6 +1630,325 @@ def table_cpcv(bundle: dict[str, Any]) -> str:
     )
 
 
+def table_engines(bundle: dict[str, Any]) -> str:
+    """Les trois moteurs côte à côte, sur leur fenêtre respective."""
+    qc24 = bundle["reconciliation_qc_2024"]["summary"]
+    qcf = bundle["reconciliation_qc_full"]["summary"]
+    mt5 = bundle["mt5_reference"]["summary"]
+    head = bundle["is_summary"]["headline_metrics"]
+    rows = [
+        f"Python (référence, campagne) & 2019--2025 & {fmt_int(head['n_trades'])} & "
+        f"{fmt_r(head['expectancy_r'])} & {fmt_dec(head['profit_factor'], 3)} \\\\",
+        f"QuantConnect & 2019--2025 & {fmt_int(qcf['qc_trades'])} & "
+        f"{fmt_r(engine_expectancy(bundle, 'reconciliation_qc_full', 'qc'))} & --- \\\\",
+        "\\midrule",
+        f"QuantConnect & 2024 & {fmt_int(qc24['qc_trades'])} & "
+        f"{fmt_r(engine_expectancy(bundle, 'reconciliation_qc_2024', 'qc'))} & --- \\\\",
+        f"\\quad\\emph{{Python, même fenêtre}} & 2024 & {fmt_int(qc24['py_trades'])} & "
+        f"{fmt_r(engine_expectancy(bundle, 'reconciliation_qc_2024', 'py'))} & --- \\\\",
+        "\\midrule",
+        f"MetaTrader~5 (expert advisor) & 2022-11--2025 & {fmt_int(mt5['mt5_trades'])} & "
+        f"{fmt_r(mt5['mt5_expectancy_r'])} & {fmt_dec(mt5['mt5_profit_factor'], 3)} \\\\",
+        f"\\quad\\emph{{Python, même fenêtre}} & 2022-11--2025 & "
+        f"{fmt_int(mt5['py_same_window_trades'])} & "
+        f"{fmt_r(mt5['py_same_window_expectancy_r'])} & --- \\\\",
+    ]
+    return tex_table(
+        header="\\textbf{Moteur} & \\textbf{Période} & \\textbf{Trades} & "
+        "\\textbf{Espérance (R)} & \\textbf{PF} \\\\",
+        rows=rows,
+        caption="Les trois moteurs, chacun sur la fenêtre où il a tourné, avec "
+        "la référence restreinte à la même fenêtre juste en dessous. Chaque "
+        "espérance porte sur tous les trades du moteur, en unités de son propre "
+        "risque initial. Le run QC complet porte des anomalies d'exécution "
+        "détaillées dans le texte ; son niveau ne valide pas le portage.",
+        label="tab:x10_engines",
+        col_spec="l l r r r",
+    )
+
+
+def table_qc_by_year(bundle: dict[str, Any]) -> str:
+    rows = []
+    for row in bundle["reconciliation_qc_full"]["by_year"]:
+        rows.append(
+            f"{row['year']} & {fmt_int(row['py_trades'])} & {fmt_int(row['qc_trades'])} & "
+            f"{fmt_r(row['py_expectancy_r'])} & {fmt_r(row['qc_expectancy_r'])} & "
+            f"{fmt_pct(row['match_rate_py_to_qc'], 1)} & "
+            f"{fmt_int(row['qc_entries_at_lot_floor'])} \\\\"
+        )
+    return tex_table(
+        header="\\textbf{Année} & \\textbf{Trades Py} & \\textbf{Trades QC} & "
+        "\\textbf{E[R] Python} & \\textbf{E[R] QC} & \\textbf{Appariement} & "
+        "\\textbf{Entrées au plancher} \\\\",
+        rows=rows,
+        caption="QuantConnect année par année. Les deux moteurs sont négatifs "
+        "les sept années. La dernière colonne compte les entrées déjà collées "
+        "au lot minimum~: c'est la trace de l'équité qui fond, et la raison "
+        "pour laquelle le niveau du compte QuantConnect ne se lit pas.",
+        label="tab:x10_qc_by_year",
+        col_spec="l r r r r r r",
+        size="\\footnotesize\n\\setlength{\\tabcolsep}{4pt}",
+    )
+
+
+def table_mt5_by_year(bundle: dict[str, Any]) -> str:
+    x10 = bundle["mt5_reference"]["x10"]
+    rows = []
+    for year in sorted(x10["by_year"]):
+        cell = x10["by_year"][year]
+        net = x10["net_usd_by_year"].get(year)
+        rows.append(
+            f"{year} & {fmt_int(cell['trades'])} & {fmt_r(cell['expectancy_r'])} & "
+            f"{fmt_dec(cell['profit_factor'], 3)} & {fmt_pct(cell['win_rate'], 1)} & "
+            f"{fmt_usd(net, 1) if net is not None else '---'} \\\\"
+        )
+    return tex_table(
+        header="\\textbf{Année} & \\textbf{Trades} & \\textbf{E[R]} & \\textbf{PF} & "
+        "\\textbf{Réussite} & \\textbf{Net} \\\\",
+        rows=rows,
+        caption="MetaTrader~5, année par année. Le run commence en novembre "
+        "2022~: la première ligne porte deux mois, pas un exercice.",
+        label="tab:x10_mt5_by_year",
+        col_spec="l r r r r r",
+    )
+
+
+def table_mt5_by_scenario(bundle: dict[str, Any]) -> str:
+    x10 = bundle["mt5_reference"]["x10"]
+    rows = []
+    for key in ("BREAK_LONG", "BREAK_SHORT", "REV_LONG", "REV_SHORT"):
+        cell = x10["by_scenario"][key]
+        net = x10["net_usd_by_scenario"].get(key)
+        rows.append(
+            f"{SCENARIO_LABELS[key]} & {fmt_int(cell['trades'])} & "
+            f"{fmt_r(cell['expectancy_r'])} & {fmt_dec(cell['profit_factor'], 3)} & "
+            f"{fmt_pct(cell['win_rate'], 1)} & "
+            f"{fmt_usd(net, 1) if net is not None else '---'} \\\\"
+        )
+    rows.append("\\midrule")
+    for key in ("STOP", "TARGET", "TIME", "SESSION"):
+        cell = x10["by_exit_reason"][key]
+        net = x10["net_usd_by_exit_reason"].get(key)
+        pf = cell["profit_factor"]
+        rows.append(
+            f"\\emph{{sortie {key}}} & {fmt_int(cell['trades'])} & "
+            f"{fmt_r(cell['expectancy_r'])} & "
+            f"{'$\\infty$' if pf is None else fmt_dec(pf, 3)} & "
+            f"{fmt_pct(cell['win_rate'], 1)} & "
+            f"{fmt_usd(net, 1) if net is not None else '---'} \\\\"
+        )
+    return tex_table(
+        header="\\textbf{Coupe} & \\textbf{Trades} & \\textbf{E[R]} & \\textbf{PF} & "
+        "\\textbf{Réussite} & \\textbf{Net} \\\\",
+        rows=rows,
+        caption="MetaTrader~5, par scénario puis par raison de sortie. Quatre "
+        "scénarios sur quatre sont négatifs~; le stop perd près d'une unité "
+        "de risque, comme sur la référence.",
+        label="tab:x10_mt5_by_scenario",
+        col_spec="l r r r r r",
+    )
+
+
+def table_rungs(bundle: dict[str, Any]) -> str:
+    """Publish measured diagnostics; only declared numeric targets get a verdict."""
+    mt5 = bundle["reconciliation_mt5"]
+    qc24 = bundle["reconciliation_qc_2024"]["summary"]
+    qcf = bundle["reconciliation_qc_full"]["summary"]
+    targets = mt5["targets"]
+    summary = mt5["summary"]
+    indicators = mt5["rung2_indicators_bid_variant"]["abs_diff"]
+    diagnostic = "descriptif"
+
+    def status(passed: bool) -> str:
+        return ("\\textcolor{rsiGreen}{\\textbf{atteinte}}" if passed
+                else "\\textcolor{combinedBurgundy}{\\textbf{manquée}}")
+
+    rows = [
+        f"1 & couverture de trace & égalité non établie & "
+        f"{fmt_int(mt5['rung1_bars']['n_m5_py'])} horodatages M5 distincts "
+        f"dans la trace Python & {diagnostic} \\\\",
+        f"2 & indicateurs sur le bid & diagnostic d'écart & "
+        f"VWAP : méd. {fmt_usd(indicators['vwap']['median'], 3)}, "
+        f"max. {fmt_usd(indicators['vwap']['max'], 3)} ; EMA : méd. "
+        f"{fmt_usd(indicators['ema50_h1']['median'], 3)}, "
+        f"max. {fmt_usd(indicators['ema50_h1']['max'], 3)} & {diagnostic} \\\\",
+        f"3 & événements & seuil non déclaré & "
+        f"{fmt_pct(mt5['rung3_events']['same_event_rate'], 1)} des "
+        f"{fmt_int(mt5['rung3_events']['n_pairs_any_event'])} couples appariés & "
+        f"{diagnostic} \\\\",
+    ]
+    entry_checks = [
+        ("Python vers QC 2024", qc24['match_rate_py_to_qc'], 0.98),
+        ("Python vers QC 2019--2025", qcf['match_rate_py_to_qc'], 0.98),
+        ("Python vers MT5, même dump, mid", summary['match_rate_py_to_mt5_same_data'], targets['same_data']),
+        ("Python vers MT5, même dump, bid", mt5['c1_bid_variant']['match_rate_py_to_mt5'], targets['same_data']),
+        ("Campagne vers MT5, flux distincts", summary['match_rate_py_to_mt5_diff_data'], targets['diff_data']),
+    ]
+    for label, measured, threshold in entry_checks:
+        rows.append(f"4 & {label} & {fmt_pct(threshold, 0)} & {fmt_pct(measured, 1)} & "
+                    f"{status(measured >= threshold)} \\\\")
+    for label, measured in [("QC 2024", qc24['unattributed_share']),
+                            ("QC 2019--2025", qcf['unattributed_share']),
+                            ("MT5, même dump, mid", summary['unattributed_share'])]:
+        rows.append(f"5 & entrées non attribuées, {label} & "
+                    f"$\\leq$ {fmt_pct(targets['unattributed_blocker'], 0)} & "
+                    f"{fmt_pct(measured, 1)} & "
+                    f"{status(measured <= targets['unattributed_blocker'])} \\\\")
+    return tex_table(
+        header="\\textbf{Barreau} & \\textbf{Objet} & \\textbf{Cible} & "
+        "\\textbf{Mesuré} & \\textbf{Verdict} \\\\",
+        rows=rows,
+        caption="Diagnostics et cibles de réconciliation. Les premières lignes "
+        "ne prouvent pas une égalité intégrale des barres ou des indicateurs. "
+        "Le résidu mesure une part d'entrées, pas une part du P\\&L. "
+        "Chaque rapprochement garde son propre échantillon.",
+        label="tab:x10_rungs",
+        col_spec="c p{4.0cm} p{2.4cm} p{4.2cm} l",
+        size="\\footnotesize",
+    )
+
+
+def table_mt5_attribution(bundle: dict[str, Any]) -> str:
+    """Les postes d'écart entre la référence et l'expert advisor."""
+    mt5 = bundle["reconciliation_mt5"]
+    posts = mt5["attribution"]["posts"]
+    una = mt5["attribution"]["unattributed"]
+    bid = posts["signals_on_bid_vs_mid"]
+    reopen = posts["broker_session_reopen"]
+    binning = posts["m5_binning_convention"]
+    rows = [
+        f"Signaux sur le bid (EA) contre le mid (référence) & "
+        f"appariement {fmt_pct(bid['match_rate_py_to_mt5_mid'], 1)} "
+        f"$\\rightarrow$ {fmt_pct(bid['match_rate_py_to_mt5_bid'], 1)} en rejouant "
+        f"sur le bid & mesuré \\\\",
+        f"Séance du courtier qui rouvre plus tard & "
+        f"{fmt_int(reopen['minutes_since_quote_resume_refused']['n'])} ordres refusés, "
+        f"{fmt_int(reopen['minutes_since_quote_resume_refused']['median'])} minutes en "
+        f"médiane après la reprise des cotations & mesuré \\\\",
+        f"Convention de datation des barres M5 & "
+        f"{fmt_pct(binning['share_of_bars_differing'], 1)} des barres avaient une "
+        f"clôture différente & mesuré, puis corrigé \\\\",
+        f"Spread courant contre spread constant & médiane mesurée "
+        f"{fmt_usd(bundle['costs_yaml']['overall']['median'], 3)} contre "
+        f"{fmt_usd(bundle['is_summary']['cost_model']['spread_usd'], 2)} & mesuré \\\\",
+        f"Double contact tranché par le testeur & "
+        f"{fmt_int(posts['double_touch_resolved_by_tester']['n_stop_target_swaps'])} "
+        f"inversions stop/cible, soit "
+        f"{fmt_pct(posts['double_touch_resolved_by_tester']['share_of_matched'], 2)} "
+        f"des paires & mesuré \\\\",
+        f"Panier dollar du courtier contre parquet local & "
+        f"accord de score sur "
+        f"{fmt_pct(posts['dxy_broker_vs_parquet']['ctx_dxy_agreement_rate'], 2)} "
+        f"des lignes & mesuré \\\\",
+        f"Règle de position unique & "
+        f"{fmt_pct(posts['single_position_path_dependence']['py_orphans_while_mt5_busy']['share'], 1)} "
+        f"des orphelins Python sur flux distincts & mesuré \\\\",
+        "\\midrule",
+        f"\\textbf{{Part non attribuée}} & "
+        f"\\textbf{{{fmt_int(una['n_unattributed'])} orphelins sur "
+        f"{fmt_int(una['n_entries_union'])}, soit "
+        f"{fmt_pct(una['unattributed_share'], 1)}}} & "
+        f"seuil de blocage {fmt_pct(una['blocker_threshold'], 0)} \\\\",
+    ]
+    return tex_table(
+        header="\\textbf{Poste d'écart} & \\textbf{Mesure} & \\textbf{Statut} \\\\",
+        rows=rows,
+        caption="Attribution des écarts entre la référence et l'expert advisor "
+        "MetaTrader~5. La part non attribuée concerne le rejeu sur le même "
+        "dump en mid ; le diagnostic de position unique concerne les flux "
+        "distincts. Une cause identifiée ne transforme pas une cible "
+        "d'appariement manquée en cible atteinte.",
+        label="tab:x10_mt5_attribution",
+        col_spec="p{5.4cm} p{6.4cm} p{2.2cm}",
+        size="\\footnotesize",
+    )
+
+
+def table_spread_measured(bundle: dict[str, Any]) -> str:
+    costs = bundle["costs_yaml"]
+    rows = []
+    for year in sorted(costs["by_year"]):
+        cell = costs["by_year"][year]
+        hours = cell.get("hours") or {}
+        if hours:
+            medians = {int(h): c["median"] for h, c in hours.items()}
+            year_median = float(np.median(list(medians.values())))
+            top_hour = max(medians, key=lambda h: medians[h])
+            top_text = f"{top_hour}~h $\\rightarrow$ {fmt_usd(medians[top_hour], 3)}"
+        else:
+            year_median, top_text = float("nan"), "---"
+        source = "mesurée" if cell["source"] == "mt5_dump" else "extrapolée"
+        if cell.get("partial_year"):
+            source += " (partielle)"
+        rows.append(
+            f"{year} & {source} & "
+            f"{fmt_usd(year_median, 3) if year_median == year_median else '---'} & "
+            f"{top_text} \\\\"
+        )
+    rows.append("\\midrule")
+    overall = costs["overall"]
+    rows.append(
+        f"\\textbf{{Ensemble}} & {fmt_int(overall['n_bars'])} barres M1 & "
+        f"\\textbf{{{fmt_usd(overall['median'], 3)}}} & "
+        f"p95 {fmt_usd(overall['p95'], 3)} \\\\"
+    )
+    return tex_table(
+        header="\\textbf{Année} & \\textbf{Source} & \\textbf{Médiane des heures} & "
+        "\\textbf{Heure la plus chère (New York)} \\\\",
+        rows=rows,
+        caption="Le spread réellement mesuré sur le flux du courtier, par "
+        "année et par heure. L'heure la plus chère est la reprise de séance --- "
+        "celle-là même à partir de laquelle la stratégie a le droit d'entrer.",
+        label="tab:x10_spread_measured",
+        col_spec="l l r l",
+    )
+
+
+def table_v1_v2(bundle: dict[str, Any]) -> str:
+    """Les neuf critères avant et après la correction de datation."""
+    v1 = bundle["is_summary_v1"]["decision_table"]["criteria"]
+    v2 = bundle["is_summary"]["decision_table"]["criteria"]
+
+    def cell(crit: dict[str, Any], key: str) -> str:
+        measured = crit["measured"]
+        if key == "trades_in_sample":
+            return fmt_int(measured)
+        if key == "expectancy_and_profit_factor":
+            return f"{fmt_r(measured['expectancy_r'])} R"
+        if key in ("dsr",):
+            return fmt_dec(measured, 3)
+        if key == "pbo":
+            return fmt_dec(measured, 4)
+        if key == "plateau":
+            return f"{fmt_int(measured['n_passing_plateau'])} sur 27"
+        if key == "walk_forward":
+            return fmt_pct(measured["share_positive_years"], 0)
+        if key == "spread_x1_5":
+            return f"{fmt_r(measured)} R"
+        return "\\emph{non mesuré}"
+
+    rows = []
+    for i, key in enumerate(v2, start=1):
+        rows.append(
+            f"{i} & {tex_sentence(v2[key]['label'])} & {cell(v1[key], key)} & "
+            f"{_verdict_cell(bool(v1[key]['pass']))} & {cell(v2[key], key)} & "
+            f"{_verdict_cell(bool(v2[key]['pass']))} \\\\"
+        )
+    return tex_table(
+        header="\\textbf{\\#} & \\textbf{Critère} & \\multicolumn{2}{c}{\\textbf{Avant}} & "
+        "\\multicolumn{2}{c}{\\textbf{Après}} \\\\",
+        rows=rows,
+        caption="Les neuf critères avant et après la correction de la "
+        "convention de datation des minutes. Un seul change de camp, et il "
+        "change en faveur de la stratégie~; le verdict, lui, ne bouge pas. "
+        "Ces deux archives portent sur la campagne Python : la mesure MT5 "
+        "ajoutée ensuite figure dans la table de décision consolidée.",
+        label="tab:x10_v1_v2",
+        col_spec="c p{4.6cm} r c r c",
+        size="\\footnotesize",
+    )
+
+
 def table_trade_examples(examples: list[dict[str, Any]]) -> str:
     rows = []
     for ex in examples:
@@ -1239,7 +1969,7 @@ def table_trade_examples(examples: list[dict[str, Any]]) -> str:
         "parmi ceux clôturés en 2023.",
         label="tab:x10_trade_examples",
         col_spec="l l r r r r r l r",
-        size="\\scriptsize",
+        size="\\scriptsize\n\\setlength{\\tabcolsep}{4pt}",
     )
 
 
@@ -1285,6 +2015,21 @@ def build_tables(bundle: dict[str, Any], examples: list[dict[str, Any]] | None) 
         "x10_r_rule": GENERATED_HEADER + table_r_rule(bundle),
         "x10_feasibility": GENERATED_HEADER + table_feasibility(bundle),
     }
+    # Les tables d'exécution n'existent que lorsque leurs moteurs ont rendu :
+    # une table absente vaut mieux qu'une table vide.
+    execution_tables = {
+        "x10_engines": (table_engines, ("reconciliation_qc_2024", "reconciliation_qc_full", "mt5_reference")),
+        "x10_qc_by_year": (table_qc_by_year, ("reconciliation_qc_full",)),
+        "x10_mt5_by_year": (table_mt5_by_year, ("mt5_reference",)),
+        "x10_mt5_by_scenario": (table_mt5_by_scenario, ("mt5_reference",)),
+        "x10_rungs": (table_rungs, ("reconciliation_qc_2024", "reconciliation_qc_full", "reconciliation_mt5")),
+        "x10_mt5_attribution": (table_mt5_attribution, ("reconciliation_mt5", "costs_yaml")),
+        "x10_spread_measured": (table_spread_measured, ("costs_yaml",)),
+        "x10_v1_v2": (table_v1_v2, ("is_summary_v1",)),
+    }
+    for name, (builder, required) in execution_tables.items():
+        if all(bundle.get(source) is not None for source in required):
+            tables[name] = GENERATED_HEADER + builder(bundle)
     if examples is not None:
         tables["x10_trade_examples"] = GENERATED_HEADER + table_trade_examples(examples)
     return tables
@@ -1704,6 +2449,102 @@ def fig_trade_example(indicator: Any, example: dict[str, Any]) -> None:
     save_fig(fig, f"x10_fig12_trade_{SCENARIO_SLUG[example['scenario']]}")
 
 
+def fig_engines_by_year(bundle: dict[str, Any]) -> None:
+    """Espérance par année, sur les trois moteurs, en barres groupées."""
+    qc_rows = {int(r["year"]): r for r in bundle["reconciliation_qc_full"]["by_year"]}
+    mt5_rows = {int(y): c for y, c in bundle["mt5_reference"]["x10"]["by_year"].items()}
+    years = sorted(qc_rows)
+    x = np.arange(len(years))
+    width = 0.27
+
+    py = [qc_rows[y]["py_expectancy_r"] for y in years]
+    qc = [qc_rows[y]["qc_expectancy_r"] for y in years]
+    mt5 = [mt5_rows[y]["expectancy_r"] if y in mt5_rows else np.nan for y in years]
+
+    fig, ax = plt.subplots(figsize=(9.8, 4.2))
+    ax.bar(x - width, py, width, label="Python (référence)", color=PALETTE["primary"])
+    ax.bar(x, qc, width, label="QuantConnect", color=PALETTE["breakout"])
+    ax.bar(x + width, mt5, width, label="MetaTrader 5", color=PALETTE["accent"])
+    ax.axhline(0.0, color=PALETTE["grey"], lw=1.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels([str(y) for y in years])
+    ax.set_ylabel("espérance nette par trade (R)")
+    ax.set_title("Trois moteurs, sept années — aucune barre au-dessus de zéro")
+    ax.legend(ncol=3, loc="lower left")
+    save_fig(fig, "x10_fig13_moteurs_par_annee")
+
+
+def fig_spread_by_hour(bundle: dict[str, Any]) -> None:
+    """Le spread médian mesuré, heure de New York par heure de New York."""
+    costs = bundle["costs_yaml"]
+    measured = {
+        year: cell
+        for year, cell in costs["by_year"].items()
+        if cell["source"] == "mt5_dump" and cell.get("hours")
+    }
+    fig, ax = plt.subplots(figsize=(9.5, 4.0))
+    colours = [PALETTE["primary"], PALETTE["breakout"], PALETTE["accent"], PALETTE["green"]]
+    for colour, year in zip(colours, sorted(measured)):
+        hours = measured[year]["hours"]
+        xs = sorted(int(h) for h in hours)
+        ax.plot(
+            xs,
+            [hours[str(h)]["median"] for h in xs],
+            marker="o",
+            ms=3.5,
+            lw=1.6,
+            color=colour,
+            label=str(year),
+        )
+    ax.set_xticks(range(0, 24, 2))
+    ax.set_xlabel("heure de New York")
+    ax.set_ylabel("spread médian ($)")
+    ax.set_title("Le spread mesuré culmine à la reprise de séance")
+    ax.legend(ncol=4)
+    save_fig(fig, "x10_fig14_spread_par_heure")
+
+
+def fig_stamp_convention() -> None:
+    """Le schéma de la convention de datation : bin réel contre bin décalé."""
+    fig, ax = plt.subplots(figsize=(9.6, 3.6))
+    minutes = np.arange(0, 11)
+    for minute in minutes:
+        ax.plot([minute, minute], [0.2, 2.8], color=PALETTE["light"], lw=0.8, zorder=0)
+
+    ax.add_patch(
+        mpatches.Rectangle((5, 1.9), 5, 0.6, facecolor=PALETTE["breakout"], alpha=0.75)
+    )
+    ax.text(7.5, 2.2, "bin M5 étiqueté 10:05", ha="center", va="center",
+            color="white", fontsize=9, fontweight="bold")
+    ax.text(-0.3, 2.2, "QC et MT5\n(datation à l'ouverture)", ha="right", va="center",
+            fontsize=9, color=PALETTE["breakout"], fontweight="bold")
+
+    ax.add_patch(
+        mpatches.Rectangle((4, 0.9), 5, 0.6, facecolor=PALETTE["accent"], alpha=0.75)
+    )
+    ax.text(6.5, 1.2, "bin M5 étiqueté 10:05", ha="center", va="center",
+            color="white", fontsize=9, fontweight="bold")
+    ax.text(-0.3, 1.2, "référence Python\navant correction", ha="right", va="center",
+            fontsize=9, color=PALETTE["accent"], fontweight="bold")
+
+    ax.annotate("", xy=(4, 0.55), xytext=(5, 0.55),
+                arrowprops=dict(arrowstyle="<->", color=PALETTE["red"], lw=1.6))
+    ax.text(4.5, 0.32, "une minute", ha="center", fontsize=9,
+            color=PALETTE["red"], fontweight="bold")
+
+    ax.set_xlim(-4.2, 11)
+    ax.set_ylim(0, 3.1)
+    ax.set_yticks([])
+    ax.set_xticks(minutes)
+    ax.set_xticklabels([f"10:0{m}" if m < 10 else f"10:{m}" for m in minutes],
+                       rotation=45, fontsize=8)
+    ax.grid(False)
+    for spine in ("left", "right", "top"):
+        ax.spines[spine].set_visible(False)
+    ax.set_title("Une minute de décalage sur toutes les barres")
+    save_fig(fig, "x10_fig15_datation")
+
+
 def build_figures(bundle: dict[str, Any], indicator: Any, examples: list[dict[str, Any]]) -> None:
     returns = _analysed_returns()
     fig_grid_schema()
@@ -1717,6 +2558,17 @@ def build_figures(bundle: dict[str, Any], indicator: Any, examples: list[dict[st
     fig_exit_reasons(bundle)
     fig_cost_sensitivity(bundle)
     fig_bootstrap(bundle)
+    fig_stamp_convention()
+    for builder, required, name in (
+        (fig_engines_by_year, ("reconciliation_qc_full", "mt5_reference"), "x10_fig13_moteurs_par_annee"),
+        (fig_spread_by_hour, ("costs_yaml",), "x10_fig14_spread_par_heure"),
+    ):
+        if all(bundle.get(source) is not None for source in required):
+            builder(bundle)
+        elif (FIG_DIR / f"{name}.png").exists():
+            raise ValueError(f"Published figure has missing sources: {name}")
+        else:
+            print(f"  · {builder.__name__} ignorée : sa source n'est pas disponible")
     for example in examples:
         fig_trade_example(indicator, example)
 
@@ -1724,6 +2576,12 @@ def build_figures(bundle: dict[str, Any], indicator: Any, examples: list[dict[st
 # ═══════════════════════════════════════════════════════════════════════
 # 8. ENTRÉE
 # ═══════════════════════════════════════════════════════════════════════
+
+
+def unbacked_tables(tables: dict[str, str]) -> list[str]:
+    """Previously published optional tables cannot outlive their evidence."""
+    expected = set(tables) | {"x10_trade_examples"}
+    return sorted(path.name for path in TBL_DIR.glob("x10_*.tex") if path.stem not in expected)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1746,7 +2604,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"✗ {FEASIBILITY_JSON} absent : lancer le script sans --check.")
             return 1
         tables = build_tables(bundle, examples=None)
-        drifted = []
+        drifted = unbacked_tables(tables)
         for name, content in tables.items():
             path = TBL_DIR / f"{name}.tex"
             if not path.is_file() or path.read_text(encoding="utf-8") != content:
@@ -1786,7 +2644,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  ✓ {len(indicator.trades)} trades, {len(examples)} exemples retenus")
 
     print("\n[3/4] Tables...")
-    for name, content in build_tables(bundle, examples).items():
+    tables = build_tables(bundle, examples)
+    stale = unbacked_tables(tables)
+    if stale:
+        raise ValueError(f"Published tables have missing sources: {stale}")
+    for name, content in tables.items():
         path = TBL_DIR / f"{name}.tex"
         path.write_text(content, encoding="utf-8")
         print(f"  ✓ {path.relative_to(_PROJECT_ROOT)}  ({len(content)} caractères)")

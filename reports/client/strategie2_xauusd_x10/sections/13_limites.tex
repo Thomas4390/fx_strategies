@@ -9,19 +9,32 @@ atténuation, ce que ce travail ne démontre pas. Sur un dossier négatif, elle
 a une fonction particulière~: elle dit à quelles conditions le verdict
 pourrait être contesté --- et, pour chacune, si la contestation tiendrait.
 
-\subsection{Le spread est constant}
+\subsection{Le spread de sélection est constant}
 
 C'est la limite la plus lourde. Le modèle de coût de sélection applique
 \XTenSpreadUsd{} à chaque aller-retour, quelle que soit l'heure et quelle que
-soit l'année, faute d'avoir pu mesurer le spread historique sur le flux du
-courtier. Ce constant est trop cher en séance liquide et trop bon marché en
-heures creuses, et il pèse de moins en moins en proportion à mesure que le
-prix de l'or monte.
+soit l'année. Le flux du courtier a depuis permis de mesurer une médiane de
+\XTenSpreadMeasuredMedian{} sur sa fenêtre disponible et de publier une
+sensibilité horaire, sans re-sélection. La couverture antérieure à cette
+fenêtre reste extrapolée~; le coût constant demeure donc une limite du modèle
+de sélection, même si son effet est maintenant quantifié.
 
 \emph{Cette limite pourrait-elle renverser le verdict~?} Non. La
-section~\ref{sec:x10_couts} montre que même une exécution gratuite laisserait
-l'espérance négative. Un spread mieux mesuré déplacerait le chiffre, pas son
-signe.
+section~\ref{sec:x10_couts} montre que la sensibilité au spread mesuré reste
+négative, tout comme l'extrapolation indicative à coût nul. Le meilleur
+modèle disponible déplace le chiffre, pas son signe.
+
+\subsection{La provenance amont du parquet n'est pas documentée}
+
+Le fichier minute de référence porte une convention de datation maintenant
+testée et réconciliée, mais sa provenance amont n'est pas documentée dans le
+dépôt~: fournisseur, chaîne d'export, corrections éventuelles et version du
+jeu de données ne forment pas un manifeste auditable. La correction de
+datation résout un défaut identifié~; elle ne remplace pas cette traçabilité.
+
+Cette lacune ne fournit aucun argument pour déployer une stratégie perdante.
+Elle limite en revanche la reproductibilité externe et interdit d'attribuer
+tous les écarts de flux au seul moteur d'exécution.
 
 \subsection{Le seuil d'accélération a un double rôle}
 
@@ -93,19 +106,33 @@ aucun critère de la table de décision n'en dépend.
 
 C'est une limite de \emph{couverture}~: le dossier aurait été plus complet
 avec ces deux tests. Ce n'est pas une limite d'\emph{interprétation}~: leur
-absence ne change rien au sens des six critères mesurés.
+absence ne change rien au sens des
+\XTenCriteriaFailingInterpretable{} critères en échec mesurés.
 
 \subsection{Le portage d'exécution repose sur un modèle interpolé}
 
 Le testeur MetaTrader~5 tourne en mode « OHLC M1 », qui interpole les
-remplissages à l'intérieur de la minute. Les chiffres qu'il produira sont donc
-un \textbf{majorant} de ce qu'un compte réel obtiendrait, et ils devront être
-lus comme tels.
+remplissages à l'intérieur de la minute. Les chiffres qu'il produit dépendent
+donc d'un chemin intraminute reconstruit. Selon l'ordre des contacts, cette
+interpolation peut améliorer ou dégrader le P\&L~: elle ne fournit aucune
+garantie de borne supérieure ou inférieure par rapport à un compte réel.
 
 S'ajoute une limite de couverture~: l'historique de l'or chez le courtier ne
 remonte qu'à la fin 2022. Un peu plus de la moitié de l'échantillon --- et
 précisément la moitié où le coût pèse le plus lourd --- ne sera jamais
 vérifiable sur le moteur d'exécution.
+
+\subsection{La dernière minute de séance diffère dans le portage QuantConnect}
+
+La spécification et la référence considèrent comme dernière barre celle qui
+débute à 16:57, heure de New York. Le portage QuantConnect conserve
+\code{SESSION\_LAST\_MINUTE = 16:58}. Cette borne fonctionne dans le cloud,
+avec la convention temporelle de LEAN, mais ne se reproduit pas telle quelle
+sur l'export local redaté à l'ouverture.
+
+L'écart est documenté et ne justifie aucune nouvelle optimisation. Il empêche
+cependant de qualifier le portage complet d'identique à la référence tant que
+la convention n'est pas rendue explicite des deux côtés.
 
 \subsection{Une fenêtre horaire interdite, écart au mandat}
 

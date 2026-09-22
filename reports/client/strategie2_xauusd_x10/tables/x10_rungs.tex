@@ -1,0 +1,25 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Diagnostics et cibles de réconciliation. Les premières lignes ne prouvent pas une égalité intégrale des barres ou des indicateurs. Le résidu mesure une part d'entrées, pas une part du P\&L. Chaque rapprochement garde son propre échantillon.}
+\label{tab:x10_rungs}
+\begin{tabular}{c p{4.0cm} p{2.4cm} p{4.2cm} l}
+\toprule
+\textbf{Barreau} & \textbf{Objet} & \textbf{Cible} & \textbf{Mesuré} & \textbf{Verdict} \\
+\midrule
+1 & couverture de trace & égalité non établie & $16\,489$ horodatages M5 distincts dans la trace Python & descriptif \\
+2 & indicateurs sur le bid & diagnostic d'écart & VWAP : méd. $0{,}000$~\$, max. $2{,}176$~\$ ; EMA : méd. $0{,}000$~\$, max. $0{,}730$~\$ & descriptif \\
+3 & événements & seuil non déclaré & $97{,}1$\,\% des $15\,372$ couples appariés & descriptif \\
+4 & Python vers QC 2024 & $98$\,\% & $98{,}7$\,\% & \textcolor{rsiGreen}{\textbf{atteinte}} \\
+4 & Python vers QC 2019--2025 & $98$\,\% & $92{,}4$\,\% & \textcolor{combinedBurgundy}{\textbf{manquée}} \\
+4 & Python vers MT5, même dump, mid & $95$\,\% & $70{,}8$\,\% & \textcolor{combinedBurgundy}{\textbf{manquée}} \\
+4 & Python vers MT5, même dump, bid & $95$\,\% & $98{,}1$\,\% & \textcolor{rsiGreen}{\textbf{atteinte}} \\
+4 & Campagne vers MT5, flux distincts & $70$\,\% & $64{,}1$\,\% & \textcolor{combinedBurgundy}{\textbf{manquée}} \\
+5 & entrées non attribuées, QC 2024 & $\leq$ $5$\,\% & $0{,}6$\,\% & \textcolor{rsiGreen}{\textbf{atteinte}} \\
+5 & entrées non attribuées, QC 2019--2025 & $\leq$ $5$\,\% & $4{,}2$\,\% & \textcolor{rsiGreen}{\textbf{atteinte}} \\
+5 & entrées non attribuées, MT5, même dump, mid & $\leq$ $5$\,\% & $1{,}1$\,\% & \textcolor{rsiGreen}{\textbf{atteinte}} \\
+\bottomrule
+\end{tabular}
+\end{table}

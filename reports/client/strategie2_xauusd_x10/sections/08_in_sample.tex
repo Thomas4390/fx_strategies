@@ -125,33 +125,30 @@ critère en demandait 60~\%. En revanche, la seconde moitié du critère passe~:
 aucune année ne porte plus de la moitié du résultat net, le maximum étant
 \XTenMaxYearShare{}. La perte n'est donc pas l'accident d'un exercice.
 
-La perte s'atténue avec le temps --- \XTenWorstYearExpectancy{}~R pour la pire
-année contre \XTenLastYearExpectancy{}~R pour la dernière --- sans jamais
-changer de signe. Deux explications purement mécaniques suffisent à en rendre
-compte, et cette campagne ne les sépare pas~: le prix de l'or a plus que
-doublé, donc un spread \emph{constant} pèse de moins en moins en proportion~;
-et le garde-fou gain/risque rejette de plus en plus de candidats, écartant
-les transactions les plus défavorables. Aucune des deux n'est un signal.
+La dernière année, à \XTenLastYearExpectancy{}~R, est moins négative que la
+pire, \XTenWorstYear{} à \XTenWorstYearExpectancy{}~R, mais la trajectoire
+n'est pas monotone. Deux effets mécaniques coexistent sans que cette campagne
+les sépare~: un spread constant pèse moins en proportion quand le prix de l'or
+monte, tandis que le garde-fou gain/risque rejette davantage de candidats en
+fin d'échantillon. Aucun des deux n'établit une amélioration du signal.
 
 \subsection{Décomposition par scénario et par séance}
 
 \input{tables/x10_sessions.tex}
 
 Les quatre scénarios perdent (section~\ref{sec:x10_scenarios}) et les trois
-séances aussi. La coupe par séance est la plus contrastée de toute la
-campagne~: la séance asiatique porte \metric{\XTenAsiaLossShare} de la perte
-pour \XTenAsiaTradeShare{} des transactions, avec une espérance de
-\XTenAsiaExpectancyR{}~R contre \XTenNewYorkExpectancyR{}~R en séance
-new-yorkaise.
+séances aussi. La campagne corrigée ne fait plus apparaître une séance qui
+concentrerait à elle seule l'échec~: l'écart entre la meilleure et la pire
+espérance n'est que de \metric{\XTenSessionSpreadR{}~R}. La plus faible est
+\XTenWorstSessionName{} à \XTenWorstSessionR{}~R, tandis que la meilleure
+reste négative à \XTenBestSessionR{}~R.
 
 \begin{warningbox}
-\textbf{Ce contraste ne suggère pas d'ajouter un filtre horaire.} Un
+\textbf{Cette coupe ne suggère pas d'ajouter un filtre horaire.} Un
 paramètre choisi après avoir vu la décomposition n'est pas un paramètre, c'est
-une sélection --- et la table de décision l'interdit explicitement. Cette
-coupe est la première chose à regarder \emph{si} le mandat est un jour
-rouvert, sous une nouvelle spécification et un nouveau budget d'essais~; elle
-n'autorise rien dans le cadre actuel. La
-section~\ref{sec:x10_non_deploiement} y revient.
+une sélection --- et la table de décision l'interdit explicitement. Surtout,
+aucune séance ne fournit ici de contraste assez large pour constituer une
+hypothèse prioritaire de réouverture.
 \end{warningbox}
 
 \subsection{Décomposition par régime de volatilité}
@@ -206,19 +203,17 @@ exploré --- et les vingt-sept configurations de la grille le confirment.
 
 \begin{description}
   \item[Extension au VWAP.] Les \emph{reversals} pris loin du \code{VWAP} de
-  séance perdent près de deux fois moins que les autres~:
-  \XTenExtendedR{}~R contre \XTenNotExtendedR{}~R. C'est la seule variable
-  descriptive de la campagne qui sépare réellement quelque chose --- et elle
-  reste du mauvais côté de zéro. La spécification l'avait figée comme
-  \emph{tracée et non bloquante}, par décision du mandat.
-  \item[Contexte dollar.] Le contexte favorable perd plus \emph{en dollars} et
-  moins \emph{par unité de risque} que le contexte adverse. Il n'y a pas de
-  contradiction~: le risque est divisé par deux quand le dollar est adverse,
-  donc ces transactions pèsent moitié moins. Le garde-fou fonctionne comme
-  prévu~; il ne discrimine pas.
-  \item[Retest.] Le retest est \textbf{contre-prédictif}. Le mandat le citait
-  comme une confirmation~; la mesure ne le soutient pas. Il reste descriptif,
-  comme la spécification l'avait gelé.
+  séance rendent \XTenExtendedR{}~R contre \XTenNotExtendedR{}~R pour les
+  autres. Les deux branches sont négatives et la campagne corrigée ne soutient
+  pas l'idée d'en faire un filtre bloquant. La spécification l'avait figée
+  comme \emph{tracée et non bloquante}.
+  \item[Contexte dollar.] Le contexte favorable rend
+  \XTenDxyFavourableR{}~R contre \XTenDxyAdverseR{}~R pour le contexte adverse.
+  Le garde-fou réduit la taille quand le dollar est adverse~; cette différence
+  de poids doit être séparée de la comparaison en unités de risque.
+  \item[Retest.] Le retest rend \XTenRetestR{}~R contre
+  \XTenNoRetestR{}~R sans retest. L'écart est faible et les deux branches
+  perdent~: la mesure ne soutient pas le retest comme confirmation.
 \end{description}
 
 \subsection{Ablations : retirer une composante à la fois}
@@ -236,10 +231,10 @@ parfaitement monotone.
 Deux précisions comptent.
 
 \begin{itemize}
-  \item Retirer le filtre dollar ne change ni le nombre de transactions ni
-  l'espérance en R --- seulement le Sharpe et le montant. C'est la
-  vérification, annoncée en section~\ref{sec:x10_risque}, qu'il ne filtre
-  rien~: il ne touche que la taille.
+  \item Retirer le filtre dollar ne change la population que de
+  \XTenDxyTradeDelta{} transactions, mais dégrade le Sharpe et accroît la perte
+  de \XTenDxySavings. C'est cohérent avec son rôle principal~: réduire la
+  taille plutôt que bloquer les signaux.
   \item Retirer la moyenne horaire ouvre plus de transactions que retirer le
   \code{VWAP}. Les deux moitiés du filtre de contexte des \emph{breakouts} ne
   mordent donc pas également.

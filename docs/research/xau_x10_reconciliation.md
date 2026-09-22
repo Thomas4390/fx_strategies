@@ -1483,3 +1483,40 @@ moteurs ne liraient pas les mêmes minutes). Ils sont remplacés, pas amendés.
    script qui fabrique `data/XAU-USD_minute_qc.parquet` (§11.10 point 1), et régénérer les
    tables du rapport client — `scripts/build_x10_report_assets.py --check` échoue aujourd'hui
    sur les 15 tables, ce qui est le comportement attendu après un rejeu de campagne.
+
+## 15. Addendum du 22 septembre — périmètres de publication et limites de preuve
+
+**Holdout state : LOCKED ; aucune performance 2026 lue pendant cette reprise.**
+
+La finalisation du rapport corrige la lecture des archives, sans modifier leurs résultats
+ni le registre des 34 essais. Cet addendum précise et, lorsque nécessaire, remplace les
+affirmations plus générales des sections précédentes.
+
+- Les espérances `summary.py_expectancy_r` et `summary.qc_expectancy_r` des réconciliations
+  QC portent sur les **paires appariées**, avec le risque Python comme dénominateur commun.
+  Elles ne doivent pas être associées aux effectifs totaux `py_trades` / `qc_trades`.
+  Les tables et macros présentant tous les trades utilisent désormais les moyennes
+  annuelles `by_year`, pondérées par leurs effectifs, en risque propre : QC 2019–2025
+  −0,2688 R sur 1 642 trades ; contrôle QC 2024 −0,2048 R sur 316 trades.
+- Le résidu non attribué vaut **0,6 % pour QC 2024**, **4,2 % pour QC 2019–2025** et
+  **1,1 % pour MT5 sur le même dump en mid**. Ces fractions concernent les entrées,
+  pas le PnL. Elles n'autorisent pas à déclarer le run QC complet validé : son contrôle
+  `health.healthy` est faux, avec des sorties orphelines et une exposition résiduelle
+  temporaire. Le plancher de lot explique également une partie de l'écart de sélection.
+- `rung1_bars.n_m5_py` compte des horodatages distincts dans la trace Python ; il ne
+  prouve pas une égalité des barres des deux moteurs. En bid, les médianes d'écart VWAP
+  et EMA50 H1 valent zéro, mais leurs maxima valent respectivement 2,17574 $ et 0,73020 $.
+  Le rapport publie ces diagnostics sans les transformer en preuve d'égalité intégrale.
+- Le rapprochement des entrées sur le même dump en bid atteint sa cible de 95 %.
+  Celui de la campagne sur un flux distinct reste inférieur à sa cible de 70 %.
+  Une cause identifiée ne transforme pas cette dernière cible en succès.
+- La table de décision du rapport joint le résultat MT5 à l'archive in-sample : sept
+  critères échouent, dont six avec une mesure interprétable. Le PBO passe. Le critère
+  2026 reste non lu par décision. La recommandation opérationnelle est de ne pas
+  déployer ; aucune validation hors échantillon ou validation opérationnelle complète
+  du portage QC n'est revendiquée.
+
+Le générateur `scripts/build_x10_report_assets.py` produit les nouvelles tables et
+figures, détecte les sources invalides ou disparues et contrôle les valeurs publiées
+avec `--check`. La provenance initiale du parquet QC et `SESSION_LAST_MINUTE` restent
+des limites ouvertes ; cette finalisation ne lance aucune nouvelle campagne.

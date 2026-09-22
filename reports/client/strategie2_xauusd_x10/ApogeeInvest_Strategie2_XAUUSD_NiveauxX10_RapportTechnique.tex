@@ -5,7 +5,7 @@
 %  AVANT son inclusion.
 % ═══════════════════════════════════════════════════════════════════
 \newcommand{\ReportRunningTitle}{Stratégie XAUUSD --- Niveaux x10}
-\newcommand{\ReportFooterLabel}{Rapport technique --- verdict in-sample : ne pas déployer}
+\newcommand{\ReportFooterLabel}{Rapport technique --- décision : ne pas déployer}
 \newcommand{\ReportPdfTitle}{Stratégie XAUUSD --- Niveaux x10 --- Rapport technique}
 \newcommand{\ReportPdfSubject}{Stratégie intraday XAUUSD sur les niveaux psychologiques de dix dollars}
 \newcommand{\ReportPdfKeywords}{XAUUSD, or, niveaux psychologiques, breakout, reversal, MetaTrader 5, QuantConnect}
@@ -95,14 +95,13 @@ batterie de robustesse et table de décision gelée avant mesure
 \begin{tabular}{rl}
   \color{slateGrey}\sffamily Préparé par & \textbf{Thomas Vaudescal} \\[0.2em]
   \color{slateGrey}\sffamily Pour & \textbf{Apogée Invest} \\[0.2em]
-  \color{slateGrey}\sffamily Date & \textbf{21 septembre 2026} \\[0.2em]
+  \color{slateGrey}\sffamily Date & \textbf{22 septembre 2026} \\[0.2em]
   \color{slateGrey}\sffamily Statut &
   \begin{minipage}[t]{8.4cm}
-    \textbf{Verdict in-sample : ne pas déployer}\\
-    \normalfont\small sections d'exécution (QuantConnect, MetaTrader~5)\\
-    \normalfont\small en cours d'intégration
+    \textbf{Décision opérationnelle : ne pas déployer}\\
+    \normalfont\small exécution réconciliée ; holdout 2026 non lu
   \end{minipage} \\[0.6em]
-  \color{slateGrey}\sffamily Version & \textbf{1.0-rc} \\
+  \color{slateGrey}\sffamily Version & \textbf{1.0} \\
 \end{tabular}
 
 \vspace{0.5cm}
@@ -113,7 +112,7 @@ batterie de robustesse et table de décision gelée avant mesure
 
 % Confidentiality block
 \noindent\colorbox{lightGrey}{%
-  \makebox[\textwidth][l]{%
+  \makebox[\dimexpr\textwidth-2\fboxsep\relax][l]{%
     \parbox{0.95\textwidth}{%
       \vspace{0.3cm}
       \footnotesize\color{slateGrey}\sffamily
@@ -123,9 +122,9 @@ batterie de robustesse et table de décision gelée avant mesure
       historiques et de simulations de résistance. Les performances passées
       ne préjugent pas des performances futures.
       \vspace{0.3cm}
-    }
-  }
-}
+    }%
+  }%
+}%
 
 \vspace{0.3cm}
 

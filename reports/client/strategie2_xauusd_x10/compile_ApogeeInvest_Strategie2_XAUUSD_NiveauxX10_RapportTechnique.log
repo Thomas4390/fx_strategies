@@ -103,7 +103,7 @@ Package titlesec Warning: Non standard sectioning command \subparagraph
 
 Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              with a KOMA-Script class is not recommended.
-(scrartcl)              I'd suggest to use 
+(scrartcl)              I'd suggest to use
 (scrartcl)              package `scrlayer' or `scrlayer-scrpage', because
 (scrartcl)              they support KOMA-Script classes.
 (scrartcl)              With `fancyhdr' several features of class `scrartcl'
@@ -291,14 +291,7 @@ Loading lettrine.cfg
 (./tables/x10_verdict.tex) (./tables/x10_headline.tex)
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
-(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux
-
-LaTeX Warning: Label `tab:x10_trade_examples' multiply defined.
-
-
-LaTeX Warning: Label `tab:x10_decision' multiply defined.
-
-)
+(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -310,11 +303,8 @@ nary-english.trsl)
 Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 115--129
- [][][][][][] 
-[1]
-Underfull \hbox (badness 10000) in paragraph at lines 143--145
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd) [1]
+Underfull \hbox (badness 10000) in paragraph at lines 142--144
 
 (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.toc
 
@@ -323,10 +313,10 @@ Package polyglossia Warning: Failed to patch part for French
 [1] [2] [3]) [4] (./sections/00_resume_verdict.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 39
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 43
 .
 
-(./tables/x10_decision.tex
+[1] (./tables/x10_decision.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 6.
@@ -345,10 +335,10 @@ Underfull \hbox (badness 2495) in paragraph at lines 17--17
 Underfull \hbox (badness 1152) in paragraph at lines 20--20
 []|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
 )/m/n/9 30, sinon NON
-) [1]
+)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 106.
+(enumitem)                sense, on input line 110.
 
 [2]) (./sections/01_mandat.tex
 
@@ -358,119 +348,125 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 [3]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 68.
+(enumitem)                sense, on input line 69.
 
-) (./sections/02_methodologie.tex [4] [5]
+) (./sections/02_methodologie.tex [4] [5] (./tables/x10_v1_v2.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
+
+Underfull \hbox (badness 3179) in paragraph at lines 15--15
+[]|\TU/LatinModernRoman(0)/m/n/9 PBO (CSCV, matrice 27 $\OMS/cmsy/m/n/9 ^^B$
+) [6]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 108.
+(enumitem)                sense, on input line 127.
 
-[6]) (./sections/03_grille_x10.tex (./tables/x10_feasibility.tex [7]) [8]
+[7]) (./sections/03_grille_x10.tex (./tables/x10_feasibility.tex) [8] [9]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 73.
 
-(./tables/x10_r_rule.tex) [9]
+(./tables/x10_r_rule.tex)
 
 LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
 (Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 123
 .
 
-) (./sections/04_mecanique.tex
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap T doesn't fit on page 10.
-(lettrine)                Missing vertical space: 6.37364pt. 
-(lettrine)                Reported on input line 9.
-
-[10]
+[10]) (./sections/04_mecanique.tex [11]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 50.
 
-[11] [12] [13] [14]) (./sections/05_scenarios.tex (./tables/x10_scenarios.tex)
-[15] [16] (./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
-) [17]
-Underfull \hbox (badness 4001) in paragraph at lines 115--115
+[12] [13] [14] [15]) (./sections/05_scenarios.tex (./tables/x10_scenarios.tex)
+[16] [17]
+Underfull \hbox (badness 4001) in paragraph at lines 117--117
 []|\TU/LatinModernRoman(0)/b/n/10.95 Qualité de la
 [18]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 129.
+(enumitem)                sense, on input line 131.
 
-) (./sections/06_recherche_vs_execution.tex
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 19.
-(lettrine)                Missing vertical space: 37.35548pt. 
-(lettrine)                Reported on input line 9.
-
-[19]
-Underfull \hbox (badness 3735) in paragraph at lines 37--37
+[19]) (./sections/06_recherche_vs_execution.tex
+Underfull \hbox (badness 3735) in paragraph at lines 20--20
 []|\TU/LatinModernRoman(0)/b/n/10.95 Moteur vecto-
-[20]
-Underfull \hbox (badness 1728) in paragraph at lines 92--93
-\TU/LatinModernRoman(0)/m/sc/10.95 tesse, momentum, accélé-
+(./tables/x10_engines.tex) [20] (./tables/x10_qc_by_year.tex) [21]
+(./tables/x10_mt5_by_year.tex) (./tables/x10_mt5_by_scenario.tex)
+(./tables/x10_mt5_attribution.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--15
+[]|\TU/LatinModernRoman(0)/m/n/9 mesuré, puis
+) [22] (./tables/x10_rungs.tex
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
+[]|\TU/LatinModernRoman(0)/m/n/9 diagnostic
 
-Underfull \hbox (badness 10000) in paragraph at lines 122--122
-[]|\TU/LatinModernRoman(0)/m/sc/10.95 Python ou QuantConnect
+Underfull \hbox (badness 1939) in paragraph at lines 17--17
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
 
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 142.
+Underfull \hbox (badness 1939) in paragraph at lines 18--18
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
 
-[21]) (./sections/07_risque.tex
+Underfull \hbox (badness 10000) in paragraph at lines 22--22
+[]|\TU/LatinModernRoman(0)/m/n/9 entrées non attribuées,
+) [23]) (./sections/07_risque.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 42.
 
-[22] [23]) (./sections/08_in_sample.tex (./tables/x10_grid27.tex)
+[24]) (./sections/08_in_sample.tex [25] (./tables/x10_grid27.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 36.
 
-[24] [25] (./tables/x10_walkforward.tex [26]) (./tables/x10_sessions.tex)
-[27] (./tables/x10_regimes.tex) [28] (./tables/x10_exits.tex) [29]
+[26] [27] (./tables/x10_walkforward.tex) [28] [29] (./tables/x10_sessions.tex)
+(./tables/x10_regimes.tex) (./tables/x10_exits.tex) [30]
 (./tables/x10_context_cuts.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 208.
+(enumitem)                sense, on input line 205.
 
-(./tables/x10_ablations.tex) [30] (./tables/x10_concentration.tex))
-(./sections/09_hors_echantillon.tex [31]
+
+Overfull \hbox (0.3545pt too wide) in paragraph at lines 205--210
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Les \TU/LatinModernRoman(0)/m/it/10.95 rev
+ersals \TU/LatinModernRoman(0)/m/sc/10.95 pris loin du \TU/LatinModernMono(0)/b
+/n/10 VWAP \TU/LatinModernRoman(0)/m/sc/10.95 de séance rendent $\OMS/cmsy/m/n/
+10.95 ^^@\OT1/cmr/m/n/10.95 0[]1991$ \TU/LatinModernRoman(0)/m/sc/10.95 R contr
+e $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1509$ \TU/LatinModernRoman(0)/m
+/sc/10.95 R
+[31] (./tables/x10_ablations.tex) (./tables/x10_concentration.tex) [32])
+(./sections/09_hors_echantillon.tex [33]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 48.
 
-[32]) (./sections/10_bootstrap_mc_ruine.tex [33] [34] [35])
-(./sections/11_robustesse_avancee.tex (./tables/x10_robustness.tex) [36]
-(./tables/x10_cpcv.tex)
+[34]) (./sections/10_bootstrap_mc_ruine.tex [35] [36])
+(./sections/11_robustesse_avancee.tex (./tables/x10_robustness.tex) [37]
+[38] (./tables/x10_cpcv.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 92.
+(enumitem)                sense, on input line 90.
 
-[37]
-Overfull \hbox (2.43547pt too wide) in paragraph at lines 97--103
+
+Overfull \hbox (2.43547pt too wide) in paragraph at lines 95--101
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le module du dépôt transmet des \TU/LatinM
 odernRoman(0)/m/it/10.95 ren-
-) (./sections/12_sensibilite_couts.tex [38] (./tables/x10_costs.tex) [39]
-[40]
+[39]) (./sections/12_sensibilite_couts.tex (./tables/x10_spread_measured.tex)
+[40] (./tables/x10_costs.tex) [41] [42]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 125.
+(enumitem)                sense, on input line 138.
 
-) (./sections/13_limites.tex [41] [42]) (./sections/14b_non_deploiement.tex
-[43]
-
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 69.
-
-[44] [45]) (./sections/annexe_a_glossaire.tex
+) (./sections/13_limites.tex [43] [44] [45])
+(./sections/14b_non_deploiement.tex [46]
+Overfull \hbox (1.4251pt too wide) in paragraph at lines 112--115
+[] []\TU/LatinModernRoman(0)/b/n/10.95 Hypothèse 2 — un scénario unique.[] \TU/
+LatinModernRoman(0)/m/sc/10.95 Le meilleur des quatre est Reversal Short à $\OM
+S/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1549$ \TU/LatinModernRoman(0)/m/sc/10
+.95 R.
+[47]) (./sections/annexe_a_glossaire.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 19.
 
+[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 33.
@@ -479,62 +475,41 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 54.
 
-[46]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 71.
 
-) (./sections/annexe_b_anatomie_trades.tex [47]
-(./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
-)
+) (./sections/annexe_b_anatomie_trades.tex [49]
+(./tables/x10_trade_examples.tex) [50]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 93.
 
-[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 114.
 
-) (./sections/annexe_c_plateau.tex [49] [50])
-(./sections/annexe_d_methodologie_robustesse.tex [51] [52])
-(./sections/annexe_e_table_decision.tex [53] (./tables/x10_decision.tex
-Underfull \hbox (badness 6725) in paragraph at lines 12--12
-[]|\TU/LatinModernRoman(0)/m/n/9 Trades in-sample 2019 $\OMS/cmsy/m/n/9 !$
-
-Underfull \hbox (badness 10000) in paragraph at lines 14--14
-[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
-
-Underfull \hbox (badness 2495) in paragraph at lines 17--17
-[]|$\OT1/cmr/m/n/9 0$\TU/LatinModernRoman(0)/m/n/9 % d’années positives;
-
-Underfull \hbox (badness 1152) in paragraph at lines 20--20
-[]|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
-)/m/n/9 30, sinon NON
-)
+) (./sections/annexe_c_plateau.tex [51] [52] [53])
+(./sections/annexe_d_methodologie_robustesse.tex [54] [55])
+(./sections/annexe_e_table_decision.tex [56]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 22.
+(enumitem)                sense, on input line 25.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 37--37
+Underfull \hbox (badness 10000) in paragraph at lines 44--44
 []|\TU/LatinModernRoman(0)/b/n/10.95 Déploiement à
-[54]
-Underfull \hbox (badness 2088) in paragraph at lines 110--110
+[57]
+Underfull \hbox (badness 2088) in paragraph at lines 118--118
 \TU/LatinModernRoman(0)/m/sc/10.95 touché des barres posté-
-[55]) [56] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
+[58]) [59] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: There were multiply-defined labels.
 
  )
 (see the transcript file for additional information)
 Output written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.pd
-f (61 pages).
+f (64 pages).
 Transcript written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechniqu
 e.log.
 This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Debian) (preloaded format=xelatex)
@@ -642,7 +617,7 @@ Package titlesec Warning: Non standard sectioning command \subparagraph
 
 Class scrartcl Warning: Usage of package `fancyhdr' together
 (scrartcl)              with a KOMA-Script class is not recommended.
-(scrartcl)              I'd suggest to use 
+(scrartcl)              I'd suggest to use
 (scrartcl)              package `scrlayer' or `scrlayer-scrpage', because
 (scrartcl)              they support KOMA-Script classes.
 (scrartcl)              With `fancyhdr' several features of class `scrartcl'
@@ -830,14 +805,7 @@ Loading lettrine.cfg
 (./tables/x10_verdict.tex) (./tables/x10_headline.tex)
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
 (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
-(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux
-
-LaTeX Warning: Label `tab:x10_trade_examples' multiply defined.
-
-
-LaTeX Warning: Label `tab:x10_decision' multiply defined.
-
-)
+(./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 
@@ -849,11 +817,8 @@ nary-english.trsl)
 Package polyglossia Warning: Failed to patch part for French
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
-Overfull \hbox (9.64635pt too wide) in paragraph at lines 115--129
- [][][][][][] 
-[1]
-Underfull \hbox (badness 10000) in paragraph at lines 143--145
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd) [1]
+Underfull \hbox (badness 10000) in paragraph at lines 142--144
 
 (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.toc
 
@@ -862,10 +827,10 @@ Package polyglossia Warning: Failed to patch part for French
 [1] [2] [3]) [4] (./sections/00_resume_verdict.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/m/sc' undefined
-(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 39
+(Font)              using `TU/LatinModernRoman(0)/m/n' instead on input line 43
 .
 
-(./tables/x10_decision.tex
+[1] (./tables/x10_decision.tex
 
 LaTeX Font Warning: Font shape `TU/LatinModernRoman(0)/b/sc' undefined
 (Font)              using `TU/LatinModernRoman(0)/b/n' instead on input line 6.
@@ -884,10 +849,10 @@ Underfull \hbox (badness 2495) in paragraph at lines 17--17
 Underfull \hbox (badness 1152) in paragraph at lines 20--20
 []|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
 )/m/n/9 30, sinon NON
-) [1]
+)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 106.
+(enumitem)                sense, on input line 110.
 
 [2]) (./sections/01_mandat.tex
 
@@ -897,119 +862,125 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 [3]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 68.
+(enumitem)                sense, on input line 69.
 
-) (./sections/02_methodologie.tex [4] [5]
+) (./sections/02_methodologie.tex [4] [5] (./tables/x10_v1_v2.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
+
+Underfull \hbox (badness 3179) in paragraph at lines 15--15
+[]|\TU/LatinModernRoman(0)/m/n/9 PBO (CSCV, matrice 27 $\OMS/cmsy/m/n/9 ^^B$
+) [6]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 108.
+(enumitem)                sense, on input line 127.
 
-[6]) (./sections/03_grille_x10.tex (./tables/x10_feasibility.tex [7]) [8]
+[7]) (./sections/03_grille_x10.tex (./tables/x10_feasibility.tex) [8] [9]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 73.
 
-(./tables/x10_r_rule.tex) [9]
+(./tables/x10_r_rule.tex)
 
 LaTeX Font Warning: Font shape `TU/LatinModernMono(0)/b/n' undefined
 (Font)              using `TU/LatinModernMono(0)/m/n' instead on input line 123
 .
 
-) (./sections/04_mecanique.tex
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap T doesn't fit on page 10.
-(lettrine)                Missing vertical space: 6.37364pt. 
-(lettrine)                Reported on input line 9.
-
-[10]
+[10]) (./sections/04_mecanique.tex [11]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 50.
 
-[11] [12] [13] [14]) (./sections/05_scenarios.tex (./tables/x10_scenarios.tex)
-[15] [16] (./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
-) [17]
-Underfull \hbox (badness 4001) in paragraph at lines 115--115
+[12] [13] [14] [15]) (./sections/05_scenarios.tex (./tables/x10_scenarios.tex)
+[16] [17]
+Underfull \hbox (badness 4001) in paragraph at lines 117--117
 []|\TU/LatinModernRoman(0)/b/n/10.95 Qualité de la
 [18]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 129.
+(enumitem)                sense, on input line 131.
 
-) (./sections/06_recherche_vs_execution.tex
-
-Package lettrine Warning: *** ATTENTION REQUIRED ***
-(lettrine)                The dropped cap U doesn't fit on page 19.
-(lettrine)                Missing vertical space: 37.35548pt. 
-(lettrine)                Reported on input line 9.
-
-[19]
-Underfull \hbox (badness 3735) in paragraph at lines 37--37
+[19]) (./sections/06_recherche_vs_execution.tex
+Underfull \hbox (badness 3735) in paragraph at lines 20--20
 []|\TU/LatinModernRoman(0)/b/n/10.95 Moteur vecto-
-[20]
-Underfull \hbox (badness 1728) in paragraph at lines 92--93
-\TU/LatinModernRoman(0)/m/sc/10.95 tesse, momentum, accélé-
+(./tables/x10_engines.tex) [20] (./tables/x10_qc_by_year.tex) [21]
+(./tables/x10_mt5_by_year.tex) (./tables/x10_mt5_by_scenario.tex)
+(./tables/x10_mt5_attribution.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--15
+[]|\TU/LatinModernRoman(0)/m/n/9 mesuré, puis
+) [22] (./tables/x10_rungs.tex
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
+[]|\TU/LatinModernRoman(0)/m/n/9 diagnostic
 
-Underfull \hbox (badness 10000) in paragraph at lines 122--122
-[]|\TU/LatinModernRoman(0)/m/sc/10.95 Python ou QuantConnect
+Underfull \hbox (badness 1939) in paragraph at lines 17--17
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
 
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 142.
+Underfull \hbox (badness 1939) in paragraph at lines 18--18
+[]|\TU/LatinModernRoman(0)/m/n/9 Python vers MT5, même
 
-[21]) (./sections/07_risque.tex
+Underfull \hbox (badness 10000) in paragraph at lines 22--22
+[]|\TU/LatinModernRoman(0)/m/n/9 entrées non attribuées,
+) [23]) (./sections/07_risque.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 42.
 
-[22] [23]) (./sections/08_in_sample.tex (./tables/x10_grid27.tex)
+[24]) (./sections/08_in_sample.tex [25] (./tables/x10_grid27.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 36.
 
-[24] [25] (./tables/x10_walkforward.tex [26]) (./tables/x10_sessions.tex)
-[27] (./tables/x10_regimes.tex) [28] (./tables/x10_exits.tex) [29]
+[26] [27] (./tables/x10_walkforward.tex) [28] [29] (./tables/x10_sessions.tex)
+(./tables/x10_regimes.tex) (./tables/x10_exits.tex) [30]
 (./tables/x10_context_cuts.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 208.
+(enumitem)                sense, on input line 205.
 
-(./tables/x10_ablations.tex) [30] (./tables/x10_concentration.tex))
-(./sections/09_hors_echantillon.tex [31]
+
+Overfull \hbox (0.3545pt too wide) in paragraph at lines 205--210
+[]\TU/LatinModernRoman(0)/m/sc/10.95 Les \TU/LatinModernRoman(0)/m/it/10.95 rev
+ersals \TU/LatinModernRoman(0)/m/sc/10.95 pris loin du \TU/LatinModernMono(0)/b
+/n/10 VWAP \TU/LatinModernRoman(0)/m/sc/10.95 de séance rendent $\OMS/cmsy/m/n/
+10.95 ^^@\OT1/cmr/m/n/10.95 0[]1991$ \TU/LatinModernRoman(0)/m/sc/10.95 R contr
+e $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1509$ \TU/LatinModernRoman(0)/m
+/sc/10.95 R
+[31] (./tables/x10_ablations.tex) (./tables/x10_concentration.tex) [32])
+(./sections/09_hors_echantillon.tex [33]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 48.
 
-[32]) (./sections/10_bootstrap_mc_ruine.tex [33] [34] [35])
-(./sections/11_robustesse_avancee.tex (./tables/x10_robustness.tex) [36]
-(./tables/x10_cpcv.tex)
+[34]) (./sections/10_bootstrap_mc_ruine.tex [35] [36])
+(./sections/11_robustesse_avancee.tex (./tables/x10_robustness.tex) [37]
+[38] (./tables/x10_cpcv.tex)
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 92.
+(enumitem)                sense, on input line 90.
 
-[37]
-Overfull \hbox (2.43547pt too wide) in paragraph at lines 97--103
+
+Overfull \hbox (2.43547pt too wide) in paragraph at lines 95--101
 []\TU/LatinModernRoman(0)/m/sc/10.95 Le module du dépôt transmet des \TU/LatinM
 odernRoman(0)/m/it/10.95 ren-
-) (./sections/12_sensibilite_couts.tex [38] (./tables/x10_costs.tex) [39]
-[40]
+[39]) (./sections/12_sensibilite_couts.tex (./tables/x10_spread_measured.tex)
+[40] (./tables/x10_costs.tex) [41] [42]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 125.
+(enumitem)                sense, on input line 138.
 
-) (./sections/13_limites.tex [41] [42]) (./sections/14b_non_deploiement.tex
-[43]
-
-Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 69.
-
-[44] [45]) (./sections/annexe_a_glossaire.tex
+) (./sections/13_limites.tex [43] [44] [45])
+(./sections/14b_non_deploiement.tex [46]
+Overfull \hbox (1.4251pt too wide) in paragraph at lines 112--115
+[] []\TU/LatinModernRoman(0)/b/n/10.95 Hypothèse 2 — un scénario unique.[] \TU/
+LatinModernRoman(0)/m/sc/10.95 Le meilleur des quatre est Reversal Short à $\OM
+S/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 0[]1549$ \TU/LatinModernRoman(0)/m/sc/10
+.95 R.
+[47]) (./sections/annexe_a_glossaire.tex
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 19.
 
+[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 33.
@@ -1018,61 +989,40 @@ Package enumitem Warning: Negative labelwidth. This does not make much
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 54.
 
-[46]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 71.
 
-) (./sections/annexe_b_anatomie_trades.tex [47]
-(./tables/x10_trade_examples.tex
-Overfull \hbox (4.64772pt too wide) in paragraph at lines 8--18
- [][] 
-)
+) (./sections/annexe_b_anatomie_trades.tex [49]
+(./tables/x10_trade_examples.tex) [50]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 93.
 
-[48]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
 (enumitem)                sense, on input line 114.
 
-) (./sections/annexe_c_plateau.tex [49] [50])
-(./sections/annexe_d_methodologie_robustesse.tex [51] [52])
-(./sections/annexe_e_table_decision.tex [53] (./tables/x10_decision.tex
-Underfull \hbox (badness 6725) in paragraph at lines 12--12
-[]|\TU/LatinModernRoman(0)/m/n/9 Trades in-sample 2019 $\OMS/cmsy/m/n/9 !$
-
-Underfull \hbox (badness 10000) in paragraph at lines 14--14
-[]|\TU/LatinModernRoman(0)/m/n/9 DSR (déflaté par dis-
-
-Underfull \hbox (badness 2495) in paragraph at lines 17--17
-[]|$\OT1/cmr/m/n/9 0$\TU/LatinModernRoman(0)/m/n/9 % d’années positives;
-
-Underfull \hbox (badness 1152) in paragraph at lines 20--20
-[]|\TU/LatinModernRoman(0)/m/n/9 n $\OMS/cmsy/m/n/9 ^^U$ \TU/LatinModernRoman(0
-)/m/n/9 30, sinon NON
-)
+) (./sections/annexe_c_plateau.tex [51] [52] [53])
+(./sections/annexe_d_methodologie_robustesse.tex [54] [55])
+(./sections/annexe_e_table_decision.tex [56]
 
 Package enumitem Warning: Negative labelwidth. This does not make much
-(enumitem)                sense, on input line 22.
+(enumitem)                sense, on input line 25.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 37--37
+Underfull \hbox (badness 10000) in paragraph at lines 44--44
 []|\TU/LatinModernRoman(0)/b/n/10.95 Déploiement à
-[54]
-Underfull \hbox (badness 2088) in paragraph at lines 110--110
+[57]
+Underfull \hbox (badness 2088) in paragraph at lines 118--118
 \TU/LatinModernRoman(0)/m/sc/10.95 touché des barres posté-
-[55]) [56] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
+[58]) [59] (./ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
-
-LaTeX Warning: There were multiply-defined labels.
 
  )
 (see the transcript file for additional information)
 Output written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechnique.pd
-f (61 pages).
+f (64 pages).
 Transcript written on ApogeeInvest_Strategie2_XAUUSD_NiveauxX10_RapportTechniqu
 e.log.

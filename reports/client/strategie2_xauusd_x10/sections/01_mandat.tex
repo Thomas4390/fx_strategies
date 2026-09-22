@@ -53,10 +53,11 @@ sur QuantConnect, portage sur MetaTrader~5, réconciliation des trois moteurs,
 batterie de robustesse, puis verdict. Le verdict peut être négatif~; il est
 alors publié tel quel, au même titre qu'un verdict favorable.
 
-La partie \emph{recherche} de cette chaîne est complète et rendue ici. Les
-deux portages d'exécution et la réconciliation événementielle sont en cours
-d'intégration~; les sections qui les portent le signalent et n'avancent aucun
-chiffre en attendant.
+La recherche, les deux portages d'exécution et leur réconciliation
+événementielle sont achevés et rendus ici. La tranche hors échantillon 2026,
+elle, est volontairement restée verrouillée~: le rapport distingue donc la
+décision opérationnelle de ne pas déployer d'une validation OOS, qui n'a pas eu
+lieu.
 
 \subsection{Ce que le gel interdit}
 
@@ -99,10 +100,10 @@ n'est traitée par prétérition~:
   n'entre pas dans une allocation, quelle que soit sa corrélation~;
   \item \textbf{le filtrage des annonces macroéconomiques} n'est pas
   implémenté --- le mandat demande la séance entière, sans calendrier~;
-  \item \textbf{le spread réel heure par heure} n'a pas pu être relevé, le
-  terminal du courtier ne joignant plus son serveur de démonstration~; le
-  repli et sa sensibilité obligatoire sont décrits en
-  section~\ref{sec:x10_couts}~;
+  \item \textbf{le spread réel antérieur à l'historique du courtier} n'est pas
+  observable directement~; le spread a été mesuré sur la fenêtre disponible,
+  puis prolongé selon la règle documentée pour une sensibilité descriptive,
+  sans re-sélection (section~\ref{sec:x10_couts})~;
   \item \textbf{toute variante du mandat} --- niveaux en \code{ATR}, scénario
   unique, restriction de séance --- relève d'une autre spécification et d'un
   autre budget d'essais, jamais d'un ajustement de celui-ci.

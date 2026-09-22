@@ -22,10 +22,14 @@ production, ni en réel ni en démo.} Sur sept années de données et
 chaque passage --- pour un profit factor de \metric{\XTenProfitFactor} et un
 ratio de Sharpe annualisé de \metric{\XTenSharpeIS}. Sur les
 \XTenCriteriaCount{} critères de la table de décision gelée avant la mesure,
-\XTenCriteriaPassing{} est franchi, celui du nombre de transactions.
+\XTenCriteriaPassing{} sont franchis~: le nombre de transactions et le
+\code{PBO}. \XTenCriteriaFailing{} restent en échec, dont
+\XTenCriteriaFailingInterpretable{} avec une mesure interprétable.
 Aucune des vingt-sept configurations de la grille n'échappe à ce constat~;
 aucune année sur sept n'est positive. Le verdict porte sur ce qui a été
-mesuré, c'est-à-dire la totalité de la recherche.
+mesuré. Il fonde la décision opérationnelle de ne pas déployer~; il ne
+constitue pas une validation hors échantillon, puisque le holdout 2026 n'a pas
+été lu.
 \end{warningbox}
 }{%
 \begin{insightbox}[title=\textbf{\color{white}\textsf{Verdict --- inconclusif}}]
@@ -116,19 +120,15 @@ Trois conséquences concrètes.
   promesses de rendement.
 \end{description}
 
-\subsection*{Ce que ce document n'établit pas encore}
+\subsection*{Ce que ce document n'établit pas}
 
-\ifdefstring{\XTenVerdictProvisoire}{1}{%
-\begin{warningbox}[title=\textbf{\color{white}\textsf{Sections d'exécution en cours d'intégration}}]
-Le verdict in-sample ci-dessus est \textbf{acquis}~: il repose sur des mesures
-complètes, et aucune mesure ultérieure ne peut transformer six échecs
-interprétables en succès. Restent à intégrer les deux portages d'exécution ---
-QuantConnect et MetaTrader~5 --- et la réconciliation événementielle des trois
-moteurs, dont les campagnes sont en cours. Les sections concernées portent
-leurs valeurs à \code{\XTenMTFiveExpectancyR} et le signalent~; aucun chiffre
-d'exécution n'est avancé tant qu'il n'a pas été mesuré.
-\end{warningbox}
-}{}
+Les portages QuantConnect et MetaTrader~5 ont été mesurés et réconciliés.
+Ils confirment le signe négatif de la recherche, tout en mettant au jour des
+écarts d'exécution et de données détaillés en
+section~\ref{sec:x10_reconciliation}. Le seul critère non mesuré est la lecture
+unique du holdout 2026. Son absence ne suspend pas la décision opérationnelle
+de ne pas engager de capital, mais interdit de parler d'une validation OOS ou
+d'un verdict définitif au sens complet du protocole.
 
 Ce document ne prétend pas démontrer qu'aucune stratégie de niveaux ronds ne
 peut fonctionner sur l'or. Il démontre que \emph{celle-ci}, telle que le mandat

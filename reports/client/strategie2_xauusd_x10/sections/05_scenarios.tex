@@ -34,10 +34,10 @@ l'autre côté du niveau à une distance proportionnelle à l'\code{ATR}.
 
 Les \emph{breakouts} sont les seuls à passer un filtre de contexte~: ils
 exigent d'être du bon côté de l'\code{EMA50} horaire \textbf{et} du
-\code{VWAP} de séance. C'est probablement ce qui explique qu'ils soient les
-moins mauvais des quatre~: le \emph{Breakout Long} rend
-\metric{\XTenBestScenarioR{}~R} contre \metric{\XTenWorstScenarioR{}~R} pour
-le pire des \emph{reversals}.
+\code{VWAP} de séance. La campagne corrigée ne permet toutefois plus d'en
+déduire une hiérarchie de familles~: les quatre espérances tiennent dans une
+bande de \metric{\XTenScenarioSpreadR{}~R}. Le meilleur scénario est
+\XTenBestScenarioName{} à \metric{\XTenBestScenarioR{}~R}~; il reste négatif.
 
 \begin{figure}[htbp]
 \centering
@@ -69,9 +69,10 @@ d'un demi-\code{ATR}.
 Les \emph{reversals} n'ont \textbf{aucune} exigence de contexte. C'est une
 décision explicite du mandat~: un retournement est contre-tendance par
 construction, l'interdire contre la moyenne horaire le viderait de son sens.
-Le prix de cette liberté est visible dans la table~: ils sont les plus
-nombreux et les plus coûteux, le \emph{Reversal Short} portant à lui seul
-\metric{\XTenRevShortLossShare} de la perte totale.
+La table ne montre pas une famille qui sauverait l'autre. Le scénario le plus
+faible est \XTenWorstScenarioName{} à \metric{\XTenWorstScenarioR{}~R}~; il
+porte \metric{\XTenWorstScenarioLossShare} de la perte totale, tandis que les
+trois autres restent eux aussi négatifs.
 
 \begin{figure}[htbp]
 \centering
@@ -86,7 +87,8 @@ niveau~; le stop se place sous l'extrême atteint.}
 \caption{Reversal Short, même règle de choix.}
 \end{figure}
 
-\input{tables/x10_trade_examples.tex}
+La table des quatre transactions, avec leurs prix et leurs sorties, est
+reproduite une seule fois en annexe~\ref{app:x10_anatomie}.
 
 \begin{warningbox}
 \textbf{Les quatre exemples se terminent au stop, et ce n'est pas un choix de
@@ -138,9 +140,10 @@ Trois précisions comptent pour lire correctement les résultats.
   « confirmation/retest ». La confirmation est le maintien~; le retest --- le
   retour d'une mèche sur le niveau pendant le maintien --- est mesuré et
   tracé, mais ne conditionne rien. La décomposition
-  (section~\ref{sec:x10_in_sample}) montre qu'il est \emph{contre-prédictif}~:
-  \XTenRetestR{}~R avec retest contre \XTenNoRetestR{}~R sans. Le mandat le
-  citait comme un signe de qualité~; la mesure ne le soutient pas.
+  (section~\ref{sec:x10_in_sample}) donne \XTenRetestR{}~R avec retest contre
+  \XTenNoRetestR{}~R sans. Les deux branches perdent et leur écart est faible~:
+  le mandat le citait comme un signe de qualité, mais la mesure ne le soutient
+  pas.
 \end{description}
 
 \subsection{Combien l'automate refuse}

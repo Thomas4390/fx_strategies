@@ -13,19 +13,26 @@ consommation du hors échantillon.
 
 \subsection{Table reproduite}
 
-\input{tables/x10_decision.tex}
+La table complète est publiée une seule fois dans le
+résumé, section~\ref{sec:x10_resume_verdict}, afin de conserver un seul label
+et une seule source typographique. La présente annexe en documente les clauses,
+la preuve d'antériorité et le journal du holdout.
 
 Deux clauses de cette table, souvent oubliées dans ce genre de document,
 gouvernent la lecture des deux dernières lignes.
 
 \begin{description}
   \item[Un critère non mesuré vaut échec.] Jamais « non applicable », jamais
-  « en attente ». Les critères 8 et 9 sont donc comptés comme des échecs,
-  exactement comme les six qui portent une mesure.
-  \item[Un seul verdict est prononcé, et il l'est une seule fois.] La table
+  « en attente ». Le critère 8 est maintenant mesuré et échoue parce que
+  l'espérance MetaTrader~5 est négative. Seul le critère 9, OOS 2026, reste
+  non mesuré et est compté comme un échec.
+  \item[Le protocole ne prononce son issue complète qu'une fois.] La table
   prévoit trois issues~: déploiement à blanc, ne pas déployer, non concluant.
   Elles sont mutuellement exclusives, et leurs conditions ont été écrites
-  avant la campagne.
+  avant la campagne. Ici, les mesures disponibles imposent la décision
+  opérationnelle de ne pas déployer, tandis que le holdout non lu interdit de
+  revendiquer une validation OOS ou un verdict définitif de la branche
+  complète.
 \end{description}
 
 \subsection{Les trois verdicts, tels qu'ils avaient été écrits}
@@ -51,10 +58,11 @@ impossibilité de produire un chiffre d'exécution. \\
 
 \ifdefstring{\XTenVerdict}{NOGO}{%
 \begin{warningbox}
-\textbf{Le verdict prononcé est « ne pas déployer ».} Six critères sont en
-échec avec une mesure interprétable~: espérance et profit factor, Sharpe
-déflaté, probabilité de surajustement, plateau, walk-forward annuel,
-sensibilité au coût majoré. Un seul aurait suffi.
+\textbf{La décision opérationnelle est « ne pas déployer ».}
+\XTenCriteriaFailingInterpretable{} critères sont en échec avec une mesure
+interprétable~: espérance et profit factor, Sharpe déflaté, plateau,
+walk-forward annuel, sensibilité au coût majoré et MetaTrader~5. Le \code{PBO}
+passe son seuil. Un seul échec mesuré aurait suffi à interdire le déploiement.
 \end{warningbox}
 }{}
 

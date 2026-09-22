@@ -9,15 +9,15 @@
 \toprule
 \textbf{\#} & \textbf{Critère} & \textbf{Seuil GO} & \textbf{Mesuré} & \textbf{Verdict} \\
 \midrule
-1 & Trades in-sample 2019 $\rightarrow$ 2025-12-31 & $\geq$ 300 & $1\,723$ trades & \textcolor{rsiGreen}{\textbf{GO}} \\
-2 & Espérance nette / profit factor & $\geq$ $+0{,}10$ R / $\geq$ $1{,}15$ & $-0{,}1602$ R / PF $0{,}737$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+1 & Trades in-sample 2019 $\rightarrow$ 2025-12-31 & $\geq$ 300 & $1\,762$ trades & \textcolor{rsiGreen}{\textbf{GO}} \\
+2 & Espérance nette / profit factor & $\geq$ $+0{,}10$ R / $\geq$ $1{,}15$ & $-0{,}1679$ R / PF $0{,}728$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
 3 & DSR (déflaté par distinct\_trials("xau\_x10")) & $\geq$ $0{,}95$ & $0{,}000$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-4 & PBO (CSCV, matrice 27 $\times$ jours) & $\leq$ $0{,}35$ & $0{,}4155$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-5 & Plateau & $\geq$ $60$\,\% voisins à Sharpe $>$ 0 ; médiane des voisins $\geq$ $0{,}5$ $\times$ pic & $0$\,\% de voisins $> 0$ ; médiane $-1{,}603$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-6 & Walk-forward annuel & $\geq$ $60$\,\% d'années positives ; aucune année $>$ $50$\,\% du net total & $0$\,\% d'années positives ; max $34{,}8$\,\% & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-7 & Spread $\times 1{,}5$ & espérance $>$ 0 & $-0{,}2012$ R & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-8 & MT5 modèle 1, 2022-11-04 $\rightarrow$ 2025-12-31 & espérance $\geq$ 0, même signe que Python & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} \\
-9 & OOS 2026, lecture unique & n $\geq$ 30, sinon NON CONCLUANT & \emph{non mesuré} & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+4 & PBO (CSCV, matrice 27 $\times$ jours) & $\leq$ $0{,}35$ & $0{,}2460$ & \textcolor{rsiGreen}{\textbf{GO}} \\
+5 & Plateau & $\geq$ $60$\,\% voisins à Sharpe $>$ 0 ; médiane des voisins $\geq$ $0{,}5$ $\times$ pic & $0$\,\% de voisins $> 0$ ; médiane $-1{,}714$ & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+6 & Walk-forward annuel & $\geq$ $60$\,\% d'années positives ; aucune année $>$ $50$\,\% du net total & $0$\,\% d'années positives ; max $28{,}7$\,\% & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+7 & Spread $\times 1{,}5$ & espérance $>$ 0 & $-0{,}2078$ R & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+8 & MT5 modèle 1, 2022-11-04 $\rightarrow$ 2025-12-31 & espérance $\geq$ 0, même signe que Python & $-0{,}1034$ R ; même signe & \textcolor{combinedBurgundy}{\textbf{échec}} \\
+9 & OOS 2026, lecture unique & n $\geq$ 30, sinon NON CONCLUANT & \emph{non lu, par décision} & \textcolor{combinedBurgundy}{\textbf{échec}} \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -1,0 +1,22 @@
+% GÉNÉRÉ par scripts/build_x10_report_assets.py — ne pas éditer à la main.
+% Toute valeur vient de results/xau_x10/*.json.
+\begin{table}[htbp]
+\centering
+\small
+\caption{Les trois moteurs, chacun sur la fenêtre où il a tourné, avec la référence restreinte à la même fenêtre juste en dessous. Chaque espérance porte sur tous les trades du moteur, en unités de son propre risque initial. Le run QC complet porte des anomalies d'exécution détaillées dans le texte ; son niveau ne valide pas le portage.}
+\label{tab:x10_engines}
+\begin{tabular}{l l r r r}
+\toprule
+\textbf{Moteur} & \textbf{Période} & \textbf{Trades} & \textbf{Espérance (R)} & \textbf{PF} \\
+\midrule
+Python (référence, campagne) & 2019--2025 & $1\,762$ & $-0{,}1679$ & $0{,}728$ \\
+QuantConnect & 2019--2025 & $1\,642$ & $-0{,}2688$ & --- \\
+\midrule
+QuantConnect & 2024 & $316$ & $-0{,}2048$ & --- \\
+\quad\emph{Python, même fenêtre} & 2024 & $317$ & $-0{,}2113$ & --- \\
+\midrule
+MetaTrader~5 (expert advisor) & 2022-11--2025 & $880$ & $-0{,}1034$ & $0{,}830$ \\
+\quad\emph{Python, même fenêtre} & 2022-11--2025 & $880$ & $-0{,}1522$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

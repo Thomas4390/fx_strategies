@@ -42,32 +42,25 @@ rien à geler. Le dispositif se bloque de lui-même, exactement comme il avait
 été conçu pour le faire.
 \end{insightbox}
 
-\subsection{Trois raisons de ne pas dépenser le holdout}
+\subsection{Deux raisons de ne pas dépenser le holdout}
 
 \begin{description}
-  \item[Le verdict est acquis in-sample.] Sur les \XTenCriteriaCount{}
-  critères, \XTenCriteriaPassing{} passe. Six échecs portent une mesure
-  interprétable~: espérance, profit factor, Sharpe déflaté, probabilité de
-  surajustement, plateau, walk-forward, sensibilité au coût. La table de
-  décision est explicite~: un seul critère en échec avec une mesure
-  interprétable suffit à prononcer « ne pas déployer ». Une lecture hors
-  échantillon ne peut donc rien sauver --- elle ne fait pas partie des
-  conditions de réouverture.
+  \item[La décision opérationnelle est acquise.] Sur les
+  \XTenCriteriaCount{} critères, \XTenCriteriaPassing{} passent et
+  \XTenCriteriaFailing{} échouent. Parmi ces derniers,
+  \XTenCriteriaFailingInterpretable{} portent une mesure~: espérance et profit
+  factor, \code{DSR}, plateau, walk-forward, sensibilité au coût et
+  MetaTrader~5. Le \code{PBO}, lui, passe après correction de la datation. La
+  règle opérationnelle impose donc de ne pas déployer. Cette décision ne doit
+  pas être présentée comme une validation OOS ou comme le verdict définitif
+  d'une branche du protocole qui aurait lu le holdout.
 
   \item[Le holdout est un budget, pas une ressource renouvelable.] Chaque
   lecture consomme définitivement une tranche de données. La tranche 2026 de
   l'or est la seule qui existe, et elle servira à tout travail futur sur cet
   instrument --- y compris à une éventuelle stratégie issue des pistes de la
-  section~\ref{sec:x10_non_deploiement}. La dépenser sur un dossier déjà
-  tranché n'apprendrait rien et appauvrirait le suivant.
-
-  \item[Le régime 2026 est hors de la distribution in-sample.] Le pas de la
-  grille exprimé en \code{ATR} vaut \XTenDollarsPerAtrFirst{} au début de
-  l'échantillon et \XTenDollarsPerAtrLast{} à la fin~; la tendance ne
-  s'inverse pas en 2026, elle se poursuit, et le régime récent est plus fin
-  que tout ce que la sélection a vu. La table de décision avait d'ailleurs
-  \emph{pré-écrit} ce déclencheur~: un régime hors distribution rend la
-  lecture « non concluante » par construction, avant même de la faire.
+  section~\ref{sec:x10_non_deploiement}. La dépenser sur un dossier dont les
+  mesures disponibles interdisent déjà le déploiement appauvrirait le suivant.
 \end{description}
 
 \subsection{Pourquoi un chiffre de 2026 serait trompeur dans les deux sens}
@@ -75,11 +68,10 @@ rien à geler. Le dispositif se bloque de lui-même, exactement comme il avait
 C'est le point qui justifie le plus directement la décision.
 
 Supposons un résultat \textbf{positif} sur le premier trimestre 2026. Il
-porterait sur quelques dizaines de transactions, dans un régime absent de
-l'échantillon, face à sept années négatives et plusieurs milliers de
-transactions. Le publier reviendrait à opposer un échantillon minuscule et
-non représentatif à une mesure massive et cohérente --- et il se trouverait
-toujours quelqu'un pour y lire un espoir.
+porterait sur une fenêtre courte face à sept années négatives et
+\XTenTradesIS{} transactions. Le publier ne ferait pas disparaître les
+\XTenCriteriaFailingInterpretable{} échecs mesurés et risquerait de faire lire
+une validation dans ce qui ne serait qu'une observation tardive.
 
 Supposons maintenant un résultat \textbf{négatif}. Il n'ajouterait rien~: il
 confirmerait ce que sept années établissent déjà, au prix d'une tranche de

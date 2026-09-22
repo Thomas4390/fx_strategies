@@ -48,17 +48,15 @@ les répartir --- ici \XTenPBOSplits{} combinaisons sur les vingt-sept
 configurations.
 
 Le \code{PBO} mesuré vaut \metric{\XTenPBO}, contre un seuil gelé de
-$0{,}35$. Le critère échoue.
+$0{,}35$. Le critère passe.
 
 \begin{warningbox}
-\textbf{Attention à ce que ce chiffre dit, et à ce qu'il ne dit pas.} Un
-\code{PBO} élevé sur une grille qui \emph{perd partout} ne signifie pas « le
-surajustement explique la perte ». Il signifie que le classement des
-vingt-sept configurations entre les deux moitiés de l'échantillon n'a presque
-aucune persistance --- ce qui est exactement ce à quoi on s'attend quand il
-n'y a rien à classer. \textbf{Il n'y a pas de surajustement parce qu'il n'y a
-pas de signal à surajuster.} Le critère échoue, et la raison de son échec est
-cohérente avec tout le reste du dossier.
+\textbf{Attention à ce que ce chiffre dit, et à ce qu'il ne dit pas.} Le
+\code{PBO} passe son seuil~: le classement relatif des configurations ne
+présente pas le niveau de retournement attendu d'une sélection fortement
+surajustée. Cela ne crée pas un signal rentable. Les vingt-sept configurations
+restent négatives et aucune ne passe le plateau~; le \code{PBO} répond à une
+question de classement, pas à celle de l'espérance absolue.
 \end{warningbox}
 
 \subsection{Validation croisée combinatoire purgée}
@@ -117,19 +115,19 @@ table reproduite au résumé (section~\ref{sec:x10_resume_verdict}) et en
 annexe~\ref{app:x10_table_decision}. Son résultat tient en trois lignes~:
 
 \begin{itemize}
-  \item \XTenCriteriaPassing{} critère sur \XTenCriteriaCount{} est franchi~:
-  celui du nombre de transactions ;
-  \item \XTenCriteriaFailing{} sont en échec, dont six avec une mesure
-  interprétable ;
-  \item deux le sont par \emph{non-mesure} --- le portage MetaTrader~5 et la
-  lecture hors échantillon --- et la table de décision impose de les compter
-  comme des échecs, jamais comme « non applicables ».
+  \item \XTenCriteriaPassing{} critères sur \XTenCriteriaCount{} sont
+  franchis~: le nombre de transactions et le \code{PBO} ;
+  \item \XTenCriteriaFailing{} sont en échec, dont
+  \XTenCriteriaFailingInterpretable{} avec une mesure interprétable ;
+  \item seul le critère OOS 2026 est en \emph{non-mesure}. Le critère
+  MetaTrader~5 est mesuré et échoue parce que son espérance est négative.
 \end{itemize}
 
 \ifdefstring{\XTenVerdict}{NOGO}{%
 \begin{warningbox}[title=\textbf{\color{white}\textsf{Conséquence mécanique}}]
 La table de décision énonce~: « au moins un critère en échec avec une mesure
-interprétable » $\Rightarrow$ \textbf{ne pas déployer}. Il y en a six. La
+interprétable » $\Rightarrow$ \textbf{ne pas déployer}. Il y en a
+\XTenCriteriaFailingInterpretable. La
 section~\ref{sec:x10_non_deploiement} en tire les conséquences~; la section
 « conditions de déploiement », prévue sous verdict favorable, n'est pas
 livrée, parce qu'elle n'a pas lieu d'être.

@@ -14,7 +14,7 @@ mesures autorisent à penser de ce qu'elles ne permettent que de supposer.
 
 \subsection{Ce que les mesures établissent}
 
-Six constats, tous mesurés, tous cohérents entre eux.
+Les constats ci-dessous sont tous mesurés et cohérents entre eux.
 
 \begin{enumerate}
   \item \textbf{L'espérance nette est négative et large.}
@@ -36,9 +36,8 @@ Six constats, tous mesurés, tous cohérents entre eux.
 
   \item \textbf{Aucune population de transactions ne tient.} Les quatre
   scénarios, les trois séances, les trois terciles de volatilité et les
-  quatre tranches de régime sont tous négatifs. La coupe la moins mauvaise
-  --- la tranche de régime intermédiaire --- reste à
-  \XTenBestDollarBandR{}~R.
+  quatre tranches de régime sont tous négatifs. Même la tranche de régime
+  \code{10~\$/ATR} la moins mauvaise reste à \XTenBestDollarBandR{}~R.
 
   \item \textbf{Le résultat survit au rééchantillonnage.} L'intervalle de
   confiance à 95~\% du Sharpe, \XTenSharpeCILow{} à \XTenSharpeCIHigh, ne
@@ -59,25 +58,22 @@ attendu de \XTenExpectedMaxSharpe{} par pur hasard. Le Sharpe observé est
 inférieure.
 \end{warningbox}
 
-\subsection{Ce qui manque encore, et pourquoi cela ne change rien}
+\subsection{Ce qui reste non validé}
 
-Deux critères sur neuf sont en échec par \emph{non-mesure}~: le portage
-MetaTrader~5 et la lecture hors échantillon. La table de décision impose de
-les compter comme des échecs, jamais comme « non applicables ».
+Le portage MetaTrader~5 est maintenant mesuré
+(section~\ref{sec:x10_reconciliation}). Son espérance vaut
+\XTenMTFiveExpectancyR{}~R sur \XTenMTFiveTrades{} transactions, du même signe
+que Python sur la même fenêtre. Il constitue donc un échec interprétable du
+critère d'exécution, pas une non-mesure. Le calage QuantConnect 2024 franchit
+sa cible d'appariement~; le portage complet reste dégradé par le plancher de
+lot et par un contrôle d'état non sain.
 
-\begin{description}
-  \item[Le portage MetaTrader~5.] Sa campagne est en cours
-  (section~\ref{sec:x10_reconciliation}). Deux remarques~: il ne couvrira
-  qu'un peu moins de la moitié de l'échantillon, faute d'historique plus
-  ancien chez le courtier~; et son modèle de remplissage interpolé en fait un
-  \emph{majorant}. Un chiffre d'exécution qui contredirait six critères de
-  recherche serait un motif d'enquête sur le portage, pas un motif de
-  déploiement.
-  \item[La lecture hors échantillon.] Elle n'a pas eu lieu, et la
-  section~\ref{sec:x10_hors_echantillon} explique pourquoi c'est la bonne
-  décision~: le verdict est acquis, le holdout est un budget non
-  renouvelable, et le régime récent est hors de la distribution de sélection.
-\end{description}
+Le seul critère non mesuré est la lecture hors échantillon. Elle n'a pas eu
+lieu, et la section~\ref{sec:x10_hors_echantillon} explique la décision de
+préserver ce budget. Il en résulte une distinction nette~: les mesures
+disponibles suffisent à interdire le déploiement, mais le rapport ne revendique
+pas de validation OOS ni de verdict définitif au sens de la branche complète du
+protocole.
 
 \subsection{Ce qui pourrait rouvrir le dossier}
 
@@ -113,44 +109,33 @@ existence psychologique. L'hypothèse mérite d'être formulée~; elle change
 d'objet d'étude.
 
 \paragraph{Hypothèse 2 --- un scénario unique.}
-Les \emph{breakouts} perdent moins que les \emph{reversals}, et le
-\emph{Breakout Long} est le moins mauvais des quatre à
-\XTenBestScenarioR{}~R. On pourrait supposer qu'une stratégie réduite à cette
-seule famille, avec un budget de conception qui lui serait entièrement
-consacré, se comporterait différemment.
+Le meilleur des quatre est \XTenBestScenarioName{} à
+\XTenBestScenarioR{}~R. Une nouvelle recherche pourrait consacrer son budget à
+un seul automate plutôt qu'à deux familles symétriques.
 
-\emph{Ce qui s'y oppose.} Le \emph{Breakout Long} reste négatif, sur un
-nombre de transactions suffisant pour que ce ne soit pas du bruit. Et une
-partie de son avantage vient probablement du fait qu'il est le seul, avec son
-symétrique, à passer un filtre de contexte --- filtre dont les ablations
-montrent qu'il améliore sans redresser.
+\emph{Ce qui s'y oppose.} Ce meilleur scénario reste négatif et l'écart entre
+le meilleur et le pire n'est que de \XTenScenarioSpreadR{}~R. La campagne
+corrigée ne fournit donc ni famille dominante ni noyau positif à isoler.
 
 \paragraph{Hypothèse 3 --- une restriction de séance.}
-C'est la coupe la plus contrastée de la campagne~: la séance asiatique porte
-\XTenAsiaLossShare{} de la perte pour \XTenAsiaTradeShare{} des transactions,
-avec \XTenAsiaExpectancyR{}~R contre \XTenNewYorkExpectancyR{}~R en séance
-new-yorkaise. On pourrait supposer qu'une stratégie limitée aux heures de
-Londres et de New York éviterait la part la plus coûteuse du flux.
+La pire séance est \XTenWorstSessionName{} à \XTenWorstSessionR{}~R, contre
+\XTenBestSessionR{}~R pour la meilleure. Une restriction horaire pourrait être
+spécifiée dans un autre mandat.
 
-\emph{Ce qui s'y oppose.} D'abord, la séance new-yorkaise \emph{reste
-négative}~: retirer l'Asie ne ferait pas passer l'espérance du bon côté de
-zéro, cela la rapprocherait seulement. Ensuite, le mandat demande
-explicitement la séance entière. Enfin, un précédent du dépôt --- une
-composante horaire intraday abandonnée --- avait identifié l'absence de
-restriction de séance comme facteur aggravant~; le reprendre ici serait
-cohérent, mais cela resterait un choix fait après avoir vu la décomposition.
+\emph{Ce qui s'y oppose.} Les trois séances sont négatives et leur écart ne
+vaut que \XTenSessionSpreadR{}~R. La campagne corrigée n'offre donc pas de
+preuve empirique en faveur d'une restriction particulière~; le mandat actuel
+demande en outre la séance entière.
 
 \paragraph{Hypothèse 4 --- l'extension au VWAP comme filtre.}
-C'est la seule variable descriptive de la campagne qui sépare réellement
-quelque chose~: les \emph{reversals} pris loin du \code{VWAP} de séance
-perdent \XTenExtendedR{}~R contre \XTenNotExtendedR{}~R pour les autres.
-La spécification l'avait figée comme tracée et non bloquante, par décision du
-mandat.
+Les \emph{reversals} étendus rendent \XTenExtendedR{}~R contre
+\XTenNotExtendedR{}~R pour les autres. La spécification avait figé cette
+grandeur comme tracée et non bloquante.
 
-\emph{Ce qui s'y oppose.} L'écart est net mais les deux branches sont
-négatives~: en faire un filtre bloquant ne produirait pas une espérance
-positive. Et c'est exactement le type de variable qu'un échantillon perdant
-fait apparaître par construction.
+\emph{Ce qui s'y oppose.} Les deux branches sont négatives et la branche
+étendue est la plus faible dans la campagne corrigée. Cette coupe ne fournit
+donc plus une piste favorable, seulement une variable descriptive à ne pas
+transformer ex post en paramètre.
 
 \subsection{Ce qui a été appris, indépendamment du verdict}
 
@@ -166,13 +151,12 @@ rapport.
   \item \textbf{Une mesure durable de la non-stationnarité de l'or.} Le
   tableau du pas de grille en \code{ATR} n'est pas propre à cette stratégie~:
   il s'applique à toute règle fondée sur une distance en dollars, et il
-  documente un régime qui a changé d'un facteur supérieur à quatre en sept
-  ans.
+  documente une dérive de régime sur l'ensemble de l'échantillon.
 
-  \item \textbf{Un contre-exemple sur le retest.} Le mandat le citait comme
-  une confirmation~; la mesure le montre contre-prédictif
-  (\XTenRetestR{}~R avec, \XTenNoRetestR{}~R sans). C'est une information
-  utile au-delà de ce dossier.
+  \item \textbf{Une mesure du retest.} Le mandat le citait comme une
+  confirmation~; la mesure donne \XTenRetestR{}~R avec retest et
+  \XTenNoRetestR{}~R sans. Les deux branches sont négatives et l'écart faible,
+  ce qui ne soutient pas le retest comme signe de qualité.
 
   \item \textbf{Une erreur de méthode documentée.} Le garde-fou gain/risque
   avait été jugé inopérant \emph{par raisonnement}, sur une hypothèse
@@ -191,6 +175,6 @@ de re-sélectionner après l'avoir mesuré.} Une grille figée à vingt-sept
 points, un budget de \XTenTrialsCeiling{} essais dont \XTenTrialsReserve{}
 restent inutilisés, des seuils gelés et committés avant la première mesure, un
 plateau exigé plutôt qu'un pic, et un holdout qui n'a pas été ouvert. Le
-dispositif a tenu~: le verdict de ce rapport est le verdict que la table de
-décision prévoyait, appliquée à la lettre.
+dispositif a tenu~: la décision opérationnelle de ne pas déployer suit la
+table gelée, tandis que le holdout reste intact et non validé.
 \end{insightbox}
