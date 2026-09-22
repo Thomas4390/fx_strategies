@@ -1,5 +1,11 @@
 # FX Strategies — ims_pipeline architecture
 
+> **XAUUSD x10 — migration du 22 septembre 2026.** Le dossier de référence
+> de cette stratégie est désormais
+> [`fx_apogee/strategies/xau_x10`](https://github.com/Thomas4390/fx_apogee/tree/main/strategies/xau_x10).
+> Les sources et résultats présents ici sont conservés pour leur historique.
+> Voir [la note de migration](docs/research/xau_x10_migration.md).
+
 VBT Pro intraday & daily FX mean reversion / momentum strategies, built
 on the `pipeline / pipeline_nb / create_cv_pipeline` pattern (see
 `example/ims_pipeline.py` for the reference template).
